@@ -31,7 +31,7 @@ Before installing, ensure you have:
 
 ### 1. Clone the repository
 
-    git clone https://github.com/yourusername/daygle-mail-archiver.git
+    git clone https://gitlab.com/daygle/daygle-mail-archiver.git
     cd daygle-mail-archiver
 
 ---
