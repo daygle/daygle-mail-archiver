@@ -1,0 +1,36 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: daygle
+      POSTGRES_USER: daygle
+      POSTGRES_PASSWORD: change_me
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  worker:
+    build: ./worker
+    env_file: .env
+    volumes:
+      - mail_data:/data/mail
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  api:
+    build: ./api
+    env_file: .env
+    volumes:
+      - mail_data:/data/mail
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    restart: unless-stopped
+
+volumes:
+  db_data:
+  mail_data:
