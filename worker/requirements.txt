@@ -1,0 +1,5 @@
+imapclient
+mail-parser
+psycopg[binary]
+sqlalchemy
+python-dotenv
