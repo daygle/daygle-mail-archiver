@@ -159,7 +159,10 @@ async def connect_imap(source: Dict[str, Any]) -> aioimaplib.IMAP4_SSL | aioimap
     require_starttls = source["require_starttls"]
     ca_bundle = source["ca_bundle"]
 
-    if use_ssl:
+    # NOTE:
+    # aioimaplib.IMAP4 does not implement .starttls(), so we treat both SSL and STARTTLS
+    # as "encrypted over TLS" and use IMAP4_SSL in both cases. Plain IMAP only if neither is set.
+    if use_ssl or require_starttls:
         ctx = create_ssl_context(ca_bundle)
         client = aioimaplib.IMAP4_SSL(host=host, port=port, ssl_context=ctx)
         await client.wait_hello_from_server()
@@ -167,11 +170,6 @@ async def connect_imap(source: Dict[str, Any]) -> aioimaplib.IMAP4_SSL | aioimap
 
     client = aioimaplib.IMAP4(host=host, port=port)
     await client.wait_hello_from_server()
-
-    if port == 143 and require_starttls:
-        ctx = create_ssl_context(ca_bundle)
-        await client.starttls(context=ctx)
-
     return client
 
 
@@ -208,13 +206,13 @@ def save_message_to_disk(raw_bytes: bytes, storage_dir: str, uid: str) -> None:
 def extract_rfc822(resp):
     """
     Extract the RFC822 literal from an aioimaplib FETCH response.
-    Different IMAP servers return different line layouts, so we scan
-    for the first line that looks like raw email bytes.
+    We scan for the first line that looks like raw email bytes and
+    skip metadata / status lines.
     """
     for line in resp.lines:
         if not isinstance(line, bytes):
             continue
-        # Skip metadata lines
+        # Skip metadata / structural lines
         if line.startswith(b"*") and b"FETCH" in line:
             continue
         if line.strip() == b")":
@@ -222,7 +220,7 @@ def extract_rfc822(resp):
         if line.startswith(b"OK "):
             continue
 
-        # This is the raw email body
+        # First remaining bytes line is treated as the raw message
         return line
 
     raise RuntimeError(f"Could not extract RFC822 body from FETCH response: {resp.lines}")
@@ -251,7 +249,6 @@ async def process_source_messages(source: Dict[str, Any], storage_dir: str) -> N
             if resp.result != "OK":
                 raise RuntimeError(f"IMAP FETCH failed for UID {uid}: {resp}")
 
-            # Extract the raw email safely
             raw_email = extract_rfc822(resp)
             save_message_to_disk(raw_email, storage_dir, uid)
 
