@@ -206,25 +206,17 @@ def save_message_to_disk(raw_bytes: bytes, storage_dir: str, uid: str) -> None:
 def extract_rfc822(resp):
     """
     Extract the RFC822 literal from an aioimaplib FETCH response.
-    We scan for the first line that looks like raw email bytes and
-    skip metadata / status lines.
+    Your server returns the literal as a bytearray on line 1.
     """
     for line in resp.lines:
-        if not isinstance(line, bytes):
-            continue
-        # Skip metadata / structural lines
-        if line.startswith(b"*") and b"FETCH" in line:
-            continue
-        if line.strip() == b")":
-            continue
-        if line.startswith(b"OK "):
-            continue
-
-        # First remaining bytes line is treated as the raw message
-        return line
+        if isinstance(line, (bytes, bytearray)):
+            # Skip metadata lines
+            if line.startswith(b"*") or line.startswith(b"OK") or line == b")":
+                continue
+            # This is the raw email body
+            return bytes(line)
 
     raise RuntimeError(f"Could not extract RFC822 body from FETCH response: {resp.lines}")
-
 
 async def process_source_messages(source: Dict[str, Any], storage_dir: str) -> None:
     client = None
