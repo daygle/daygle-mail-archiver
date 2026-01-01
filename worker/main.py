@@ -209,12 +209,16 @@ def extract_rfc822(resp):
     Your server returns the literal as a bytearray on line 1.
     """
     for line in resp.lines:
-        if isinstance(line, (bytes, bytearray)):
-            # Skip metadata lines
-            if line.startswith(b"*") or line.startswith(b"OK") or line == b")":
-                continue
-            # This is the raw email body
-            return bytes(line)
+        # Only accept bytes or bytearray
+        if not isinstance(line, (bytes, bytearray)):
+            continue
+
+        # Skip metadata lines
+        if line.startswith(b"*") or line.startswith(b"OK") or line == b")":
+            continue
+
+        # This is the raw email body
+        return bytes(line)
 
     raise RuntimeError(f"Could not extract RFC822 body from FETCH response: {resp.lines}")
 
