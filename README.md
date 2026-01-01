@@ -1,28 +1,31 @@
 # Daygle Mail Archiver
 
-A lightweight, Docker-based IMAP mail archiver designed for deterministic, scenario-proof ingestion.  
-Daygle fetches emails from IMAP, stores the raw .eml files, extracts metadata into Postgres, and optionally deletes messages after successful processing.
+A deterministic, scenario‑proof IMAP mail archiver built for reliability, clarity, and maintainability.  
+Daygle ingests emails from one or more IMAP accounts, stores raw `.eml` files, extracts metadata into Postgres, and provides a full web UI for browsing, searching, and monitoring.
 
 ---
 
 ## 🚀 Features
 
-- IMAP ingestion worker (Python)
-- Safe, idempotent processing (never deletes until archived)
-- Raw .eml storage on filesystem
-- Metadata stored in Postgres
-- Optional FastAPI API for browsing/searching
-- Fully containerized with Docker Compose
-- Designed for reliability, clarity, and maintainability
+- **Multi‑account IMAP ingestion** (one worker per IMAP account)
+- **Encrypted IMAP passwords** stored securely in Postgres
+- **Raw `.eml` storage** on filesystem
+- **Metadata indexing** in Postgres
+- **FastAPI web UI** for browsing, searching, filtering
+- **Per‑account worker heartbeat + error logging**
+- **Status dashboard** (storage, DB health, worker status)
+- **Settings UI** for global configuration
+- **Accounts UI** for adding/editing IMAP accounts
+- Fully containerized with **Docker Compose**
 
 ---
 
 ## 📦 Requirements
 
-Before installing, ensure you have:
+You need:
 
-- Docker (20+ recommended)
-- Docker Compose (v2+)
+- Docker 20+
+- Docker Compose v2+
 - Git
 
 ---
@@ -31,8 +34,10 @@ Before installing, ensure you have:
 
 ### 1. Clone the repository
 
-    git clone https://gitlab.com/daygle/daygle-mail-archiver.git
-    cd daygle-mail-archiver
+```bash
+git clone https://gitlab.com/daygle/daygle-mail-archiver.git
+cd daygle-mail-archiver
+```
 
 ---
 
@@ -40,106 +45,220 @@ Before installing, ensure you have:
 
 Copy the example:
 
-    cp .env.example .env
+```bash
+cp .env.example .env
+```
 
-Edit .env and set your IMAP + DB credentials:
+Edit `.env` and set the global settings:
 
-    DB_DSN=postgres://daygle:change_me@db:5432/daygle
+```
+DB_DSN=postgres://daygle:change_me@db:5432/daygle
+IMAP_PASSWORD_KEY=generate_a_32byte_key
+SESSION_SECRET=change_me
+STORAGE_DIR=/data/mail
+```
 
-    IMAP_HOST=imap.example.com
-    IMAP_PORT=993
-    IMAP_USER=user@example.com
-    IMAP_PASSWORD=change_me
-    IMAP_USE_SSL=true
-
-    POLL_INTERVAL_SECONDS=300
-    DELETE_AFTER_PROCESSING=true
-    STORAGE_DIR=/data/mail
+**Important:**  
+IMAP settings are *not* stored in `.env`.  
+You will configure IMAP accounts through the **web UI** after installation.
 
 ---
 
 ### 3. Build and start the stack
 
-    docker compose up -d --build
+```bash
+docker compose up -d --build
+```
 
-This will start:
+This starts:
 
-- Postgres
-- Worker (IMAP ingestion loop)
-- API (optional, on port 8080)
+- **db** – Postgres (auto‑initializes schema)
+- **api** – Web UI (port 8080)
+- **worker_default** – Worker for the default IMAP account  
+  (You can add more workers later)
 
 ---
 
-### 4. Verify the worker is running
+### 4. Open the web UI
 
-    docker compose logs -f worker
+Visit:
 
-You should see logs like:
+```
+http://localhost:8080
+```
 
-    Connected to IMAP
-    Processing UID 1234
-    Stored message at /data/mail/default/INBOX/1234.eml
-    Deleted from IMAP
+Login with the default admin account:
+
+- **Username:** `administrator`
+- **Password:** `administrator`
+
+You can change this later.
+
+---
+
+### 5. Add IMAP accounts
+
+Go to:
+
+```
+Accounts → Add Account
+```
+
+Add one or more accounts:
+
+- Name (identifier)
+- Host / Port
+- Username
+- Password (encrypted automatically)
+- SSL / STARTTLS
+- Poll interval
+- Delete‑after‑processing
+- Enabled/disabled
+
+Each account you add will require a worker container.
+
+---
+
+### 6. Start workers for each account
+
+Each worker container needs:
+
+```
+IMAP_ACCOUNT_NAME=<account_name>
+```
+
+Example in `docker-compose.yml`:
+
+```yaml
+worker_default:
+  build: ./worker
+  environment:
+    DB_DSN: ${DB_DSN}
+    IMAP_PASSWORD_KEY: ${IMAP_PASSWORD_KEY}
+    IMAP_ACCOUNT_NAME: default
+  depends_on:
+    - db
+```
+
+For a second account:
+
+```yaml
+worker_work:
+  build: ./worker
+  environment:
+    DB_DSN: ${DB_DSN}
+    IMAP_PASSWORD_KEY: ${IMAP_PASSWORD_KEY}
+    IMAP_ACCOUNT_NAME: work
+  depends_on:
+    - db
+```
+
+Then run:
+
+```bash
+docker compose up -d --build
+```
 
 ---
 
 ## 📂 Directory Structure
 
-    daygle-mail-archiver/
-    ├── docker-compose.yml
-    ├── .env
-    ├── worker/
-    ├── api/
-    └── docs/
+```
+daygle-mail-archiver/
+├── docker-compose.yml
+├── .env
+├── worker/
+├── api/
+└── db/
+```
 
-Raw emails are stored in the Docker volume:
+Raw emails are stored in:
 
-    /data/mail/<account>/<folder>/<uid>.eml
+```
+/data/mail/<account>-<uid>.eml
+```
 
 ---
 
-## 🌐 API Usage (Optional)
+## 🌐 Web UI
 
-Once running, visit:
+### Messages
+```
+http://localhost:8080/messages
+```
 
-    http://localhost:8080/messages
+Search, filter, view metadata, view body text.
 
-This returns the latest archived messages.
+### Accounts
+```
+http://localhost:8080/accounts
+```
+
+Add/edit IMAP accounts, test IMAP connectivity.
+
+### Status Dashboard
+```
+http://localhost:8080/status
+```
+
+Shows:
+
+- Per‑account worker heartbeat
+- Last success/error
+- Storage usage
+- DB health
+
+### Error Log
+```
+http://localhost:8080/errors
+```
+
+Shows recent worker/API/storage errors.
 
 ---
 
 ## 🔄 Updating the system
 
-Pull the latest changes:
+```bash
+git pull
+docker compose up -d --build
+```
 
-    git pull
-    docker compose up -d --build
+Workers will restart automatically.
 
 ---
 
 ## 🧪 Development Mode
 
-If you want to run the worker locally without Docker:
+To run the worker locally:
 
-    cd worker
-    pip install -r requirements.txt
-    python main.py
+```bash
+cd worker
+pip install -r requirements.txt
+export IMAP_ACCOUNT_NAME=default
+python main.py
+```
 
-Make sure your .env variables are exported or use a .env loader.
+To run the API locally:
+
+```bash
+cd api
+pip install -r requirements.txt
+uvicorn app:app --reload --port 8080
+```
 
 ---
 
 ## 🛠 Roadmap
 
-See docs/roadmap.md for planned features, including:
-
-- Multi-account support
-- Search indexing
-- Web UI
-- Retention policies
+- Per‑folder selection per account  
+- Attachment indexing  
+- Full‑text search improvements  
+- Retention policies  
+- Export tools  
 
 ---
 
 ## 📜 License
 
-MIT (or whichever you choose — update this section to your actual license)
+MIT (or your chosen license)
