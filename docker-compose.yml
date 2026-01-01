@@ -2,17 +2,19 @@ services:
   db:
     image: postgres:16
     environment:
-      POSTGRES_DB: daygle-mail-archiver
-      POSTGRES_USER: daygle-mail-archiver
+      POSTGRES_DB: daygle_mail_archiver
+      POSTGRES_USER: daygle_mail_archiver
       POSTGRES_PASSWORD: change_me
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
     restart: unless-stopped
 
-  worker:
+  worker_default:
     build: ./worker
     env_file: .env
+    environment:
+      IMAP_ACCOUNT_NAME: default   # <-- IMPORTANT: must match the account name in the UI
     volumes:
       - mail_data:/data/mail
     depends_on:
