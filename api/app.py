@@ -777,18 +777,40 @@ def source_test_imap(request: Request, source_id: int):
 
     ok, msg = test_imap_account(source_id)
 
+    # Update last_success / last_error / last_heartbeat
     with engine.begin() as conn:
+        if ok:
+            conn.execute(
+                text("""
+                    UPDATE imap_accounts
+                    SET last_success = NOW(),
+                        last_error = NULL,
+                        last_heartbeat = NOW()
+                    WHERE id = :id
+                """),
+                {"id": source_id},
+            )
+        else:
+            conn.execute(
+                text("""
+                    UPDATE imap_accounts
+                    SET last_error = :err,
+                        last_heartbeat = NOW()
+                    WHERE id = :id
+                """),
+                {"id": source_id, "err": msg},
+            )
+
+        # Reload updated row for display
         row = conn.execute(
-            text(
-                """
+            text("""
                 SELECT id, name, host, port, username,
                        use_ssl, require_starttls, ca_bundle,
                        poll_interval_seconds, delete_after_processing,
-                       enabled
+                       enabled, last_heartbeat, last_success, last_error
                 FROM imap_accounts
                 WHERE id = :id
-                """
-            ),
+            """),
             {"id": source_id},
         ).mappings().first()
 
