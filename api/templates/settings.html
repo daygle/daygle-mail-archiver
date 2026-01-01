@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1 class="mb-4 fw-bold">Settings</h1>
+
+<div class="row">
+    <div class="col-md-8">
+
+        {% if error %}
+            <div class="alert alert-danger" role="alert">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        {% if success %}
+            <div class="alert alert-success" role="alert">
+                {{ success }}
+            </div>
+        {% endif %}
+
+        <form method="post" action="/settings">
+
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header fw-bold">
+                    IMAP Settings
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">IMAP Host</label>
+                        <input type="text" name="imap_host" class="form-control"
+                               value="{{ settings.get('imap_host', '') }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">IMAP Port</label>
+                        <input type="number" name="imap_port" class="form-control"
+                               value="{{ settings.get('imap_port', '993') }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">IMAP User</label>
+                        <input type="text" name="imap_user" class="form-control"
+                               value="{{ settings.get('imap_user', '') }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">IMAP Password</label>
+                        <input type="password" name="imap_password" class="form-control"
+                               placeholder="Leave blank to keep existing password">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Use SSL</label>
+                        <select name="imap_use_ssl" class="form-select">
+                            <option value="true" {% if settings.get('imap_use_ssl', 'true') == 'true' %}selected{% endif %}>True</option>
+                            <option value="false" {% if settings.get('imap_use_ssl', 'true') == 'false' %}selected{% endif %}>False</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Require STARTTLS (port 143)</label>
+                        <select name="imap_require_starttls" class="form-select">
+                            <option value="true" {% if settings.get('imap_require_starttls', 'false') == 'true' %}selected{% endif %}>True</option>
+                            <option value="false" {% if settings.get('imap_require_starttls', 'false') == 'false' %}selected{% endif %}>False</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-0">
+                        <label class="form-label">CA Bundle Path (optional)</label>
+                        <input type="text" name="imap_ca_bundle" class="form-control"
+                               value="{{ settings.get('imap_ca_bundle', '') }}"
+                               placeholder="/etc/ssl/certs/ca-certificates.crt">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header fw-bold">
+                    Worker Settings
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Poll Interval (seconds)</label>
+                        <input type="number" name="poll_interval_seconds" class="form-control"
+                               value="{{ settings.get('poll_interval_seconds', '300') }}" required>
+                    </div>
+
+                    <div class="mb-0">
+                        <label class="form-label">Delete After Processing</label>
+                        <select name="delete_after_processing" class="form-select">
+                            <option value="true" {% if settings.get('delete_after_processing', 'true') == 'true' %}selected{% endif %}>True</option>
+                            <option value="false" {% if settings.get('delete_after_processing', 'true') == 'false' %}selected{% endif %}>False</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header fw-bold">
+                    Storage Settings
+                </div>
+                <div class="card-body">
+                    <div class="mb-0">
+                        <label class="form-label">Storage Directory</label>
+                        <input type="text" name="storage_dir" class="form-control"
+                               value="{{ settings.get('storage_dir', '/data/mail') }}" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header fw-bold">
+                    UI Settings
+                </div>
+                <div class="card-body">
+                    <div class="mb-0">
+                        <label class="form-label">Page Size</label>
+                        <input type="number" name="page_size" class="form-control"
+                               value="{{ settings.get('page_size', '50') }}" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end mb-4">
+                <button type="submit" class="btn btn-primary">
+                    Save Settings
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+{% endblock %}

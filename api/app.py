@@ -1,5 +1,4 @@
 import os
-from datetime import datetime
 from typing import List, Dict, Any
 
 from fastapi import FastAPI, Request, HTTPException, Form
@@ -9,9 +8,12 @@ from sqlalchemy import create_engine, text
 from mailparser import parse_from_bytes
 from starlette.middleware.sessions import SessionMiddleware
 
+from cryptography.fernet import Fernet, InvalidToken  # for IMAP password encryption
+
 DB_DSN = os.getenv("DB_DSN")
-STORAGE_DIR = os.getenv("STORAGE_DIR", "/data/mail")
+STORAGE_DIR_DEFAULT = os.getenv("STORAGE_DIR", "/data/mail")
 SESSION_SECRET = os.getenv("SESSION_SECRET", "change-me-session-secret")
+IMAP_PASSWORD_KEY = os.getenv("IMAP_PASSWORD_KEY")  # base64-encoded key for Fernet
 
 engine = create_engine(DB_DSN, future=True)
 
@@ -26,6 +28,46 @@ app.add_middleware(
 )
 
 templates = Jinja2Templates(directory="templates")
+
+
+# ------------------
+# Encryption helpers for IMAP password
+# ------------------
+
+def get_fernet() -> Fernet | None:
+    if not IMAP_PASSWORD_KEY:
+        return None
+    return Fernet(IMAP_PASSWORD_KEY.encode("utf-8"))
+
+
+def encrypt_imap_password(plaintext: str) -> str:
+    f = get_fernet()
+    if not f:
+        # If no key configured, store empty to avoid accidental plaintext
+        return ""
+    token = f.encrypt(plaintext.encode("utf-8"))
+    return token.decode("utf-8")
+
+
+def decrypt_imap_password(token: str) -> str:
+    if not token:
+        return ""
+    f = get_fernet()
+    if not f:
+        return ""
+    try:
+        plaintext = f.decrypt(token.encode("utf-8"))
+        return plaintext.decode("utf-8")
+    except InvalidToken:
+        return ""
+
+
+# ------------------
+# Settings helpers
+# ------------------
+
+def require_login(request: Request) -> bool:
+    return "user_id" in request.session
 
 
 def build_search_where(
@@ -93,13 +135,33 @@ def build_order_by(sort: str | None, direction: str | None) -> str:
     return f"ORDER BY {col} {dir_sql}"
 
 
-def require_login(request: Request) -> bool:
-    """
-    Simple helper to check login.
-    Returns True if logged in, False otherwise.
-    """
-    return "user_id" in request.session
+def load_settings() -> Dict[str, str]:
+    with engine.begin() as conn:
+        rows = conn.execute(
+            text("SELECT key, value FROM settings")
+        ).mappings().all()
+    return {r["key"]: r["value"] for r in rows}
 
+
+def save_settings(updates: Dict[str, str]) -> None:
+    with engine.begin() as conn:
+        for k, v in updates.items():
+            conn.execute(
+                text(
+                    """
+                    INSERT INTO settings (key, value, updated_at)
+                    VALUES (:key, :value, NOW())
+                    ON CONFLICT (key)
+                    DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
+                    """
+                ),
+                {"key": k, "value": v},
+            )
+
+
+# ------------------
+# Root
+# ------------------
 
 @app.get("/", response_class=HTMLResponse)
 def root(request: Request):
@@ -157,7 +219,6 @@ def login_submit(
             {"request": request, "error": error},
         )
 
-    # Authentication successful
     request.session["user_id"] = row["id"]
     request.session["username"] = username
 
@@ -168,6 +229,117 @@ def login_submit(
 def logout(request: Request):
     request.session.clear()
     return RedirectResponse(url="/login", status_code=303)
+
+
+# ------------------
+# Settings UI
+# ------------------
+
+@app.get("/settings", response_class=HTMLResponse)
+def settings_form(request: Request):
+    if not require_login(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    settings = load_settings()
+
+    # Decrypt IMAP password for display (never show actual value; leave field blank)
+    imap_password_placeholder = ""  # we don't prefill the real password
+
+    return templates.TemplateResponse(
+        "settings.html",
+        {
+            "request": request,
+            "settings": settings,
+            "imap_password_placeholder": imap_password_placeholder,
+            "error": None,
+            "success": None,
+        },
+    )
+
+
+@app.post("/settings", response_class=HTMLResponse)
+def settings_submit(
+    request: Request,
+    imap_host: str = Form(...),
+    imap_port: str = Form(...),
+    imap_user: str = Form(...),
+    imap_password: str = Form(""),
+    imap_use_ssl: str = Form("false"),
+    imap_require_starttls: str = Form("false"),
+    imap_ca_bundle: str = Form(""),
+    poll_interval_seconds: str = Form(...),
+    delete_after_processing: str = Form("false"),
+    storage_dir: str = Form(...),
+    page_size: str = Form(...),
+):
+    if not require_login(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    settings = load_settings()
+    error = None
+    success = None
+
+    # Basic validation
+    try:
+        int(imap_port)
+    except ValueError:
+        error = "IMAP port must be a number."
+
+    try:
+        int(poll_interval_seconds)
+    except ValueError:
+        error = (error + " " if error else "") + "Poll interval must be a number."
+
+    try:
+        int(page_size)
+    except ValueError:
+        error = (error + " " if error else "") + "Page size must be a number."
+
+    if error:
+        return templates.TemplateResponse(
+            "settings.html",
+            {
+                "request": request,
+                "settings": settings,
+                "imap_password_placeholder": "",
+                "error": error,
+                "success": None,
+            },
+        )
+
+    updates: Dict[str, str] = {
+        "imap_host": imap_host.strip(),
+        "imap_port": imap_port.strip(),
+        "imap_user": imap_user.strip(),
+        "imap_use_ssl": "true" if imap_use_ssl == "true" else "false",
+        "imap_require_starttls": "true" if imap_require_starttls == "true" else "false",
+        "imap_ca_bundle": imap_ca_bundle.strip(),
+        "poll_interval_seconds": poll_interval_seconds.strip(),
+        "delete_after_processing": "true" if delete_after_processing == "true" else "false",
+        "storage_dir": storage_dir.strip(),
+        "page_size": page_size.strip(),
+    }
+
+    # If a new password was entered, encrypt and store it
+    if imap_password:
+        encrypted = encrypt_imap_password(imap_password)
+        updates["imap_password_encrypted"] = encrypted
+
+    save_settings(updates)
+
+    settings = load_settings()
+    success = "Settings saved successfully."
+
+    return templates.TemplateResponse(
+        "settings.html",
+        {
+            "request": request,
+            "settings": settings,
+            "imap_password_placeholder": "",
+            "error": None,
+            "success": success,
+        },
+    )
 
 
 # ------------------
@@ -190,6 +362,16 @@ def list_messages(
 ):
     if not require_login(request):
         return RedirectResponse(url="/login", status_code=303)
+
+    # Allow default page size override from settings
+    settings = load_settings()
+    try:
+        default_page_size = int(settings.get("page_size", "50"))
+    except ValueError:
+        default_page_size = 50
+
+    if "page_size" not in request.query_params:
+        page_size = default_page_size
 
     if page < 1:
         page = 1
@@ -356,7 +538,6 @@ def api_list_messages(
     q: str | None = None,
 ):
     if not require_login(request):
-        # For API, return 401 instead of redirect
         raise HTTPException(status_code=401, detail="Not authenticated")
 
     where_sql, where_params = build_search_where(

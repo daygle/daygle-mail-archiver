@@ -6,6 +6,10 @@
 -- Needed for password hashing (crypt/gen_salt)
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
+-------------------------------------------------------------------
+-- Messages table
+-------------------------------------------------------------------
+
 CREATE TABLE IF NOT EXISTS messages (
     id SERIAL PRIMARY KEY,
 
@@ -69,7 +73,6 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 -- Create default administrator user (username: administrator, password: administrator)
--- This uses bcrypt via pgcrypto's crypt/gen_salt('bf')
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM users WHERE username = 'administrator') THEN
@@ -78,3 +81,34 @@ BEGIN
     END IF;
 END;
 $$;
+
+-------------------------------------------------------------------
+-- Settings table for runtime configuration
+-------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Initial defaults (can be overridden via Settings UI)
+INSERT INTO settings (key, value)
+VALUES
+    -- IMAP
+    ('imap_host', 'imap.example.com'),
+    ('imap_port', '993'),
+    ('imap_user', 'user@example.com'),
+    ('imap_use_ssl', 'true'),
+    ('imap_require_starttls', 'false'),
+    ('imap_ca_bundle', ''),
+    -- IMAP password is stored encrypted by the app; leave empty by default
+    ('imap_password_encrypted', ''),
+    -- Worker
+    ('poll_interval_seconds', '300'),
+    ('delete_after_processing', 'true'),
+    -- Storage
+    ('storage_dir', '/data/mail'),
+    -- UI
+    ('page_size', '50')
+ON CONFLICT (key) DO NOTHING;
