@@ -292,22 +292,29 @@ def test_db() -> tuple[bool, str]:
     except Exception as e:
         return False, f"DB test failed: {e}"
 
-
 def get_recent_errors(source_prefix: str | None = None, limit: int = 100) -> list[dict]:
-    sql = """
-        SELECT id, timestamp, source, message, details
-        FROM error_log
-    """
     params: Dict[str, Any] = {"limit": limit}
-    if source_prefix:
-        sql += " WHERE source LIKE :src"
-        params["src"] = source_prefix + "%"
-    sql += " ORDER BY timestamp DESC LIMIT :limit"
+
+    if source_prefix and source_prefix.strip():
+        sql = """
+            SELECT id, timestamp, source, message, details
+            FROM error_log
+            WHERE source LIKE :src
+            ORDER BY timestamp DESC
+            LIMIT :limit
+        """
+        params["src"] = source_prefix.strip() + "%"
+    else:
+        sql = """
+            SELECT id, timestamp, source, message, details
+            FROM error_log
+            ORDER BY timestamp DESC
+            LIMIT :limit
+        """
 
     with engine.begin() as conn:
         rows = conn.execute(text(sql), params).mappings().all()
     return [dict(r) for r in rows]
-
 
 # ------------------
 # Root / auth

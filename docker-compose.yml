@@ -10,11 +10,9 @@ services:
       - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
     restart: unless-stopped
 
-  worker_default:
+  worker:
     build: ./worker
     env_file: .env
-    environment:
-      IMAP_ACCOUNT_NAME: default   # <-- IMPORTANT: must match the account name in the UI
     volumes:
       - mail_data:/data/mail
     depends_on:

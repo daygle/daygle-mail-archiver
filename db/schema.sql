@@ -121,11 +121,6 @@ CREATE TABLE IF NOT EXISTS imap_accounts (
     last_error TEXT
 );
 
--- Optional seed account (disabled by default)
-INSERT INTO imap_accounts (name, host, port, username, use_ssl, enabled)
-VALUES ('default', 'imap.example.com', 993, 'user@example.com', TRUE, FALSE)
-ON CONFLICT (name) DO NOTHING;
-
 -------------------------------------------------------------------
 -- Error log (recent errors view)
 -------------------------------------------------------------------
