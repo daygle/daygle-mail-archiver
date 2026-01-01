@@ -9,3 +9,4 @@ mail-parser
 itsdangerous
 cryptography
 imapclient
+python-multipart
