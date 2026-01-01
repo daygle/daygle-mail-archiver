@@ -507,26 +507,26 @@ def settings_test_db(request: Request):
 
 
 # ------------------
-# IMAP accounts management
+# IMAP sources management
 # ------------------
 
 @app.get("/sources", response_class=HTMLResponse)
-def accounts_list(request: Request):
+def sources_list(request: Request):
     if not require_login(request):
         return RedirectResponse(url="/login", status_code=303)
 
-    accounts = get_accounts()
+    sources = get_accounts()  # still uses the same DB table
     return templates.TemplateResponse(
         "sources.html",
         {
             "request": request,
-            "accounts": accounts,
+            "sources": sources,
         },
     )
 
 
 @app.get("/sources/new", response_class=HTMLResponse)
-def account_new_form(request: Request):
+def source_new_form(request: Request):
     if not require_login(request):
         return RedirectResponse(url="/login", status_code=303)
 
@@ -534,7 +534,7 @@ def account_new_form(request: Request):
         "source_form.html",
         {
             "request": request,
-            "account": None,
+            "source": None,
             "error": None,
             "success": None,
         },
@@ -542,7 +542,7 @@ def account_new_form(request: Request):
 
 
 @app.post("/sources/new", response_class=HTMLResponse)
-def account_new_submit(
+def source_new_submit(
     request: Request,
     name: str = Form(...),
     host: str = Form(...),
@@ -566,10 +566,10 @@ def account_new_submit(
     if not name or not host or not username:
         error = "Name, host, and username are required."
     elif use_ssl_bool and require_starttls_bool:
-        error = "Use SSL and Require STARTTLS cannot both be enabled. Choose one."
+        error = "Use SSL and Require STARTTLS cannot both be enabled."
 
     if error:
-        account_data = {
+        source_data = {
             "id": None,
             "name": name,
             "host": host,
@@ -586,7 +586,7 @@ def account_new_submit(
             "source_form.html",
             {
                 "request": request,
-                "account": account_data,
+                "source": source_data,
                 "error": error,
                 "success": None,
             },
@@ -626,8 +626,8 @@ def account_new_submit(
     return RedirectResponse(url="/sources", status_code=303)
 
 
-@app.get("/sources/{account_id}", response_class=HTMLResponse)
-def account_edit_form(request: Request, account_id: int):
+@app.get("/sources/{source_id}", response_class=HTMLResponse)
+def source_edit_form(request: Request, source_id: int):
     if not require_login(request):
         return RedirectResponse(url="/login", status_code=303)
 
@@ -643,27 +643,27 @@ def account_edit_form(request: Request, account_id: int):
                 WHERE id = :id
                 """
             ),
-            {"id": account_id},
+            {"id": source_id},
         ).mappings().first()
 
     if not row:
-        raise HTTPException(status_code=404, detail="Account not found")
+        raise HTTPException(status_code=404, detail="Source not found")
 
     return templates.TemplateResponse(
         "source_form.html",
         {
             "request": request,
-            "account": dict(row),
+            "source": dict(row),
             "error": None,
             "success": None,
         },
     )
 
 
-@app.post("/sources/{account_id}", response_class=HTMLResponse)
-def account_edit_submit(
+@app.post("/sources/{source_id}", response_class=HTMLResponse)
+def source_edit_submit(
     request: Request,
-    account_id: int,
+    source_id: int,
     name: str = Form(...),
     host: str = Form(...),
     port: int = Form(...),
@@ -686,7 +686,7 @@ def account_edit_submit(
     if not name or not host or not username:
         error = "Name, host, and username are required."
     elif use_ssl_bool and require_starttls_bool:
-        error = "Use SSL and Require STARTTLS cannot both be enabled. Choose one."
+        error = "Use SSL and Require STARTTLS cannot both be enabled."
 
     if error:
         with engine.begin() as conn:
@@ -701,13 +701,14 @@ def account_edit_submit(
                     WHERE id = :id
                     """
                 ),
-                {"id": account_id},
+                {"id": source_id},
             ).mappings().first()
+
         return templates.TemplateResponse(
             "source_form.html",
             {
                 "request": request,
-                "account": dict(row) if row else None,
+                "source": dict(row) if row else None,
                 "error": error,
                 "success": None,
             },
@@ -740,7 +741,7 @@ def account_edit_submit(
     ]
 
     params = {
-        "id": account_id,
+        "id": source_id,
         "name": fields["name"],
         "host": fields["host"],
         "port": fields["port"],
@@ -769,12 +770,12 @@ def account_edit_submit(
     return RedirectResponse(url="/sources", status_code=303)
 
 
-@app.post("/sources/{account_id}/test-imap", response_class=HTMLResponse)
-def account_test_imap(request: Request, account_id: int):
+@app.post("/sources/{source_id}/test-imap", response_class=HTMLResponse)
+def source_test_imap(request: Request, source_id: int):
     if not require_login(request):
         return RedirectResponse(url="/login", status_code=303)
 
-    ok, msg = test_imap_account(account_id)
+    ok, msg = test_imap_account(source_id)
 
     with engine.begin() as conn:
         row = conn.execute(
@@ -788,17 +789,17 @@ def account_test_imap(request: Request, account_id: int):
                 WHERE id = :id
                 """
             ),
-            {"id": account_id},
+            {"id": source_id},
         ).mappings().first()
 
     if not row:
-        raise HTTPException(status_code=404, detail="Account not found")
+        raise HTTPException(status_code=404, detail="Source not found")
 
     return templates.TemplateResponse(
         "source_form.html",
         {
             "request": request,
-            "account": dict(row),
+            "source": dict(row),
             "error": None if ok else msg,
             "success": msg if ok else None,
         },
