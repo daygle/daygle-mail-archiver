@@ -43,7 +43,7 @@ def decrypt_password(token: str) -> str:
 
 
 # ------------------
-# Settings / accounts
+# Settings / sources
 # ------------------
 
 def load_global_settings() -> dict:
@@ -54,7 +54,7 @@ def load_global_settings() -> dict:
     return {r["key"]: r["value"] for r in rows}
 
 
-def load_enabled_accounts() -> List[Dict[str, Any]]:
+def load_enabled_sources() -> List[Dict[str, Any]]:
     with engine.begin() as conn:
         rows = conn.execute(
             text(
@@ -69,19 +69,20 @@ def load_enabled_accounts() -> List[Dict[str, Any]]:
                 """
             )
         ).mappings().all()
-    accounts: List[Dict[str, Any]] = []
+
+    sources: List[Dict[str, Any]] = []
     for r in rows:
         d = dict(r)
         d["password"] = decrypt_password(d["password_encrypted"])
-        accounts.append(d)
-    return accounts
+        sources.append(d)
+    return sources
 
 
 # ------------------
 # Error + heartbeat logging
 # ------------------
 
-def log_error(account_id: int, source: str, message: str, details: str | None = None) -> None:
+def log_error(source_id: int, source_name: str, message: str, details: str | None = None) -> None:
     with engine.begin() as conn:
         conn.execute(
             text(
@@ -91,7 +92,7 @@ def log_error(account_id: int, source: str, message: str, details: str | None = 
                 """
             ),
             {
-                "source": source,
+                "source": f"source:{source_name}",
                 "message": message,
                 "details": details or "",
             },
@@ -104,11 +105,11 @@ def log_error(account_id: int, source: str, message: str, details: str | None = 
                 WHERE id = :id
                 """
             ),
-            {"id": account_id, "msg": message},
+            {"id": source_id, "msg": message},
         )
 
 
-def log_success(account_id: int, message: str = "OK") -> None:
+def log_success(source_id: int) -> None:
     with engine.begin() as conn:
         conn.execute(
             text(
@@ -120,17 +121,17 @@ def log_success(account_id: int, message: str = "OK") -> None:
                 WHERE id = :id
                 """
             ),
-            {"id": account_id},
+            {"id": source_id},
         )
 
 
-def update_heartbeat_only(account_id: int) -> None:
+def update_heartbeat_only(source_id: int) -> None:
     with engine.begin() as conn:
         conn.execute(
             text(
                 "UPDATE imap_accounts SET last_heartbeat = NOW() WHERE id = :id"
             ),
-            {"id": account_id},
+            {"id": source_id},
         )
 
 
@@ -147,12 +148,12 @@ def create_ssl_context(ca_bundle: str | None) -> ssl.SSLContext:
     return ctx
 
 
-async def connect_imap(account: Dict[str, Any]) -> aioimaplib.IMAP4_SSL | aioimaplib.IMAP4:
-    host = account["host"]
-    port = account["port"]
-    use_ssl = account["use_ssl"]
-    require_starttls = account["require_starttls"]
-    ca_bundle = account["ca_bundle"]
+async def connect_imap(source: Dict[str, Any]) -> aioimaplib.IMAP4_SSL | aioimaplib.IMAP4:
+    host = source["host"]
+    port = source["port"]
+    use_ssl = source["use_ssl"]
+    require_starttls = source["require_starttls"]
+    ca_bundle = source["ca_bundle"]
 
     if use_ssl:
         ctx = create_ssl_context(ca_bundle)
@@ -163,52 +164,32 @@ async def connect_imap(account: Dict[str, Any]) -> aioimaplib.IMAP4_SSL | aioima
         client = aioimaplib.IMAP4(host=host, port=port)
         await client.wait_hello_from_server()
         if port == 143 and require_starttls:
-            # STARTTLS support check is limited in aioimaplib;
-            # if needed, you can issue CAPABILITY and inspect response.
             ctx = create_ssl_context(ca_bundle)
             await client.starttls(context=ctx)
         return client
 
 
 # ------------------
-# Message processing placeholder
+# Message processing
 # ------------------
 
-async def process_account_messages(account: Dict[str, Any], storage_dir: str) -> None:
-    """
-    This is where your existing logic goes:
-    - connect to IMAP
-    - select folders
-    - search for new messages
-    - fetch, store to disk under storage_dir
-    - insert into messages table
-    - delete from server if delete_after_processing
-    """
+async def process_source_messages(source: Dict[str, Any], storage_dir: str) -> None:
     client = None
     try:
-        client = await connect_imap(account)
+        client = await connect_imap(source)
 
-        # Login
-        username = account["username"]
-        password = account["password"]
+        username = source["username"]
+        password = source["password"]
+
         resp = await client.login(username, password)
         if resp.result != "OK":
             raise RuntimeError(f"IMAP login failed: {resp}")
 
-        # Example: select INBOX
         resp = await client.select("INBOX")
         if resp.result != "OK":
             raise RuntimeError(f"IMAP SELECT failed: {resp}")
 
-        # TODO: adapt your real fetching/UID tracking logic here.
-        # For now, we just do a NOOP as a placeholder.
         await client.noop()
-
-        # On success, you’d typically:
-        # - write messages to storage_dir
-        # - insert/update DB rows
-        # That logic is carried over from your current worker.
-        # Keep DB access via engine.begin() inside asyncio.to_thread if it gets heavy.
 
     finally:
         if client is not None:
@@ -219,27 +200,27 @@ async def process_account_messages(account: Dict[str, Any], storage_dir: str) ->
 
 
 # ------------------
-# Per-account async loop
+# Per-source async loop
 # ------------------
 
-async def account_loop(account: Dict[str, Any], storage_dir: str) -> None:
-    account_id = account["id"]
-    name = account["name"]
-    poll_interval = account["poll_interval_seconds"]
+async def source_loop(source: Dict[str, Any], storage_dir: str) -> None:
+    source_id = source["id"]
+    name = source["name"]
+    poll_interval = source["poll_interval_seconds"]
 
     if poll_interval <= 0:
-        poll_interval = 300  # fallback
+        poll_interval = 300
 
     while True:
         start = datetime.utcnow()
         try:
-            update_heartbeat_only(account_id)
-            await process_account_messages(account, storage_dir)
-            log_success(account_id)
+            update_heartbeat_only(source_id)
+            await process_source_messages(source, storage_dir)
+            log_success(source_id)
         except Exception as e:
-            msg = f"Worker error for account '{name}': {e}"
-            log_error(account_id, source=f"worker:{name}", message=msg)
-        # Ensure at least poll_interval between starts, not ends
+            msg = f"Worker error for source '{name}': {e}"
+            log_error(source_id, name, msg)
+
         elapsed = (datetime.utcnow() - start).total_seconds()
         sleep_for = poll_interval if elapsed >= poll_interval else (poll_interval - elapsed)
         await asyncio.sleep(sleep_for)
@@ -253,20 +234,16 @@ async def main():
     global_settings = load_global_settings()
     storage_dir = global_settings.get("storage_dir", "/data/mail")
 
-    # Ensure storage dir exists
     os.makedirs(storage_dir, exist_ok=True)
 
-    # We’ll periodically reload the account list so changes in the DB take effect.
-    # For now: load once at startup and spawn one task per enabled account.
-    accounts = load_enabled_accounts()
-    if not accounts:
-        raise RuntimeError("No enabled IMAP accounts found")
+    sources = load_enabled_sources()
+    if not sources:
+        raise RuntimeError("No enabled sources found")
 
     tasks = []
-    for account in accounts:
-        tasks.append(asyncio.create_task(account_loop(account, storage_dir)))
+    for source in sources:
+        tasks.append(asyncio.create_task(source_loop(source, storage_dir)))
 
-    # Wait forever on all tasks
     await asyncio.gather(*tasks)
 
 
