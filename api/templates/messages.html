@@ -5,9 +5,77 @@
 
 <div class="card shadow-sm mb-4">
     <div class="card-body">
-        <p class="text-muted mb-0">
-            Total messages: <strong>{{ total }}</strong> — Page {{ page }}
-        </p>
+        <form class="row g-3" method="get" action="/messages">
+            <div class="col-md-4">
+                <label class="form-label">Search</label>
+                <input type="text" name="q" class="form-control" placeholder="Subject, sender, recipient..."
+                       value="{{ q }}">
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label">Sort by</label>
+                <select name="sort" class="form-select">
+                    <option value="date" {% if sort == "date" %}selected{% endif %}>Date</option>
+                    <option value="sender" {% if sort == "sender" %}selected{% endif %}>Sender</option>
+                    <option value="subject" {% if sort == "subject" %}selected{% endif %}>Subject</option>
+                    <option value="folder" {% if sort == "folder" %}selected{% endif %}>Folder</option>
+                    <option value="id" {% if sort == "id" %}selected{% endif %}>ID</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label">Direction</label>
+                <select name="direction" class="form-select">
+                    <option value="desc" {% if direction == "desc" %}selected{% endif %}>Newest first</option>
+                    <option value="asc" {% if direction == "asc" %}selected{% endif %}>Oldest first</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label">Account</label>
+                <select name="account" class="form-select">
+                    <option value="">All</option>
+                    {% for acc in accounts %}
+                        <option value="{{ acc }}" {% if account == acc %}selected{% endif %}>{{ acc }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label">Folder</label>
+                <select name="folder" class="form-select">
+                    <option value="">All</option>
+                    {% for f in folders %}
+                        <option value="{{ f }}" {% if folder == f %}selected{% endif %}>{{ f }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label">Date from</label>
+                <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label">Date to</label>
+                <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+            </div>
+
+            <div class="col-md-3 d-flex align-items-end">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="1" id="use_fts" name="use_fts"
+                           {% if use_fts %}checked{% endif %}>
+                    <label class="form-check-label" for="use_fts">
+                        Use full-text search
+                    </label>
+                </div>
+            </div>
+
+            <div class="col-md-3 d-flex align-items-end justify-content-end">
+                <button type="submit" class="btn btn-primary me-2">Apply</button>
+                <a href="/messages" class="btn btn-outline-secondary">Reset</a>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -43,7 +111,9 @@
 
         {% if has_prev %}
             <li class="page-item">
-                <a class="page-link" href="/messages?page={{ page - 1 }}">&laquo; Previous</a>
+                <a class="page-link" href="/messages?page={{ page - 1 }}&q={{ q }}&sort={{ sort }}&direction={{ direction }}&account={{ account }}&folder={{ folder }}&date_from={{ date_from }}&date_to={{ date_to }}&use_fts={% if use_fts %}1{% else %}0{% endif %}">
+                    &laquo; Previous
+                </a>
             </li>
         {% else %}
             <li class="page-item disabled">
@@ -57,7 +127,9 @@
 
         {% if has_next %}
             <li class="page-item">
-                <a class="page-link" href="/messages?page={{ page + 1 }}">Next &raquo;</a>
+                <a class="page-link" href="/messages?page={{ page + 1 }}&q={{ q }}&sort={{ sort }}&direction={{ direction }}&account={{ account }}&folder={{ folder }}&date_from={{ date_from }}&date_to={{ date_to }}&use_fts={% if use_fts %}1{% else %}0{% endif %}">
+                    Next &raquo;
+                </a>
             </li>
         {% else %}
             <li class="page-item disabled">
