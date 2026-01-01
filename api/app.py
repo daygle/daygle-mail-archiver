@@ -531,7 +531,7 @@ def account_new_form(request: Request):
         return RedirectResponse(url="/login", status_code=303)
 
     return templates.TemplateResponse(
-        "account_form.html",
+        "source_form.html",
         {
             "request": request,
             "account": None,
@@ -583,7 +583,7 @@ def account_new_submit(
             "enabled": enabled == "true",
         }
         return templates.TemplateResponse(
-            "account_form.html",
+            "source_form.html",
             {
                 "request": request,
                 "account": account_data,
@@ -650,7 +650,7 @@ def account_edit_form(request: Request, account_id: int):
         raise HTTPException(status_code=404, detail="Account not found")
 
     return templates.TemplateResponse(
-        "account_form.html",
+        "source_form.html",
         {
             "request": request,
             "account": dict(row),
@@ -704,7 +704,7 @@ def account_edit_submit(
                 {"id": account_id},
             ).mappings().first()
         return templates.TemplateResponse(
-            "account_form.html",
+            "source_form.html",
             {
                 "request": request,
                 "account": dict(row) if row else None,
@@ -795,7 +795,7 @@ def account_test_imap(request: Request, account_id: int):
         raise HTTPException(status_code=404, detail="Account not found")
 
     return templates.TemplateResponse(
-        "account_form.html",
+        "source_form.html",
         {
             "request": request,
             "account": dict(row),
