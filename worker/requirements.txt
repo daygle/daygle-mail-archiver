@@ -1,5 +1,7 @@
-imapclient
-mail-parser
 psycopg[binary]
+psycopg2-binary
 sqlalchemy
+cryptography
+imapclient
 python-dotenv
+mail-parser
