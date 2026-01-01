@@ -15,6 +15,11 @@
     </div>
 </div>
 
+<form method="post" action="/messages/{{ message.id }}/delete"
+      onsubmit="return confirm('Permanently delete this archived email?');">
+    <button class="btn btn-danger mb-3">Delete from Archive</button>
+</form>
+
 {% if attachments and attachments|length > 0 %}
 <div class="card mb-3">
     <div class="card-header">
@@ -24,7 +29,9 @@
         {% for att in attachments %}
             <li class="list-group-item">
                 <strong>{{ att.filename or "(no filename)" }}</strong>
-                <span class="text-muted"> &mdash; {{ att.content_type }} ({{ att.size }} bytes)</span>
+                <span class="text-muted">
+                    — {{ att.content_type }} ({{ att.size }} bytes)
+                </span>
             </li>
         {% endfor %}
     </ul>
