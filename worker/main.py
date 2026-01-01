@@ -9,6 +9,10 @@ from sqlalchemy import create_engine, text
 from cryptography.fernet import Fernet, InvalidToken
 import aioimaplib
 
+# ------------------
+# Env + DB setup
+# ------------------
+
 load_dotenv()
 
 DB_DSN = os.getenv("DB_DSN")
@@ -160,13 +164,41 @@ async def connect_imap(source: Dict[str, Any]) -> aioimaplib.IMAP4_SSL | aioimap
         client = aioimaplib.IMAP4_SSL(host=host, port=port, ssl_context=ctx)
         await client.wait_hello_from_server()
         return client
-    else:
-        client = aioimaplib.IMAP4(host=host, port=port)
-        await client.wait_hello_from_server()
-        if port == 143 and require_starttls:
-            ctx = create_ssl_context(ca_bundle)
-            await client.starttls(context=ctx)
-        return client
+
+    client = aioimaplib.IMAP4(host=host, port=port)
+    await client.wait_hello_from_server()
+
+    if port == 143 and require_starttls:
+        ctx = create_ssl_context(ca_bundle)
+        await client.starttls(context=ctx)
+
+    return client
+
+
+async def fetch_unseen_uids(client) -> List[str]:
+    resp = await client.search("UNSEEN")
+    if resp.result != "OK":
+        raise RuntimeError(f"IMAP SEARCH failed: {resp}")
+
+    if not resp.lines:
+        return []
+
+    line = resp.lines[0].decode().strip()
+    if not line:
+        return []
+
+    return line.split()
+
+
+# ------------------
+# Message storage helpers
+# ------------------
+
+def save_message_to_disk(raw_bytes: bytes, storage_dir: str, uid: str) -> None:
+    os.makedirs(storage_dir, exist_ok=True)
+    path = os.path.join(storage_dir, f"{uid}.eml")
+    with open(path, "wb") as f:
+        f.write(raw_bytes)
 
 
 # ------------------
@@ -189,7 +221,23 @@ async def process_source_messages(source: Dict[str, Any], storage_dir: str) -> N
         if resp.result != "OK":
             raise RuntimeError(f"IMAP SELECT failed: {resp}")
 
-        await client.noop()
+        uids = await fetch_unseen_uids(client)
+
+        for uid in uids:
+            resp = await client.fetch(uid, "(RFC822)")
+            if resp.result != "OK":
+                raise RuntimeError(f"IMAP FETCH failed for UID {uid}: {resp}")
+
+            # resp.lines is typically: [b'UID FETCH...', b'<raw email bytes>', ...]
+            # We take the second line as the raw message.
+            raw_email = resp.lines[1]
+            save_message_to_disk(raw_email, storage_dir, uid)
+
+            if source["delete_after_processing"]:
+                await client.store(uid, "+FLAGS", "\\Deleted")
+
+        if source["delete_after_processing"]:
+            await client.expunge()
 
     finally:
         if client is not None:
