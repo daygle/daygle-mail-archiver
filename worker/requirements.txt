@@ -1,7 +1,8 @@
 psycopg[binary]
 psycopg2-binary
-sqlalchemy
 cryptography
 imapclient
 python-dotenv
 mail-parser
+aioimaplib
+SQLAlchemy
