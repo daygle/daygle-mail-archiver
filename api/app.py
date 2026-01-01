@@ -517,7 +517,7 @@ def accounts_list(request: Request):
 
     accounts = get_accounts()
     return templates.TemplateResponse(
-        "accounts.html",
+        "sources.html",
         {
             "request": request,
             "accounts": accounts,
