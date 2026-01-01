@@ -395,6 +395,8 @@ def settings_form(request: Request):
             "settings": settings,
             "error": None,
             "success": None,
+            "storage_result": None,
+            "db_result": None,
         },
     )
 
@@ -402,8 +404,6 @@ def settings_form(request: Request):
 @app.post("/settings", response_class=HTMLResponse)
 def settings_submit(
     request: Request,
-    poll_interval_seconds: str = Form(...),
-    delete_after_processing: str = Form("false"),
     storage_dir: str = Form(...),
     page_size: str = Form(...),
 ):
@@ -413,15 +413,11 @@ def settings_submit(
     settings = load_settings()
     error = None
 
-    try:
-        int(poll_interval_seconds)
-    except ValueError:
-        error = "Poll interval must be a number."
-
+    # Validate page size
     try:
         int(page_size)
     except ValueError:
-        error = (error + " " if error else "") + "Page size must be a number."
+        error = "Page size must be a number."
 
     if error:
         return templates.TemplateResponse(
@@ -431,12 +427,12 @@ def settings_submit(
                 "settings": settings,
                 "error": error,
                 "success": None,
+                "storage_result": None,
+                "db_result": None,
             },
         )
 
     updates: Dict[str, str] = {
-        "poll_interval_seconds": poll_interval_seconds.strip(),
-        "delete_after_processing": "true" if delete_after_processing == "true" else "false",
         "storage_dir": storage_dir.strip(),
         "page_size": page_size.strip(),
     }
@@ -451,6 +447,54 @@ def settings_submit(
             "settings": settings,
             "error": None,
             "success": "Settings saved successfully.",
+            "storage_result": None,
+            "db_result": None,
+        },
+    )
+
+
+@app.get("/settings/test-storage", response_class=HTMLResponse)
+def settings_test_storage(request: Request):
+    if not require_login(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    settings = load_settings()
+    ok, msg = test_storage(settings)
+    prefix = "success" if ok else "error"
+    storage_result = f"{prefix}:{msg}"
+
+    return templates.TemplateResponse(
+        "settings.html",
+        {
+            "request": request,
+            "settings": settings,
+            "error": None,
+            "success": None,
+            "storage_result": storage_result,
+            "db_result": None,
+        },
+    )
+
+
+@app.get("/settings/test-db", response_class=HTMLResponse)
+def settings_test_db(request: Request):
+    if not require_login(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    settings = load_settings()
+    ok, msg = test_db()
+    prefix = "success" if ok else "error"
+    db_result = f"{prefix}:{msg}"
+
+    return templates.TemplateResponse(
+        "settings.html",
+        {
+            "request": request,
+            "settings": settings,
+            "error": None,
+            "success": None,
+            "storage_result": None,
+            "db_result": db_result,
         },
     )
 
@@ -518,7 +562,6 @@ def account_new_submit(
         error = "Use SSL and Require STARTTLS cannot both be enabled. Choose one."
 
     if error:
-        # Re-populate the form with the entered values
         account_data = {
             "id": None,
             "name": name,
