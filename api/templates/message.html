@@ -9,7 +9,7 @@
         <p><strong>From:</strong> {{ message.sender }}</p>
         <p><strong>To:</strong> {{ message.recipients }}</p>
         <p><strong>Date:</strong> {{ message.date or message.created_at }}</p>
-        <p><strong>Account:</strong> {{ message.account }}</p>
+        <p><strong>Account:</strong> {{ message.source }}</p>
         <p><strong>Folder:</strong> {{ message.folder }} (UID {{ message.uid }})</p>
         <p><strong>Storage path:</strong> <code>{{ message.storage_path }}</code></p>
     </div>

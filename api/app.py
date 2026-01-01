@@ -105,7 +105,7 @@ def build_search_where(
     params: Dict[str, Any] = {}
 
     if account:
-        clauses.append("account = :account")
+        clauses.append("source = :account")
         params["account"] = account
 
     if folder:
@@ -150,7 +150,7 @@ def build_order_by(sort: str | None, direction: str | None) -> str:
         "subject": "subject",
         "folder": "folder",
         "id": "id",
-        "account": "account",
+        "account": "source",
     }
 
     col = sort_map.get(sort, "date")
@@ -926,7 +926,7 @@ def list_messages(
     query_params["offset"] = offset
 
     list_sql = f"""
-        SELECT id, account, folder, uid, subject, sender, recipients, date, created_at
+        SELECT id, source, folder, uid, subject, sender, recipients, date, created_at
         FROM messages
         {where_sql}
         {order_by_sql}
@@ -944,7 +944,7 @@ def list_messages(
         total = conn.execute(text(count_sql), where_params).mappings().first()["c"]
 
         accounts = conn.execute(
-            text("SELECT DISTINCT account FROM messages ORDER BY account")
+            text("SELECT DISTINCT source FROM messages ORDER BY source")
         ).scalars().all()
         folders = conn.execute(
             text("SELECT DISTINCT folder FROM messages ORDER BY folder")
@@ -986,7 +986,7 @@ def view_message(request: Request, message_id: int):
         row = conn.execute(
             text(
                 """
-                SELECT id, account, folder, uid, subject, sender, recipients, date,
+                SELECT id, source, folder, uid, subject, sender, recipients, date,
                        storage_path, created_at
                 FROM messages
                 WHERE id = :id
