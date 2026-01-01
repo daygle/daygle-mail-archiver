@@ -36,6 +36,17 @@
         <a class="navbar-brand fw-bold" href="/messages">
             Daygle Mail Archiver
         </a>
+
+        <div class="d-flex ms-auto">
+            {% if request.session.get('username') %}
+                <span class="navbar-text me-3">
+                    Signed in as <strong>{{ request.session.get('username') }}</strong>
+                </span>
+                <a href="/logout" class="btn btn-outline-light btn-sm">Logout</a>
+            {% else %}
+                <a href="/login" class="btn btn-outline-light btn-sm">Login</a>
+            {% endif %}
+        </div>
     </div>
 </nav>
 

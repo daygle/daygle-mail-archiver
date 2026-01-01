@@ -3,6 +3,9 @@
 -- This file is executed automatically on first run by the Postgres container.
 --
 
+-- Needed for password hashing (crypt/gen_salt)
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 CREATE TABLE IF NOT EXISTS messages (
     id SERIAL PRIMARY KEY,
 
@@ -53,3 +56,25 @@ FOR EACH ROW EXECUTE FUNCTION messages_search_vector_update();
 CREATE INDEX IF NOT EXISTS messages_search_vector_idx
     ON messages
     USING GIN (search_vector);
+
+-------------------------------------------------------------------
+-- Users table for admin login
+-------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Create default administrator user (username: administrator, password: administrator)
+-- This uses bcrypt via pgcrypto's crypt/gen_salt('bf')
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM users WHERE username = 'administrator') THEN
+        INSERT INTO users (username, password_hash)
+        VALUES ('administrator', crypt('administrator', gen_salt('bf')));
+    END IF;
+END;
+$$;

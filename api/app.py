@@ -2,18 +2,28 @@ import os
 from datetime import datetime
 from typing import List, Dict, Any
 
-from fastapi import FastAPI, Request, HTTPException, Query
+from fastapi import FastAPI, Request, HTTPException, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import create_engine, text
 from mailparser import parse_from_bytes
+from starlette.middleware.sessions import SessionMiddleware
 
 DB_DSN = os.getenv("DB_DSN")
 STORAGE_DIR = os.getenv("STORAGE_DIR", "/data/mail")
+SESSION_SECRET = os.getenv("SESSION_SECRET", "change-me-session-secret")
 
 engine = create_engine(DB_DSN, future=True)
 
 app = FastAPI()
+
+# Session middleware for login sessions
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=SESSION_SECRET,
+    session_cookie="daygle_session",
+    max_age=60 * 60 * 8,  # 8 hours
+)
 
 templates = Jinja2Templates(directory="templates")
 
@@ -29,7 +39,6 @@ def build_search_where(
     clauses: List[str] = []
     params: Dict[str, Any] = {}
 
-    # Basic / advanced search filters
     if account:
         clauses.append("account = :account")
         params["account"] = account
@@ -46,7 +55,6 @@ def build_search_where(
         clauses.append("date <= :date_to")
         params["date_to"] = date_to
 
-    # Text search (basic LIKE or full-text)
     if q:
         if use_fts:
             clauses.append("search_vector @@ plainto_tsquery('simple', :q)")
@@ -85,10 +93,86 @@ def build_order_by(sort: str | None, direction: str | None) -> str:
     return f"ORDER BY {col} {dir_sql}"
 
 
-@app.get("/", response_class=HTMLResponse)
-def root():
-    return RedirectResponse(url="/messages")
+def require_login(request: Request) -> bool:
+    """
+    Simple helper to check login.
+    Returns True if logged in, False otherwise.
+    """
+    return "user_id" in request.session
 
+
+@app.get("/", response_class=HTMLResponse)
+def root(request: Request):
+    if not require_login(request):
+        return RedirectResponse(url="/login", status_code=303)
+    return RedirectResponse(url="/messages", status_code=303)
+
+
+# ------------------
+# Authentication
+# ------------------
+
+@app.get("/login", response_class=HTMLResponse)
+def login_form(request: Request):
+    if require_login(request):
+        return RedirectResponse(url="/messages", status_code=303)
+    return templates.TemplateResponse(
+        "login.html",
+        {"request": request, "error": None},
+    )
+
+
+@app.post("/login", response_class=HTMLResponse)
+def login_submit(
+    request: Request,
+    username: str = Form(...),
+    password: str = Form(...),
+):
+    error = None
+
+    if not username or not password:
+        error = "Username and password are required."
+        return templates.TemplateResponse(
+            "login.html",
+            {"request": request, "error": error},
+        )
+
+    with engine.begin() as conn:
+        row = conn.execute(
+            text(
+                """
+                SELECT id,
+                       password_hash = crypt(:password, password_hash) AS valid
+                FROM users
+                WHERE username = :username
+                """
+            ),
+            {"username": username, "password": password},
+        ).mappings().first()
+
+    if not row or not row["valid"]:
+        error = "Invalid username or password."
+        return templates.TemplateResponse(
+            "login.html",
+            {"request": request, "error": error},
+        )
+
+    # Authentication successful
+    request.session["user_id"] = row["id"]
+    request.session["username"] = username
+
+    return RedirectResponse(url="/messages", status_code=303)
+
+
+@app.get("/logout")
+def logout(request: Request):
+    request.session.clear()
+    return RedirectResponse(url="/login", status_code=303)
+
+
+# ------------------
+# Messages UI
+# ------------------
 
 @app.get("/messages", response_class=HTMLResponse)
 def list_messages(
@@ -104,6 +188,9 @@ def list_messages(
     date_to: str | None = None,
     use_fts: int = 0,
 ):
+    if not require_login(request):
+        return RedirectResponse(url="/login", status_code=303)
+
     if page < 1:
         page = 1
     offset = (page - 1) * page_size
@@ -142,7 +229,6 @@ def list_messages(
         rows = conn.execute(text(list_sql), query_params).mappings().all()
         total = conn.execute(text(count_sql), where_params).mappings().first()["c"]
 
-        # For filter dropdowns: list distinct accounts/folders
         accounts = conn.execute(
             text("SELECT DISTINCT account FROM messages ORDER BY account")
         ).scalars().all()
@@ -179,6 +265,9 @@ def list_messages(
 
 @app.get("/messages/{message_id}", response_class=HTMLResponse)
 def view_message(request: Request, message_id: int):
+    if not require_login(request):
+        return RedirectResponse(url="/login", status_code=303)
+
     with engine.begin() as conn:
         row = conn.execute(
             text(
@@ -226,7 +315,10 @@ def view_message(request: Request, message_id: int):
 
 
 @app.post("/messages/{message_id}/delete")
-def delete_message(message_id: int):
+def delete_message(request: Request, message_id: int):
+    if not require_login(request):
+        return RedirectResponse(url="/login", status_code=303)
+
     with engine.begin() as conn:
         row = conn.execute(
             text("SELECT storage_path FROM messages WHERE id = :id"),
@@ -253,11 +345,20 @@ def delete_message(message_id: int):
     return RedirectResponse(url="/messages", status_code=303)
 
 
+# ------------------
+# JSON API
+# ------------------
+
 @app.get("/api/messages")
 def api_list_messages(
+    request: Request,
     limit: int = 100,
     q: str | None = None,
 ):
+    if not require_login(request):
+        # For API, return 401 instead of redirect
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
     where_sql, where_params = build_search_where(
         q=q,
         account=None,

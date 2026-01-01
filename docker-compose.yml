@@ -4,8 +4,8 @@ services:
   db:
     image: postgres:16
     environment:
-      POSTGRES_DB: daygle
-      POSTGRES_USER: daygle
+      POSTGRES_DB: daygle-mail-archiver
+      POSTGRES_USER: daygle-mail-archiver
       POSTGRES_PASSWORD: change_me
     volumes:
       - db_data:/var/lib/postgresql/data
