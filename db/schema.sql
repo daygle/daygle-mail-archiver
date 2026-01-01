@@ -1,6 +1,6 @@
 --
--- Daygle Mail Archiver – Database Schema (Updated)
--- Clean, modern, per‑account IMAP architecture
+-- Daygle Mail Archiver – Database Schema (Final Source-Based Version)
+-- Clean, modern, multi-source IMAP ingestion architecture
 --
 
 -- Needed for password hashing (crypt/gen_salt)
@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS messages (
     id SERIAL PRIMARY KEY,
 
     -- IMAP metadata
-    account TEXT NOT NULL,
+    source TEXT NOT NULL,          -- renamed from "account"
     folder TEXT NOT NULL,
     uid BIGINT NOT NULL,
 
@@ -32,9 +32,9 @@ CREATE TABLE IF NOT EXISTS messages (
     search_vector tsvector
 );
 
--- Ensure uniqueness of messages per account/folder/uid
+-- Ensure uniqueness of messages per source/folder/uid
 CREATE UNIQUE INDEX IF NOT EXISTS messages_unique_idx
-    ON messages (account, folder, uid);
+    ON messages (source, folder, uid);
 
 -- Full-text search trigger function
 CREATE OR REPLACE FUNCTION messages_search_vector_update()
@@ -100,7 +100,8 @@ VALUES
 ON CONFLICT (key) DO NOTHING;
 
 -------------------------------------------------------------------
--- IMAP accounts (per-account configuration)
+-- IMAP sources (per-source configuration)
+-- Internal table name remains imap_accounts for compatibility
 -------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS imap_accounts (
@@ -115,20 +116,20 @@ CREATE TABLE IF NOT EXISTS imap_accounts (
     ca_bundle TEXT NOT NULL DEFAULT '',
     poll_interval_seconds INTEGER NOT NULL DEFAULT 300,
     delete_after_processing BOOLEAN NOT NULL DEFAULT TRUE,
-    enabled BOOLEAN NOT NULL DEFAULT FALSE,  -- IMPORTANT: default disabled
+    enabled BOOLEAN NOT NULL DEFAULT FALSE,  -- default disabled
     last_heartbeat TIMESTAMP,
     last_success TIMESTAMP,
     last_error TEXT
 );
 
 -------------------------------------------------------------------
--- Error log (recent errors view)
+-- Error log
 -------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS error_log (
     id SERIAL PRIMARY KEY,
     timestamp TIMESTAMP NOT NULL DEFAULT NOW(),
-    source TEXT NOT NULL,         -- e.g., 'worker:default', 'api', 'storage', 'db'
+    source TEXT NOT NULL,         -- e.g., 'source:Work', 'api', 'storage', 'db'
     message TEXT NOT NULL,
     details TEXT
 );
