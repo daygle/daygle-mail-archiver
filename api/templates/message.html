@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h1 class="mb-3">Message #{{ message.id }}</h1>
+<h1 class="mb-4 fw-bold">Message #{{ message.id }}</h1>
 
-<div class="card mb-3">
+<div class="card shadow-sm mb-4">
     <div class="card-body">
         <p><strong>Subject:</strong> {{ message.subject }}</p>
         <p><strong>From:</strong> {{ message.sender }}</p>
@@ -17,29 +17,27 @@
 
 <form method="post" action="/messages/{{ message.id }}/delete"
       onsubmit="return confirm('Permanently delete this archived email?');">
-    <button class="btn btn-danger mb-3">Delete from Archive</button>
+    <button class="btn btn-danger mb-4">Delete from Archive</button>
 </form>
 
 {% if attachments and attachments|length > 0 %}
-<div class="card mb-3">
-    <div class="card-header">
+<div class="card shadow-sm mb-4">
+    <div class="card-header fw-bold">
         Attachments
     </div>
     <ul class="list-group list-group-flush">
         {% for att in attachments %}
             <li class="list-group-item">
                 <strong>{{ att.filename or "(no filename)" }}</strong>
-                <span class="text-muted">
-                    — {{ att.content_type }} ({{ att.size }} bytes)
-                </span>
+                <span class="text-muted"> — {{ att.content_type }} ({{ att.size }} bytes)</span>
             </li>
         {% endfor %}
     </ul>
 </div>
 {% endif %}
 
-<div class="card">
-    <div class="card-header">
+<div class="card shadow-sm">
+    <div class="card-header fw-bold">
         Body (plaintext)
     </div>
     <div class="card-body">
@@ -47,7 +45,7 @@
     </div>
 </div>
 
-<div class="mt-3">
+<div class="mt-4">
     <a href="/messages" class="btn btn-secondary">&laquo; Back to list</a>
 </div>
 
