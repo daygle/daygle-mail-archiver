@@ -205,6 +205,29 @@ def save_message_to_disk(raw_bytes: bytes, storage_dir: str, uid: str) -> None:
 # Message processing
 # ------------------
 
+def extract_rfc822(resp):
+    """
+    Extract the RFC822 literal from an aioimaplib FETCH response.
+    Different IMAP servers return different line layouts, so we scan
+    for the first line that looks like raw email bytes.
+    """
+    for line in resp.lines:
+        if not isinstance(line, bytes):
+            continue
+        # Skip metadata lines
+        if line.startswith(b"*") and b"FETCH" in line:
+            continue
+        if line.strip() == b")":
+            continue
+        if line.startswith(b"OK "):
+            continue
+
+        # This is the raw email body
+        return line
+
+    raise RuntimeError(f"Could not extract RFC822 body from FETCH response: {resp.lines}")
+
+
 async def process_source_messages(source: Dict[str, Any], storage_dir: str) -> None:
     client = None
     try:
@@ -228,9 +251,8 @@ async def process_source_messages(source: Dict[str, Any], storage_dir: str) -> N
             if resp.result != "OK":
                 raise RuntimeError(f"IMAP FETCH failed for UID {uid}: {resp}")
 
-            # resp.lines is typically: [b'UID FETCH...', b'<raw email bytes>', ...]
-            # We take the second line as the raw message.
-            raw_email = resp.lines[1]
+            # Extract the raw email safely
+            raw_email = extract_rfc822(resp)
             save_message_to_disk(raw_email, storage_dir, uid)
 
             if source["delete_after_processing"]:
