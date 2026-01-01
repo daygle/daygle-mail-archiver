@@ -3,3 +3,5 @@ uvicorn
 psycopg[binary]
 sqlalchemy
 python-dotenv
+jinja2
+mail-parser
