@@ -18,11 +18,35 @@
             </div>
         {% endif %}
 
+        {% if imap_result %}
+            {% set parts = imap_result.split(":", 1) %}
+            <div class="alert alert-{{ 'success' if parts[0] == 'success' else 'danger' }}" role="alert">
+                <strong>IMAP Test:</strong> {{ parts[1] }}
+            </div>
+        {% endif %}
+
+        {% if storage_result %}
+            {% set parts = storage_result.split(":", 1) %}
+            <div class="alert alert-{{ 'success' if parts[0] == 'success' else 'danger' }}" role="alert">
+                <strong>Storage Test:</strong> {{ parts[1] }}
+            </div>
+        {% endif %}
+
+        {% if db_result %}
+            {% set parts = db_result.split(":", 1) %}
+            <div class="alert alert-{{ 'success' if parts[0] == 'success' else 'danger' }}" role="alert">
+                <strong>DB Test:</strong> {{ parts[1] }}
+            </div>
+        {% endif %}
+
         <form method="post" action="/settings">
 
             <div class="card mb-4 shadow-sm">
-                <div class="card-header fw-bold">
-                    IMAP Settings
+                <div class="card-header fw-bold d-flex align-items-center justify-content-between">
+                    <span>IMAP Settings</span>
+                    <a href="/settings/test-imap" class="btn btn-sm btn-outline-secondary">
+                        Test IMAP Connection
+                    </a>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
@@ -96,8 +120,11 @@
             </div>
 
             <div class="card mb-4 shadow-sm">
-                <div class="card-header fw-bold">
-                    Storage Settings
+                <div class="card-header fw-bold d-flex align-items-center justify-content-between">
+                    <span>Storage Settings</span>
+                    <a href="/settings/test-storage" class="btn btn-sm btn-outline-secondary">
+                        Test Storage Directory
+                    </a>
                 </div>
                 <div class="card-body">
                     <div class="mb-0">
@@ -109,8 +136,11 @@
             </div>
 
             <div class="card mb-4 shadow-sm">
-                <div class="card-header fw-bold">
-                    UI Settings
+                <div class="card-header fw-bold d-flex align-items-center justify-content-between">
+                    <span>UI Settings</span>
+                    <a href="/settings/test-db" class="btn btn-sm btn-outline-secondary">
+                        Test DB Connection
+                    </a>
                 </div>
                 <div class="card-body">
                     <div class="mb-0">
@@ -121,7 +151,10 @@
                 </div>
             </div>
 
-            <div class="d-flex justify-content-end mb-4">
+            <div class="d-flex justify-content-between mb-4">
+                <a href="/status" class="btn btn-outline-secondary">
+                    View Status Dashboard
+                </a>
                 <button type="submit" class="btn btn-primary">
                     Save Settings
                 </button>

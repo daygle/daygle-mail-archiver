@@ -1,4 +1,5 @@
 import os
+import ssl
 from typing import List, Dict, Any
 
 from fastapi import FastAPI, Request, HTTPException, Form
@@ -7,24 +8,23 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import create_engine, text
 from mailparser import parse_from_bytes
 from starlette.middleware.sessions import SessionMiddleware
-
-from cryptography.fernet import Fernet, InvalidToken  # for IMAP password encryption
+from cryptography.fernet import Fernet, InvalidToken
+from imapclient import IMAPClient
 
 DB_DSN = os.getenv("DB_DSN")
 STORAGE_DIR_DEFAULT = os.getenv("STORAGE_DIR", "/data/mail")
 SESSION_SECRET = os.getenv("SESSION_SECRET", "change-me-session-secret")
-IMAP_PASSWORD_KEY = os.getenv("IMAP_PASSWORD_KEY")  # base64-encoded key for Fernet
+IMAP_PASSWORD_KEY = os.getenv("IMAP_PASSWORD_KEY")
 
 engine = create_engine(DB_DSN, future=True)
 
 app = FastAPI()
 
-# Session middleware for login sessions
 app.add_middleware(
     SessionMiddleware,
     secret_key=SESSION_SECRET,
     session_cookie="daygle_session",
-    max_age=60 * 60 * 8,  # 8 hours
+    max_age=60 * 60 * 8,
 )
 
 templates = Jinja2Templates(directory="templates")
@@ -43,7 +43,6 @@ def get_fernet() -> Fernet | None:
 def encrypt_imap_password(plaintext: str) -> str:
     f = get_fernet()
     if not f:
-        # If no key configured, store empty to avoid accidental plaintext
         return ""
     token = f.encrypt(plaintext.encode("utf-8"))
     return token.decode("utf-8")
@@ -63,11 +62,35 @@ def decrypt_imap_password(token: str) -> str:
 
 
 # ------------------
-# Settings helpers
+# Generic helpers
 # ------------------
 
 def require_login(request: Request) -> bool:
     return "user_id" in request.session
+
+
+def load_settings() -> Dict[str, str]:
+    with engine.begin() as conn:
+        rows = conn.execute(
+            text("SELECT key, value FROM settings")
+        ).mappings().all()
+    return {r["key"]: r["value"] for r in rows}
+
+
+def save_settings(updates: Dict[str, str]) -> None:
+    with engine.begin() as conn:
+        for k, v in updates.items():
+            conn.execute(
+                text(
+                    """
+                    INSERT INTO settings (key, value, updated_at)
+                    VALUES (:key, :value, NOW())
+                    ON CONFLICT (key)
+                    DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
+                    """
+                ),
+                {"key": k, "value": v},
+            )
 
 
 def build_search_where(
@@ -135,28 +158,131 @@ def build_order_by(sort: str | None, direction: str | None) -> str:
     return f"ORDER BY {col} {dir_sql}"
 
 
-def load_settings() -> Dict[str, str]:
-    with engine.begin() as conn:
-        rows = conn.execute(
-            text("SELECT key, value FROM settings")
-        ).mappings().all()
-    return {r["key"]: r["value"] for r in rows}
+# ------------------
+# Health / test helpers
+# ------------------
 
+def test_imap(settings: Dict[str, str]) -> tuple[bool, str]:
+    host = settings.get("imap_host")
+    port = int(settings.get("imap_port", "993"))
+    user = settings.get("imap_user")
+    use_ssl = settings.get("imap_use_ssl", "true").lower() == "true"
+    require_starttls = settings.get("imap_require_starttls", "false").lower() == "true"
+    ca_bundle = settings.get("imap_ca_bundle") or ""
+    encrypted_pw = settings.get("imap_password_encrypted", "")
+    password = decrypt_imap_password(encrypted_pw)
 
-def save_settings(updates: Dict[str, str]) -> None:
-    with engine.begin() as conn:
-        for k, v in updates.items():
-            conn.execute(
-                text(
-                    """
-                    INSERT INTO settings (key, value, updated_at)
-                    VALUES (:key, :value, NOW())
-                    ON CONFLICT (key)
-                    DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
-                    """
-                ),
-                {"key": k, "value": v},
+    if not host or not user or not password:
+        return False, "IMAP host, user, or password is missing."
+
+    def create_ssl_context():
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = True
+        ctx.verify_mode = ssl.CERT_REQUIRED
+        if ca_bundle:
+            ctx.load_verify_locations(ca_bundle)
+        return ctx
+
+    try:
+        if use_ssl:
+            ctx = create_ssl_context()
+            client = IMAPClient(
+                host,
+                port=port,
+                ssl=True,
+                ssl_context=ctx,
+                timeout=20,
             )
+        else:
+            client = IMAPClient(
+                host,
+                port=port,
+                ssl=False,
+                timeout=20,
+            )
+            if port == 143 and require_starttls:
+                caps = client.capabilities()
+                if b"STARTTLS" not in caps:
+                    return False, "Server does not support STARTTLS."
+                client.starttls(create_ssl_context())
+
+        client.login(user, password)
+        client.logout()
+        return True, "Successfully connected and authenticated to IMAP server."
+    except Exception as e:
+        return False, f"IMAP test failed: {e}"
+
+
+def test_storage(settings: Dict[str, str]) -> tuple[bool, str]:
+    storage_dir = settings.get("storage_dir", STORAGE_DIR_DEFAULT)
+    test_file = os.path.join(storage_dir, ".daygle_test.tmp")
+
+    try:
+        os.makedirs(storage_dir, exist_ok=True)
+        with open(test_file, "w") as f:
+            f.write("test")
+        os.remove(test_file)
+        return True, f"Storage directory is writable: {storage_dir}"
+    except Exception as e:
+        return False, f"Storage directory test failed for {storage_dir}: {e}"
+
+
+def test_db() -> tuple[bool, str]:
+    try:
+        with engine.begin() as conn:
+            # basic connectivity
+            conn.execute(text("SELECT 1"))
+            # check required tables
+            for tbl in ("messages", "users", "settings", "worker_status"):
+                conn.execute(text(f"SELECT 1 FROM {tbl} LIMIT 1"))
+        return True, "Database connection and required tables are OK."
+    except Exception as e:
+        return False, f"DB test failed: {e}"
+
+
+def get_worker_status() -> Dict[str, Any] | None:
+    with engine.begin() as conn:
+        row = conn.execute(
+            text(
+                """
+                SELECT id, last_heartbeat, last_success, last_error,
+                       last_run_duration_seconds, messages_processed
+                FROM worker_status
+                WHERE id = 1
+                """
+            )
+        ).mappings().first()
+    return dict(row) if row else None
+
+
+def get_message_count() -> int:
+    with engine.begin() as conn:
+        row = conn.execute(
+            text("SELECT COUNT(*) AS c FROM messages")
+        ).mappings().first()
+    return row["c"] if row else 0
+
+
+def get_storage_stats(settings: Dict[str, str]) -> Dict[str, Any]:
+    storage_dir = settings.get("storage_dir", STORAGE_DIR_DEFAULT)
+    exists = os.path.isdir(storage_dir)
+    total_size = 0
+    file_count = 0
+    if exists:
+        for root, dirs, files in os.walk(storage_dir):
+            for name in files:
+                fp = os.path.join(root, name)
+                try:
+                    total_size += os.path.getsize(fp)
+                    file_count += 1
+                except OSError:
+                    continue
+    return {
+        "storage_dir": storage_dir,
+        "exists": exists,
+        "total_size_bytes": total_size,
+        "file_count": file_count,
+    }
 
 
 # ------------------
@@ -232,27 +358,31 @@ def logout(request: Request):
 
 
 # ------------------
-# Settings UI
+# Settings UI + tests
 # ------------------
 
 @app.get("/settings", response_class=HTMLResponse)
-def settings_form(request: Request):
+def settings_form(
+    request: Request,
+    imap_result: str | None = None,
+    storage_result: str | None = None,
+    db_result: str | None = None,
+):
     if not require_login(request):
         return RedirectResponse(url="/login", status_code=303)
 
     settings = load_settings()
-
-    # Decrypt IMAP password for display (never show actual value; leave field blank)
-    imap_password_placeholder = ""  # we don't prefill the real password
 
     return templates.TemplateResponse(
         "settings.html",
         {
             "request": request,
             "settings": settings,
-            "imap_password_placeholder": imap_password_placeholder,
             "error": None,
             "success": None,
+            "imap_result": imap_result,
+            "storage_result": storage_result,
+            "db_result": db_result,
         },
     )
 
@@ -277,9 +407,7 @@ def settings_submit(
 
     settings = load_settings()
     error = None
-    success = None
 
-    # Basic validation
     try:
         int(imap_port)
     except ValueError:
@@ -301,9 +429,11 @@ def settings_submit(
             {
                 "request": request,
                 "settings": settings,
-                "imap_password_placeholder": "",
                 "error": error,
                 "success": None,
+                "imap_result": None,
+                "storage_result": None,
+                "db_result": None,
             },
         )
 
@@ -320,7 +450,6 @@ def settings_submit(
         "page_size": page_size.strip(),
     }
 
-    # If a new password was entered, encrypt and store it
     if imap_password:
         encrypted = encrypt_imap_password(imap_password)
         updates["imap_password_encrypted"] = encrypted
@@ -328,18 +457,143 @@ def settings_submit(
     save_settings(updates)
 
     settings = load_settings()
-    success = "Settings saved successfully."
 
     return templates.TemplateResponse(
         "settings.html",
         {
             "request": request,
             "settings": settings,
-            "imap_password_placeholder": "",
             "error": None,
-            "success": success,
+            "success": "Settings saved successfully.",
+            "imap_result": None,
+            "storage_result": None,
+            "db_result": None,
         },
     )
+
+
+@app.get("/settings/test-imap", response_class=HTMLResponse)
+def settings_test_imap(request: Request):
+    if not require_login(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    settings = load_settings()
+    ok, msg = test_imap(settings)
+
+    return templates.TemplateResponse(
+        "settings.html",
+        {
+            "request": request,
+            "settings": settings,
+            "error": None,
+            "success": None,
+            "imap_result": ("success" if ok else "error") + ":" + msg,
+            "storage_result": None,
+            "db_result": None,
+        },
+    )
+
+
+@app.get("/settings/test-storage", response_class=HTMLResponse)
+def settings_test_storage(request: Request):
+    if not require_login(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    settings = load_settings()
+    ok, msg = test_storage(settings)
+
+    return templates.TemplateResponse(
+        "settings.html",
+        {
+            "request": request,
+            "settings": settings,
+            "error": None,
+            "success": None,
+            "imap_result": None,
+            "storage_result": ("success" if ok else "error") + ":" + msg,
+            "db_result": None,
+        },
+    )
+
+
+@app.get("/settings/test-db", response_class=HTMLResponse)
+def settings_test_db(request: Request):
+    if not require_login(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    settings = load_settings()
+    ok, msg = test_db()
+
+    return templates.TemplateResponse(
+        "settings.html",
+        {
+            "request": request,
+            "settings": settings,
+            "error": None,
+            "success": None,
+            "imap_result": None,
+            "storage_result": None,
+            "db_result": ("success" if ok else "error") + ":" + msg,
+        },
+    )
+
+
+# ------------------
+# Status dashboard
+# ------------------
+
+@app.get("/status", response_class=HTMLResponse)
+def status_page(request: Request):
+    if not require_login(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    settings = load_settings()
+    worker = get_worker_status()
+    msg_count = get_message_count()
+    storage_stats = get_storage_stats(settings)
+
+    imap_ok, imap_msg = test_imap(settings)
+    storage_ok, storage_msg = test_storage(settings)
+    db_ok, db_msg = test_db()
+
+    return templates.TemplateResponse(
+        "status.html",
+        {
+            "request": request,
+            "settings": settings,
+            "worker": worker,
+            "message_count": msg_count,
+            "storage_stats": storage_stats,
+            "imap_ok": imap_ok,
+            "imap_msg": imap_msg,
+            "storage_ok": storage_ok,
+            "storage_msg": storage_msg,
+            "db_ok": db_ok,
+            "db_msg": db_msg,
+        },
+    )
+
+
+@app.get("/api/status")
+def api_status():
+    settings = load_settings()
+    worker = get_worker_status()
+    msg_count = get_message_count()
+    storage_stats = get_storage_stats(settings)
+    imap_ok, imap_msg = test_imap(settings)
+    storage_ok, storage_msg = test_storage(settings)
+    db_ok, db_msg = test_db()
+
+    return {
+        "worker": worker,
+        "message_count": msg_count,
+        "storage": storage_stats,
+        "tests": {
+            "imap": {"ok": imap_ok, "message": imap_msg},
+            "storage": {"ok": storage_ok, "message": storage_msg},
+            "db": {"ok": db_ok, "message": db_msg},
+        },
+    }
 
 
 # ------------------
@@ -363,7 +617,6 @@ def list_messages(
     if not require_login(request):
         return RedirectResponse(url="/login", status_code=303)
 
-    # Allow default page size override from settings
     settings = load_settings()
     try:
         default_page_size = int(settings.get("page_size", "50"))

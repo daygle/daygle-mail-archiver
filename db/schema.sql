@@ -112,3 +112,21 @@ VALUES
     -- UI
     ('page_size', '50')
 ON CONFLICT (key) DO NOTHING;
+
+-------------------------------------------------------------------
+-- Worker status heartbeat
+-------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS worker_status (
+    id INTEGER PRIMARY KEY,
+    last_heartbeat TIMESTAMP,
+    last_success TIMESTAMP,
+    last_error TEXT,
+    last_run_duration_seconds INTEGER,
+    messages_processed INTEGER DEFAULT 0
+);
+
+-- Ensure a single row with id = 1 exists
+INSERT INTO worker_status (id, last_heartbeat, last_success, last_error, last_run_duration_seconds, messages_processed)
+VALUES (1, NULL, NULL, NULL, NULL, 0)
+ON CONFLICT (id) DO NOTHING;

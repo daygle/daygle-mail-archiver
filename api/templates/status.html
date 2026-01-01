@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1 class="mb-4 fw-bold">Status Dashboard</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header fw-bold">
+                Worker Status
+            </div>
+            <div class="card-body">
+                {% if worker %}
+                    <p><strong>Last heartbeat:</strong> {{ worker.last_heartbeat or "Never" }}</p>
+                    <p><strong>Last success:</strong> {{ worker.last_success or "Never" }}</p>
+                    <p><strong>Last error:</strong> {{ worker.last_error or "None" }}</p>
+                    <p><strong>Last run duration (s):</strong> {{ worker.last_run_duration_seconds or "Unknown" }}</p>
+                    <p><strong>Messages processed (last run):</strong> {{ worker.messages_processed or 0 }}</p>
+                {% else %}
+                    <p>No worker status recorded yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header fw-bold">
+                Message Archive
+            </div>
+            <div class="card-body">
+                <p><strong>Total messages archived:</strong> {{ message_count }}</p>
+                <a href="/messages" class="btn btn-sm btn-primary">View Messages</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header fw-bold">
+                Storage
+            </div>
+            <div class="card-body">
+                <p><strong>Directory:</strong> {{ storage_stats.storage_dir }}</p>
+                <p>
+                    <strong>Exists:</strong>
+                    {% if storage_stats.exists %}
+                        <span class="text-success">Yes</span>
+                    {% else %}
+                        <span class="text-danger">No</span>
+                    {% endif %}
+                </p>
+                <p><strong>File count:</strong> {{ storage_stats.file_count }}</p>
+                <p><strong>Total size (bytes):</strong> {{ storage_stats.total_size_bytes }}</p>
+            </div>
+        </div>
+
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header fw-bold">
+                Health Checks
+            </div>
+            <div class="card-body">
+                <p>
+                    <strong>IMAP:</strong>
+                    {% if imap_ok %}
+                        <span class="text-success">OK</span>
+                    {% else %}
+                        <span class="text-danger">Failed</span>
+                    {% endif %}
+                    <br>
+                    <small>{{ imap_msg }}</small>
+                </p>
+
+                <p>
+                    <strong>Storage:</strong>
+                    {% if storage_ok %}
+                        <span class="text-success">OK</span>
+                    {% else %}
+                        <span class="text-danger">Failed</span>
+                    {% endif %}
+                    <br>
+                    <small>{{ storage_msg }}</small>
+                </p>
+
+                <p>
+                    <strong>Database:</strong>
+                    {% if db_ok %}
+                        <span class="text-success">OK</span>
+                    {% else %}
+                        <span class="text-danger">Failed</span>
+                    {% endif %}
+                    <br>
+                    <small>{{ db_msg }}</small>
+                </p>
+
+                <a href="/settings" class="btn btn-sm btn-outline-secondary mt-2">
+                    Go to Settings
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
