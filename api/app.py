@@ -841,7 +841,7 @@ def status_page(request: Request):
         return RedirectResponse(url="/login", status_code=303)
 
     settings = load_settings()
-    accounts = get_accounts()
+    sources = get_accounts()  # renamed for clarity
     msg_count = get_message_count()
     storage_stats = get_storage_stats(settings)
     db_ok, db_msg = test_db()
@@ -851,7 +851,7 @@ def status_page(request: Request):
         {
             "request": request,
             "settings": settings,
-            "accounts": accounts,
+            "sources": sources,
             "message_count": msg_count,
             "storage_stats": storage_stats,
             "db_ok": db_ok,
