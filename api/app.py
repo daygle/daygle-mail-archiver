@@ -509,15 +509,34 @@ def account_new_submit(
         return RedirectResponse(url="/login", status_code=303)
 
     error = None
+    use_ssl_bool = use_ssl == "true"
+    require_starttls_bool = require_starttls == "true"
+
     if not name or not host or not username:
         error = "Name, host, and username are required."
+    elif use_ssl_bool and require_starttls_bool:
+        error = "Use SSL and Require STARTTLS cannot both be enabled. Choose one."
 
     if error:
+        # Re-populate the form with the entered values
+        account_data = {
+            "id": None,
+            "name": name,
+            "host": host,
+            "port": port,
+            "username": username,
+            "use_ssl": use_ssl_bool,
+            "require_starttls": require_starttls_bool,
+            "ca_bundle": ca_bundle,
+            "poll_interval_seconds": poll_interval_seconds,
+            "delete_after_processing": delete_after_processing == "true",
+            "enabled": enabled == "true",
+        }
         return templates.TemplateResponse(
             "account_form.html",
             {
                 "request": request,
-                "account": None,
+                "account": account_data,
                 "error": error,
                 "success": None,
             },
@@ -545,8 +564,8 @@ def account_new_submit(
                 "port": port,
                 "username": username.strip(),
                 "pw": encrypted_pw,
-                "use_ssl": use_ssl == "true",
-                "require_starttls": require_starttls == "true",
+                "use_ssl": use_ssl_bool,
+                "require_starttls": require_starttls_bool,
                 "ca_bundle": ca_bundle.strip(),
                 "poll": poll_interval_seconds,
                 "delete_after": delete_after_processing == "true",
@@ -611,8 +630,13 @@ def account_edit_submit(
         return RedirectResponse(url="/login", status_code=303)
 
     error = None
+    use_ssl_bool = use_ssl == "true"
+    require_starttls_bool = require_starttls == "true"
+
     if not name or not host or not username:
         error = "Name, host, and username are required."
+    elif use_ssl_bool and require_starttls_bool:
+        error = "Use SSL and Require STARTTLS cannot both be enabled. Choose one."
 
     if error:
         with engine.begin() as conn:
@@ -644,8 +668,8 @@ def account_edit_submit(
         "host": host.strip(),
         "port": port,
         "username": username.strip(),
-        "use_ssl": use_ssl == "true",
-        "require_starttls": require_starttls == "true",
+        "use_ssl": use_ssl_bool,
+        "require_starttls": require_starttls_bool,
         "ca_bundle": ca_bundle.strip(),
         "poll_interval_seconds": poll_interval_seconds,
         "delete_after_processing": delete_after_processing == "true",

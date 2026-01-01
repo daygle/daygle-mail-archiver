@@ -20,17 +20,17 @@
             </div>
         {% endif %}
 
-        <form method="post" action="{% if account %}/accounts/{{ account.id }}{% else %}/accounts/new{% endif %}">
+        <form id="accountForm" method="post" action="{% if account %}/accounts/{{ account.id }}{% else %}/accounts/new{% endif %}">
 
             <div class="card mb-4 shadow-sm">
                 <div class="card-header fw-bold d-flex justify-content-between align-items-center">
                     <span>Account Details</span>
                     {% if account %}
-                        <form method="post" action="/accounts/{{ account.id }}/test-imap" class="d-inline">
-                            <button type="submit" class="btn btn-sm btn-outline-secondary">
-                                Test IMAP Connection
-                            </button>
-                        </form>
+                        <button type="button"
+                                class="btn btn-sm btn-outline-secondary"
+                                onclick="document.getElementById('testImapForm').submit()">
+                            Test IMAP Connection
+                        </button>
                     {% endif %}
                 </div>
                 <div class="card-body">
@@ -124,7 +124,53 @@
             </div>
 
         </form>
+
+        {% if account %}
+            <form id="testImapForm" method="post" action="/accounts/{{ account.id }}/test-imap" style="display:none;"></form>
+        {% endif %}
     </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("accountForm");
+    const ssl = form.querySelector("select[name='use_ssl']");
+    const starttls = form.querySelector("select[name='require_starttls']");
+
+    function enforceMutualExclusion(event) {
+        if (ssl.value === "true" && starttls.value === "true") {
+            if (event && event.target === ssl) {
+                starttls.value = "false";
+                alert("SSL and STARTTLS cannot both be enabled. STARTTLS has been disabled.");
+            } else {
+                ssl.value = "false";
+                alert("SSL and STARTTLS cannot both be enabled. SSL has been disabled.");
+            }
+        }
+    }
+
+    ssl.addEventListener("change", enforceMutualExclusion);
+    starttls.addEventListener("change", enforceMutualExclusion);
+
+    form.addEventListener("submit", (e) => {
+        const requiredFields = ["name", "host", "port", "username", "poll_interval_seconds"];
+
+        for (const field of requiredFields) {
+            const el = form.querySelector(`[name='${field}']`);
+            if (!el || !el.value || el.value.toString().trim() === "") {
+                e.preventDefault();
+                alert(`Field "${field}" is required.`);
+                return;
+            }
+        }
+
+        if (ssl.value === "true" && starttls.value === "true") {
+            e.preventDefault();
+            alert("SSL and STARTTLS cannot both be enabled.");
+            return;
+        }
+    });
+});
+</script>
 
 {% endblock %}
