@@ -26,6 +26,7 @@ services:
     env_file: .env
     volumes:
       - mail_data:/data/mail
+      - ./api:/app
     ports:
       - "8080:8080"
     depends_on:
