@@ -8,7 +8,7 @@
 
         <div class="card mb-4 shadow-sm">
             <div class="card-header fw-bold">
-                IMAP Accounts
+                Sources
             </div>
             <div class="card-body p-0">
                 <table class="table mb-0 align-middle">
@@ -24,7 +24,7 @@
                     </tr>
                     </thead>
                     <tbody>
-                    {% for acc in accounts %}
+                    {% for acc in sources %}
                         <tr>
                             <td class="fw-bold">{{ acc.name }}</td>
                             <td>{{ acc.host }}:{{ acc.port }}</td>
@@ -49,10 +49,10 @@
                             </td>
                         </tr>
                     {% endfor %}
-                    {% if accounts|length == 0 %}
+                    {% if sources|length == 0 %}
                         <tr>
                             <td colspan="7" class="text-center text-muted py-3">
-                                No IMAP accounts configured yet.
+                                No sources configured yet.
                             </td>
                         </tr>
                     {% endif %}
@@ -60,7 +60,7 @@
                 </table>
             </div>
             <div class="card-footer d-flex justify-content-between">
-                <a href="/accounts" class="btn btn-sm btn-outline-primary">Manage Accounts</a>
+                <a href="/sources" class="btn btn-sm btn-outline-primary">Manage Sources</a>
                 <a href="/errors" class="btn btn-sm btn-outline-secondary">View Errors</a>
             </div>
         </div>

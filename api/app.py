@@ -510,7 +510,7 @@ def settings_test_db(request: Request):
 # IMAP accounts management
 # ------------------
 
-@app.get("/accounts", response_class=HTMLResponse)
+@app.get("/sources", response_class=HTMLResponse)
 def accounts_list(request: Request):
     if not require_login(request):
         return RedirectResponse(url="/login", status_code=303)
@@ -525,7 +525,7 @@ def accounts_list(request: Request):
     )
 
 
-@app.get("/accounts/new", response_class=HTMLResponse)
+@app.get("/sources/new", response_class=HTMLResponse)
 def account_new_form(request: Request):
     if not require_login(request):
         return RedirectResponse(url="/login", status_code=303)
@@ -541,7 +541,7 @@ def account_new_form(request: Request):
     )
 
 
-@app.post("/accounts/new", response_class=HTMLResponse)
+@app.post("/sources/new", response_class=HTMLResponse)
 def account_new_submit(
     request: Request,
     name: str = Form(...),
@@ -623,10 +623,10 @@ def account_new_submit(
             },
         )
 
-    return RedirectResponse(url="/accounts", status_code=303)
+    return RedirectResponse(url="/sources", status_code=303)
 
 
-@app.get("/accounts/{account_id}", response_class=HTMLResponse)
+@app.get("/sources/{account_id}", response_class=HTMLResponse)
 def account_edit_form(request: Request, account_id: int):
     if not require_login(request):
         return RedirectResponse(url="/login", status_code=303)
@@ -660,7 +660,7 @@ def account_edit_form(request: Request, account_id: int):
     )
 
 
-@app.post("/accounts/{account_id}", response_class=HTMLResponse)
+@app.post("/sources/{account_id}", response_class=HTMLResponse)
 def account_edit_submit(
     request: Request,
     account_id: int,
@@ -766,10 +766,10 @@ def account_edit_submit(
     with engine.begin() as conn:
         conn.execute(text(sql), params)
 
-    return RedirectResponse(url="/accounts", status_code=303)
+    return RedirectResponse(url="/sources", status_code=303)
 
 
-@app.post("/accounts/{account_id}/test-imap", response_class=HTMLResponse)
+@app.post("/sources/{account_id}/test-imap", response_class=HTMLResponse)
 def account_test_imap(request: Request, account_id: int):
     if not require_login(request):
         return RedirectResponse(url="/login", status_code=303)

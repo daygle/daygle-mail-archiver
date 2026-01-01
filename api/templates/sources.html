@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h1 class="mb-4 fw-bold">IMAP Accounts</h1>
+<h1 class="mb-4 fw-bold">Sources</h1>
 
 <div class="mb-3">
-    <a href="/accounts/new" class="btn btn-primary">Add New Account</a>
+    <a href="/sources/new" class="btn btn-primary">Add New Source</a>
     <a href="/status" class="btn btn-outline-secondary ms-2">Status Dashboard</a>
 </div>
 
@@ -26,33 +26,33 @@
             </tr>
             </thead>
             <tbody>
-            {% for acc in accounts %}
+            {% for source in sources %}
                 <tr>
-                    <td class="fw-bold">{{ acc.name }}</td>
-                    <td>{{ acc.host }}:{{ acc.port }}</td>
-                    <td>{{ acc.username }}</td>
-                    <td>{{ 'Yes' if acc.use_ssl else 'No' }}</td>
-                    <td>{{ acc.poll_interval_seconds }}</td>
+                    <td class="fw-bold">{{ source.name }}</td>
+                    <td>{{ source.host }}:{{ source.port }}</td>
+                    <td>{{ source.username }}</td>
+                    <td>{{ 'Yes' if source.use_ssl else 'No' }}</td>
+                    <td>{{ source.poll_interval_seconds }}</td>
                     <td>
-                        {% if acc.enabled %}
+                        {% if source.enabled %}
                             <span class="badge bg-success">Enabled</span>
                         {% else %}
                             <span class="badge bg-secondary">Disabled</span>
                         {% endif %}
                     </td>
-                    <td>{{ acc.last_heartbeat or 'Never' }}</td>
-                    <td>{{ acc.last_success or 'Never' }}</td>
+                    <td>{{ source.last_heartbeat or 'Never' }}</td>
+                    <td>{{ source.last_success or 'Never' }}</td>
                     <td>
-                        {% if acc.last_error %}
-                            <span class="text-danger" title="{{ acc.last_error }}">
-                                {{ acc.last_error[:40] }}{% if acc.last_error|length > 40 %}...{% endif %}
+                        {% if source.last_error %}
+                            <span class="text-danger" title="{{ source.last_error }}">
+                                {{ source.last_error[:40] }}{% if source.last_error|length > 40 %}...{% endif %}
                             </span>
                         {% else %}
                             <span class="text-muted">None</span>
                         {% endif %}
                     </td>
                     <td class="text-end">
-                        <a href="/accounts/{{ acc.id }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                        <a href="/sources/{{ source.id }}" class="btn btn-sm btn-outline-primary">Edit</a>
                     </td>
                 </tr>
             {% endfor %}
