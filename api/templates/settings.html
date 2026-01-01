@@ -18,13 +18,6 @@
             </div>
         {% endif %}
 
-        {% if imap_result %}
-            {% set parts = imap_result.split(":", 1) %}
-            <div class="alert alert-{{ 'success' if parts[0] == 'success' else 'danger' }}" role="alert">
-                <strong>IMAP Test:</strong> {{ parts[1] }}
-            </div>
-        {% endif %}
-
         {% if storage_result %}
             {% set parts = storage_result.split(":", 1) %}
             <div class="alert alert-{{ 'success' if parts[0] == 'success' else 'danger' }}" role="alert">
@@ -40,63 +33,6 @@
         {% endif %}
 
         <form method="post" action="/settings">
-
-            <div class="card mb-4 shadow-sm">
-                <div class="card-header fw-bold d-flex align-items-center justify-content-between">
-                    <span>IMAP Settings</span>
-                    <a href="/settings/test-imap" class="btn btn-sm btn-outline-secondary">
-                        Test IMAP Connection
-                    </a>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label">IMAP Host</label>
-                        <input type="text" name="imap_host" class="form-control"
-                               value="{{ settings.get('imap_host', '') }}" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">IMAP Port</label>
-                        <input type="number" name="imap_port" class="form-control"
-                               value="{{ settings.get('imap_port', '993') }}" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">IMAP User</label>
-                        <input type="text" name="imap_user" class="form-control"
-                               value="{{ settings.get('imap_user', '') }}" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">IMAP Password</label>
-                        <input type="password" name="imap_password" class="form-control"
-                               placeholder="Leave blank to keep existing password">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Use SSL</label>
-                        <select name="imap_use_ssl" class="form-select">
-                            <option value="true" {% if settings.get('imap_use_ssl', 'true') == 'true' %}selected{% endif %}>True</option>
-                            <option value="false" {% if settings.get('imap_use_ssl', 'true') == 'false' %}selected{% endif %}>False</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Require STARTTLS (port 143)</label>
-                        <select name="imap_require_starttls" class="form-select">
-                            <option value="true" {% if settings.get('imap_require_starttls', 'false') == 'true' %}selected{% endif %}>True</option>
-                            <option value="false" {% if settings.get('imap_require_starttls', 'false') == 'false' %}selected{% endif %}>False</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-0">
-                        <label class="form-label">CA Bundle Path (optional)</label>
-                        <input type="text" name="imap_ca_bundle" class="form-control"
-                               value="{{ settings.get('imap_ca_bundle', '') }}"
-                               placeholder="/etc/ssl/certs/ca-certificates.crt">
-                    </div>
-                </div>
-            </div>
 
             <div class="card mb-4 shadow-sm">
                 <div class="card-header fw-bold">
