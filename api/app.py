@@ -17,7 +17,6 @@ templates = Jinja2Templates(directory="templates")
 
 @app.get("/", response_class=HTMLResponse)
 def root():
-    # Redirect to messages list
     return RedirectResponse(url="/messages")
 
 
@@ -87,7 +86,6 @@ def view_message(request: Request, message_id: int):
 
     parsed = parse_from_bytes(raw)
 
-    # Prefer plaintext body; fall back to full payload text
     body_text = parsed.text_plain[0] if parsed.text_plain else parsed.body
 
     attachments = [
@@ -110,7 +108,34 @@ def view_message(request: Request, message_id: int):
     )
 
 
-# Existing JSON API endpoint (kept for integrations)
+@app.post("/messages/{message_id}/delete")
+def delete_message(message_id: int):
+    with engine.begin() as conn:
+        row = conn.execute(
+            text("SELECT storage_path FROM messages WHERE id = :id"),
+            {"id": message_id}
+        ).mappings().first()
+
+    if not row:
+        raise HTTPException(status_code=404, detail="Message not found")
+
+    storage_path = row["storage_path"]
+
+    if storage_path and os.path.exists(storage_path):
+        try:
+            os.remove(storage_path)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to delete file: {e}")
+
+    with engine.begin() as conn:
+        conn.execute(
+            text("DELETE FROM messages WHERE id = :id"),
+            {"id": message_id}
+        )
+
+    return RedirectResponse(url="/messages", status_code=303)
+
+
 @app.get("/api/messages")
 def api_list_messages(limit: int = 100):
     with engine.begin() as conn:
