@@ -1,6 +1,6 @@
 --
--- Daygle Mail Archiver – Database Schema
--- This file is executed automatically on first run by the Postgres container.
+-- Daygle Mail Archiver – Database Schema (Updated)
+-- Clean, modern, per‑account IMAP architecture
 --
 
 -- Needed for password hashing (crypt/gen_salt)
@@ -92,23 +92,10 @@ CREATE TABLE IF NOT EXISTS settings (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Initial defaults (can be overridden via Settings UI)
+-- Initial defaults (only true global settings)
 INSERT INTO settings (key, value)
 VALUES
-    -- IMAP (legacy global; per-account now preferred)
-    ('imap_host', 'imap.example.com'),
-    ('imap_port', '993'),
-    ('imap_user', 'user@example.com'),
-    ('imap_use_ssl', 'true'),
-    ('imap_require_starttls', 'false'),
-    ('imap_ca_bundle', ''),
-    ('imap_password_encrypted', ''),
-    -- Worker (global defaults)
-    ('poll_interval_seconds', '300'),
-    ('delete_after_processing', 'true'),
-    -- Storage
     ('storage_dir', '/data/mail'),
-    -- UI
     ('page_size', '50')
 ON CONFLICT (key) DO NOTHING;
 
@@ -128,15 +115,15 @@ CREATE TABLE IF NOT EXISTS imap_accounts (
     ca_bundle TEXT NOT NULL DEFAULT '',
     poll_interval_seconds INTEGER NOT NULL DEFAULT 300,
     delete_after_processing BOOLEAN NOT NULL DEFAULT TRUE,
-    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    enabled BOOLEAN NOT NULL DEFAULT FALSE,  -- IMPORTANT: default disabled
     last_heartbeat TIMESTAMP,
     last_success TIMESTAMP,
     last_error TEXT
 );
 
--- Optional seed account (no password, to be set via UI)
-INSERT INTO imap_accounts (name, host, port, username, use_ssl)
-VALUES ('default', 'imap.example.com', 993, 'user@example.com', TRUE)
+-- Optional seed account (disabled by default)
+INSERT INTO imap_accounts (name, host, port, username, use_ssl, enabled)
+VALUES ('default', 'imap.example.com', 993, 'user@example.com', TRUE, FALSE)
 ON CONFLICT (name) DO NOTHING;
 
 -------------------------------------------------------------------
