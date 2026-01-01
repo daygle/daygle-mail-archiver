@@ -1088,3 +1088,87 @@ def api_list_messages(
     with engine.begin() as conn:
         rows = conn.execute(text(list_sql), params).mappings().all()
         return list(rows)
+
+# ------------------
+# Administrator Password
+# ------------------
+
+@app.get("/admin/password", response_class=HTMLResponse)
+def admin_password_form(request: Request):
+    if not require_login(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    return templates.TemplateResponse(
+        "admin_password.html",
+        {
+            "request": request,
+            "error": None,
+            "success": None,
+        },
+    )
+
+
+@app.post("/admin/password", response_class=HTMLResponse)
+def admin_password_submit(
+    request: Request,
+    current_password: str = Form(...),
+    new_password: str = Form(...),
+    confirm_password: str = Form(...),
+):
+    if not require_login(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    user_id = request.session["user_id"]
+
+    # Validate new password
+    if new_password != confirm_password:
+        return templates.TemplateResponse(
+            "admin_password.html",
+            {
+                "request": request,
+                "error": "New passwords do not match.",
+                "success": None,
+            },
+        )
+
+    with engine.begin() as conn:
+        row = conn.execute(
+            text(
+                """
+                SELECT password_hash = crypt(:current, password_hash) AS valid
+                FROM users
+                WHERE id = :id
+                """
+            ),
+            {"id": user_id, "current": current_password},
+        ).mappings().first()
+
+        if not row or not row["valid"]:
+            return templates.TemplateResponse(
+                "admin_password.html",
+                {
+                    "request": request,
+                    "error": "Current password is incorrect.",
+                    "success": None,
+                },
+            )
+
+        conn.execute(
+            text(
+                """
+                UPDATE users
+                SET password_hash = crypt(:new, gen_salt('bf'))
+                WHERE id = :id
+                """
+            ),
+            {"id": user_id, "new": new_password},
+        )
+
+    return templates.TemplateResponse(
+        "admin_password.html",
+        {
+            "request": request,
+            "error": None,
+            "success": "Password updated successfully.",
+        },
+    )
