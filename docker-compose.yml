@@ -9,6 +9,7 @@ services:
       POSTGRES_PASSWORD: change_me
     volumes:
       - db_data:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
     restart: unless-stopped
 
   worker:
