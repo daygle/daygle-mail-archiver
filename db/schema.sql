@@ -1,138 +1,89 @@
 --
--- Daygle Mail Archiver – Database Schema (Final Source-Based Version)
--- Clean, modern, multi-source IMAP ingestion architecture
+-- SETTINGS TABLE
 --
-
--- Needed for password hashing (crypt/gen_salt)
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-
--------------------------------------------------------------------
--- Messages table
--------------------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS messages (
-    id SERIAL PRIMARY KEY,
-
-    -- IMAP metadata
-    source TEXT NOT NULL,          -- renamed from "account"
-    folder TEXT NOT NULL,
-    uid BIGINT NOT NULL,
-
-    -- Email metadata
-    subject TEXT,
-    sender TEXT,
-    recipients TEXT,
-    date TIMESTAMP,
-    storage_path TEXT NOT NULL,
-
-    -- Internal metadata
-    created_at TIMESTAMP DEFAULT NOW(),
-
-    -- Full-text search vector
-    search_vector tsvector
-);
-
--- Ensure uniqueness of messages per source/folder/uid
-CREATE UNIQUE INDEX IF NOT EXISTS messages_unique_idx
-    ON messages (source, folder, uid);
-
--- Full-text search trigger function
-CREATE OR REPLACE FUNCTION messages_search_vector_update()
-RETURNS trigger AS $$
-BEGIN
-    NEW.search_vector :=
-        to_tsvector(
-            'simple',
-            coalesce(NEW.subject, '') || ' ' ||
-            coalesce(NEW.sender, '') || ' ' ||
-            coalesce(NEW.recipients, '')
-        );
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Trigger to maintain search_vector on insert/update
-CREATE TRIGGER messages_search_vector_trigger
-BEFORE INSERT OR UPDATE ON messages
-FOR EACH ROW EXECUTE FUNCTION messages_search_vector_update();
-
--- GIN index for fast full-text search
-CREATE INDEX IF NOT EXISTS messages_search_vector_idx
-    ON messages
-    USING GIN (search_vector);
-
--------------------------------------------------------------------
--- Users table for admin login
--------------------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS users (
-    id SERIAL PRIMARY KEY,
-    username TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW()
-);
-
--- Create default administrator user (username: administrator, password: administrator)
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM users WHERE username = 'administrator') THEN
-        INSERT INTO users (username, password_hash)
-        VALUES ('administrator', crypt('administrator', gen_salt('bf')));
-    END IF;
-END;
-$$;
-
--------------------------------------------------------------------
--- Settings table for runtime configuration (global)
--------------------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS settings (
+CREATE TABLE settings (
     key TEXT PRIMARY KEY,
-    value TEXT NOT NULL,
-    updated_at TIMESTAMP DEFAULT NOW()
+    value TEXT NOT NULL
 );
 
--- Initial defaults (only true global settings)
-INSERT INTO settings (key, value)
-VALUES
-    ('storage_dir', '/data/mail'),
-    ('page_size', '50')
-ON CONFLICT (key) DO NOTHING;
 
--------------------------------------------------------------------
--- IMAP sources (per-source configuration)
--- Internal table name remains imap_accounts for compatibility
--------------------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS imap_accounts (
+--
+-- IMAP ACCOUNTS
+--
+CREATE TABLE imap_accounts (
     id SERIAL PRIMARY KEY,
-    name TEXT UNIQUE NOT NULL,               -- short, human-friendly, used in logs/labels
+    name TEXT NOT NULL,
     host TEXT NOT NULL,
     port INTEGER NOT NULL DEFAULT 993,
     username TEXT NOT NULL,
-    password_encrypted TEXT NOT NULL DEFAULT '',
+    password_encrypted TEXT NOT NULL,
+
     use_ssl BOOLEAN NOT NULL DEFAULT TRUE,
     require_starttls BOOLEAN NOT NULL DEFAULT FALSE,
-    ca_bundle TEXT NOT NULL DEFAULT '',
+
     poll_interval_seconds INTEGER NOT NULL DEFAULT 300,
-    delete_after_processing BOOLEAN NOT NULL DEFAULT TRUE,
-    enabled BOOLEAN NOT NULL DEFAULT FALSE,  -- default disabled
-    last_heartbeat TIMESTAMP,
-    last_success TIMESTAMP,
+    delete_after_processing BOOLEAN NOT NULL DEFAULT FALSE,
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+
+    ca_bundle TEXT,
+
+    last_heartbeat TIMESTAMPTZ,
+    last_success TIMESTAMPTZ,
     last_error TEXT
 );
 
--------------------------------------------------------------------
--- Error log
--------------------------------------------------------------------
+CREATE INDEX idx_imap_accounts_enabled ON imap_accounts(enabled);
 
-CREATE TABLE IF NOT EXISTS error_log (
+
+--
+-- MESSAGES TABLE
+-- Stores compressed raw email (RFC822) directly in the DB.
+--
+CREATE TABLE messages (
     id SERIAL PRIMARY KEY,
-    timestamp TIMESTAMP NOT NULL DEFAULT NOW(),
-    source TEXT NOT NULL,         -- e.g., 'source:Work', 'api', 'storage', 'db'
+
+    source TEXT NOT NULL,
+    folder TEXT NOT NULL,
+    uid TEXT NOT NULL,
+
+    subject TEXT,
+    sender TEXT,
+    recipients TEXT,
+
+    date TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    raw_email BYTEA NOT NULL,
+    compressed BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+-- Useful indexes
+CREATE INDEX idx_messages_source ON messages(source);
+CREATE INDEX idx_messages_folder ON messages(folder);
+CREATE INDEX idx_messages_date ON messages(date);
+CREATE INDEX idx_messages_created_at ON messages(created_at);
+
+-- Full‑text search index (simplified FTS)
+CREATE INDEX idx_messages_fts ON messages
+USING GIN (
+    to_tsvector(
+        'simple',
+        coalesce(subject, '') || ' ' ||
+        coalesce(sender, '') || ' ' ||
+        coalesce(recipients, '')
+    )
+);
+
+
+--
+-- ERROR LOG
+--
+CREATE TABLE error_log (
+    id SERIAL PRIMARY KEY,
+    timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    source TEXT,
     message TEXT NOT NULL,
     details TEXT
 );
 
-CREATE INDEX IF NOT EXISTS error_log_timestamp_idx
-    ON error_log (timestamp DESC);
+CREATE INDEX idx_error_log_timestamp ON error_log(timestamp DESC);

@@ -1,7 +1,5 @@
 psycopg[binary]
-psycopg2-binary
 cryptography
-imapclient
 python-dotenv
 mail-parser
 aioimaplib

@@ -1,97 +1,118 @@
 import os
-import ssl
-from typing import List, Dict, Any
+import gzip
+from datetime import datetime
+from typing import Any, Dict, Tuple
 
-from fastapi import FastAPI, Request, HTTPException, Form, Query
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import (
+    FastAPI,
+    Request,
+    Depends,
+    Form,
+    HTTPException,
+    status,
+)
+from fastapi.responses import (
+    HTMLResponse,
+    RedirectResponse,
+    StreamingResponse,
+)
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import create_engine, text
-from mailparser import parse_from_bytes
+
 from starlette.middleware.sessions import SessionMiddleware
-from cryptography.fernet import Fernet, InvalidToken
-from imapclient import IMAPClient
+
+from sqlalchemy import create_engine, text
+from sqlalchemy.engine import Engine
+
+from cryptography.fernet import Fernet
+from email import message_from_bytes
+from email.message import Message as EmailMessage
+
+
+# ------------------
+# Configuration
+# ------------------
 
 DB_DSN = os.getenv("DB_DSN")
-STORAGE_DIR_DEFAULT = os.getenv("STORAGE_DIR", "/data/mail")
-SESSION_SECRET = os.getenv("SESSION_SECRET", "change-me-session-secret")
-IMAP_PASSWORD_KEY = os.getenv("IMAP_PASSWORD_KEY")
+if not DB_DSN:
+    raise RuntimeError("DB_DSN is not set")
 
-engine = create_engine(DB_DSN, future=True)
+SESSION_SECRET = os.getenv("SESSION_SECRET", "change-me-session-secret")
+
+# Used to encrypt IMAP passwords in imap_accounts
+IMAP_PASSWORD_KEY = os.getenv("IMAP_PASSWORD_KEY")
+if not IMAP_PASSWORD_KEY:
+    raise RuntimeError("IMAP_PASSWORD_KEY is not set")
+
+# Simple admin auth (you can wire this to settings later if you like)
+ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin")
+
+engine: Engine = create_engine(DB_DSN, future=True)
+fernet = Fernet(IMAP_PASSWORD_KEY.encode())
 
 app = FastAPI()
 
-app.add_middleware(
-    SessionMiddleware,
-    secret_key=SESSION_SECRET,
-    session_cookie="daygle_session",
-    max_age=60 * 60 * 8,
-)
+app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET)
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 
 # ------------------
-# Encryption helpers
-# ------------------
-
-def get_fernet() -> Fernet | None:
-    if not IMAP_PASSWORD_KEY:
-        return None
-    return Fernet(IMAP_PASSWORD_KEY.encode("utf-8"))
-
-
-def encrypt_password(plaintext: str) -> str:
-    f = get_fernet()
-    if not f:
-        return ""
-    token = f.encrypt(plaintext.encode("utf-8"))
-    return token.decode("utf-8")
-
-
-def decrypt_password(token: str) -> str:
-    if not token:
-        return ""
-    f = get_fernet()
-    if not f:
-        return ""
-    try:
-        plaintext = f.decrypt(token.encode("utf-8"))
-        return plaintext.decode("utf-8")
-    except InvalidToken:
-        return ""
-
-
-# ------------------
-# Generic helpers
+# Helpers: auth
 # ------------------
 
 def require_login(request: Request) -> bool:
-    return "user_id" in request.session
+    user = request.session.get("user")
+    return user == ADMIN_USERNAME
 
+
+def ensure_logged_in(request: Request) -> None:
+    if not require_login(request):
+        raise HTTPException(status_code=status.HTTP_303_SEE_OTHER)
+
+
+# ------------------
+# Helpers: settings
+# ------------------
 
 def load_settings() -> Dict[str, str]:
     with engine.begin() as conn:
-        rows = conn.execute(
-            text("SELECT key, value FROM settings")
-        ).mappings().all()
-    return {r["key"]: r["value"] for r in rows}
+        rows = conn.execute(text("SELECT key, value FROM settings")).mappings().all()
+        return {r["key"]: r["value"] for r in rows}
 
 
-def save_settings(updates: Dict[str, str]) -> None:
+def save_setting(key: str, value: str) -> None:
     with engine.begin() as conn:
-        for k, v in updates.items():
-            conn.execute(
-                text(
-                    """
-                    INSERT INTO settings (key, value, updated_at)
-                    VALUES (:key, :value, NOW())
-                    ON CONFLICT (key)
-                    DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
-                    """
-                ),
-                {"key": k, "value": v},
-            )
+        conn.execute(
+            text(
+                """
+                INSERT INTO settings (key, value)
+                VALUES (:key, :value)
+                ON CONFLICT (key)
+                DO UPDATE SET value = EXCLUDED.value
+                """
+            ),
+            {"key": key, "value": value},
+        )
 
+
+# ------------------
+# Helpers: IMAP accounts
+# ------------------
+
+def decrypt_password(token: str) -> str:
+    return fernet.decrypt(token.encode()).decode()
+
+
+def encrypt_password(plaintext: str) -> str:
+    return fernet.encrypt(plaintext.encode()).decode()
+
+
+# ------------------
+# Helpers: search / ordering
+# ------------------
 
 def build_search_where(
     q: str | None,
@@ -99,241 +120,143 @@ def build_search_where(
     folder: str | None,
     date_from: str | None,
     date_to: str | None,
-    use_fts: bool,
-) -> tuple[str, Dict[str, Any]]:
-    clauses: List[str] = []
+) -> Tuple[str, Dict[str, Any]]:
+    """
+    Always use PostgreSQL FTS.
+
+    We create a tsvector over subject, sender, recipients and match against plainto_tsquery.
+    """
+    conditions = []
     params: Dict[str, Any] = {}
 
+    if q:
+        conditions.append(
+            "to_tsvector('simple', coalesce(subject, '') || ' ' || coalesce(sender, '') || ' ' || coalesce(recipients, '')) @@ plainto_tsquery(:q)"
+        )
+        params["q"] = q
+
     if account:
-        clauses.append("source = :account")
+        conditions.append("source = :account")
         params["account"] = account
 
     if folder:
-        clauses.append("folder = :folder")
+        conditions.append("folder = :folder")
         params["folder"] = folder
 
     if date_from:
-        clauses.append("date >= :date_from")
+        conditions.append("date >= :date_from")
         params["date_from"] = date_from
 
     if date_to:
-        clauses.append("date <= :date_to")
+        conditions.append("date <= :date_to")
         params["date_to"] = date_to
 
-    if q:
-        if use_fts:
-            clauses.append("search_vector @@ plainto_tsquery('simple', :q)")
-            params["q"] = q
-        else:
-            clauses.append(
-                "(subject ILIKE :q_like "
-                "OR sender ILIKE :q_like "
-                "OR recipients ILIKE :q_like)"
-            )
-            params["q_like"] = f"%{q}%"
-
     where_sql = ""
-    if clauses:
-        where_sql = "WHERE " + " AND ".join(clauses)
+    if conditions:
+        where_sql = "WHERE " + " AND ".join(conditions)
 
     return where_sql, params
 
 
 def build_order_by(sort: str | None, direction: str | None) -> str:
-    sort = (sort or "date").lower()
-    direction = (direction or "desc").lower()
-
-    sort_map = {
+    allowed_sort = {
         "date": "date",
-        "created": "created_at",
-        "sender": "sender",
         "subject": "subject",
+        "sender": "sender",
+        "source": "source",
         "folder": "folder",
-        "id": "id",
-        "account": "source",
+        "created_at": "created_at",
     }
+    col = allowed_sort.get(sort or "date", "date")
 
-    col = sort_map.get(sort, "date")
-    dir_sql = "ASC" if direction == "asc" else "DESC"
+    dir_normalized = (direction or "desc").lower()
+    if dir_normalized not in ("asc", "desc"):
+        dir_normalized = "desc"
 
-    return f"ORDER BY {col} {dir_sql}"
+    return f"ORDER BY {col} {dir_normalized}"
 
 
-def get_storage_stats(settings: Dict[str, str]) -> Dict[str, Any]:
-    storage_dir = settings.get("storage_dir", STORAGE_DIR_DEFAULT)
-    exists = os.path.isdir(storage_dir)
-    total_size = 0
-    file_count = 0
-    if exists:
-        for root, dirs, files in os.walk(storage_dir):
-            for name in files:
-                fp = os.path.join(root, name)
-                try:
-                    total_size += os.path.getsize(fp)
-                    file_count += 1
-                except OSError:
+# ------------------
+# Helpers: message parsing
+# ------------------
+
+def decompress_email(raw: bytes, compressed: bool) -> bytes:
+    if compressed:
+        return gzip.decompress(raw)
+    return raw
+
+
+def parse_email_structure(raw_email: bytes) -> Dict[str, Any]:
+    """
+    Parse raw email bytes into a structure suitable for templates.
+    """
+    msg: EmailMessage = message_from_bytes(raw_email)
+
+    def get_body(msg: EmailMessage) -> Dict[str, str]:
+        text_body = ""
+        html_body = ""
+
+        if msg.is_multipart():
+            for part in msg.walk():
+                ctype = part.get_content_type()
+                disp = str(part.get("Content-Disposition") or "").lower()
+
+                if "attachment" in disp:
                     continue
-    return {
-        "storage_dir": storage_dir,
-        "exists": exists,
-        "total_size_bytes": total_size,
-        "file_count": file_count,
+
+                if ctype == "text/plain":
+                    try:
+                        text_body += part.get_payload(decode=True).decode(
+                            part.get_content_charset() or "utf-8",
+                            errors="replace",
+                        )
+                    except Exception:
+                        continue
+                elif ctype == "text/html":
+                    try:
+                        html_body += part.get_payload(decode=True).decode(
+                            part.get_content_charset() or "utf-8",
+                            errors="replace",
+                        )
+                    except Exception:
+                        continue
+        else:
+            ctype = msg.get_content_type()
+            if ctype == "text/plain":
+                text_body = msg.get_payload(decode=True).decode(
+                    msg.get_content_charset() or "utf-8",
+                    errors="replace",
+                )
+            elif ctype == "text/html":
+                html_body = msg.get_payload(decode=True).decode(
+                    msg.get_content_charset() or "utf-8",
+                    errors="replace",
+                )
+
+        return {"text": text_body, "html": html_body}
+
+    headers = {
+        "subject": msg.get("Subject", ""),
+        "from": msg.get("From", ""),
+        "to": msg.get("To", ""),
+        "cc": msg.get("Cc", ""),
+        "date": msg.get("Date", ""),
+        "message_id": msg.get("Message-ID", ""),
     }
 
-
-def get_message_count() -> int:
-    with engine.begin() as conn:
-        row = conn.execute(
-            text("SELECT COUNT(*) AS c FROM messages")
-        ).mappings().first()
-    return row["c"] if row else 0
-
-
-def get_accounts() -> list[dict]:
-    with engine.begin() as conn:
-        rows = conn.execute(
-            text(
-                """
-                SELECT id, name, host, port, username, use_ssl, require_starttls,
-                       poll_interval_seconds, delete_after_processing,
-                       enabled, last_heartbeat, last_success, last_error
-                FROM imap_accounts
-                ORDER BY name
-                """
-            )
-        ).mappings().all()
-    return [dict(r) for r in rows]
+    body = get_body(msg)
+    return {"headers": headers, "body": body}
 
 
 # ------------------
-# Tests / health
+# Routes: auth
 # ------------------
-
-def test_imap_account(account_id: int) -> tuple[bool, str]:
-    with engine.begin() as conn:
-        row = conn.execute(
-            text("SELECT * FROM imap_accounts WHERE id = :id"),
-            {"id": account_id},
-        ).mappings().first()
-
-    if not row:
-        return False, "Account not found"
-
-    host = row["host"]
-    port = row["port"]
-    user = row["username"]
-    use_ssl = row["use_ssl"]
-    require_starttls = row["require_starttls"]
-    ca_bundle = row["ca_bundle"]
-    password = decrypt_password(row["password_encrypted"])
-
-    if not host or not user or not password:
-        return False, "Host, username, or password is missing."
-
-    def create_ssl_context():
-        ctx = ssl.create_default_context()
-        ctx.check_hostname = True
-        ctx.verify_mode = ssl.CERT_REQUIRED
-        if ca_bundle:
-            ctx.load_verify_locations(ca_bundle)
-        return ctx
-
-    try:
-        if use_ssl:
-            ctx = create_ssl_context()
-            client = IMAPClient(
-                host,
-                port=port,
-                ssl=True,
-                ssl_context=ctx,
-                timeout=20,
-            )
-        else:
-            client = IMAPClient(
-                host,
-                port=port,
-                ssl=False,
-                timeout=20,
-            )
-            if port == 143 and require_starttls:
-                caps = client.capabilities()
-                if b"STARTTLS" not in caps:
-                    return False, "Server does not support STARTTLS."
-                client.starttls(create_ssl_context())
-
-        client.login(user, password)
-        client.logout()
-        return True, "Successfully connected and authenticated."
-    except Exception as e:
-        return False, f"IMAP test failed: {e}"
-
-
-def test_storage(settings: Dict[str, str]) -> tuple[bool, str]:
-    storage_dir = settings.get("storage_dir", STORAGE_DIR_DEFAULT)
-    test_file = os.path.join(storage_dir, ".daygle_test.tmp")
-
-    try:
-        os.makedirs(storage_dir, exist_ok=True)
-        with open(test_file, "w") as f:
-            f.write("test")
-        os.remove(test_file)
-        return True, f"Storage directory is writable: {storage_dir}"
-    except Exception as e:
-        return False, f"Storage directory test failed for {storage_dir}: {e}"
-
-
-def test_db() -> tuple[bool, str]:
-    try:
-        with engine.begin() as conn:
-            conn.execute(text("SELECT 1"))
-            for tbl in ("messages", "users", "settings", "imap_accounts", "error_log"):
-                conn.execute(text(f"SELECT 1 FROM {tbl} LIMIT 1"))
-        return True, "Database connection and required tables are OK."
-    except Exception as e:
-        return False, f"DB test failed: {e}"
-
-def get_recent_errors(source_prefix: str | None = None, limit: int = 100) -> list[dict]:
-    params: Dict[str, Any] = {"limit": limit}
-
-    if source_prefix and source_prefix.strip():
-        sql = """
-            SELECT id, timestamp, source, message, details
-            FROM error_log
-            WHERE source LIKE :src
-            ORDER BY timestamp DESC
-            LIMIT :limit
-        """
-        params["src"] = source_prefix.strip() + "%"
-    else:
-        sql = """
-            SELECT id, timestamp, source, message, details
-            FROM error_log
-            ORDER BY timestamp DESC
-            LIMIT :limit
-        """
-
-    with engine.begin() as conn:
-        rows = conn.execute(text(sql), params).mappings().all()
-    return [dict(r) for r in rows]
-
-# ------------------
-# Root / auth
-# ------------------
-
-@app.get("/", response_class=HTMLResponse)
-def root(request: Request):
-    if not require_login(request):
-        return RedirectResponse(url="/login", status_code=303)
-    return RedirectResponse(url="/messages", status_code=303)
-
 
 @app.get("/login", response_class=HTMLResponse)
 def login_form(request: Request):
-    if require_login(request):
-        return RedirectResponse(url="/messages", status_code=303)
     return templates.TemplateResponse(
         "login.html",
-        {"request": request, "error": None},
+        {"request": request, "error": ""},
     )
 
 
@@ -343,39 +266,14 @@ def login_submit(
     username: str = Form(...),
     password: str = Form(...),
 ):
-    error = None
+    if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+        request.session["user"] = username
+        return RedirectResponse(url="/messages", status_code=303)
 
-    if not username or not password:
-        error = "Username and password are required."
-        return templates.TemplateResponse(
-            "login.html",
-            {"request": request, "error": error},
-        )
-
-    with engine.begin() as conn:
-        row = conn.execute(
-            text(
-                """
-                SELECT id,
-                       password_hash = crypt(:password, password_hash) AS valid
-                FROM users
-                WHERE username = :username
-                """
-            ),
-            {"username": username, "password": password},
-        ).mappings().first()
-
-    if not row or not row["valid"]:
-        error = "Invalid username or password."
-        return templates.TemplateResponse(
-            "login.html",
-            {"request": request, "error": error},
-        )
-
-    request.session["user_id"] = row["id"]
-    request.session["username"] = username
-
-    return RedirectResponse(url="/messages", status_code=303)
+    return templates.TemplateResponse(
+        "login.html",
+        {"request": request, "error": "Invalid username or password"},
+    )
 
 
 @app.get("/logout")
@@ -385,521 +283,7 @@ def logout(request: Request):
 
 
 # ------------------
-# Settings (global)
-# ------------------
-
-@app.get("/settings", response_class=HTMLResponse)
-def settings_form(request: Request):
-    if not require_login(request):
-        return RedirectResponse(url="/login", status_code=303)
-
-    settings = load_settings()
-
-    return templates.TemplateResponse(
-        "settings.html",
-        {
-            "request": request,
-            "settings": settings,
-            "error": None,
-            "success": None,
-            "storage_result": None,
-            "db_result": None,
-        },
-    )
-
-
-@app.post("/settings", response_class=HTMLResponse)
-def settings_submit(
-    request: Request,
-    storage_dir: str = Form(...),
-    page_size: str = Form(...),
-):
-    if not require_login(request):
-        return RedirectResponse(url="/login", status_code=303)
-
-    settings = load_settings()
-    error = None
-
-    # Validate page size
-    try:
-        int(page_size)
-    except ValueError:
-        error = "Page size must be a number."
-
-    if error:
-        return templates.TemplateResponse(
-            "settings.html",
-            {
-                "request": request,
-                "settings": settings,
-                "error": error,
-                "success": None,
-                "storage_result": None,
-                "db_result": None,
-            },
-        )
-
-    updates: Dict[str, str] = {
-        "storage_dir": storage_dir.strip(),
-        "page_size": page_size.strip(),
-    }
-
-    save_settings(updates)
-    settings = load_settings()
-
-    return templates.TemplateResponse(
-        "settings.html",
-        {
-            "request": request,
-            "settings": settings,
-            "error": None,
-            "success": "Settings saved successfully.",
-            "storage_result": None,
-            "db_result": None,
-        },
-    )
-
-
-@app.get("/settings/test-storage", response_class=HTMLResponse)
-def settings_test_storage(request: Request):
-    if not require_login(request):
-        return RedirectResponse(url="/login", status_code=303)
-
-    settings = load_settings()
-    ok, msg = test_storage(settings)
-    prefix = "success" if ok else "error"
-    storage_result = f"{prefix}:{msg}"
-
-    return templates.TemplateResponse(
-        "settings.html",
-        {
-            "request": request,
-            "settings": settings,
-            "error": None,
-            "success": None,
-            "storage_result": storage_result,
-            "db_result": None,
-        },
-    )
-
-
-@app.get("/settings/test-db", response_class=HTMLResponse)
-def settings_test_db(request: Request):
-    if not require_login(request):
-        return RedirectResponse(url="/login", status_code=303)
-
-    settings = load_settings()
-    ok, msg = test_db()
-    prefix = "success" if ok else "error"
-    db_result = f"{prefix}:{msg}"
-
-    return templates.TemplateResponse(
-        "settings.html",
-        {
-            "request": request,
-            "settings": settings,
-            "error": None,
-            "success": None,
-            "storage_result": None,
-            "db_result": db_result,
-        },
-    )
-
-
-# ------------------
-# IMAP sources management
-# ------------------
-
-@app.get("/sources", response_class=HTMLResponse)
-def sources_list(request: Request):
-    if not require_login(request):
-        return RedirectResponse(url="/login", status_code=303)
-
-    sources = get_accounts()  # still uses the same DB table
-    return templates.TemplateResponse(
-        "sources.html",
-        {
-            "request": request,
-            "sources": sources,
-        },
-    )
-
-
-@app.get("/sources/new", response_class=HTMLResponse)
-def source_new_form(request: Request):
-    if not require_login(request):
-        return RedirectResponse(url="/login", status_code=303)
-
-    return templates.TemplateResponse(
-        "source_form.html",
-        {
-            "request": request,
-            "source": None,
-            "error": None,
-            "success": None,
-        },
-    )
-
-
-@app.post("/sources/new", response_class=HTMLResponse)
-def source_new_submit(
-    request: Request,
-    name: str = Form(...),
-    host: str = Form(...),
-    port: int = Form(...),
-    username: str = Form(...),
-    password: str = Form(""),
-    use_ssl: str = Form("true"),
-    require_starttls: str = Form("false"),
-    ca_bundle: str = Form(""),
-    poll_interval_seconds: int = Form(...),
-    delete_after_processing: str = Form("true"),
-    enabled: str = Form("true"),
-):
-    if not require_login(request):
-        return RedirectResponse(url="/login", status_code=303)
-
-    error = None
-    use_ssl_bool = use_ssl == "true"
-    require_starttls_bool = require_starttls == "true"
-
-    if not name or not host or not username:
-        error = "Name, host, and username are required."
-    elif use_ssl_bool and require_starttls_bool:
-        error = "Use SSL and Require STARTTLS cannot both be enabled."
-
-    if error:
-        source_data = {
-            "id": None,
-            "name": name,
-            "host": host,
-            "port": port,
-            "username": username,
-            "use_ssl": use_ssl_bool,
-            "require_starttls": require_starttls_bool,
-            "ca_bundle": ca_bundle,
-            "poll_interval_seconds": poll_interval_seconds,
-            "delete_after_processing": delete_after_processing == "true",
-            "enabled": enabled == "true",
-        }
-        return templates.TemplateResponse(
-            "source_form.html",
-            {
-                "request": request,
-                "source": source_data,
-                "error": error,
-                "success": None,
-            },
-        )
-
-    encrypted_pw = encrypt_password(password) if password else ""
-
-    with engine.begin() as conn:
-        conn.execute(
-            text(
-                """
-                INSERT INTO imap_accounts
-                (name, host, port, username, password_encrypted,
-                 use_ssl, require_starttls, ca_bundle,
-                 poll_interval_seconds, delete_after_processing, enabled)
-                VALUES
-                (:name, :host, :port, :username, :pw,
-                 :use_ssl, :require_starttls, :ca_bundle,
-                 :poll, :delete_after, :enabled)
-                """
-            ),
-            {
-                "name": name.strip(),
-                "host": host.strip(),
-                "port": port,
-                "username": username.strip(),
-                "pw": encrypted_pw,
-                "use_ssl": use_ssl_bool,
-                "require_starttls": require_starttls_bool,
-                "ca_bundle": ca_bundle.strip(),
-                "poll": poll_interval_seconds,
-                "delete_after": delete_after_processing == "true",
-                "enabled": enabled == "true",
-            },
-        )
-
-    return RedirectResponse(url="/sources", status_code=303)
-
-
-@app.get("/sources/{source_id}", response_class=HTMLResponse)
-def source_edit_form(request: Request, source_id: int):
-    if not require_login(request):
-        return RedirectResponse(url="/login", status_code=303)
-
-    with engine.begin() as conn:
-        row = conn.execute(
-            text(
-                """
-                SELECT id, name, host, port, username,
-                       use_ssl, require_starttls, ca_bundle,
-                       poll_interval_seconds, delete_after_processing,
-                       enabled
-                FROM imap_accounts
-                WHERE id = :id
-                """
-            ),
-            {"id": source_id},
-        ).mappings().first()
-
-    if not row:
-        raise HTTPException(status_code=404, detail="Source not found")
-
-    return templates.TemplateResponse(
-        "source_form.html",
-        {
-            "request": request,
-            "source": dict(row),
-            "error": None,
-            "success": None,
-        },
-    )
-
-
-@app.post("/sources/{source_id}", response_class=HTMLResponse)
-def source_edit_submit(
-    request: Request,
-    source_id: int,
-    name: str = Form(...),
-    host: str = Form(...),
-    port: int = Form(...),
-    username: str = Form(...),
-    password: str = Form(""),
-    use_ssl: str = Form("true"),
-    require_starttls: str = Form("false"),
-    ca_bundle: str = Form(""),
-    poll_interval_seconds: int = Form(...),
-    delete_after_processing: str = Form("true"),
-    enabled: str = Form("true"),
-):
-    if not require_login(request):
-        return RedirectResponse(url="/login", status_code=303)
-
-    error = None
-    use_ssl_bool = use_ssl == "true"
-    require_starttls_bool = require_starttls == "true"
-
-    if not name or not host or not username:
-        error = "Name, host, and username are required."
-    elif use_ssl_bool and require_starttls_bool:
-        error = "Use SSL and Require STARTTLS cannot both be enabled."
-
-    if error:
-        with engine.begin() as conn:
-            row = conn.execute(
-                text(
-                    """
-                    SELECT id, name, host, port, username,
-                           use_ssl, require_starttls, ca_bundle,
-                           poll_interval_seconds, delete_after_processing,
-                           enabled
-                    FROM imap_accounts
-                    WHERE id = :id
-                    """
-                ),
-                {"id": source_id},
-            ).mappings().first()
-
-        return templates.TemplateResponse(
-            "source_form.html",
-            {
-                "request": request,
-                "source": dict(row) if row else None,
-                "error": error,
-                "success": None,
-            },
-        )
-
-    fields = {
-        "name": name.strip(),
-        "host": host.strip(),
-        "port": port,
-        "username": username.strip(),
-        "use_ssl": use_ssl_bool,
-        "require_starttls": require_starttls_bool,
-        "ca_bundle": ca_bundle.strip(),
-        "poll_interval_seconds": poll_interval_seconds,
-        "delete_after_processing": delete_after_processing == "true",
-        "enabled": enabled == "true",
-    }
-
-    set_clauses = [
-        "name = :name",
-        "host = :host",
-        "port = :port",
-        "username = :username",
-        "use_ssl = :use_ssl",
-        "require_starttls = :require_starttls",
-        "ca_bundle = :ca_bundle",
-        "poll_interval_seconds = :poll",
-        "delete_after_processing = :delete_after",
-        "enabled = :enabled",
-    ]
-
-    params = {
-        "id": source_id,
-        "name": fields["name"],
-        "host": fields["host"],
-        "port": fields["port"],
-        "username": fields["username"],
-        "use_ssl": fields["use_ssl"],
-        "require_starttls": fields["require_starttls"],
-        "ca_bundle": fields["ca_bundle"],
-        "poll": fields["poll_interval_seconds"],
-        "delete_after": fields["delete_after_processing"],
-        "enabled": fields["enabled"],
-    }
-
-    if password:
-        set_clauses.append("password_encrypted = :pw")
-        params["pw"] = encrypt_password(password)
-
-    sql = f"""
-        UPDATE imap_accounts
-        SET {", ".join(set_clauses)}
-        WHERE id = :id
-    """
-
-    with engine.begin() as conn:
-        conn.execute(text(sql), params)
-
-    return RedirectResponse(url="/sources", status_code=303)
-
-
-@app.post("/sources/{source_id}/test-imap", response_class=HTMLResponse)
-def source_test_imap(request: Request, source_id: int):
-    if not require_login(request):
-        return RedirectResponse(url="/login", status_code=303)
-
-    ok, msg = test_imap_account(source_id)
-
-    # Update last_success / last_error / last_heartbeat
-    with engine.begin() as conn:
-        if ok:
-            conn.execute(
-                text("""
-                    UPDATE imap_accounts
-                    SET last_success = NOW(),
-                        last_error = NULL,
-                        last_heartbeat = NOW()
-                    WHERE id = :id
-                """),
-                {"id": source_id},
-            )
-        else:
-            conn.execute(
-                text("""
-                    UPDATE imap_accounts
-                    SET last_error = :err,
-                        last_heartbeat = NOW()
-                    WHERE id = :id
-                """),
-                {"id": source_id, "err": msg},
-            )
-
-        # Reload updated row for display
-        row = conn.execute(
-            text("""
-                SELECT id, name, host, port, username,
-                       use_ssl, require_starttls, ca_bundle,
-                       poll_interval_seconds, delete_after_processing,
-                       enabled, last_heartbeat, last_success, last_error
-                FROM imap_accounts
-                WHERE id = :id
-            """),
-            {"id": source_id},
-        ).mappings().first()
-
-    if not row:
-        raise HTTPException(status_code=404, detail="Source not found")
-
-    return templates.TemplateResponse(
-        "source_form.html",
-        {
-            "request": request,
-            "source": dict(row),
-            "error": None if ok else msg,
-            "success": msg if ok else None,
-        },
-    )
-
-
-# ------------------
-# Errors view
-# ------------------
-
-@app.get("/errors", response_class=HTMLResponse)
-def errors_page(
-    request: Request,
-    source: str | None = Query(default=None),
-    limit: int = Query(default=100),
-):
-    if not require_login(request):
-        return RedirectResponse(url="/login", status_code=303)
-
-    errors = get_recent_errors(source_prefix=source, limit=limit)
-    return templates.TemplateResponse(
-        "errors.html",
-        {
-            "request": request,
-            "errors": errors,
-            "source": source or "",
-            "limit": limit,
-        },
-    )
-
-
-# ------------------
-# Status dashboard
-# ------------------
-
-@app.get("/status", response_class=HTMLResponse)
-def status_page(request: Request):
-    if not require_login(request):
-        return RedirectResponse(url="/login", status_code=303)
-
-    settings = load_settings()
-    sources = get_accounts()  # renamed for clarity
-    msg_count = get_message_count()
-    storage_stats = get_storage_stats(settings)
-    db_ok, db_msg = test_db()
-
-    return templates.TemplateResponse(
-        "status.html",
-        {
-            "request": request,
-            "settings": settings,
-            "sources": sources,
-            "message_count": msg_count,
-            "storage_stats": storage_stats,
-            "db_ok": db_ok,
-            "db_msg": db_msg,
-        },
-    )
-
-
-@app.get("/api/status")
-def api_status():
-    settings = load_settings()
-    accounts = get_accounts()
-    msg_count = get_message_count()
-    storage_stats = get_storage_stats(settings)
-    db_ok, db_msg = test_db()
-
-    return {
-        "accounts": accounts,
-        "message_count": msg_count,
-        "storage": storage_stats,
-        "db": {"ok": db_ok, "message": db_msg},
-    }
-
-
-# ------------------
-# Messages UI
+# Routes: messages
 # ------------------
 
 @app.get("/messages", response_class=HTMLResponse)
@@ -914,7 +298,6 @@ def list_messages(
     folder: str | None = None,
     date_from: str | None = None,
     date_to: str | None = None,
-    use_fts: int = 0,
 ):
     if not require_login(request):
         return RedirectResponse(url="/login", status_code=303)
@@ -932,15 +315,12 @@ def list_messages(
         page = 1
     offset = (page - 1) * page_size
 
-    use_fts_bool = use_fts == 1
-
     where_sql, where_params = build_search_where(
         q=q,
         account=account,
         folder=folder,
         date_from=date_from,
         date_to=date_to,
-        use_fts=use_fts_bool,
     )
     order_by_sql = build_order_by(sort, direction)
 
@@ -993,7 +373,6 @@ def list_messages(
             "folder": folder or "",
             "date_from": date_from or "",
             "date_to": date_to or "",
-            "use_fts": use_fts_bool,
             "accounts": accounts,
             "folders": folders,
         },
@@ -1005,200 +384,362 @@ def view_message(request: Request, message_id: int):
     if not require_login(request):
         return RedirectResponse(url="/login", status_code=303)
 
+    sql = """
+        SELECT id, source, folder, uid, subject, sender, recipients, date, raw_email, compressed, created_at
+        FROM messages
+        WHERE id = :id
+    """
+
     with engine.begin() as conn:
-        row = conn.execute(
-            text(
-                """
-                SELECT id, source, folder, uid, subject, sender, recipients, date,
-                       storage_path, created_at
-                FROM messages
-                WHERE id = :id
-                """
-            ),
-            {"id": message_id},
-        ).mappings().first()
+        row = conn.execute(text(sql), {"id": message_id}).mappings().first()
 
     if not row:
         raise HTTPException(status_code=404, detail="Message not found")
 
-    storage_path = row["storage_path"]
-    if not storage_path or not os.path.exists(storage_path):
-        raise HTTPException(status_code=404, detail="Stored message file not found")
+    raw_stored: bytes = row["raw_email"]
+    compressed: bool = row["compressed"]
+    raw_email = decompress_email(raw_stored, compressed)
 
-    with open(storage_path, "rb") as f:
-        raw = f.read()
-
-    parsed = parse_from_bytes(raw)
-    body_text = parsed.text_plain[0] if parsed.text_plain else parsed.body
-
-    attachments = [
-        {
-            "filename": att.get("filename"),
-            "content_type": att.get("mail_content_type"),
-            "size": len(att.get("payload", b"") or b""),
-        }
-        for att in parsed.attachments or []
-    ]
+    parsed = parse_email_structure(raw_email)
 
     return templates.TemplateResponse(
-        "message.html",
+        "view_message.html",
         {
             "request": request,
             "message": row,
-            "body_text": body_text,
-            "attachments": attachments,
+            "headers": parsed["headers"],
+            "body": parsed["body"],
         },
     )
 
 
-@app.post("/messages/{message_id}/delete")
-def delete_message(request: Request, message_id: int):
+@app.get("/messages/{message_id}/download")
+def download_message(request: Request, message_id: int):
     if not require_login(request):
         return RedirectResponse(url="/login", status_code=303)
 
+    sql = """
+        SELECT id, raw_email, compressed
+        FROM messages
+        WHERE id = :id
+    """
+
     with engine.begin() as conn:
-        row = conn.execute(
-            text("SELECT storage_path FROM messages WHERE id = :id"),
-            {"id": message_id},
-        ).mappings().first()
+        row = conn.execute(text(sql), {"id": message_id}).mappings().first()
 
     if not row:
         raise HTTPException(status_code=404, detail="Message not found")
 
-    storage_path = row["storage_path"]
+    raw_stored: bytes = row["raw_email"]
+    compressed: bool = row["compressed"]
+    raw_email = decompress_email(raw_stored, compressed)
 
-    if storage_path and os.path.exists(storage_path):
-        try:
-            os.remove(storage_path)
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to delete file: {e}")
+    filename = f"message-{message_id}.eml"
 
-    with engine.begin() as conn:
-        conn.execute(
-            text("DELETE FROM messages WHERE id = :id"),
-            {"id": message_id},
-        )
-
-    return RedirectResponse(url="/messages", status_code=303)
-
-
-# ------------------
-# JSON API
-# ------------------
-
-@app.get("/api/messages")
-def api_list_messages(
-    request: Request,
-    limit: int = 100,
-    q: str | None = None,
-):
-    if not require_login(request):
-        raise HTTPException(status_code=401, detail="Not authenticated")
-
-    where_sql, where_params = build_search_where(
-        q=q,
-        account=None,
-        folder=None,
-        date_from=None,
-        date_to=None,
-        use_fts=False,
-    )
-
-    list_sql = f"""
-        SELECT id, account, folder, uid, subject, sender, recipients, date, created_at
-        FROM messages
-        {where_sql}
-        ORDER BY date DESC
-        LIMIT :limit
-    """
-
-    params = dict(where_params)
-    params["limit"] = limit
-
-    with engine.begin() as conn:
-        rows = conn.execute(text(list_sql), params).mappings().all()
-        return list(rows)
-
-# ------------------
-# Administrator Password
-# ------------------
-
-@app.get("/admin/password", response_class=HTMLResponse)
-def admin_password_form(request: Request):
-    if not require_login(request):
-        return RedirectResponse(url="/login", status_code=303)
-
-    return templates.TemplateResponse(
-        "admin_password.html",
-        {
-            "request": request,
-            "error": None,
-            "success": None,
+    return StreamingResponse(
+        iter([raw_email]),
+        media_type="message/rfc822",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"'
         },
     )
 
 
-@app.post("/admin/password", response_class=HTMLResponse)
-def admin_password_submit(
+# ------------------
+# Routes: settings
+# ------------------
+
+@app.get("/settings", response_class=HTMLResponse)
+def settings_form(request: Request):
+    if not require_login(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    settings = load_settings()
+    return templates.TemplateResponse(
+        "settings.html",
+        {"request": request, "settings": settings},
+    )
+
+
+@app.post("/settings", response_class=HTMLResponse)
+def settings_save(
     request: Request,
-    current_password: str = Form(...),
-    new_password: str = Form(...),
-    confirm_password: str = Form(...),
+    page_size: int = Form(...),
 ):
     if not require_login(request):
         return RedirectResponse(url="/login", status_code=303)
 
-    user_id = request.session["user_id"]
+    save_setting("page_size", str(page_size))
 
-    # Validate new password
-    if new_password != confirm_password:
-        return templates.TemplateResponse(
-            "admin_password.html",
+    return RedirectResponse(url="/settings", status_code=303)
+
+
+# ------------------
+# Routes: IMAP accounts
+# ------------------
+
+@app.get("/imap_accounts", response_class=HTMLResponse)
+def list_imap_accounts(request: Request):
+    if not require_login(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    sql = """
+        SELECT
+            id,
+            name,
+            host,
+            port,
+            username,
+            use_ssl,
+            require_starttls,
+            poll_interval_seconds,
+            delete_after_processing,
+            enabled,
+            last_heartbeat,
+            last_success,
+            last_error
+        FROM imap_accounts
+        ORDER BY id
+    """
+    with engine.begin() as conn:
+        accounts = conn.execute(text(sql)).mappings().all()
+
+    return templates.TemplateResponse(
+        "imap_accounts.html",
+        {
+            "request": request,
+            "accounts": accounts,
+        },
+    )
+
+
+@app.get("/imap_accounts/new", response_class=HTMLResponse)
+def new_imap_account_form(request: Request):
+    if not require_login(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    return templates.TemplateResponse(
+        "imap_account_form.html",
+        {
+            "request": request,
+            "account": None,
+        },
+    )
+
+
+@app.post("/imap_accounts/new", response_class=HTMLResponse)
+def create_imap_account(
+    request: Request,
+    name: str = Form(...),
+    host: str = Form(...),
+    port: int = Form(...),
+    username: str = Form(...),
+    password: str = Form(...),
+    use_ssl: bool = Form(False),
+    require_starttls: bool = Form(False),
+    poll_interval_seconds: int = Form(300),
+    delete_after_processing: bool = Form(False),
+    enabled: bool = Form(True),
+):
+    if not require_login(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    password_encrypted = encrypt_password(password)
+
+    sql = """
+        INSERT INTO imap_accounts
+            (name, host, port, username, password_encrypted,
+             use_ssl, require_starttls, poll_interval_seconds,
+             delete_after_processing, enabled,
+             last_heartbeat, last_success, last_error)
+        VALUES
+            (:name, :host, :port, :username, :password_encrypted,
+             :use_ssl, :require_starttls, :poll_interval_seconds,
+             :delete_after_processing, :enabled,
+             NULL, NULL, NULL)
+    """
+    with engine.begin() as conn:
+        conn.execute(
+            text(sql),
             {
-                "request": request,
-                "error": "New passwords do not match.",
-                "success": None,
+                "name": name,
+                "host": host,
+                "port": port,
+                "username": username,
+                "password_encrypted": password_encrypted,
+                "use_ssl": use_ssl,
+                "require_starttls": require_starttls,
+                "poll_interval_seconds": poll_interval_seconds,
+                "delete_after_processing": delete_after_processing,
+                "enabled": enabled,
             },
         )
 
+    return RedirectResponse(url="/imap_accounts", status_code=303)
+
+
+@app.get("/imap_accounts/{account_id}/edit", response_class=HTMLResponse)
+def edit_imap_account_form(request: Request, account_id: int):
+    if not require_login(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    sql = """
+        SELECT
+            id,
+            name,
+            host,
+            port,
+            username,
+            password_encrypted,
+            use_ssl,
+            require_starttls,
+            poll_interval_seconds,
+            delete_after_processing,
+            enabled
+        FROM imap_accounts
+        WHERE id = :id
+    """
     with engine.begin() as conn:
-        row = conn.execute(
-            text(
-                """
-                SELECT password_hash = crypt(:current, password_hash) AS valid
-                FROM users
-                WHERE id = :id
-                """
-            ),
-            {"id": user_id, "current": current_password},
-        ).mappings().first()
+        account = conn.execute(text(sql), {"id": account_id}).mappings().first()
 
-        if not row or not row["valid"]:
-            return templates.TemplateResponse(
-                "admin_password.html",
-                {
-                    "request": request,
-                    "error": "Current password is incorrect.",
-                    "success": None,
-                },
-            )
+    if not account:
+        raise HTTPException(status_code=404, detail="IMAP account not found")
 
-        conn.execute(
-            text(
-                """
-                UPDATE users
-                SET password_hash = crypt(:new, gen_salt('bf'))
-                WHERE id = :id
-                """
-            ),
-            {"id": user_id, "new": new_password},
-        )
-
+    # We do not decrypt the password to show it; form should treat password as "change if non-empty".
     return templates.TemplateResponse(
-        "admin_password.html",
+        "imap_account_form.html",
         {
             "request": request,
-            "error": None,
-            "success": "Password updated successfully.",
+            "account": account,
         },
     )
+
+
+@app.post("/imap_accounts/{account_id}/edit", response_class=HTMLResponse)
+def update_imap_account(
+    request: Request,
+    account_id: int,
+    name: str = Form(...),
+    host: str = Form(...),
+    port: int = Form(...),
+    username: str = Form(...),
+    password: str = Form(""),
+    use_ssl: bool = Form(False),
+    require_starttls: bool = Form(False),
+    poll_interval_seconds: int = Form(300),
+    delete_after_processing: bool = Form(False),
+    enabled: bool = Form(True),
+):
+    if not require_login(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    with engine.begin() as conn:
+        if password.strip():
+            password_encrypted = encrypt_password(password)
+            sql = """
+                UPDATE imap_accounts
+                SET name = :name,
+                    host = :host,
+                    port = :port,
+                    username = :username,
+                    password_encrypted = :password_encrypted,
+                    use_ssl = :use_ssl,
+                    require_starttls = :require_starttls,
+                    poll_interval_seconds = :poll_interval_seconds,
+                    delete_after_processing = :delete_after_processing,
+                    enabled = :enabled
+                WHERE id = :id
+            """
+            params = {
+                "id": account_id,
+                "name": name,
+                "host": host,
+                "port": port,
+                "username": username,
+                "password_encrypted": password_encrypted,
+                "use_ssl": use_ssl,
+                "require_starttls": require_starttls,
+                "poll_interval_seconds": poll_interval_seconds,
+                "delete_after_processing": delete_after_processing,
+                "enabled": enabled,
+            }
+        else:
+            sql = """
+                UPDATE imap_accounts
+                SET name = :name,
+                    host = :host,
+                    port = :port,
+                    username = :username,
+                    use_ssl = :use_ssl,
+                    require_starttls = :require_starttls,
+                    poll_interval_seconds = :poll_interval_seconds,
+                    delete_after_processing = :delete_after_processing,
+                    enabled = :enabled
+                WHERE id = :id
+            """
+            params = {
+                "id": account_id,
+                "name": name,
+                "host": host,
+                "port": port,
+                "username": username,
+                "use_ssl": use_ssl,
+                "require_starttls": require_starttls,
+                "poll_interval_seconds": poll_interval_seconds,
+                "delete_after_processing": delete_after_processing,
+                "enabled": enabled,
+            }
+
+        conn.execute(text(sql), params)
+
+    return RedirectResponse(url="/imap_accounts", status_code=303)
+
+
+@app.post("/imap_accounts/{account_id}/delete")
+def delete_imap_account(request: Request, account_id: int):
+    if not require_login(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    sql = "DELETE FROM imap_accounts WHERE id = :id"
+    with engine.begin() as conn:
+        conn.execute(text(sql), {"id": account_id})
+
+    return RedirectResponse(url="/imap_accounts", status_code=303)
+
+
+# ------------------
+# Routes: error log
+# ------------------
+
+@app.get("/error_log", response_class=HTMLResponse)
+def view_error_log(request: Request):
+    if not require_login(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    sql = """
+        SELECT id, timestamp, source, message, details
+        FROM error_log
+        ORDER BY timestamp DESC
+        LIMIT 200
+    """
+    with engine.begin() as conn:
+        rows = conn.execute(text(sql)).mappings().all()
+
+    return templates.TemplateResponse(
+        "error_log.html",
+        {
+            "request": request,
+            "errors": rows,
+        },
+    )
+
+
+# ------------------
+# Root redirect
+# ------------------
+
+@app.get("/")
+def root(request: Request):
+    if not require_login(request):
+        return RedirectResponse(url="/login", status_code=303)
+    return RedirectResponse(url="/messages", status_code=303)
