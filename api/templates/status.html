@@ -6,65 +6,39 @@
 <div class="row">
     <div class="col-md-7">
 
+        <!-- Sources Summary -->
         <div class="card mb-4 shadow-sm">
             <div class="card-header fw-bold">
-                Sources
+                Sources Summary
             </div>
-            <div class="card-body p-0">
-                <table class="table mb-0 align-middle">
-                    <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Host</th>
-                        <th>Enabled</th>
-                        <th>Poll (s)</th>
-                        <th>Last heartbeat</th>
-                        <th>Last success</th>
-                        <th>Last error</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for acc in sources %}
-                        <tr>
-                            <td class="fw-bold">{{ acc.name }}</td>
-                            <td>{{ acc.host }}:{{ acc.port }}</td>
-                            <td>
-                                {% if acc.enabled %}
-                                    <span class="badge bg-success">Enabled</span>
-                                {% else %}
-                                    <span class="badge bg-secondary">Disabled</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ acc.poll_interval_seconds }}</td>
-                            <td>{{ acc.last_heartbeat or 'Never' }}</td>
-                            <td>{{ acc.last_success or 'Never' }}</td>
-                            <td>
-                                {% if acc.last_error %}
-                                    <span class="text-danger" title="{{ acc.last_error }}">
-                                        {{ acc.last_error[:40] }}{% if acc.last_error|length > 40 %}...{% endif %}
-                                    </span>
-                                {% else %}
-                                    <span class="text-muted">None</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    {% if sources|length == 0 %}
-                        <tr>
-                            <td colspan="7" class="text-center text-muted py-3">
-                                No sources configured yet.
-                            </td>
-                        </tr>
-                    {% endif %}
-                    </tbody>
-                </table>
-            </div>
-            <div class="card-footer d-flex justify-content-between">
-                <a href="/sources" class="btn btn-sm btn-outline-primary">Manage Sources</a>
-                <a href="/errors" class="btn btn-sm btn-outline-secondary">View Errors</a>
+            <div class="card-body">
+                <p>
+                    <strong>Total sources:</strong> {{ sources|length }}
+                </p>
+
+                {% if sources|length > 0 %}
+                    <p>
+                        <strong>Enabled:</strong>
+                        {{ sources | selectattr("enabled") | list | length }}
+                    </p>
+                    <p>
+                        <strong>Disabled:</strong>
+                        {{ sources | rejectattr("enabled") | list | length }}
+                    </p>
+                {% else %}
+                    <p class="text-muted">No sources configured yet.</p>
+                {% endif %}
+
+                <a href="/sources" class="btn btn-sm btn-outline-primary mt-2">
+                    Manage Sources
+                </a>
+                <a href="/errors" class="btn btn-sm btn-outline-secondary mt-2">
+                    View Errors
+                </a>
             </div>
         </div>
 
+        <!-- Message Archive -->
         <div class="card mb-4 shadow-sm">
             <div class="card-header fw-bold">
                 Message Archive
@@ -79,6 +53,7 @@
 
     <div class="col-md-5">
 
+        <!-- Storage -->
         <div class="card mb-4 shadow-sm">
             <div class="card-header fw-bold">
                 Storage
@@ -98,6 +73,7 @@
             </div>
         </div>
 
+        <!-- Database Health -->
         <div class="card mb-4 shadow-sm">
             <div class="card-header fw-bold">
                 Database Health
