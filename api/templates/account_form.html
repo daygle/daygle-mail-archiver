@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1 class="mb-4 fw-bold">
+    {% if account %}Edit Account: {{ account.name }}{% else %}New IMAP Account{% endif %}
+</h1>
+
+<div class="row">
+    <div class="col-md-8">
+
+        {% if error %}
+            <div class="alert alert-danger" role="alert">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        {% if success %}
+            <div class="alert alert-success" role="alert">
+                {{ success }}
+            </div>
+        {% endif %}
+
+        <form method="post" action="{% if account %}/accounts/{{ account.id }}{% else %}/accounts/new{% endif %}">
+
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header fw-bold d-flex justify-content-between align-items-center">
+                    <span>Account Details</span>
+                    {% if account %}
+                        <form method="post" action="/accounts/{{ account.id }}/test-imap" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                Test IMAP Connection
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+
+                    <div class="mb-3">
+                        <label class="form-label">Name (identifier)</label>
+                        <input type="text" name="name" class="form-control"
+                               value="{{ account.name if account else '' }}" required>
+                        <div class="form-text">
+                            Used in worker names (IMAP_ACCOUNT_NAME) and logs.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Host</label>
+                        <input type="text" name="host" class="form-control"
+                               value="{{ account.host if account else '' }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Port</label>
+                        <input type="number" name="port" class="form-control"
+                               value="{{ account.port if account else 993 }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" name="username" class="form-control"
+                               value="{{ account.username if account else '' }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control"
+                               placeholder="{% if account %}Leave blank to keep existing password{% else %}Enter password{% endif %}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Use SSL</label>
+                        <select name="use_ssl" class="form-select">
+                            <option value="true" {% if not account or account.use_ssl %}selected{% endif %}>True</option>
+                            <option value="false" {% if account and not account.use_ssl %}selected{% endif %}>False</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Require STARTTLS (port 143)</label>
+                        <select name="require_starttls" class="form-select">
+                            <option value="true" {% if account and account.require_starttls %}selected{% endif %}>True</option>
+                            <option value="false" {% if not account or not account.require_starttls %}selected{% endif %}>False</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">CA Bundle Path (optional)</label>
+                        <input type="text" name="ca_bundle" class="form-control"
+                               value="{{ account.ca_bundle if account else '' }}"
+                               placeholder="/etc/ssl/certs/ca-certificates.crt">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Poll Interval (seconds)</label>
+                        <input type="number" name="poll_interval_seconds" class="form-control"
+                               value="{{ account.poll_interval_seconds if account else 300 }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Delete After Processing</label>
+                        <select name="delete_after_processing" class="form-select">
+                            <option value="true" {% if not account or account.delete_after_processing %}selected{% endif %}>True</option>
+                            <option value="false" {% if account and not account.delete_after_processing %}selected{% endif %}>False</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-0">
+                        <label class="form-label">Enabled</label>
+                        <select name="enabled" class="form-select">
+                            <option value="true" {% if not account or account.enabled %}selected{% endif %}>True</option>
+                            <option value="false" {% if account and not account.enabled %}selected{% endif %}>False</option>
+                        </select>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mb-4">
+                <a href="/accounts" class="btn btn-outline-secondary">Back to Accounts</a>
+                <button type="submit" class="btn btn-primary">
+                    Save Account
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+{% endblock %}

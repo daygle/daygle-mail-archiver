@@ -83,7 +83,7 @@ END;
 $$;
 
 -------------------------------------------------------------------
--- Settings table for runtime configuration
+-- Settings table for runtime configuration (global)
 -------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS settings (
@@ -95,16 +95,15 @@ CREATE TABLE IF NOT EXISTS settings (
 -- Initial defaults (can be overridden via Settings UI)
 INSERT INTO settings (key, value)
 VALUES
-    -- IMAP
+    -- IMAP (legacy global; per-account now preferred)
     ('imap_host', 'imap.example.com'),
     ('imap_port', '993'),
     ('imap_user', 'user@example.com'),
     ('imap_use_ssl', 'true'),
     ('imap_require_starttls', 'false'),
     ('imap_ca_bundle', ''),
-    -- IMAP password is stored encrypted by the app; leave empty by default
     ('imap_password_encrypted', ''),
-    -- Worker
+    -- Worker (global defaults)
     ('poll_interval_seconds', '300'),
     ('delete_after_processing', 'true'),
     -- Storage
@@ -114,19 +113,43 @@ VALUES
 ON CONFLICT (key) DO NOTHING;
 
 -------------------------------------------------------------------
--- Worker status heartbeat
+-- IMAP accounts (per-account configuration)
 -------------------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS worker_status (
-    id INTEGER PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS imap_accounts (
+    id SERIAL PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL,               -- short, human-friendly, used in logs/labels
+    host TEXT NOT NULL,
+    port INTEGER NOT NULL DEFAULT 993,
+    username TEXT NOT NULL,
+    password_encrypted TEXT NOT NULL DEFAULT '',
+    use_ssl BOOLEAN NOT NULL DEFAULT TRUE,
+    require_starttls BOOLEAN NOT NULL DEFAULT FALSE,
+    ca_bundle TEXT NOT NULL DEFAULT '',
+    poll_interval_seconds INTEGER NOT NULL DEFAULT 300,
+    delete_after_processing BOOLEAN NOT NULL DEFAULT TRUE,
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
     last_heartbeat TIMESTAMP,
     last_success TIMESTAMP,
-    last_error TEXT,
-    last_run_duration_seconds INTEGER,
-    messages_processed INTEGER DEFAULT 0
+    last_error TEXT
 );
 
--- Ensure a single row with id = 1 exists
-INSERT INTO worker_status (id, last_heartbeat, last_success, last_error, last_run_duration_seconds, messages_processed)
-VALUES (1, NULL, NULL, NULL, NULL, 0)
-ON CONFLICT (id) DO NOTHING;
+-- Optional seed account (no password, to be set via UI)
+INSERT INTO imap_accounts (name, host, port, username, use_ssl)
+VALUES ('default', 'imap.example.com', 993, 'user@example.com', TRUE)
+ON CONFLICT (name) DO NOTHING;
+
+-------------------------------------------------------------------
+-- Error log (recent errors view)
+-------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS error_log (
+    id SERIAL PRIMARY KEY,
+    timestamp TIMESTAMP NOT NULL DEFAULT NOW(),
+    source TEXT NOT NULL,         -- e.g., 'worker:default', 'api', 'storage', 'db'
+    message TEXT NOT NULL,
+    details TEXT
+);
+
+CREATE INDEX IF NOT EXISTS error_log_timestamp_idx
+    ON error_log (timestamp DESC);

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1 class="mb-4 fw-bold">Recent Errors</h1>
+
+<form class="row g-3 mb-3" method="get" action="/errors">
+    <div class="col-md-4">
+        <label class="form-label">Source prefix</label>
+        <input type="text" name="source" class="form-control"
+               placeholder="e.g. worker:default"
+               value="{{ source }}">
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">Limit</label>
+        <input type="number" name="limit" class="form-control"
+               value="{{ limit }}">
+    </div>
+    <div class="col-md-3 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary me-2">Filter</button>
+        <a href="/errors" class="btn btn-outline-secondary">Reset</a>
+    </div>
+    <div class="col-md-3 d-flex align-items-end justify-content-end">
+        <a href="/status" class="btn btn-outline-secondary">Status Dashboard</a>
+    </div>
+</form>
+
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+            <tr>
+                <th>Time</th>
+                <th>Source</th>
+                <th>Message</th>
+                <th>Details</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for e in errors %}
+                <tr>
+                    <td>{{ e.timestamp }}</td>
+                    <td>{{ e.source }}</td>
+                    <td>{{ e.message }}</td>
+                    <td>
+                        {% if e.details %}
+                            <pre class="mb-0" style="max-height: 8rem; overflow:auto;">{{ e.details }}</pre>
+                        {% else %}
+                            <span class="text-muted">None</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            {% if errors|length == 0 %}
+                <tr>
+                    <td colspan="4" class="text-center text-muted py-4">
+                        No errors logged.
+                    </td>
+                </tr>
+            {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
