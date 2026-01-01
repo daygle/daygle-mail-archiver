@@ -2,7 +2,7 @@
 {% block content %}
 
 <h1 class="mb-4 fw-bold">
-    {% if account %}Edit Account: {{ account.name }}{% else %}New IMAP Account{% endif %}
+    {% if source %}Edit Source: {{ source.name }}{% else %}New IMAP Source{% endif %}
 </h1>
 
 <div class="row">
@@ -20,12 +20,12 @@
             </div>
         {% endif %}
 
-        <form id="accountForm" method="post" action="{% if account %}/sources/{{ account.id }}{% else %}/sources/new{% endif %}">
+        <form id="sourceForm" method="post" action="{% if source %}/sources/{{ source.id }}{% else %}/sources/new{% endif %}">
 
             <div class="card mb-4 shadow-sm">
                 <div class="card-header fw-bold d-flex justify-content-between align-items-center">
-                    <span>Account Details</span>
-                    {% if account %}
+                    <span>Source Details</span>
+                    {% if source %}
                         <button type="button"
                                 class="btn btn-sm btn-outline-secondary"
                                 onclick="document.getElementById('testImapForm').submit()">
@@ -38,78 +38,78 @@
                     <div class="mb-3">
                         <label class="form-label">Name (identifier)</label>
                         <input type="text" name="name" class="form-control"
-                               value="{{ account.name if account else '' }}" required>
+                               value="{{ source.name if source else '' }}" required>
                         <div class="form-text">
-                            Used in worker names (IMAP_ACCOUNT_NAME) and logs.
+                            Used in worker logs and status pages.
                         </div>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Host</label>
                         <input type="text" name="host" class="form-control"
-                               value="{{ account.host if account else '' }}" required>
+                               value="{{ source.host if source else '' }}" required>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Port</label>
                         <input type="number" name="port" class="form-control"
-                               value="{{ account.port if account else 993 }}" required>
+                               value="{{ source.port if source else 993 }}" required>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Username</label>
                         <input type="text" name="username" class="form-control"
-                               value="{{ account.username if account else '' }}" required>
+                               value="{{ source.username if source else '' }}" required>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Password</label>
                         <input type="password" name="password" class="form-control"
-                               placeholder="{% if account %}Leave blank to keep existing password{% else %}Enter password{% endif %}">
+                               placeholder="{% if source %}Leave blank to keep existing password{% else %}Enter password{% endif %}">
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Use SSL</label>
                         <select name="use_ssl" class="form-select">
-                            <option value="true" {% if not account or account.use_ssl %}selected{% endif %}>True</option>
-                            <option value="false" {% if account and not account.use_ssl %}selected{% endif %}>False</option>
+                            <option value="true" {% if not source or source.use_ssl %}selected{% endif %}>True</option>
+                            <option value="false" {% if source and not source.use_ssl %}selected{% endif %}>False</option>
                         </select>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Require STARTTLS (port 143)</label>
                         <select name="require_starttls" class="form-select">
-                            <option value="true" {% if account and account.require_starttls %}selected{% endif %}>True</option>
-                            <option value="false" {% if not account or not account.require_starttls %}selected{% endif %}>False</option>
+                            <option value="true" {% if source and source.require_starttls %}selected{% endif %}>True</option>
+                            <option value="false" {% if not source or not source.require_starttls %}selected{% endif %}>False</option>
                         </select>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">CA Bundle Path (optional)</label>
                         <input type="text" name="ca_bundle" class="form-control"
-                               value="{{ account.ca_bundle if account else '' }}"
+                               value="{{ source.ca_bundle if source else '' }}"
                                placeholder="/etc/ssl/certs/ca-certificates.crt">
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Poll Interval (seconds)</label>
                         <input type="number" name="poll_interval_seconds" class="form-control"
-                               value="{{ account.poll_interval_seconds if account else 300 }}" required>
+                               value="{{ source.poll_interval_seconds if source else 300 }}" required>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Delete After Processing</label>
                         <select name="delete_after_processing" class="form-select">
-                            <option value="true" {% if not account or account.delete_after_processing %}selected{% endif %}>True</option>
-                            <option value="false" {% if account and not account.delete_after_processing %}selected{% endif %}>False</option>
+                            <option value="true" {% if not source or source.delete_after_processing %}selected{% endif %}>True</option>
+                            <option value="false" {% if source and not source.delete_after_processing %}selected{% endif %}>False</option>
                         </select>
                     </div>
 
                     <div class="mb-0">
                         <label class="form-label">Enabled</label>
                         <select name="enabled" class="form-select">
-                            <option value="true" {% if not account or account.enabled %}selected{% endif %}>True</option>
-                            <option value="false" {% if account and not account.enabled %}selected{% endif %}>False</option>
+                            <option value="true" {% if not source or source.enabled %}selected{% endif %}>True</option>
+                            <option value="false" {% if source and not source.enabled %}selected{% endif %}>False</option>
                         </select>
                     </div>
 
@@ -117,23 +117,23 @@
             </div>
 
             <div class="d-flex justify-content-between mb-4">
-                <a href="/accounts" class="btn btn-outline-secondary">Back to Accounts</a>
+                <a href="/sources" class="btn btn-outline-secondary">Back to Sources</a>
                 <button type="submit" class="btn btn-primary">
-                    Save Account
+                    Save Source
                 </button>
             </div>
 
         </form>
 
-        {% if account %}
-            <form id="testImapForm" method="post" action="/accounts/{{ account.id }}/test-imap" style="display:none;"></form>
+        {% if source %}
+            <form id="testImapForm" method="post" action="/sources/{{ source.id }}/test-imap" style="display:none;"></form>
         {% endif %}
     </div>
 </div>
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-    const form = document.getElementById("accountForm");
+    const form = document.getElementById("sourceForm");
     const ssl = form.querySelector("select[name='use_ssl']");
     const starttls = form.querySelector("select[name='require_starttls']");
 
