@@ -42,6 +42,7 @@ Follow these steps to get a fully running Daygle instance.
 ## 1. Clone the repository
 
 ```
+cd /opt/
 git clone https://github.com/your/repo.git daygle-mail-archiver
 cd daygle-mail-archiver
 ```
