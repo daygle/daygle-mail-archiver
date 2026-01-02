@@ -19,7 +19,7 @@ def login_form(request: Request):
 @router.post("/login")
 def login_submit(request: Request, username: str = Form(...), password: str = Form(...)):
     user = query(
-        "SELECT id, username, password_hash FROM users WHERE username = :u",
+        "SELECT id, username, password_hash, date_format FROM users WHERE username = :u",
         {"u": username}
     ).mappings().first()
 
@@ -33,12 +33,14 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
         # First login, set password
         request.session["user_id"] = user["id"]
         request.session["username"] = user["username"]
+        request.session["date_format"] = user["date_format"]
         request.session["needs_password"] = True
         return RedirectResponse("/set_password", status_code=303)
 
     if bcrypt.checkpw(password.encode(), user["password_hash"].encode()):
         request.session["user_id"] = user["id"]
         request.session["username"] = user["username"]
+        request.session["date_format"] = user["date_format"]
         return RedirectResponse("/messages", status_code=303)
 
     return templates.TemplateResponse(

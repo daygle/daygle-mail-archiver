@@ -19,8 +19,12 @@ def profile_form(request: Request):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
+    user_id = request.session["user_id"]
+    user = query("SELECT date_format FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+    current_format = user["date_format"] if user else "%Y-%m-%d"
+
     msg = request.session.pop("flash", None)
-    return templates.TemplateResponse("profile.html", {"request": request, "flash": msg})
+    return templates.TemplateResponse("profile.html", {"request": request, "flash": msg, "date_format": current_format})
 
 @router.post("/profile/change_password")
 def change_password(
@@ -50,4 +54,15 @@ def change_password(
     hash_pw = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt()).decode()
     query("UPDATE users SET password_hash = :h WHERE id = :id", {"h": hash_pw, "id": user_id})
     flash(request, "Password changed successfully.")
+    return RedirectResponse("/profile", status_code=303)
+
+@router.post("/profile/change_date_format")
+def change_date_format(request: Request, date_format: str = Form(...)):
+    if not require_login(request):
+        return RedirectResponse("/login", status_code=303)
+
+    user_id = request.session["user_id"]
+    query("UPDATE users SET date_format = :f WHERE id = :id", {"f": date_format, "id": user_id})
+    request.session["date_format"] = date_format
+    flash(request, "Date format updated successfully.")
     return RedirectResponse("/profile", status_code=303)
