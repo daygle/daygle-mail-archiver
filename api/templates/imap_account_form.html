@@ -67,22 +67,29 @@
 
     <div class="form-actions">
         <button type="submit">{{ "Update Account" if account else "Create Account" }}</button>
-        <!-- Moved test button here for better alignment -->
-        <form method="post" action="/imap_accounts/test" style="display: inline;">
-            <input type="hidden" name="account_id" value="{{ account.id if account else '' }}">
-            <input type="hidden" name="name" value="{{ account.name if account else '' }}">
-            <input type="hidden" name="host" value="{{ account.host if account else '' }}">
-            <input type="hidden" name="port" value="{{ account.port if account else '993' }}">
-            <input type="hidden" name="username" value="{{ account.username if account else '' }}">
-            <input type="hidden" name="password" value="{{ account.password if account else '' }}">
-            <input type="hidden" name="use_ssl" value="{{ 'true' if account and account.use_ssl else 'false' }}">
-            <input type="hidden" name="require_starttls" value="{{ 'true' if account and account.require_starttls else 'false' }}">
-            <input type="hidden" name="poll_interval_seconds" value="{{ account.poll_interval_seconds if account else '300' }}">
-            <input type="hidden" name="delete_after_processing" value="{{ 'true' if account and account.delete_after_processing else 'false' }}">
-            <input type="hidden" name="enabled" value="{{ 'true' if not account or account.enabled else 'false' }}">
-            <button type="submit" class="test-btn">Test Connection</button>
-        </form>
     </div>
+
+</form>
+
+<!-- SEPARATE FORM: Test Connection -->
+<form method="post" action="/imap_accounts/test" class="test-connection-form">
+
+    <input type="hidden" name="account_id" value="{{ account.id if account else '' }}">
+    <input type="hidden" name="name" value="{{ account.name if account else '' }}">
+    <input type="hidden" name="host" value="{{ account.host if account else '' }}">
+    <input type="hidden" name="port" value="{{ account.port if account else '993' }}">
+    <input type="hidden" name="username" value="{{ account.username if account else '' }}">
+
+    <!-- Use stored password -->
+    <input type="hidden" name="password" value="{{ account.password if account else '' }}">
+
+    <input type="hidden" name="use_ssl" value="{{ 'true' if account and account.use_ssl else 'false' }}">
+    <input type="hidden" name="require_starttls" value="{{ 'true' if account and account.require_starttls else 'false' }}">
+    <input type="hidden" name="poll_interval_seconds" value="{{ account.poll_interval_seconds if account else '300' }}">
+    <input type="hidden" name="delete_after_processing" value="{{ 'true' if account and account.delete_after_processing else 'false' }}">
+    <input type="hidden" name="enabled" value="{{ 'true' if not account or account.enabled else 'false' }}">
+
+    <button type="submit" class="test-btn">Test Connection</button>
 
 </form>
 
