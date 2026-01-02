@@ -246,3 +246,14 @@ button.test-btn:hover {
     border-bottom: 1px solid #eee;
     white-space: nowrap; /* prevents wrapping */
 }
+
+.checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.checkbox-group input[type="checkbox"] {
+    margin: 0;
+}
