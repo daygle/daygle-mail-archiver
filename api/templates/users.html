@@ -22,28 +22,25 @@
 
 <h3>Existing Users</h3>
 <table>
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Username</th>
-            <th>Created At</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for user in users %}
-        <tr>
-            <td>{{ user.id }}</td>
-            <td>{{ user.username }}</td>
-            <td>{{ user.created_at }}</td>
-            <td>
-                <form method="post" action="/users/{{ user.id }}/delete" style="display: inline;">
-                    <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this user?')">Delete</button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
+    <tr>
+        <th>ID</th>
+        <th>Username</th>
+        <th>Created At</th>
+        <th>Actions</th>
+    </tr>
+
+    {% for user in users %}
+    <tr>
+        <td>{{ user.id }}</td>
+        <td>{{ user.username }}</td>
+        <td>{{ user.created_at.strftime(request.session.date_format) }}</td>
+        <td>
+            <form method="post" action="/users/{{ user.id }}/delete" style="display: inline;">
+                <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this user?')">Delete</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
 </table>
 
 {% endblock %}
