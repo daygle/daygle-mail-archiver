@@ -6,7 +6,6 @@ from datetime import datetime, timezone, timedelta
 from db import query, execute
 from security import decrypt_password
 from imap_client import ImapConnection
-from logger import log  # Assuming logger.py is in worker/src or adjust path
 
 POLL_INTERVAL_FALLBACK = 300  # seconds
 
