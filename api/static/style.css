@@ -225,3 +225,24 @@ button.test-btn:hover {
   color: #212529;
   border-color: #ffc107;
 }
+
+.table-container {
+    overflow-x: auto;
+    background: white;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+}
+
+.table-container table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px; /* ensures columns don't squish */
+}
+
+.table-container th,
+.table-container td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #eee;
+    white-space: nowrap; /* prevents wrapping */
+}
