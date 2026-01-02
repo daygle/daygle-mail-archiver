@@ -8,7 +8,7 @@ router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
 def require_login(request: Request):
-    return request.session.get("user") is not None
+    return "user_id" in request.session
 
 @router.get("/error_log")
 def error_log(request: Request):

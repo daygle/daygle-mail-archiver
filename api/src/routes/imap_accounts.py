@@ -15,7 +15,7 @@ templates = Jinja2Templates(directory="templates")
 
 
 def require_login(request: Request):
-    return request.session.get("user") is not None
+    return "user_id" in request.session
 
 
 def flash(request: Request, message: str):
