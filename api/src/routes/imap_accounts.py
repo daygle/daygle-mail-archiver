@@ -298,8 +298,8 @@ def test_connection(
     # Load and decrypt stored password if none was provided
     # ---------------------------------------------------------
     if not password and account_id:
-        from db import get_account_by_id
-        from crypto import decrypt_password  # adjust import to your project
+        from ..db import get_account_by_id
+        from ..crypto import decrypt_password
 
         acc = get_account_by_id(account_id)
         if acc and acc.password:
@@ -323,23 +323,15 @@ def test_connection(
                 for c in caps:
                     if isinstance(c, list):
                         for sub in c:
-                            if isinstance(sub, bytes):
-                                normalized_caps.append(sub)
-                            else:
-                                normalized_caps.append(str(sub).encode("utf-8"))
+                            normalized_caps.append(sub if isinstance(sub, bytes) else str(sub).encode("utf-8"))
                     else:
-                        if isinstance(c, bytes):
-                            normalized_caps.append(c)
-                        else:
-                            normalized_caps.append(str(c).encode("utf-8"))
+                        normalized_caps.append(c if isinstance(c, bytes) else str(c).encode("utf-8"))
 
                 caps_flat = b" ".join(normalized_caps)
 
-                # LOGIN allowed?
                 if b"AUTH=LOGIN" in caps_flat:
                     conn.login(username, password)
 
-                # SASL PLAIN allowed?
                 elif b"AUTH=PLAIN" in caps_flat:
                     def try_plain(authzid, authcid, pw):
                         auth_string = base64.b64encode(
@@ -347,30 +339,22 @@ def test_connection(
                         ).decode("ascii")
                         return conn.authenticate("PLAIN", lambda _: auth_string)
 
-                    # Variant 1
                     try:
                         try_plain("", username, password)
                     except Exception:
-                        # Variant 2
                         try:
                             try_plain(username, username, password)
                         except Exception:
-                            # Variant 3
                             try:
                                 try_plain("", username, password)
                             except Exception:
-                                # Variant 4
                                 try:
                                     try_plain(username, username, password)
                                 except Exception:
-                                    raise RuntimeError(
-                                        "SASL PLAIN authentication failed for all variants"
-                                    )
+                                    raise RuntimeError("SASL PLAIN authentication failed for all variants")
 
                 else:
-                    raise RuntimeError(
-                        "Server does not advertise AUTH=LOGIN or AUTH=PLAIN after STARTTLS"
-                    )
+                    raise RuntimeError("Server does not advertise AUTH=LOGIN or AUTH=PLAIN after STARTTLS")
 
             else:
                 conn.login(username, password)
