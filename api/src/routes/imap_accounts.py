@@ -294,22 +294,18 @@ def test_connection(
 ):
     try:
         if use_ssl:
-            # SSL: straight to IMAP4_SSL, regular LOGIN
             conn = IMAP4_SSL(host, port)
             conn.login(username, password)
 
         else:
-            # Plain IMAP, optional STARTTLS + capability-based auth
             conn = IMAP4(host, port)
 
             if require_starttls:
-                # Upgrade connection
                 conn.starttls()
 
-                # Fetch capabilities (may contain bytes, str, or nested lists)
                 caps = conn.capability()
 
-                # Normalize capabilities: flatten nested lists and convert to bytes
+                # Normalize capabilities
                 normalized_caps = []
                 for c in caps:
                     if isinstance(c, list):
@@ -326,20 +322,37 @@ def test_connection(
 
                 caps_flat = b" ".join(normalized_caps)
 
-                # Choose authentication method based on capabilities
+                # LOGIN allowed?
                 if b"AUTH=LOGIN" in caps_flat:
                     conn.login(username, password)
 
+                # SASL PLAIN allowed?
                 elif b"AUTH=PLAIN" in caps_flat:
-                    # SASL PLAIN: base64("\0username\0password")
-                    auth_string = base64.b64encode(
-                        f"\0{username}\0{password}".encode("utf-8")
-                    ).decode("ascii")
+                    def try_plain(authzid, authcid, pw):
+                        auth_string = base64.b64encode(
+                            f"{authzid}\0{authcid}\0{pw}".encode("utf-8")
+                        ).decode("ascii")
+                        return conn.authenticate("PLAIN", lambda _: auth_string)
 
-                    def auth_plain(_):
-                        return auth_string
-
-                    conn.authenticate("PLAIN", auth_plain)
+                    # Variant 1
+                    try:
+                        try_plain("", username, password)
+                    except Exception:
+                        # Variant 2
+                        try:
+                            try_plain(username, username, password)
+                        except Exception:
+                            # Variant 3
+                            try:
+                                try_plain("", username, password)
+                            except Exception:
+                                # Variant 4
+                                try:
+                                    try_plain(username, username, password)
+                                except Exception:
+                                    raise RuntimeError(
+                                        "SASL PLAIN authentication failed for all variants"
+                                    )
 
                 else:
                     raise RuntimeError(
@@ -347,7 +360,6 @@ def test_connection(
                     )
 
             else:
-                # No STARTTLS, plain LOGIN (only safe if server allows it)
                 conn.login(username, password)
 
         conn.logout()
@@ -356,7 +368,6 @@ def test_connection(
     except Exception as e:
         flash(request, f"Connection failed: {e}")
 
-    # Rebuild account dict for re-rendering the form
     account = {
         "id": account_id,
         "name": name,

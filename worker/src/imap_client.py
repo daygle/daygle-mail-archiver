@@ -20,6 +20,17 @@ class ImapConnection:
         self.require_starttls = require_starttls
         self.conn = None
 
+    def _try_sasl_plain(self, authzid, authcid, password):
+        """Try a SASL PLAIN authentication variant."""
+        auth_string = base64.b64encode(
+            f"{authzid}\0{authcid}\0{password}".encode("utf-8")
+        ).decode("ascii")
+
+        def auth_plain(_):
+            return auth_string
+
+        return self.conn.authenticate("PLAIN", auth_plain)
+
     def __enter__(self):
         # SSL connection
         if self.use_ssl:
@@ -55,26 +66,51 @@ class ImapConnection:
 
             caps_flat = b" ".join(normalized_caps)
 
-            # Choose authentication method based on capabilities
+            # LOGIN allowed?
             if b"AUTH=LOGIN" in caps_flat:
-                # Standard LOGIN
                 self.conn.login(self.username, self.password)
+                return self.conn
 
-            elif b"AUTH=PLAIN" in caps_flat:
-                # SASL PLAIN
-                auth_string = base64.b64encode(
-                    f"\0{self.username}\0{self.password}".encode("utf-8")
-                ).decode("ascii")
+            # SASL PLAIN allowed?
+            if b"AUTH=PLAIN" in caps_flat:
+                # Try SASL PLAIN variants in order
 
-                def auth_plain(_):
-                    return auth_string
+                # Variant 1: authzid="", authcid=username
+                try:
+                    self._try_sasl_plain("", self.username, self.password)
+                    return self.conn
+                except Exception:
+                    pass
 
-                self.conn.authenticate("PLAIN", auth_plain)
+                # Variant 2: authzid=username, authcid=username
+                try:
+                    self._try_sasl_plain(self.username, self.username, self.password)
+                    return self.conn
+                except Exception:
+                    pass
 
-            else:
+                # Variant 3: authzid="", authcid=full email (same as username here)
+                try:
+                    self._try_sasl_plain("", self.username, self.password)
+                    return self.conn
+                except Exception:
+                    pass
+
+                # Variant 4: authzid=full email, authcid=full email
+                try:
+                    self._try_sasl_plain(self.username, self.username, self.password)
+                    return self.conn
+                except Exception:
+                    pass
+
                 raise RuntimeError(
-                    f"IMAP server {self.host}:{self.port} does not advertise AUTH=LOGIN or AUTH=PLAIN after STARTTLS"
+                    f"SASL PLAIN authentication failed for all variants on {self.host}:{self.port}"
                 )
+
+            # No supported auth methods
+            raise RuntimeError(
+                f"IMAP server {self.host}:{self.port} does not support LOGIN or PLAIN after STARTTLS"
+            )
 
         else:
             # Plain LOGIN (only safe if server allows it)
