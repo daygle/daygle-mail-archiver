@@ -17,12 +17,14 @@
 
     <div class="form-group">
         <label>Retention Period</label>
-        <input name="retention_value" type="number" min="1" value="{{ settings.retention_value or '1' }}">
-        <select name="retention_unit">
-            <option value="days" {% if settings.retention_unit == 'days' %}selected{% endif %}>Day(s)</option>
-            <option value="months" {% if settings.retention_unit == 'months' %}selected{% endif %}>Month(s)</option>
-            <option value="years" {% if settings.retention_unit == 'years' or not settings.retention_unit %}selected{% endif %}>Year(s)</option>
-        </select>
+        <div class="form-row">
+            <input name="retention_value" type="number" min="1" value="{{ settings.retention_value or '1' }}">
+            <select name="retention_unit">
+                <option value="days" {% if settings.retention_unit == 'days' %}selected{% endif %}>Day(s)</option>
+                <option value="months" {% if settings.retention_unit == 'months' %}selected{% endif %}>Month(s)</option>
+                <option value="years" {% if settings.retention_unit == 'years' or not settings.retention_unit %}selected{% endif %}>Year(s)</option>
+            </select>
+        </div>
     </div>
 
     <button type="submit">Save</button>

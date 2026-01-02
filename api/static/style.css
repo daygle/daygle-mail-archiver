@@ -266,3 +266,25 @@ button.test-btn:hover {
     color: #b30000;
     font-weight: bold;
 }
+
+.form-row {
+    display: flex;
+    gap: 10px;
+    align-items: end;
+}
+
+.form-row input,
+.form-row select {
+    flex: 1;
+    width: auto; /* Override full width for flex items */
+}
+
+.test-connection-form {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.test-connection-form button {
+    margin-top: 0;
+}
