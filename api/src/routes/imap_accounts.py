@@ -244,11 +244,10 @@ def test_connection(
         "enabled": enabled,
     }
 
+    msg = request.session.pop("flash", None)
+
     return templates.TemplateResponse(
         "imap_account_form.html",
-        {
-            "request": request,
-            "account": account,
-            "flash": request.session.pop("flash", None),
-        },
+        {"request": request, "account": account, "flash": msg},
     )
+

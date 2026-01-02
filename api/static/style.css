@@ -107,3 +107,17 @@ pre {
     border: 1px solid #a7f3d0;
     font-weight: 500;
 }
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+button.test-btn {
+    background: #059669; /* green */
+}
+
+button.test-btn:hover {
+    background: #047857;
+}
