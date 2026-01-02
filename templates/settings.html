@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Settings</h2>
+
+<form method="post">
+
+    <div class="form-group">
+        <label>Page Size</label>
+        <input name="page_size" type="number" value="{{ settings.page_size }}">
+    </div>
+
+    <button type="submit">Save</button>
+
+</form>
+
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Error Log</h2>
+
+<table>
+    <tr>
+        <th>Time</th>
+        <th>Source</th>
+        <th>Message</th>
+        <th>Details</th>
+    </tr>
+
+    {% for e in errors %}
+    <tr>
+        <td>{{ e.timestamp }}</td>
+        <td>{{ e.source }}</td>
+        <td>{{ e.message }}</td>
+        <td><pre>{{ e.details }}</pre></td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

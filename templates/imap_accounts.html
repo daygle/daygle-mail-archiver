@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>IMAP Accounts</h2>
+
+<a href="/imap_accounts/new"><button>Add New Account</button></a>
+
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Host</th>
+        <th>User</th>
+        <th>SSL</th>
+        <th>Enabled</th>
+        <th>Last Success</th>
+        <th>Last Error</th>
+    </tr>
+
+    {% for a in accounts %}
+    <tr>
+        <td>{{ a.name }}</td>
+        <td>{{ a.host }}:{{ a.port }}</td>
+        <td>{{ a.username }}</td>
+        <td>{{ "Yes" if a.use_ssl else "No" }}</td>
+        <td>{{ "Yes" if a.enabled else "No" }}</td>
+        <td>{{ a.last_success }}</td>
+        <td>{{ a.last_error }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

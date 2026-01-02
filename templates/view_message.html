@@ -1,10 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
+
 <h2>{{ headers.subject }}</h2>
 
-<p><b>From:</b> {{ headers.from }}</p>
-<p><b>To:</b> {{ headers.to }}</p>
-<p><b>Date:</b> {{ headers.date }}</p>
+<p><strong>From:</strong> {{ headers.from }}</p>
+<p><strong>To:</strong> {{ headers.to }}</p>
+<p><strong>Date:</strong> {{ headers.date }}</p>
 
 <hr>
 
@@ -16,7 +17,8 @@
 
 <hr>
 
-<a href="/messages/{{ message.id }}/download">Download .eml</a>
+<a href="/messages/{{ message.id }}/download">
+    <button>Download .eml</button>
+</a>
 
 {% endblock %}
-``

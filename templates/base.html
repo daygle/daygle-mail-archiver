@@ -5,14 +5,18 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <nav>
-        <a href="/messages">Messages</a> |
-        <a href="/imap_accounts">IMAP Accounts</a> |
-        <a href="/settings">Settings</a> |
-        <a href="/error_log">Error Log</a> |
-        <a href="/logout">Logout</a>
-    </nav>
-    <hr>
+
+<nav>
+    <a href="/messages">Messages</a>
+    <a href="/imap_accounts">IMAP Accounts</a>
+    <a href="/settings">Settings</a>
+    <a href="/error_log">Error Log</a>
+    <a href="/logout">Logout</a>
+</nav>
+
+<div class="container">
     {% block content %}{% endblock %}
+</div>
+
 </body>
 </html>
