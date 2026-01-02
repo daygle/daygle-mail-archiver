@@ -1,6 +1,0 @@
-psycopg[binary]
-cryptography
-python-dotenv
-mail-parser
-aioimaplib
-SQLAlchemy

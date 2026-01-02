@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>{{ headers.subject }}</h2>
+
+<p><b>From:</b> {{ headers.from }}</p>
+<p><b>To:</b> {{ headers.to }}</p>
+<p><b>Date:</b> {{ headers.date }}</p>
+
+<hr>
+
+{% if body.html %}
+<div>{{ body.html | safe }}</div>
+{% else %}
+<pre>{{ body.text }}</pre>
+{% endif %}
+
+<hr>
+
+<a href="/messages/{{ message.id }}/download">Download .eml</a>
+
+{% endblock %}
+``

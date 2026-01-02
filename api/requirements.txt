@@ -1,12 +1,8 @@
 fastapi
 uvicorn
-psycopg[binary]
-psycopg2-binary
-sqlalchemy
-python-dotenv
 jinja2
-mail-parser
-itsdangerous
-cryptography
-imapclient
 python-multipart
+sqlalchemy
+psycopg2
+cryptography
+email-validator

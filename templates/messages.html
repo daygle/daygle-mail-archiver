@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Messages</h2>
+
+<form method="get">
+    <input name="q" placeholder="Search" value="{{ q }}">
+    <button type="submit">Search</button>
+</form>
+
+<table border="1" cellpadding="5">
+<tr>
+    <th>Date</th>
+    <th>Subject</th>
+    <th>Sender</th>
+    <th>Source</th>
+    <th>Folder</th>
+</tr>
+
+{% for m in messages %}
+<tr>
+    <td>{{ m.date }}</td>
+    <td><a href="/messages/{{ m.id }}">{{ m.subject }}</a></td>
+    <td>{{ m.sender }}</td>
+    <td>{{ m.source }}</td>
+    <td>{{ m.folder }}</td>
+</tr>
+{% endfor %}
+</table>
+
+{% endblock %}
