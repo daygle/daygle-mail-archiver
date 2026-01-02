@@ -12,17 +12,31 @@ nav {
     color: white;
     padding: 12px 20px;
     display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.burger {
+    display: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: white;
+    margin-right: 15px;
+}
+
+.nav-links {
+    display: flex;
     gap: 20px;
     align-items: center;
 }
 
-nav a {
+.nav-links a {
     color: #d1d5db;
     text-decoration: none;
     font-weight: 500;
 }
 
-nav a:hover {
+.nav-links a:hover {
     color: white;
 }
 
@@ -287,4 +301,35 @@ button.test-btn:hover {
 
 .test-connection-form button {
     margin-top: 0;
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+    .burger {
+        display: block;
+    }
+
+    .nav-links {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #1f2937;
+        flex-direction: column;
+        gap: 0;
+        padding: 10px 0;
+        display: none;
+        border-top: 1px solid #374151;
+    }
+
+    .nav-links a {
+        padding: 10px 20px;
+        border-bottom: 1px solid #374151;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    #nav-toggle:checked ~ .nav-links {
+        display: flex;
+    }
 }
