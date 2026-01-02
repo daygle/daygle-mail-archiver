@@ -107,6 +107,7 @@ CREATE TABLE IF NOT EXISTS settings (
 CREATE TABLE IF NOT EXISTS error_log (
     id SERIAL PRIMARY KEY,
     timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    level TEXT NOT NULL DEFAULT 'error',
     source TEXT,
     message TEXT NOT NULL,
     details TEXT

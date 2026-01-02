@@ -4,6 +4,7 @@ from fastapi.templating import Jinja2Templates
 import bcrypt
 
 from utils.db import query
+from utils.logger import log
 
 templates = Jinja2Templates(directory="templates")
 
@@ -24,6 +25,7 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
     ).mappings().first()
 
     if not user:
+        log("warning", "auth", f"Failed login attempt for unknown user: {username}")
         return templates.TemplateResponse(
             "login.html",
             {"request": request, "error": "Invalid credentials"},
@@ -35,14 +37,17 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
         request.session["username"] = user["username"]
         request.session["date_format"] = user["date_format"]
         request.session["needs_password"] = True
+        log("info", "auth", f"User {username} initiated first login")
         return RedirectResponse("/set_password", status_code=303)
 
     if bcrypt.checkpw(password.encode(), user["password_hash"].encode()):
         request.session["user_id"] = user["id"]
         request.session["username"] = user["username"]
         request.session["date_format"] = user["date_format"]
+        log("info", "auth", f"User {username} logged in successfully")
         return RedirectResponse("/messages", status_code=303)
 
+    log("warning", "auth", f"Failed login attempt for user: {username}")
     return templates.TemplateResponse(
         "login.html",
         {"request": request, "error": "Invalid credentials"},

@@ -1,11 +1,22 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2>Error Log</h2>
+<h2>Log Viewer</h2>
+
+<form method="get" style="margin-bottom: 20px;">
+    <label>Filter by Level:</label>
+    <select name="level" onchange="this.form.submit()">
+        <option value="all" {% if current_level == 'all' %}selected{% endif %}>All</option>
+        <option value="error" {% if current_level == 'error' %}selected{% endif %}>Error</option>
+        <option value="warning" {% if current_level == 'warning' %}selected{% endif %}>Warning</option>
+        <option value="info" {% if current_level == 'info' %}selected{% endif %}>Info</option>
+    </select>
+</form>
 
 <table>
     <tr>
         <th>Time</th>
+        <th>Level</th>
         <th>Source</th>
         <th>Message</th>
         <th>Details</th>
@@ -13,7 +24,8 @@
 
     {% for e in errors %}
     <tr>
-        <td>{{ e.timestamp }}</td>
+        <td>{{ e.timestamp.strftime(request.session.date_format) }}</td>
+        <td>{{ e.level }}</td>
         <td>{{ e.source }}</td>
         <td>{{ e.message }}</td>
         <td><pre>{{ e.details }}</pre></td>

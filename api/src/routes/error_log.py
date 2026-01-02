@@ -11,20 +11,28 @@ def require_login(request: Request):
     return "user_id" in request.session
 
 @router.get("/error_log")
-def error_log(request: Request):
+def error_log(request: Request, level: str = "all"):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
+    where = ""
+    params = {}
+    if level != "all":
+        where = "WHERE level = :level"
+        params["level"] = level
+
     rows = query(
-        """
-        SELECT id, timestamp, source, message, details
+        f"""
+        SELECT id, timestamp, level, source, message, details
         FROM error_log
+        {where}
         ORDER BY timestamp DESC
         LIMIT 200
-        """
+        """,
+        params
     ).mappings().all()
 
     return templates.TemplateResponse(
         "error_log.html",
-        {"request": request, "errors": rows},
+        {"request": request, "errors": rows, "current_level": level},
     )

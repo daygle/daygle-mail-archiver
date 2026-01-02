@@ -6,22 +6,12 @@ from datetime import datetime, timezone, timedelta
 from db import query, execute
 from security import decrypt_password
 from imap_client import ImapConnection
+from logger import log  # Assuming logger.py is in worker/src or adjust path
 
 POLL_INTERVAL_FALLBACK = 300  # seconds
 
-def log_error(source: str, message: str, details: str = ""):
-    execute(
-        """
-        INSERT INTO error_log (timestamp, source, message, details)
-        VALUES (:ts, :source, :message, :details)
-        """,
-        {
-            "ts": datetime.now(timezone.utc),
-            "source": source,
-            "message": message[:500],
-            "details": details[:4000],
-        },
-    )
+def log_error(source: str, message: str, details: str = "", level: str = "error"):
+    log(level, source, message, details)
 
 def update_heartbeat(account_id: int):
     execute(
