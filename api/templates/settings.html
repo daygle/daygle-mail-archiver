@@ -31,4 +31,14 @@
 
 </form>
 
+<h3>Database Backup/Restore</h3>
+<p>Use these tools to backup or restore the database. Backup creates a SQL file; restore requires a previously created backup file.</p>
+
+<a href="/settings/backup" class="btn btn-primary">Download Backup</a>
+
+<form method="post" action="/settings/restore" enctype="multipart/form-data" style="margin-top: 10px;">
+    <input type="file" name="file" accept=".sql" required>
+    <button type="submit" class="btn btn-danger">Restore from Backup</button>
+</form>
+
 {% endblock %}

@@ -1,6 +1,9 @@
-from fastapi import APIRouter, Request, Form
-from fastapi.responses import RedirectResponse
+from fastapi import APIRouter, Request, Form, UploadFile, File
+from fastapi.responses import RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
+import subprocess
+import os
+from io import BytesIO
 
 from utils.db import query
 
@@ -77,3 +80,52 @@ def save_settings(
 
     flash(request, "Settings updated successfully.")
     return RedirectResponse("/settings", status_code=303)
+
+@router.get("/settings/backup")
+def backup_db(request: Request):
+    if not require_login(request):
+        return RedirectResponse("/login", status_code=303)
+
+    dsn = os.getenv("DB_DSN")
+    if not dsn:
+        flash(request, "DB_DSN not configured.")
+        return RedirectResponse("/settings", status_code=303)
+
+    try:
+        result = subprocess.run(["pg_dump", dsn, "--format=plain"], capture_output=True, text=True, timeout=60)
+        if result.returncode != 0:
+            flash(request, f"Backup failed: {result.stderr}")
+            return RedirectResponse("/settings", status_code=303)
+
+        bio = BytesIO(result.stdout.encode('utf-8'))
+        return StreamingResponse(
+            bio,
+            media_type="application/sql",
+            headers={"Content-Disposition": "attachment; filename=daygle_backup.sql"}
+        )
+    except Exception as e:
+        flash(request, f"Backup error: {str(e)}")
+        return RedirectResponse("/settings", status_code=303)
+
+@router.post("/settings/restore")
+def restore_db(request: Request, file: UploadFile = File(...)):
+    if not require_login(request):
+        return RedirectResponse("/login", status_code=303)
+
+    dsn = os.getenv("DB_DSN")
+    if not dsn:
+        flash(request, "DB_DSN not configured.")
+        return RedirectResponse("/settings", status_code=303)
+
+    try:
+        content = file.file.read().decode('utf-8')
+        result = subprocess.run(["psql", dsn], input=content, capture_output=True, text=True, timeout=120)
+        if result.returncode != 0:
+            flash(request, f"Restore failed: {result.stderr}")
+            return RedirectResponse("/settings", status_code=303)
+
+        flash(request, "Database restored successfully.")
+        return RedirectResponse("/settings", status_code=303)
+    except Exception as e:
+        flash(request, f"Restore error: {str(e)}")
+        return RedirectResponse("/settings", status_code=303)
