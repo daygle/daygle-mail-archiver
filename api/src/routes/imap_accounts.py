@@ -1,4 +1,6 @@
 import base64
+import traceback
+import sys
 
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import RedirectResponse
@@ -366,6 +368,8 @@ def test_connection(
         flash(request, "Connection successful")
 
     except Exception as e:
+        print("=== IMAP TEST ERROR ===", file=sys.stderr)
+        traceback.print_exc()
         flash(request, f"Connection failed: {e}")
 
     account = {
