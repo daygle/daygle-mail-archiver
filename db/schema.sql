@@ -87,9 +87,9 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Insert default admin user if not exists
+-- Insert default admin user with no password (set on first login)
 INSERT INTO users (username, password_hash)
-VALUES ('administrator', '$2b$12$abcdefghijklmnopqrstuvwx')  -- Replace with actual bcrypt hash for 'administrator'
+VALUES ('administrator', '')
 ON CONFLICT (username) DO NOTHING;
 
 -- ----------------------------
