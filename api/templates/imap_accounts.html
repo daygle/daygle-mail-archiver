@@ -7,10 +7,14 @@
 
 <table>
     <tr>
+        <th>ID</th>
         <th>Name</th>
         <th>Host</th>
+        <th>Port</th>
         <th>User</th>
         <th>SSL</th>
+        <th>STARTTLS</th>
+        <th>Poll Interval</th>
         <th>Delete After Processing</th>
         <th>Enabled</th>
         <th>Last Success</th>
@@ -30,6 +34,11 @@
         <td>{{ acc.poll_interval_seconds }}</td>
         <td>{{ "Yes" if acc.delete_after_processing else "No" }}</td>
         <td>{{ "Yes" if acc.enabled else "No" }}</td>
+        <td>{{ acc.last_success }}</td>
+        <td>{{ acc.last_error }}</td>
+        <td>
+            <a href="/imap_accounts/{{ acc.id }}/edit">Edit</a>
+        </td>
     </tr>
     {% endfor %}
 </table>
