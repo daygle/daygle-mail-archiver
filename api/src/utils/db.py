@@ -1,28 +1,12 @@
 import os
-from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
-from starlette.middleware.sessions import SessionMiddleware
-from jinja2 import Environment, FileSystemLoader
+from sqlalchemy import create_engine, text
 
-from routes import messages, imap_accounts, settings, auth, error_log
+DB_DSN = os.getenv("DB_DSN")
+if not DB_DSN:
+    raise RuntimeError("DB_DSN is not set")
 
-SESSION_SECRET = os.getenv("SESSION_SECRET", "change-me")
+engine = create_engine(DB_DSN, future=True)
 
-app = FastAPI()
-
-# Sessions
-app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET)
-
-# Static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-# Routers
-app.include_router(auth.router)
-app.include_router(messages.router)
-app.include_router(imap_accounts.router)
-app.include_router(settings.router)
-app.include_router(error_log.router)
-
-@app.get("/")
-def root():
-    return {"status": "ok"}
+def query(sql: str, params=None):
+    with engine.begin() as conn:
+        return conn.execute(text(sql), params or {})
