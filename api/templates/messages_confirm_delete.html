@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="confirm-overlay">
+  <div class="confirm-modal">
+    <h2>Confirm Deletion</h2>
+    <p>You are about to delete {{ count }} message{% if count != 1 %}s{% endif %}.</p>
+
+    <p>Choose how you want to delete them:</p>
+
+    <form method="post" action="/messages/delete">
+      {% for id in ids %}
+      <input type="hidden" name="ids" value="{{ id }}">
+      {% endfor %}
+      <input type="hidden" name="return_url" value="{{ return_url }}">
+
+      <div class="confirm-buttons">
+        <button type="submit" name="mode" value="db" class="btn btn-danger">
+          Database Only
+        </button>
+        <button type="submit" name="mode" value="imap" class="btn btn-warning">
+          Database and IMAP
+        </button>
+      </div>
+
+      <div class="confirm-cancel">
+        <a href="{{ return_url }}" class="btn btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

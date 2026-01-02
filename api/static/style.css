@@ -121,3 +121,107 @@ button.test-btn {
 button.test-btn:hover {
     background: #047857;
 }
+
+.flash-message {
+  background: #e1f3d8;
+  border: 1px solid #b0d69b;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  border-radius: 4px;
+  color: #31572c;
+}
+
+.messages-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+.messages-table th,
+.messages-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid #ddd;
+}
+
+.messages-table th {
+  text-align: left;
+  background: #f5f5f5;
+}
+
+.messages-actions {
+  margin-top: 10px;
+  text-align: right;
+}
+
+.empty-state {
+  text-align: center;
+  color: #777;
+}
+
+.confirm-overlay {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 0;
+}
+
+.confirm-modal {
+  max-width: 480px;
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+  padding: 20px 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  margin: 0 auto;
+}
+
+.confirm-modal h2 {
+  margin-top: 0;
+}
+
+.confirm-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.confirm-cancel {
+  margin-top: 12px;
+  text-align: right;
+}
+
+/* Basic button styles if you don't already have them */
+.btn {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: #007bff;
+  color: #fff;
+  border-color: #007bff;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: #fff;
+  border-color: #6c757d;
+}
+
+.btn-danger {
+  background: #dc3545;
+  color: #fff;
+  border-color: #dc3545;
+}
+
+.btn-warning {
+  background: #ffc107;
+  color: #212529;
+  border-color: #ffc107;
+}

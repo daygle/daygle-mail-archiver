@@ -1,24 +1,41 @@
 {% extends "base.html" %}
+
 {% block content %}
+<h1>{{ message.subject or "(no subject)" }}</h1>
 
-<h2>{{ headers.subject }}</h2>
-
-<p><strong>From:</strong> {{ headers.from }}</p>
-<p><strong>To:</strong> {{ headers.to }}</p>
-<p><strong>Date:</strong> {{ headers.date }}</p>
-
-<hr>
-
-{% if body.html %}
-<div>{{ body.html | safe }}</div>
-{% else %}
-<pre>{{ body.text }}</pre>
+{% if flash %}
+<div class="flash-message">
+  {{ flash }}
+</div>
 {% endif %}
 
+<div class="message-meta">
+  <p><strong>From:</strong> {{ message.sender }}</p>
+  <p><strong>To:</strong> {{ message.recipients }}</p>
+  <p><strong>Date:</strong> {{ message.date }}</p>
+  <p><strong>Account:</strong> {{ message.source }}</p>
+  <p><strong>Folder:</strong> {{ message.folder }}</p>
+</div>
+
+<div class="message-actions">
+  <a href="/messages/{{ message.id }}/download" class="btn btn-secondary">Download EML</a>
+
+  <form method="post" action="/messages/{{ message.id }}/delete/confirm" style="display:inline;">
+    <button type="submit" class="btn btn-danger">Delete</button>
+  </form>
+</div>
+
 <hr>
 
-<a href="/messages/{{ message.id }}/download">
-    <button>Download .eml</button>
-</a>
+<h2>Headers</h2>
+<pre class="message-headers">
+{% for k, v in headers.items() %}
+{{ k }}: {{ v }}
+{% endfor %}
+</pre>
 
+<h2>Body</h2>
+<div class="message-body">
+  {{ body | safe }}
+</div>
 {% endblock %}

@@ -1,31 +1,102 @@
 {% extends "base.html" %}
+
 {% block content %}
+<h1>Messages</h1>
 
-<h2>Messages</h2>
+{% if flash %}
+<div class="flash-message">
+  {{ flash }}
+</div>
+{% endif %}
 
-<form method="get" style="margin-bottom: 20px;">
-    <input name="q" placeholder="Search messages…" value="{{ q }}">
-    <button type="submit">Search</button>
+<form method="get" action="/messages" class="messages-filter-form">
+  <input type="text" name="q" value="{{ q }}" placeholder="Search subject, sender, recipients">
+  <input type="text" name="account" value="{{ account }}" placeholder="Account">
+  <input type="text" name="folder" value="{{ folder }}" placeholder="Folder">
+  <button type="submit" class="btn btn-primary">Filter</button>
 </form>
 
-<table>
-    <tr>
+<form method="post" action="/messages/delete/confirm" id="messages-bulk-form">
+  <table class="messages-table">
+    <thead>
+      <tr>
+        <th>
+          <input type="checkbox" id="select-all">
+        </th>
         <th>Date</th>
-        <th>Subject</th>
-        <th>Sender</th>
-        <th>Source</th>
+        <th>Account</th>
         <th>Folder</th>
-    </tr>
+        <th>From</th>
+        <th>To</th>
+        <th>Subject</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for msg in messages %}
+      <tr>
+        <td>
+          <input type="checkbox" name="ids" value="{{ msg.id }}" class="msg-checkbox">
+        </td>
+        <td>{{ msg.date }}</td>
+        <td>{{ msg.source }}</td>
+        <td>{{ msg.folder }}</td>
+        <td>{{ msg.sender }}</td>
+        <td>{{ msg.recipients }}</td>
+        <td>
+          <a href="/messages/{{ msg.id }}">{{ msg.subject or "(no subject)" }}</a>
+        </td>
+      </tr>
+      {% endfor %}
+      {% if messages|length == 0 %}
+      <tr>
+        <td colspan="7" class="empty-state">No messages found.</td>
+      </tr>
+      {% endif %}
+    </tbody>
+  </table>
 
-    {% for m in messages %}
-    <tr>
-        <td>{{ m.date }}</td>
-        <td><a href="/messages/{{ m.id }}">{{ m.subject }}</a></td>
-        <td>{{ m.sender }}</td>
-        <td>{{ m.source }}</td>
-        <td>{{ m.folder }}</td>
-    </tr>
-    {% endfor %}
-</table>
+  <div class="messages-actions">
+    <button type="submit" class="btn btn-danger" id="delete-selected-btn" disabled>
+      Delete Selected
+    </button>
+  </div>
+</form>
 
+<div class="pagination">
+  {% if page > 1 %}
+  <a href="/messages?page={{ page - 1 }}&page_size={{ page_size }}&q={{ q }}&account={{ account }}&folder={{ folder }}">Previous</a>
+  {% endif %}
+
+  <span>Page {{ page }}</span>
+
+  {% if (page * page_size) < total %}
+  <a href="/messages?page={{ page + 1 }}&page_size={{ page_size }}&q={{ q }}&account={{ account }}&folder={{ folder }}">Next</a>
+  {% endif %}
+</div>
+
+<script>
+  (function () {
+    const selectAll = document.getElementById('select-all');
+    const checkboxes = document.querySelectorAll('.msg-checkbox');
+    const deleteBtn = document.getElementById('delete-selected-btn');
+
+    function updateDeleteButton() {
+      const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+      deleteBtn.disabled = !anyChecked;
+    }
+
+    if (selectAll) {
+      selectAll.addEventListener('change', function () {
+        checkboxes.forEach(cb => cb.checked = selectAll.checked);
+        updateDeleteButton();
+      });
+    }
+
+    checkboxes.forEach(cb => {
+      cb.addEventListener('change', updateDeleteButton);
+    });
+
+    updateDeleteButton();
+  })();
+</script>
 {% endblock %}
