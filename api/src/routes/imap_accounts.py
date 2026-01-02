@@ -294,9 +294,17 @@ def test_connection(
     enabled: bool = Form(True),
     account_id: int = Form(None),
 ):
-    print("DEBUG use_ssl =", use_ssl)
-    print("DEBUG require_starttls =", require_starttls)
-    print("DEBUG password =", repr(password))
+    # ---------------------------------------------------------
+    # Load and decrypt stored password if none was provided
+    # ---------------------------------------------------------
+    if not password and account_id:
+        from db import get_account_by_id
+        from crypto import decrypt_password  # adjust import to your project
+
+        acc = get_account_by_id(account_id)
+        if acc and acc.password:
+            password = decrypt_password(acc.password)
+
     try:
         if use_ssl:
             conn = IMAP4_SSL(host, port)
