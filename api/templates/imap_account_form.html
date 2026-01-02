@@ -84,11 +84,11 @@
     <!-- Password intentionally blank for test -->
     <input type="hidden" name="password" value="">
 
-    <input type="hidden" name="use_ssl" value="{{ 1 if account and account.use_ssl else 0 }}">
-    <input type="hidden" name="require_starttls" value="{{ 1 if account and account.require_starttls else 0 }}">
+    <input type="hidden" name="use_ssl" value="{{ 'true' if account and account.use_ssl else 'false' }}">
+    <input type="hidden" name="require_starttls" value="{{ 'true' if account and account.require_starttls else 'false' }}">
     <input type="hidden" name="poll_interval_seconds" value="{{ account.poll_interval_seconds if account else '300' }}">
-    <input type="hidden" name="delete_after_processing" value="{{ 1 if account and account.delete_after_processing else 0 }}">
-    <input type="hidden" name="enabled" value="{{ 1 if not account or account.enabled else 0 }}">
+    <input type="hidden" name="delete_after_processing" value="{{ 'true' if account and account.delete_after_processing else 'false' }}">
+    <input type="hidden" name="enabled" value="{{ 'true' if not account or account.enabled else 'false' }}">
 
     <button type="submit" class="test-btn">Test Connection</button>
 
