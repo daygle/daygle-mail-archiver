@@ -4,6 +4,7 @@ from fastapi.templating import Jinja2Templates
 import subprocess
 import os
 from io import BytesIO
+from urllib.parse import urlparse
 
 from utils.db import query
 
@@ -92,7 +93,25 @@ def backup_db(request: Request):
         return RedirectResponse("/settings", status_code=303)
 
     try:
-        result = subprocess.run(["pg_dump", dsn, "--format=plain"], capture_output=True, text=True, timeout=60)
+        parsed = urlparse(dsn)
+        host = parsed.hostname
+        port = parsed.port or 5432
+        user = parsed.username
+        password = parsed.password
+        dbname = parsed.path.lstrip('/')
+
+        env = os.environ.copy()
+        env['PGPASSWORD'] = password
+
+        result = subprocess.run([
+            "pg_dump",
+            "--host", host,
+            "--port", str(port),
+            "--username", user,
+            "--dbname", dbname,
+            "--format=plain"
+        ], env=env, capture_output=True, text=True, timeout=60)
+
         if result.returncode != 0:
             flash(request, f"Backup failed: {result.stderr}")
             return RedirectResponse("/settings", status_code=303)
@@ -118,8 +137,26 @@ def restore_db(request: Request, file: UploadFile = File(...)):
         return RedirectResponse("/settings", status_code=303)
 
     try:
+        parsed = urlparse(dsn)
+        host = parsed.hostname
+        port = parsed.port or 5432
+        user = parsed.username
+        password = parsed.password
+        dbname = parsed.path.lstrip('/')
+
         content = file.file.read().decode('utf-8')
-        result = subprocess.run(["psql", dsn], input=content, capture_output=True, text=True, timeout=120)
+
+        env = os.environ.copy()
+        env['PGPASSWORD'] = password
+
+        result = subprocess.run([
+            "psql",
+            "--host", host,
+            "--port", str(port),
+            "--username", user,
+            "--dbname", dbname
+        ], env=env, input=content, capture_output=True, text=True, timeout=120)
+
         if result.returncode != 0:
             flash(request, f"Restore failed: {result.stderr}")
             return RedirectResponse("/settings", status_code=303)
