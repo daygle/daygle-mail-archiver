@@ -298,12 +298,20 @@ def test_connection(
     # Load and decrypt stored password if none was provided
     # ---------------------------------------------------------
     if not password and account_id:
-        from ..db import get_account_by_id
-        from ..crypto import decrypt_password
+        from utils.db import query
+        from utils.security import decrypt_password
 
-        acc = get_account_by_id(account_id)
-        if acc and acc.password:
-            password = decrypt_password(acc.password)
+        acc = query(
+            """
+            SELECT password_encrypted
+            FROM imap_accounts
+            WHERE id = :id
+            """,
+            {"id": account_id},
+        ).mappings().first()
+
+        if acc and acc["password_encrypted"]:
+            password = decrypt_password(acc["password_encrypted"])
 
     try:
         if use_ssl:
