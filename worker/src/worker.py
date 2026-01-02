@@ -1,20 +1,13 @@
 import time
 import gzip
 import email
-from datetime import datetime, timezone, timedelta
-from dateutil.relativedelta import relativedelta
+from datetime import datetime, timezone
 
-from utils.db import query, execute
-from utils.settings import get_retention_config, set_retention_last_run
+from db import query, execute
 from security import decrypt_password
 from imap_client import ImapConnection
 
 POLL_INTERVAL_FALLBACK = 300  # seconds
-
-
-# ---------------------------------------------------------
-# Error Logging
-# ---------------------------------------------------------
 
 def log_error(source: str, message: str, details: str = ""):
     execute(
@@ -30,11 +23,6 @@ def log_error(source: str, message: str, details: str = ""):
         },
     )
 
-
-# ---------------------------------------------------------
-# IMAP State Helpers
-# ---------------------------------------------------------
-
 def update_heartbeat(account_id: int):
     execute(
         """
@@ -44,7 +32,6 @@ def update_heartbeat(account_id: int):
         """,
         {"ts": datetime.now(timezone.utc), "id": account_id},
     )
-
 
 def update_success(account_id: int):
     execute(
@@ -56,7 +43,6 @@ def update_success(account_id: int):
         {"ts": datetime.now(timezone.utc), "id": account_id},
     )
 
-
 def update_error(account_id: int, msg: str):
     execute(
         """
@@ -66,7 +52,6 @@ def update_error(account_id: int, msg: str):
         """,
         {"msg": msg[:500], "id": account_id},
     )
-
 
 def get_accounts():
     rows = query(
@@ -79,7 +64,6 @@ def get_accounts():
         """
     ).mappings().all()
     return rows
-
 
 def get_last_uid(account_id: int, folder: str) -> int:
     row = query(
@@ -95,7 +79,6 @@ def get_last_uid(account_id: int, folder: str) -> int:
         return int(row["last_uid"])
     return 0
 
-
 def set_last_uid(account_id: int, folder: str, uid: int):
     execute(
         """
@@ -107,12 +90,12 @@ def set_last_uid(account_id: int, folder: str, uid: int):
         {"id": account_id, "folder": folder, "uid": uid},
     )
 
-
-# ---------------------------------------------------------
-# Message Storage
-# ---------------------------------------------------------
-
-def store_message(source: str, folder: str, uid: int, msg_bytes: bytes):
+def store_message(
+    source: str,
+    folder: str,
+    uid: int,
+    msg_bytes: bytes,
+):
     compressed_bytes = gzip.compress(msg_bytes)
 
     msg = email.message_from_bytes(msg_bytes)
@@ -145,79 +128,10 @@ def store_message(source: str, folder: str, uid: int, msg_bytes: bytes):
         },
     )
 
-
-# ---------------------------------------------------------
-# Retention Logic
-# ---------------------------------------------------------
-
-def compute_retention_cutoff(retention):
-    enabled = retention["enabled"] == "true"
-    if not enabled:
-        return None
-
-    try:
-        value = int(retention["value"])
-    except ValueError:
-        return None
-
-    if value < 1:
-        return None
-
-    unit = retention["unit"]
-    now = datetime.utcnow()
-
-    if unit == "days":
-        return now - timedelta(days=value)
-    elif unit == "months":
-        return now - relativedelta(months=value)
-    elif unit == "years":
-        return now - relativedelta(years=value)
-    return None
-
-
-def run_retention_purge_in_worker():
-    retention = get_retention_config()
-    cutoff = compute_retention_cutoff(retention)
-
-    if cutoff is None:
-        return
-
-    row = query(
-        """
-        SELECT COUNT(*) AS c
-        FROM messages
-        WHERE created_at < :cutoff
-        """,
-        {"cutoff": cutoff},
-    ).mappings().first()
-
-    count = row["c"] if row else 0
-
-    if count == 0:
-        set_retention_last_run(datetime.utcnow())
-        print(f"[Retention] No messages older than {cutoff}.")
-        return
-
-    query(
-        """
-        DELETE FROM messages
-        WHERE created_at < :cutoff
-        """,
-        {"cutoff": cutoff},
-    )
-
-    set_retention_last_run(datetime.utcnow())
-    print(f"[Retention] Purged {count} message(s) older than {cutoff}.")
-
-
-# ---------------------------------------------------------
-# IMAP Processing
-# ---------------------------------------------------------
-
 def process_account(account):
     account_id = account["id"]
     name = account["name"]
-    source = name
+    source = name  # used as source label in messages table
 
     update_heartbeat(account_id)
 
@@ -243,17 +157,28 @@ def process_account(account):
             if status != "OK":
                 raise RuntimeError(f"LIST failed: {status}")
 
+            # Simple approach: iterate over all mailboxes
             for mbox in mailboxes:
                 parts = mbox.decode().split(" ")
                 folder = parts[-1].strip('"')
 
+                # Optional: skip special folders if desired
+                # Here we just process everything.
                 conn.select(folder, readonly=True)
 
                 last_uid = get_last_uid(account_id, folder)
 
-                criteria = f"(UID {last_uid+1}:*)" if last_uid > 0 else "ALL"
+                # UID search: all messages with UID greater than last_uid
+                if last_uid > 0:
+                    criteria = f"(UID {last_uid+1}:*)"
+                else:
+                    criteria = "ALL"
+
                 status, data = conn.uid("SEARCH", None, criteria)
-                if status != "OK" or not data or not data[0]:
+                if status != "OK":
+                    continue
+
+                if not data or not data[0]:
                     continue
 
                 uids = [int(u) for u in data[0].split()]
@@ -269,7 +194,8 @@ def process_account(account):
 
                     raw = msg_data[0][1]
                     store_message(source, folder, uid, raw)
-                    max_uid = max(max_uid, uid)
+                    if uid > max_uid:
+                        max_uid = uid
 
                 if max_uid > last_uid:
                     set_last_uid(account_id, folder, max_uid)
@@ -281,11 +207,6 @@ def process_account(account):
         log_error(source, msg)
         update_error(account_id, msg)
 
-
-# ---------------------------------------------------------
-# Main Loop
-# ---------------------------------------------------------
-
 def main_loop():
     while True:
         accounts = get_accounts()
@@ -294,13 +215,12 @@ def main_loop():
             continue
 
         for account in accounts:
+            poll_interval = account["poll_interval_seconds"] or POLL_INTERVAL_FALLBACK
             process_account(account)
+            # No per-account sleep here; we do a global sleep after all accounts
 
-        # Run retention purge once per cycle
-        run_retention_purge_in_worker()
-
+        # Sleep before next cycle
         time.sleep(POLL_INTERVAL_FALLBACK)
-
 
 if __name__ == "__main__":
     main_loop()
