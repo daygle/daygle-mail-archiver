@@ -9,14 +9,22 @@
 <nav>
     <input type="checkbox" id="nav-toggle" style="display: none;">
     <label for="nav-toggle" class="burger">☰</label>
-    <div class="nav-links">
+    <div class="nav-left">
         <a href="/messages">Messages</a>
         <a href="/imap_accounts">IMAP Accounts</a>
         <a href="/users">Users</a>
         <a href="/settings">Settings</a>
         <a href="/error_log">Error Log</a>
-        <a href="/profile">Profile</a>
-        {% if request.session.username %}Logged in as {{ request.session.username }} | {% endif %}<a href="/logout">Logout</a>
+    </div>
+    <div class="nav-right">
+        {% if request.session.username %}
+        <input type="checkbox" id="user-menu-toggle" style="display: none;">
+        <label for="user-menu-toggle" class="username">{{ request.session.username }}</label>
+        <div class="user-menu">
+            <a href="/profile">Profile</a>
+            <a href="/logout">Logout</a>
+        </div>
+        {% endif %}
     </div>
 </nav>
 

@@ -13,6 +13,7 @@ nav {
     padding: 12px 20px;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     position: relative;
 }
 
@@ -24,19 +25,73 @@ nav {
     margin-right: 15px;
 }
 
-.nav-links {
+.nav-left {
     display: flex;
     gap: 20px;
     align-items: center;
 }
 
-.nav-links a {
+.nav-right {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.username {
+    cursor: pointer;
+    color: #d1d5db;
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 4px;
+}
+
+.username:hover {
+    color: white;
+    background: #374151;
+}
+
+.user-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: #1f2937;
+    border: 1px solid #374151;
+    border-radius: 4px;
+    display: none;
+    flex-direction: column;
+    min-width: 120px;
+    z-index: 10;
+}
+
+.user-menu a {
+    color: #d1d5db;
+    text-decoration: none;
+    padding: 10px 15px;
+    border-bottom: 1px solid #374151;
+}
+
+.user-menu a:last-child {
+    border-bottom: none;
+}
+
+.user-menu a:hover {
+    color: white;
+    background: #374151;
+}
+
+#user-menu-toggle:checked ~ .user-menu {
+    display: flex;
+}
+
+.nav-left a,
+.nav-right a {
     color: #d1d5db;
     text-decoration: none;
     font-weight: 500;
 }
 
-.nav-links a:hover {
+.nav-left a:hover,
+.nav-right a:hover {
     color: white;
 }
 
@@ -309,7 +364,7 @@ button.test-btn:hover {
         display: block;
     }
 
-    .nav-links {
+    .nav-left {
         position: absolute;
         top: 100%;
         left: 0;
@@ -322,14 +377,22 @@ button.test-btn:hover {
         border-top: 1px solid #374151;
     }
 
-    .nav-links a {
+    .nav-left a {
         padding: 10px 20px;
         border-bottom: 1px solid #374151;
         width: 100%;
         box-sizing: border-box;
     }
 
-    #nav-toggle:checked ~ .nav-links {
+    #nav-toggle:checked ~ .nav-left {
         display: flex;
+    }
+
+    .nav-right {
+        margin-left: auto;
+    }
+
+    .user-menu {
+        right: 20px;
     }
 }
