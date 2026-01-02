@@ -29,10 +29,10 @@
     <div class="form-group">
         <label>Date Format</label>
         <select name="date_format">
-            <option value="%Y-%m-%d" {% if date_format == '%Y-%m-%d' %}selected{% endif %}>YYYY-MM-DD</option>
-            <option value="%m/%d/%Y" {% if date_format == '%m/%d/%Y' %}selected{% endif %}>MM/DD/YYYY</option>
-            <option value="%d/%m/%Y" {% if date_format == '%d/%m/%Y' %}selected{% endif %}>DD/MM/YYYY</option>
-            <option value="%Y/%m/%d" {% if date_format == '%Y/%m/%d' %}selected{% endif %}>YYYY/MM/DD</option>
+            <option value="%Y-%m-%d %H:%M:%S" {% if date_format == '%Y-%m-%d %H:%M:%S' %}selected{% endif %}>YYYY-MM-DD HH:MM:SS</option>
+            <option value="%m/%d/%Y %H:%M:%S" {% if date_format == '%m/%d/%Y %H:%M:%S' %}selected{% endif %}>MM/DD/YYYY HH:MM:SS</option>
+            <option value="%d/%m/%Y %H:%M:%S" {% if date_format == '%d/%m/%Y %H:%M:%S' %}selected{% endif %}>DD/MM/YYYY HH:MM:SS</option>
+            <option value="%Y/%m/%d %H:%M:%S" {% if date_format == '%Y/%m/%d %H:%M:%S' %}selected{% endif %}>YYYY/MM/DD HH:MM:SS</option>
         </select>
     </div>
     <button type="submit">Update Format</button>
