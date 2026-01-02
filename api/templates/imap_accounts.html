@@ -18,17 +18,18 @@
         <th>Actions</th>
     </tr>
 
-    {% for a in accounts %}
+    {% for acc in accounts %}
     <tr>
-        <td>{{ a.name }}</td>
-        <td>{{ a.host }}:{{ a.port }}</td>
-        <td>{{ a.username }}</td>
-        <td>{{ "Yes" if a.use_ssl else "No" }}</td>
-        <td>{{ "Yes" if account.delete_after_processing else "No" }}</td>
-        <td>{{ "Yes" if a.enabled else "No" }}</td>
-        <td>{{ a.last_success }}</td>
-        <td>{{ a.last_error }}</td>
-        <td><a href="/imap_accounts/{{ a.id }}/edit">Edit</a></td>
+        <td>{{ acc.id }}</td>
+        <td>{{ acc.name }}</td>
+        <td>{{ acc.host }}</td>
+        <td>{{ acc.port }}</td>
+        <td>{{ acc.username }}</td>
+        <td>{{ "Yes" if acc.use_ssl else "No" }}</td>
+        <td>{{ "Yes" if acc.require_starttls else "No" }}</td>
+        <td>{{ acc.poll_interval_seconds }}</td>
+        <td>{{ "Yes" if acc.delete_after_processing else "No" }}</td>
+        <td>{{ "Yes" if acc.enabled else "No" }}</td>
     </tr>
     {% endfor %}
 </table>
