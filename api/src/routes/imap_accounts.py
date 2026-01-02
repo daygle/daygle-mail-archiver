@@ -1,3 +1,5 @@
+import base64
+
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -292,15 +294,42 @@ def test_connection(
 ):
     try:
         if use_ssl:
+            # SSL: straight to IMAP4_SSL, regular LOGIN
             conn = IMAP4_SSL(host, port)
+            conn.login(username, password)
         else:
+            # Plain IMAP, optional STARTTLS + capability-based auth
             conn = IMAP4(host, port)
+
             if require_starttls:
+                # Upgrade connection
                 conn.starttls()
 
-        conn.login(username, password)
-        conn.logout()
+                # Capability-based auth selection
+                caps = conn.capability()  # list of bytes, e.g. [b'IMAP4rev1', b'AUTH=PLAIN', ...]
+                caps_flat = b" ".join(caps)
 
+                if b"AUTH=LOGIN" in caps_flat:
+                    conn.login(username, password)
+                elif b"AUTH=PLAIN" in caps_flat:
+                    # SASL PLAIN: base64("\0username\0password")
+                    auth_string = base64.b64encode(
+                        f"\0{username}\0{password}".encode("utf-8")
+                    ).decode("ascii")
+
+                    def auth_plain(_):
+                        return auth_string
+
+                    conn.authenticate("PLAIN", auth_plain)
+                else:
+                    raise RuntimeError(
+                        "Server does not advertise AUTH=LOGIN or AUTH=PLAIN after STARTTLS"
+                    )
+            else:
+                # No STARTTLS, plain LOGIN (only safe if server allows it)
+                conn.login(username, password)
+
+        conn.logout()
         flash(request, "Connection successful")
     except Exception as e:
         flash(request, f"Connection failed: {e}")
@@ -324,4 +353,3 @@ def test_connection(
         "imap_account_form.html",
         {"request": request, "account": account, "flash": msg},
     )
-
