@@ -204,12 +204,17 @@ def update_account(
 @router.post("/imap_accounts/test")
 def test_connection(
     request: Request,
+    name: str = Form(""),
     host: str = Form(...),
     port: int = Form(...),
     username: str = Form(...),
-    password: str = Form(...),
+    password: str = Form(""),
     use_ssl: bool = Form(False),
     require_starttls: bool = Form(False),
+    poll_interval_seconds: int = Form(300),
+    delete_after_processing: bool = Form(False),
+    enabled: bool = Form(True),
+    account_id: int = Form(None),
 ):
     try:
         if use_ssl:
@@ -226,4 +231,24 @@ def test_connection(
     except Exception as e:
         flash(request, f"Connection failed: {e}")
 
-    return RedirectResponse("/imap_accounts/new", status_code=303)
+    account = {
+        "id": account_id,
+        "name": name,
+        "host": host,
+        "port": port,
+        "username": username,
+        "use_ssl": use_ssl,
+        "require_starttls": require_starttls,
+        "poll_interval_seconds": poll_interval_seconds,
+        "delete_after_processing": delete_after_processing,
+        "enabled": enabled,
+    }
+
+    return templates.TemplateResponse(
+        "imap_account_form.html",
+        {
+            "request": request,
+            "account": account,
+            "flash": request.session.pop("flash", None),
+        },
+    )
