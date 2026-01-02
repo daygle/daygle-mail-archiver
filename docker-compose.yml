@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:16
-    container_name: daygle-mail-archiver-postgres
+    container_name: daygle-mail-archiver-database
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -23,8 +23,6 @@ services:
       DB_DSN: ${DB_DSN}
       SESSION_SECRET: ${SESSION_SECRET}
       IMAP_PASSWORD_KEY: ${IMAP_PASSWORD_KEY}
-      ADMIN_USERNAME: ${ADMIN_USERNAME}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
     depends_on:
       db:
         condition: service_healthy
