@@ -3,9 +3,7 @@
 
 <h2>{{ "Edit IMAP Account" if account else "New IMAP Account" }}</h2>
 
-{% if flash %}
-<div class="flash">{{ flash }}</div>
-{% endif %}
+<!-- Removed duplicate flash display, as base.html handles it -->
 
 <!-- MAIN FORM: Create/Update Account -->
 <form method="post" action="{{ '/imap_accounts/' ~ account.id ~ '/edit' if account else '/imap_accounts/new' }}">
