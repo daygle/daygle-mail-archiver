@@ -10,6 +10,9 @@ templates = Jinja2Templates(directory="templates")
 def require_login(request: Request):
     return request.session.get("user") is not None
 
+def flash(request: Request, message: str):
+    request.session["flash"] = message
+
 @router.get("/settings")
 def settings_form(request: Request):
     if not require_login(request):
@@ -18,9 +21,11 @@ def settings_form(request: Request):
     rows = query("SELECT key, value FROM settings").mappings().all()
     settings = {r["key"]: r["value"] for r in rows}
 
+    msg = request.session.pop("flash", None)
+
     return templates.TemplateResponse(
         "settings.html",
-        {"request": request, "settings": settings},
+        {"request": request, "settings": settings, "flash": msg},
     )
 
 @router.post("/settings")
@@ -70,4 +75,5 @@ def save_settings(
         {"v": retention_unit},
     )
 
+    flash(request, "Settings updated successfully.")
     return RedirectResponse("/settings", status_code=303)
