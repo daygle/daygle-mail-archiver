@@ -81,8 +81,8 @@
     <input type="hidden" name="port" value="{{ account.port if account else '993' }}">
     <input type="hidden" name="username" value="{{ account.username if account else '' }}">
 
-    <!-- Password intentionally blank for test -->
-    <input type="hidden" name="password" value="">
+    <!-- Use stored password -->
+    <input type="hidden" name="password" value="{{ account.password if account else '' }}">
 
     <input type="hidden" name="use_ssl" value="{{ 'true' if account and account.use_ssl else 'false' }}">
     <input type="hidden" name="require_starttls" value="{{ 'true' if account and account.require_starttls else 'false' }}">

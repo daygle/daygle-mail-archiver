@@ -294,8 +294,6 @@ def test_connection(
     enabled: bool = Form(True),
     account_id: int = Form(None),
 ):
-    print("DEBUG use_ssl =", use_ssl)
-    print("DEBUG require_starttls =", require_starttls)
     try:
         if use_ssl:
             conn = IMAP4_SSL(host, port)
