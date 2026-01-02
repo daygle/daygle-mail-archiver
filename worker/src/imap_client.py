@@ -37,7 +37,10 @@ class ImapConnection:
 
             # Capability-based authentication
             caps = self.conn.capability()  # list of bytes
-            caps_flat = b" ".join(caps)
+            caps_flat = b" ".join(
+                c if isinstance(c, bytes) else c.encode("utf-8")
+                for c in caps
+            )
 
             if b"AUTH=LOGIN" in caps_flat:
                 # Standard LOGIN

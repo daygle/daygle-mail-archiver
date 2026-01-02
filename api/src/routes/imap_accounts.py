@@ -307,7 +307,10 @@ def test_connection(
 
                 # Capability-based auth selection
                 caps = conn.capability()  # list of bytes, e.g. [b'IMAP4rev1', b'AUTH=PLAIN', ...]
-                caps_flat = b" ".join(caps)
+                caps_flat = b" ".join(
+                    c if isinstance(c, bytes) else c.encode("utf-8")
+                    for c in caps
+                )
 
                 if b"AUTH=LOGIN" in caps_flat:
                     conn.login(username, password)
