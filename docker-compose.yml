@@ -1,0 +1,48 @@
+services:
+  db:
+    image: postgres:16
+    container_name: daygle_db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./api
+    container_name: daygle_api
+    environment:
+      DB_DSN: ${DB_DSN}
+      SESSION_SECRET: ${SESSION_SECRET}
+      IMAP_PASSWORD_KEY: ${IMAP_PASSWORD_KEY}
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ./worker
+    container_name: daygle_worker
+    environment:
+      DB_DSN: ${DB_DSN}
+      IMAP_PASSWORD_KEY: ${IMAP_PASSWORD_KEY}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  db_data:
