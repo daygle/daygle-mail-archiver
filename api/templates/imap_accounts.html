@@ -11,6 +11,7 @@
         <th>Host</th>
         <th>User</th>
         <th>SSL</th>
+        <th>Delete After Processing</th>
         <th>Enabled</th>
         <th>Last Success</th>
         <th>Last Error</th>
@@ -23,6 +24,7 @@
         <td>{{ a.host }}:{{ a.port }}</td>
         <td>{{ a.username }}</td>
         <td>{{ "Yes" if a.use_ssl else "No" }}</td>
+        <td>{{ "Yes" if account.delete_after_processing else "No" }}</td>
         <td>{{ "Yes" if a.enabled else "No" }}</td>
         <td>{{ a.last_success }}</td>
         <td>{{ a.last_error }}</td>
