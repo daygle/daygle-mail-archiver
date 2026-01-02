@@ -24,10 +24,17 @@ def settings_form(request: Request):
     )
 
 @router.post("/settings")
-def save_settings(request: Request, page_size: int = Form(...)):
+def save_settings(
+    request: Request,
+    page_size: int = Form(...),
+    enable_purge: bool = Form(False),
+    retention_value: int = Form(1),
+    retention_unit: str = Form("years"),
+):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
+    # Save page_size
     query(
         """
         INSERT INTO settings (key, value)
@@ -35,6 +42,32 @@ def save_settings(request: Request, page_size: int = Form(...)):
         ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
         """,
         {"v": str(page_size)},
+    )
+
+    # Save retention settings
+    query(
+        """
+        INSERT INTO settings (key, value)
+        VALUES ('enable_purge', :v)
+        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
+        """,
+        {"v": str(enable_purge).lower()},
+    )
+    query(
+        """
+        INSERT INTO settings (key, value)
+        VALUES ('retention_value', :v)
+        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
+        """,
+        {"v": str(retention_value)},
+    )
+    query(
+        """
+        INSERT INTO settings (key, value)
+        VALUES ('retention_unit', :v)
+        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
+        """,
+        {"v": retention_unit},
     )
 
     return RedirectResponse("/settings", status_code=303)

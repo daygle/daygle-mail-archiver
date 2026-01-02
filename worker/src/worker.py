@@ -1,7 +1,7 @@
 import time
 import gzip
 import email
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from db import query, execute
 from security import decrypt_password
@@ -207,6 +207,37 @@ def process_account(account):
         log_error(source, msg)
         update_error(account_id, msg)
 
+def get_settings():
+    rows = query("SELECT key, value FROM settings").mappings().all()
+    return {r["key"]: r["value"] for r in rows}
+
+def purge_old_messages():
+    settings = get_settings()
+    enable_purge = settings.get("enable_purge", "false").lower() == "true"
+    if not enable_purge:
+        return
+
+    retention_value = int(settings.get("retention_value", 1))
+    retention_unit = settings.get("retention_unit", "years")
+
+    now = datetime.now(timezone.utc)
+    if retention_unit == "days":
+        cutoff = now - timedelta(days=retention_value)
+    elif retention_unit == "months":
+        cutoff = now - timedelta(days=retention_value * 30)  # Approximate
+    elif retention_unit == "years":
+        cutoff = now - timedelta(days=retention_value * 365)  # Approximate
+    else:
+        return  # Invalid unit
+
+    execute(
+        """
+        DELETE FROM messages
+        WHERE created_at < :cutoff
+        """,
+        {"cutoff": cutoff},
+    )
+
 def main_loop():
     while True:
         accounts = get_accounts()
@@ -218,6 +249,9 @@ def main_loop():
             poll_interval = account["poll_interval_seconds"] or POLL_INTERVAL_FALLBACK
             process_account(account)
             # No per-account sleep here; we do a global sleep after all accounts
+
+        # Purge old messages after processing all accounts
+        purge_old_messages()
 
         # Sleep before next cycle
         time.sleep(POLL_INTERVAL_FALLBACK)
