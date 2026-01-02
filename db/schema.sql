@@ -108,4 +108,4 @@ INSERT INTO system_settings (key, value) VALUES
     ('retention_enabled', 'false'),
     ('retention_value', '1'),
     ('retention_unit', 'years'),
-    ('retention_last_run', NULL);
+    ('retention_last_run', '');
