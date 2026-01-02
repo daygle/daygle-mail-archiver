@@ -10,8 +10,8 @@ templates = Jinja2Templates(directory="templates")
 def require_login(request: Request):
     return "user_id" in request.session
 
-@router.get("/error_log")
-def error_log(request: Request, level: str = "all"):
+@router.get("/logs")
+def logs(request: Request, level: str = "all"):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
@@ -24,7 +24,7 @@ def error_log(request: Request, level: str = "all"):
     rows = query(
         f"""
         SELECT id, timestamp, level, source, message, details
-        FROM error_log
+        FROM logs
         {where}
         ORDER BY timestamp DESC
         LIMIT 200
@@ -33,6 +33,6 @@ def error_log(request: Request, level: str = "all"):
     ).mappings().all()
 
     return templates.TemplateResponse(
-        "error_log.html",
+        "logs.html",
         {"request": request, "errors": rows, "current_level": level},
     )

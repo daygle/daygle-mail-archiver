@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from jinja2 import Environment, FileSystemLoader
 
-from routes import messages, imap_accounts, settings, auth, error_log, users, profile
+from routes import messages, imap_accounts, settings, auth, users, profile, logs
 
 SESSION_SECRET = os.getenv("SESSION_SECRET", "change-me")
 
@@ -21,9 +21,9 @@ app.include_router(auth.router)
 app.include_router(messages.router)
 app.include_router(imap_accounts.router)
 app.include_router(settings.router)
-app.include_router(error_log.router)
 app.include_router(users.router)
 app.include_router(profile.router)
+app.include_router(logs.router)
 
 @app.get("/")
 def root():

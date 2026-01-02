@@ -11,7 +11,19 @@ from logger import log  # Assuming logger.py is in worker/src or adjust path
 POLL_INTERVAL_FALLBACK = 300  # seconds
 
 def log_error(source: str, message: str, details: str = "", level: str = "error"):
-    log(level, source, message, details)
+    execute(
+        """
+        INSERT INTO logs (timestamp, level, source, message, details)
+        VALUES (:ts, :level, :source, :message, :details)
+        """,
+        {
+            "ts": datetime.now(timezone.utc),
+            "level": level,
+            "source": source,
+            "message": message[:500],
+            "details": details[:4000],
+        },
+    )
 
 def update_heartbeat(account_id: int):
     execute(
