@@ -15,6 +15,10 @@
 </nav>
 
 <div class="container">
+    {% if flash %}
+    <div class="flash">{{ flash }}</div>
+    {% endif %}
+
     {% block content %}{% endblock %}
 </div>
 

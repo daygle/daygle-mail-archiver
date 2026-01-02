@@ -1,28 +1,76 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2>New IMAP Account</h2>
+<h2>{{ "Edit IMAP Account" if account else "New IMAP Account" }}</h2>
 
 <form method="post">
 
     <div class="form-group">
         <label>Name</label>
-        <input name="name">
+        <input name="name" value="{{ account.name if account else '' }}">
     </div>
 
     <div class="form-group">
         <label>Host</label>
-        <input name="host">
+        <input name="host" value="{{ account.host if account else '' }}">
     </div>
 
     <div class="form-group">
         <label>Port</label>
-        <input name="port" type="number" value="993">
+        <input name="port" type="number" value="{{ account.port if account else '993' }}">
     </div>
 
     <div class="form-group">
         <label>Username</label>
-        <input name="username">
+        <input name="username" value="{{ account.username if account else '' }}">
+    </div>
+
+    <div class="form-group">
+        <label>Password {% if account %}(leave blank to keep existing){% endif %}</label>
+        <input name="password" type="password">
+    </div>
+
+    <div class="form-group">
+        <label>Use SSL</label>
+        <input type="checkbox" name="use_ssl" {% if account and account.use_ssl %}checked{% endif %}>
+    </div>
+
+    <div class="form-group">
+        <label>Require STARTTLS</label>
+        <input type="checkbox" name="require_starttls" {% if account and account.require_starttls %}checked{% endif %}>
+    </div>
+
+    <div class="form-group">
+        <label>Poll Interval (seconds)</label>
+        <input name="poll_interval_seconds" type="number" value="{{ account.poll_interval_seconds if account else '300' }}">
+    </div>
+
+    <div class="form-group">
+        <label>Enabled</label>
+        <input type="checkbox" name="enabled" {% if not account or account.enabled %}checked{% endif %}>
+    </div>
+
+    <button type="submit">{{ "Update Account" if account else "Create Account" }}</button>
+</form>
+
+<hr>
+
+<h3>Test Connection</h3>
+
+<form method="post" action="/imap_accounts/test">
+    <div class="form-group">
+        <label>Host</label>
+        <input name="host" value="{{ account.host if account else '' }}">
+    </div>
+
+    <div class="form-group">
+        <label>Port</label>
+        <input name="port" type="number" value="{{ account.port if account else '993' }}">
+    </div>
+
+    <div class="form-group">
+        <label>Username</label>
+        <input name="username" value="{{ account.username if account else '' }}">
     </div>
 
     <div class="form-group">
@@ -32,26 +80,15 @@
 
     <div class="form-group">
         <label>Use SSL</label>
-        <input type="checkbox" name="use_ssl" checked>
+        <input type="checkbox" name="use_ssl" {% if account and account.use_ssl %}checked{% endif %}>
     </div>
 
     <div class="form-group">
         <label>Require STARTTLS</label>
-        <input type="checkbox" name="require_starttls">
+        <input type="checkbox" name="require_starttls" {% if account and account.require_starttls %}checked{% endif %}>
     </div>
 
-    <div class="form-group">
-        <label>Poll Interval (seconds)</label>
-        <input name="poll_interval_seconds" type="number" value="300">
-    </div>
-
-    <div class="form-group">
-        <label>Enabled</label>
-        <input type="checkbox" name="enabled" checked>
-    </div>
-
-    <button type="submit">Save</button>
-
+    <button type="submit">Test Connection</button>
 </form>
 
 {% endblock %}

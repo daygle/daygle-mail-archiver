@@ -97,3 +97,13 @@ pre {
     border-radius: 8px;
     overflow-x: auto;
 }
+
+.flash {
+    background: #d1fae5;
+    color: #065f46;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    border: 1px solid #a7f3d0;
+    font-weight: 500;
+}

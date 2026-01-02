@@ -14,6 +14,7 @@
         <th>Enabled</th>
         <th>Last Success</th>
         <th>Last Error</th>
+        <th>Actions</th>
     </tr>
 
     {% for a in accounts %}
@@ -25,6 +26,7 @@
         <td>{{ "Yes" if a.enabled else "No" }}</td>
         <td>{{ a.last_success }}</td>
         <td>{{ a.last_error }}</td>
+        <td><a href="/imap_accounts/{{ a.id }}/edit">Edit</a></td>
     </tr>
     {% endfor %}
 </table>
