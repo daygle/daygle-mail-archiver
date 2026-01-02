@@ -78,6 +78,21 @@ CREATE TABLE IF NOT EXISTS imap_state (
 );
 
 -- ----------------------------
+-- users
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Insert default admin user if not exists
+INSERT INTO users (username, password_hash)
+VALUES ('administrator', '$2b$12$abcdefghijklmnopqrstuvwx')  -- Replace with actual bcrypt hash for 'administrator'
+ON CONFLICT (username) DO NOTHING;
+
+-- ----------------------------
 -- settings
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS settings (

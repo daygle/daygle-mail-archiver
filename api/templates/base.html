@@ -11,7 +11,7 @@
     <a href="/imap_accounts">IMAP Accounts</a>
     <a href="/settings">Settings</a>
     <a href="/error_log">Error Log</a>
-    <a href="/logout">Logout</a>
+    {% if request.session.username %}Logged in as {{ request.session.username }} | {% endif %}<a href="/logout">Logout</a>
 </nav>
 
 <div class="container">

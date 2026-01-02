@@ -1,17 +1,16 @@
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
-import os
+import bcrypt
+
+from utils.db import query
 
 templates = Jinja2Templates(directory="templates")
 
 router = APIRouter()
 
-ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin")
-
 def logged_in(request: Request):
-    return request.session.get("user") == ADMIN_USERNAME
+    return "user_id" in request.session
 
 @router.get("/login")
 def login_form(request: Request):
@@ -19,8 +18,14 @@ def login_form(request: Request):
 
 @router.post("/login")
 def login_submit(request: Request, username: str = Form(...), password: str = Form(...)):
-    if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
-        request.session["user"] = username
+    user = query(
+        "SELECT id, username, password_hash FROM users WHERE username = :u",
+        {"u": username}
+    ).mappings().first()
+
+    if user and bcrypt.checkpw(password.encode(), user["password_hash"].encode()):
+        request.session["user_id"] = user["id"]
+        request.session["username"] = user["username"]
         return RedirectResponse("/messages", status_code=303)
 
     return templates.TemplateResponse(

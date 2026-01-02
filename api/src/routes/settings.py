@@ -5,6 +5,7 @@ import subprocess
 import os
 from io import BytesIO
 from urllib.parse import urlparse
+import bcrypt
 
 from utils.db import query
 
@@ -12,7 +13,7 @@ router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
 def require_login(request: Request):
-    return request.session.get("user") is not None
+    return "user_id" in request.session
 
 def flash(request: Request, message: str):
     request.session["flash"] = message
@@ -166,3 +167,16 @@ def restore_db(request: Request, file: UploadFile = File(...)):
     except Exception as e:
         flash(request, f"Restore error: {str(e)}")
         return RedirectResponse("/settings", status_code=303)
+
+@router.post("/settings/create_user")
+def create_user(request: Request, username: str = Form(...), password: str = Form(...)):
+    if not require_login(request):
+        return RedirectResponse("/login", status_code=303)
+
+    hash_pw = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    try:
+        query("INSERT INTO users (username, password_hash) VALUES (:u, :h)", {"u": username, "h": hash_pw})
+        flash(request, f"User {username} created successfully.")
+    except Exception as e:
+        flash(request, f"User creation failed: {str(e)}")
+    return RedirectResponse("/settings", status_code=303)
