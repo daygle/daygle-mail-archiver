@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="confirm-overlay">
+  <div class="confirm-modal">
+
+    <h2>⚠️ Delete IMAP Account</h2>
+
+    <p>You are about to delete the IMAP account:</p>
+    <p><strong>{{ account.name }}</strong></p>
+
+    <p>This account has <strong>{{ msg_count }}</strong> message{% if msg_count != 1 %}s{% endif %} associated with it.</p>
+
+    <p>What would you like to do?</p>
+
+    <form method="post" action="/imap_accounts/{{ account.id }}/delete">
+
+      <div class="confirm-buttons">
+        <button type="submit" name="mode" value="retain" class="btn btn-warning">
+          Delete Account (retain {{ msg_count }} message{% if msg_count != 1 %}s{% endif %})
+        </button>
+
+        <button type="submit" name="mode" value="delete_messages" class="btn btn-danger">
+          Delete Account + {{ msg_count }} message{% if msg_count != 1 %}s{% endif %}
+        </button>
+      </div>
+
+      <div class="confirm-cancel">
+        <a href="/imap_accounts" class="btn btn-secondary">Cancel</a>
+      </div>
+
+    </form>
+
+  </div>
+</div>
+
+{% endblock %}

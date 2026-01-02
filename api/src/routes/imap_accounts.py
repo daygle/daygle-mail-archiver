@@ -201,6 +201,80 @@ def update_account(
     return RedirectResponse("/imap_accounts", status_code=303)
 
 
+@router.post("/imap_accounts/{id}/delete")
+def delete_account(request: Request, id: int, mode: str = Form(...)):
+    if not require_login(request):
+        return RedirectResponse("/login", status_code=303)
+
+    account = query(
+        "SELECT id, name FROM imap_accounts WHERE id = :id",
+        {"id": id},
+    ).mappings().first()
+
+    if not account:
+        flash(request, "Account not found")
+        return RedirectResponse("/imap_accounts", status_code=303)
+
+    if mode == "retain":
+        # Delete account only
+        query("DELETE FROM imap_accounts WHERE id = :id", {"id": id})
+        flash(request, f"IMAP account '{account['name']}' deleted. Messages retained.")
+        return RedirectResponse("/imap_accounts", status_code=303)
+
+    elif mode == "delete_messages":
+        # Delete messages first
+        query(
+            "DELETE FROM messages WHERE source = :name",
+            {"name": account["name"]},
+        )
+        # Then delete account
+        query("DELETE FROM imap_accounts WHERE id = :id", {"id": id})
+
+        flash(request, f"IMAP account '{account['name']}' and all related messages deleted.")
+        return RedirectResponse("/imap_accounts", status_code=303)
+
+    flash(request, "Invalid delete mode.")
+    return RedirectResponse("/imap_accounts", status_code=303)
+
+
+@router.get("/imap_accounts/{id}/delete/confirm")
+def confirm_delete_account(request: Request, id: int):
+    if not require_login(request):
+        return RedirectResponse("/login", status_code=303)
+
+    account = query(
+        """
+        SELECT id, name
+        FROM imap_accounts
+        WHERE id = :id
+        """,
+        {"id": id},
+    ).mappings().first()
+
+    if not account:
+        flash(request, "Account not found")
+        return RedirectResponse("/imap_accounts", status_code=303)
+
+    # Count messages linked to this account
+    msg_count = query(
+        """
+        SELECT COUNT(*) AS c
+        FROM messages
+        WHERE source = :name
+        """,
+        {"name": account["name"]},
+    ).mappings().first()["c"]
+
+    return templates.TemplateResponse(
+        "imap_account_confirm_delete.html",
+        {
+            "request": request,
+            "account": account,
+            "msg_count": msg_count,
+        },
+    )
+
+
 @router.post("/imap_accounts/test")
 def test_connection(
     request: Request,

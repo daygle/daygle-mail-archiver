@@ -38,7 +38,8 @@
         <td>{{ acc.last_success }}</td>
         <td>{{ acc.last_error }}</td>
         <td>
-            <a href="/imap_accounts/{{ acc.id }}/edit">Edit</a>
+            <a href="/imap_accounts/{{ acc.id }}/edit">Edit</a> |
+            <a href="/imap_accounts/{{ acc.id }}/delete/confirm" class="danger-link">Delete</a>
         </td>
     </tr>
     {% endfor %}

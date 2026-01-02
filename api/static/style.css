@@ -246,3 +246,23 @@ button.test-btn:hover {
     border-bottom: 1px solid #eee;
     white-space: nowrap; /* prevents wrapping */
 }
+
+.confirm-modal h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #b30000;
+}
+
+.confirm-modal strong {
+    color: #333;
+}
+
+.confirm-buttons button {
+    flex: 1;
+}
+
+.danger-link {
+    color: #b30000;
+    font-weight: bold;
+}
