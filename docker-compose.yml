@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:16
-    container_name: daygle_db
+    container_name: daygle-mail-archiver-postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -18,7 +18,7 @@ services:
   api:
     build:
       context: ./api
-    container_name: daygle_api
+    container_name: daygle-mail-archiver-api
     environment:
       DB_DSN: ${DB_DSN}
       SESSION_SECRET: ${SESSION_SECRET}
@@ -35,7 +35,7 @@ services:
   worker:
     build:
       context: ./worker
-    container_name: daygle_worker
+    container_name: daygle-mail-archiver-worker
     environment:
       DB_DSN: ${DB_DSN}
       IMAP_PASSWORD_KEY: ${IMAP_PASSWORD_KEY}
