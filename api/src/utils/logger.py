@@ -1,8 +1,8 @@
 from datetime import datetime, timezone
-from utils.db import execute
+from utils.db import query
 
 def log(level: str, source: str, message: str, details: str = ""):
-    execute(
+    query(
         """
         INSERT INTO logs (timestamp, level, source, message, details)
         VALUES (:ts, :level, :source, :message, :details)
