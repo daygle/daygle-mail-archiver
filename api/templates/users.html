@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>User Management</h2>
+
+{% if flash %}
+<div class="flash">{{ flash }}</div>
+{% endif %}
+
+<h3>Create New User</h3>
+<form method="post" action="/users/create">
+    <div class="form-group">
+        <label>Username</label>
+        <input name="username" required>
+    </div>
+    <div class="form-group">
+        <label>Password</label>
+        <input name="password" type="password" required>
+    </div>
+    <button type="submit">Create User</button>
+</form>
+
+<h3>Existing Users</h3>
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Created At</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.id }}</td>
+            <td>{{ user.username }}</td>
+            <td>{{ user.created_at }}</td>
+            <td>
+                <form method="post" action="/users/{{ user.id }}/delete" style="display: inline;">
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this user?')">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
