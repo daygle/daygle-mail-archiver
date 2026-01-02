@@ -35,13 +35,27 @@ class ImapConnection:
         if self.require_starttls:
             self.conn.starttls()
 
-            # Capability-based authentication
-            caps = self.conn.capability()  # list of bytes
-            caps_flat = b" ".join(
-                c if isinstance(c, bytes) else c.encode("utf-8")
-                for c in caps
-            )
+            # Fetch capabilities (may contain bytes, str, or nested lists)
+            caps = self.conn.capability()
 
+            # Normalize capabilities: flatten nested lists and convert everything to bytes
+            normalized_caps = []
+            for c in caps:
+                if isinstance(c, list):
+                    for sub in c:
+                        if isinstance(sub, bytes):
+                            normalized_caps.append(sub)
+                        else:
+                            normalized_caps.append(str(sub).encode("utf-8"))
+                else:
+                    if isinstance(c, bytes):
+                        normalized_caps.append(c)
+                    else:
+                        normalized_caps.append(str(c).encode("utf-8"))
+
+            caps_flat = b" ".join(normalized_caps)
+
+            # Choose authentication method based on capabilities
             if b"AUTH=LOGIN" in caps_flat:
                 # Standard LOGIN
                 self.conn.login(self.username, self.password)
