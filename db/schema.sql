@@ -95,3 +95,17 @@ CREATE TABLE IF NOT EXISTS error_log (
     message TEXT NOT NULL,
     details TEXT
 );
+
+-- ----------------------------
+-- retention settings
+-- ----------------------------
+CREATE TABLE system_settings (
+    key   TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
+
+INSERT INTO system_settings (key, value) VALUES
+    ('retention_enabled', 'false'),
+    ('retention_value', '1'),
+    ('retention_unit', 'years'),
+    ('retention_last_run', NULL);

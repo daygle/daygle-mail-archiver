@@ -3,15 +3,88 @@
 
 <h2>Settings</h2>
 
-<form method="post">
+{% if flash %}
+<div class="flash">{{ flash }}</div>
+{% endif %}
+
+<!-- ========================= -->
+<!-- Page Size Settings        -->
+<!-- ========================= -->
+
+<form method="post" action="/settings" class="form-block">
+
+    <h3>General</h3>
 
     <div class="form-group">
         <label>Page Size</label>
         <input name="page_size" type="number" value="{{ settings.page_size }}">
     </div>
 
-    <button type="submit">Save</button>
-
+    <button type="submit" class="btn-primary">Save</button>
 </form>
+
+<hr>
+
+<!-- ========================= -->
+<!-- Retention Policy Settings -->
+<!-- ========================= -->
+
+<form method="post" action="/settings/retention" class="form-block">
+
+    <h3>Retention Policy</h3>
+
+    <div class="form-group">
+        <label>
+            <input type="checkbox" name="retention_enabled"
+                   {% if retention.enabled == 'true' %}checked{% endif %}>
+            Enable automatic retention purge
+        </label>
+    </div>
+
+    <div class="form-group">
+        <label>Retention period</label>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <input type="number" name="retention_value" min="1"
+                   value="{{ retention.value }}" style="width:100px;">
+            <select name="retention_unit">
+                <option value="days"   {% if retention.unit == 'days' %}selected{% endif %}>Day(s)</option>
+                <option value="months" {% if retention.unit == 'months' %}selected{% endif %}>Month(s)</option>
+                <option value="years"  {% if retention.unit == 'years' %}selected{% endif %}>Year(s)</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Last retention purge</label>
+        <div>
+            {% if retention.last_run %}
+                {{ retention.last_run }}
+            {% else %}
+                Never
+            {% endif %}
+        </div>
+    </div>
+
+    <button type="submit" class="btn-primary">Save Retention Settings</button>
+</form>
+
+<!-- ========================= -->
+<!-- Retention Actions         -->
+<!-- ========================= -->
+
+<div style="margin-top:20px; display:flex; gap:15px;">
+
+    <form method="post" action="/settings/retention/preview">
+        <button type="submit" class="btn-secondary">Preview purge count</button>
+    </form>
+
+    <form method="post" action="/settings/retention/purge">
+        <button type="submit" class="btn-danger"
+                onclick="return confirm('Are you sure you want to purge old messages now?');">
+            Purge now
+        </button>
+    </form>
+
+</div>
 
 {% endblock %}
