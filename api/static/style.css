@@ -306,6 +306,19 @@ table td .btn-sm {
     margin: 2px;
 }
 
+.imap-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+}
+
+.imap-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
   @media (max-width: 576px) {
     body { padding-top: 64px; }
     .container { margin: 12px auto; padding: 14px; }

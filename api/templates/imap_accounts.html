@@ -3,7 +3,9 @@
 
 <h2>IMAP Accounts</h2>
 
-<a href="/imap_accounts/new"><button><i class="fa-solid fa-plus"></i> Add New Account</button></a>
+<div class="imap-actions">
+<a href="/imap_accounts/new"><button class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add New Account</button></a>
+</div>
 
 <div class="table-container">
 <table>
@@ -35,8 +37,8 @@
         <td>{{ acc.poll_interval_seconds }}</td>
         <td>{{ "Yes" if acc.delete_after_processing else "No" }}</td>
         <td>{{ "Yes" if acc.enabled else "No" }}</td>
-        <td>{{ acc.last_success }}</td>
-        <td>{{ acc.last_error }}</td>
+        <td>{{ acc.last_success.strftime(request.session.get('date_format', '%Y-%m-%d %H:%M:%S')) if acc.last_success else 'Never' }}</td>
+        <td>{{ acc.last_error.strftime(request.session.get('date_format', '%Y-%m-%d %H:%M:%S')) if acc.last_error else 'None' }}</td>
         <td>
             <a href="/imap_accounts/{{ acc.id }}/edit" class="btn btn-sm btn-primary"><i class="fa-solid fa-pen-to-square"></i> Edit</a>
             <a href="/imap_accounts/{{ acc.id }}/delete/confirm" class="btn btn-sm btn-danger"><i class="fa-solid fa-trash"></i> Delete</a>
