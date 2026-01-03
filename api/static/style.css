@@ -169,13 +169,15 @@ pre {
   min-width: 0;
 }
 
-.messages-filter-form button {
+.messages-filter-form .btn {
   flex: 0 0 auto;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
+  padding: 10px 14px;
+  line-height: 1.1;
 }
 
 .messages-actions {
@@ -189,6 +191,8 @@ pre {
   align-items: center;
   justify-content: center;
   gap: 6px;
+  padding: 10px 14px;
+  line-height: 1.1;
 }
 
 .empty-state {
