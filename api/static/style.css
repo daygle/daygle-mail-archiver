@@ -321,19 +321,23 @@ pre {
 
 .form-actions {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
     gap: 15px;
     margin-top: 30px;
     padding-top: 20px;
     border-top: 1px solid #e5e7eb;
+    margin-bottom: 0;
 }
 
 .test-connection-form {
-    margin: 0;
-    padding: 0;
-    border: none;
-    display: contents;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 15px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
 }
 
 .test-connection-form button {
