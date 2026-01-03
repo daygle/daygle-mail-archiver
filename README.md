@@ -1,35 +1,31 @@
 # Daygle Mail Archiver
 
-A clean, deterministic, self‑contained mail archiver designed for long‑term retention, auditability, and reliability.  
-Daygle connects to IMAP accounts, downloads messages, compresses them, stores them in PostgreSQL, and provides a modern web UI for browsing, searching, and downloading archived mail.
+Daygle Mail Archiver is a deterministic, scenario‑proof email ingestion and archiving system designed for long‑term retention, auditability, and operational reliability. It ingests messages from IMAP/POP3 sources, decrypts OpenPGP‑protected content when keys are available, stores messages in a structured database, and exposes a clean UI for browsing, retention policy management, and administrative control.
+
+This project is built with explicit, maintainable configuration, modular backend logic, and a modernized UI — ensuring predictable behaviour across all environments.
 
 ---
 
-## Features
+## ✨ Features
 
-- IMAP ingestion worker  
-- Tracks last UID per folder  
-- Gzip‑compresses raw emails  
-- Stores messages in PostgreSQL  
-- Modern FastAPI web UI  
-- Full‑text search  
-- Download `.eml` files  
-- Error log viewer  
-- Docker‑based deployment  
+### **Email Ingestion**
+- Deterministic IMAP/POP3 polling  
+- Duplicate‑safe ingestion with pointer tracking  
+- OpenPGP decryption when recipient keys are available  
+- Full message + attachment extraction  
 
----
+### **Retention Policy Engine**
+- Configurable retention windows  
+- “Preview purge” mode  
+- “Purge now” execution  
+- Last‑run timestamps for auditability  
+- Deterministic deletion rules based on `created_at`  
 
-## Project Structure
-
-```
-daygle-mail-archiver/
-  api/
-  worker/
-  db/
-  docker-compose.yml
-  .env.example
-  README.md
-```
+### **Modern UI**
+- Clean, responsive interface  
+- Mail browser with message + attachment viewer  
+- Admin panel for retention, credentials, and system state  
+- Explicit error feedback and validation  
 
 ---
 
@@ -43,7 +39,7 @@ Follow these steps to get a fully running Daygle instance.
 
 ```
 cd /opt/
-git clone https://github.com/your/repo.git daygle-mail-archiver
+git clone https://gitlab.com/daygle/daygle-mail-archiver
 cd daygle-mail-archiver
 ```
 
@@ -58,28 +54,19 @@ cp .env.example .env
 Your `.env` should look like this:
 
 ```
-# PostgreSQL Credentials
 DB_NAME=daygle_mail_archiver
 DB_USER=daygle_mail_archiver
 DB_PASS=change_me
 
-# PostgreSQL Container Config
 POSTGRES_DB=${DB_NAME}
 POSTGRES_USER=${DB_USER}
 POSTGRES_PASSWORD=${DB_PASS}
 
-# Database DSN (used by API + Worker)
 DB_DSN=postgresql+psycopg2://${DB_USER}:${DB_PASS}@db:5432/${DB_NAME}
 
-# API Session
 SESSION_SECRET=8f4c2b9e3d7a4f1c9e8b2d3f7c6a1e4b5d8f0c2a7b9d3e6f1a4c7b8d9e2f3a1
 
-# IMAP Password Encryption
 IMAP_PASSWORD_KEY=8t2y0x8qZp8G7QfVYp4p0Q2u7v8Yx1m4l8e0q2c3s0A=
-
-# Admin Login
-ADMIN_USERNAME=administrator
-ADMIN_PASSWORD=administrator
 ```
 
 ---
@@ -107,9 +94,9 @@ docker compose ps
 
 Expected:
 
-- `daygle_db` → healthy  
-- `daygle_api` → running  
-- `daygle_worker` → running  
+- `daygle-mail-archiver-database` → healthy  
+- `daygle-mail-archiver-api` → running  
+- `daygle-mail-archiver-worker` → running  
 
 ---
 
@@ -123,7 +110,7 @@ http://localhost:8000/login
 
 Login:
 
-- Username: `administrator`  
+- Username: `administrator`
 - Password: `administrator`  
 
 ---
@@ -195,14 +182,6 @@ docker compose up -d --build
 docker compose exec db psql -U "$DB_USER" -d "$DB_NAME"
 ```
 
-Useful queries:
-
-```
-SELECT COUNT(*) FROM messages;
-SELECT * FROM imap_accounts;
-SELECT * FROM error_log ORDER BY timestamp DESC LIMIT 20;
-```
-
 ---
 
 # Security Notes
@@ -214,6 +193,14 @@ SELECT * FROM error_log ORDER BY timestamp DESC LIMIT 20;
 
 ---
 
-# License
+## 📄 License
 
 MIT (or your preferred license)
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome.  
+Please open issues or merge requests in the GitLab project.
+```
