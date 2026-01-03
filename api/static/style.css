@@ -249,6 +249,15 @@ pre {
     line-height: 38px;
 }
 
+
+  @media (max-width: 576px) {
+    body { padding-top: 64px; }
+    .container { margin: 12px auto; padding: 14px; }
+    .navbar-brand, .offcanvas-title { font-size: 0.98rem; gap: 5px; }
+    .navbar .btn, .navbar .navbar-toggler { padding: 6px 10px; }
+    table { display: block; width: 100%; overflow-x: auto; font-size: 14px; }
+    .table-container table { min-width: 0; }
+  }
 .message-subject {
     background: #f3f4f6;
     padding: 15px;
