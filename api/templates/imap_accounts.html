@@ -3,49 +3,55 @@
 
 <h2>IMAP Accounts</h2>
 
-<div class="imap-actions">
-<a href="/imap_accounts/new"><button class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add New Account</button></a>
-</div>
+<!-- IMAP Accounts Section -->
+<div class="settings-section">
+    <h3>Email Accounts</h3>
+    <p class="section-description">Manage your IMAP email accounts and connection settings</p>
+    
+    <div class="imap-actions">
+        <a href="/imap_accounts/new"><button class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add New Account</button></a>
+    </div>
 
-<div class="table-container">
-<table>
-    <tr>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Host</th>
-        <th>Port</th>
-        <th>User</th>
-        <th>SSL</th>
-        <th>STARTTLS</th>
-        <th>Poll Interval</th>
-        <th>Delete After Processing</th>
-        <th>Enabled</th>
-        <th>Last Success</th>
-        <th>Last Error</th>
-        <th>Actions</th>
-    </tr>
+    <div class="table-container">
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Host</th>
+                <th>Port</th>
+                <th>User</th>
+                <th>SSL</th>
+                <th>STARTTLS</th>
+                <th>Poll Interval</th>
+                <th>Delete After Processing</th>
+                <th>Enabled</th>
+                <th>Last Success</th>
+                <th>Last Error</th>
+                <th>Actions</th>
+            </tr>
 
-    {% for acc in accounts %}
-    <tr>
-        <td>{{ acc.id }}</td>
-        <td>{{ acc.name }}</td>
-        <td>{{ acc.host }}</td>
-        <td>{{ acc.port }}</td>
-        <td>{{ acc.username }}</td>
-        <td>{{ "Yes" if acc.use_ssl else "No" }}</td>
-        <td>{{ "Yes" if acc.require_starttls else "No" }}</td>
-        <td>{{ acc.poll_interval_seconds }}</td>
-        <td>{{ "Yes" if acc.delete_after_processing else "No" }}</td>
-        <td>{{ "Yes" if acc.enabled else "No" }}</td>
-        <td>{{ acc.last_success.strftime(request.session.get('date_format', '%Y-%m-%d %H:%M:%S')) if acc.last_success else 'Never' }}</td>
-        <td>{{ acc.last_error.strftime(request.session.get('date_format', '%Y-%m-%d %H:%M:%S')) if acc.last_error else 'None' }}</td>
-        <td>
-            <a href="/imap_accounts/{{ acc.id }}/edit" class="btn btn-sm btn-primary"><i class="fa-solid fa-pen-to-square"></i> Edit</a>
-            <a href="/imap_accounts/{{ acc.id }}/delete/confirm" class="btn btn-sm btn-danger"><i class="fa-solid fa-trash"></i> Delete</a>
-        </td>
-    </tr>
-    {% endfor %}
-</table>
+            {% for acc in accounts %}
+            <tr>
+                <td>{{ acc.id }}</td>
+                <td>{{ acc.name }}</td>
+                <td>{{ acc.host }}</td>
+                <td>{{ acc.port }}</td>
+                <td>{{ acc.username }}</td>
+                <td>{{ "Yes" if acc.use_ssl else "No" }}</td>
+                <td>{{ "Yes" if acc.require_starttls else "No" }}</td>
+                <td>{{ acc.poll_interval_seconds }}</td>
+                <td>{{ "Yes" if acc.delete_after_processing else "No" }}</td>
+                <td>{{ "Yes" if acc.enabled else "No" }}</td>
+                <td>{{ acc.last_success.strftime(request.session.get('date_format', '%Y-%m-%d %H:%M:%S')) if acc.last_success else 'Never' }}</td>
+                <td>{{ acc.last_error.strftime(request.session.get('date_format', '%Y-%m-%d %H:%M:%S')) if acc.last_error else 'None' }}</td>
+                <td>
+                    <a href="/imap_accounts/{{ acc.id }}/edit" class="btn btn-sm btn-primary"><i class="fa-solid fa-pen-to-square"></i> Edit</a>
+                    <a href="/imap_accounts/{{ acc.id }}/delete/confirm" class="btn btn-sm btn-danger"><i class="fa-solid fa-trash"></i> Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
 </div>
 
 {% endblock %}
