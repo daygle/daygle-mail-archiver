@@ -3,12 +3,12 @@
 
 <h2>Settings</h2>
 
-<!-- General Settings Section -->
-<div class="settings-section">
-    <h3>General Settings</h3>
-    <p class="section-description">Configure general application preferences</p>
-    
-    <form method="post">
+<!-- General Settings & Email Purging Section -->
+<form method="post">
+    <div class="settings-section">
+        <h3>General Settings</h3>
+        <p class="section-description">Configure general application preferences</p>
+        
         <div class="form-group">
             <label for="page_size">Page Size</label>
             <input id="page_size" class="form-control" name="page_size" type="number" value="{{ settings.page_size or '50' }}">
@@ -23,19 +23,13 @@
                 <option value="%Y-%m-%d %I:%M %p" {% if settings.date_format == '%Y-%m-%d %I:%M %p' %}selected{% endif %}>2024-01-15 02:30 PM</option>
             </select>
         </div>
+    </div>
 
-        <div class="form-actions">
-            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save"></i> Save</button>
-        </div>
-    </form>
-</div>
-
-<!-- Email Purging Section -->
-<div class="settings-section">
-    <h3>Email Purging</h3>
-    <p class="section-description">Automatically delete old emails based on retention period</p>
-    
-    <form method="post">
+    <!-- Email Purging Section -->
+    <div class="settings-section">
+        <h3>Email Purging</h3>
+        <p class="section-description">Automatically delete old emails based on retention period</p>
+        
         <div class="form-checkboxes">
             <div class="form-group checkbox-group">
                 <input id="enable_purge" type="checkbox" name="enable_purge" {% if settings.enable_purge == 'true' %}checked{% endif %}>
@@ -56,10 +50,10 @@
         </div>
 
         <div class="form-actions">
-            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save"></i> Save</button>
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save"></i> Save Settings</button>
         </div>
-    </form>
-</div>
+    </div>
+</form>
 
 <!-- Database Backup/Restore Section -->
 <div class="settings-section">

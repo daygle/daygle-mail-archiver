@@ -155,11 +155,6 @@ select.form-control {
 .settings-section {
     margin-bottom: 40px;
     padding-bottom: 30px;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.settings-section:last-child {
-    border-bottom: none;
 }
 
 .settings-section h3 {
