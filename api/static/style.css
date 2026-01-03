@@ -445,16 +445,31 @@ pre {
 
 .test-connection-form {
     display: flex;
-    justify-content: flex-start;
+    justify-content: flex-end;
     align-items: center;
     gap: 15px;
-    margin-top: -61px;
-    padding-top: 20px;
+    margin-top: 0;
+    padding: 0;
     border-top: none;
+    position: absolute;
+    margin-left: 0;
 }
 
 .test-connection-form button {
     margin: 0;
+}
+
+/* Position test-connection-form next to form-actions */
+.settings-section > form:last-of-type {
+    position: relative;
+}
+
+.settings-section > .test-connection-form {
+    position: static;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+    margin-bottom: 0;
 }
 
 .message-actions {
