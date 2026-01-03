@@ -3,34 +3,42 @@
 
 <h2>Log Viewer</h2>
 
-<form method="get" style="margin-bottom: 20px;">
-    <label>Filter by Level:</label>
-    <select name="level" onchange="this.form.submit()">
-        <option value="all" {% if current_level == 'all' %}selected{% endif %}>All</option>
-        <option value="error" {% if current_level == 'error' %}selected{% endif %}>Error</option>
-        <option value="warning" {% if current_level == 'warning' %}selected{% endif %}>Warning</option>
-        <option value="info" {% if current_level == 'info' %}selected{% endif %}>Info</option>
-    </select>
-</form>
+<!-- Log Viewer Section -->
+<div class="settings-section">
+    <h3>System Logs</h3>
+    <p class="section-description">View system logs and error messages</p>
 
-<table>
-    <tr>
-        <th>Time</th>
-        <th>Level</th>
-        <th>Source</th>
-        <th>Message</th>
-        <th>Details</th>
-    </tr>
+    <div class="log-filter-container">
+        <label for="log_level">Filter by Level:</label>
+        <form method="get" class="log-filter-form">
+            <select id="log_level" class="form-control" name="level" onchange="this.form.submit()">
+                <option value="all" {% if current_level == 'all' %}selected{% endif %}>All</option>
+                <option value="error" {% if current_level == 'error' %}selected{% endif %}>Error</option>
+                <option value="warning" {% if current_level == 'warning' %}selected{% endif %}>Warning</option>
+                <option value="info" {% if current_level == 'info' %}selected{% endif %}>Info</option>
+            </select>
+        </form>
+    </div>
 
-    {% for e in errors %}
-    <tr>
-        <td>{{ e.timestamp.strftime(request.session.date_format) }}</td>
-        <td>{{ e.level }}</td>
-        <td>{{ e.source }}</td>
-        <td>{{ e.message }}</td>
-        <td><pre>{{ e.details }}</pre></td>
-    </tr>
-    {% endfor %}
-</table>
+    <table>
+        <tr>
+            <th>Time</th>
+            <th>Level</th>
+            <th>Source</th>
+            <th>Message</th>
+            <th>Details</th>
+        </tr>
+
+        {% for e in errors %}
+        <tr>
+            <td>{{ e.timestamp.strftime(request.session.date_format) }}</td>
+            <td>{{ e.level }}</td>
+            <td>{{ e.source }}</td>
+            <td>{{ e.message }}</td>
+            <td><pre>{{ e.details }}</pre></td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
 
 {% endblock %}

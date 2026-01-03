@@ -232,6 +232,25 @@ select.form-control {
     }
 }
 
+/* Log filter styling */
+.log-filter-container {
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.log-filter-container label {
+    font-weight: 500;
+    color: #333;
+    font-size: 14px;
+    margin: 0;
+}
+
+.log-filter-form {
+    flex: 0 1 200px;
+}
+
 pre {
     background: #f3f4f6;
     padding: 15px;
