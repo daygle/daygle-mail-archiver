@@ -26,7 +26,6 @@
             <th>Level</th>
             <th>Source</th>
             <th>Message</th>
-            <th>Details</th>
         </tr>
 
         {% for e in errors %}
@@ -35,7 +34,6 @@
             <td>{{ e.level }}</td>
             <td>{{ e.source }}</td>
             <td>{{ e.message }}</td>
-            <td><pre>{{ e.details }}</pre></td>
         </tr>
         {% endfor %}
     </table>

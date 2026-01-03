@@ -19,7 +19,7 @@ def list_users(request: Request):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    users = query("SELECT id, username, created_at FROM users ORDER BY id").mappings().all()
+    users = query("SELECT id, username, enabled, created_at FROM users ORDER BY id").mappings().all()
     msg = request.session.pop("flash", None)
 
     return templates.TemplateResponse(
@@ -55,4 +55,25 @@ def delete_user(request: Request, user_id: int):
         flash(request, "User deleted successfully.")
     except Exception as e:
         flash(request, f"User deletion failed: {str(e)}")
+    return RedirectResponse("/users", status_code=303)
+
+@router.post("/users/{user_id}/toggle")
+def toggle_user_enabled(request: Request, user_id: int):
+    if not require_login(request):
+        return RedirectResponse("/login", status_code=303)
+
+    current_user_id = request.session.get("user_id")
+    if user_id == current_user_id:
+        flash(request, "Cannot disable your own account.")
+        return RedirectResponse("/users", status_code=303)
+
+    try:
+        # Toggle the enabled status
+        query(
+            "UPDATE users SET enabled = NOT enabled WHERE id = :id",
+            {"id": user_id}
+        )
+        flash(request, "User status updated successfully.")
+    except Exception as e:
+        flash(request, f"User status update failed: {str(e)}")
     return RedirectResponse("/users", status_code=303)

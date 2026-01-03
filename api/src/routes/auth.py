@@ -20,7 +20,7 @@ def login_form(request: Request):
 @router.post("/login")
 def login_submit(request: Request, username: str = Form(...), password: str = Form(...)):
     user = query(
-        "SELECT id, username, password_hash, date_format FROM users WHERE username = :u",
+        "SELECT id, username, password_hash, date_format, enabled FROM users WHERE username = :u",
         {"u": username}
     ).mappings().first()
 
@@ -29,6 +29,13 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
         return templates.TemplateResponse(
             "login.html",
             {"request": request, "error": "Invalid credentials"},
+        )
+
+    if not user["enabled"]:
+        log("warning", "auth", f"Failed login attempt for disabled user: {username}")
+        return templates.TemplateResponse(
+            "login.html",
+            {"request": request, "error": "This account has been disabled"},
         )
 
     if not user["password_hash"]:
