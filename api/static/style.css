@@ -366,8 +366,12 @@ button.test-btn:hover {
 }
 
 .message-actions .btn {
-    min-width: 120px;
+    width: 140px;
+    height: 40px;
     text-align: center;
+    box-sizing: border-box;
+    display: inline-block;
+    line-height: 38px; /* Center text vertically */
 }
 
 .message-subject {
