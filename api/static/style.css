@@ -378,6 +378,23 @@ button.test-btn:hover {
     white-space: pre-wrap;
 }
 
+.meta-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.meta-table td {
+    padding: 5px 10px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.meta-table td:first-child {
+    width: 120px;
+    font-weight: bold;
+    background: #f9fafb;
+}
+
 /* Mobile styles */
 @media (max-width: 768px) {
     .burger {

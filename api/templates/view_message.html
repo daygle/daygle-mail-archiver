@@ -4,11 +4,28 @@
 <h1>{{ message.subject or "(no subject)" }}</h1>
 
 <div class="message-meta">
-  <p><strong>From:</strong> {{ message.sender }}</p>
-  <p><strong>To:</strong> {{ message.recipients }}</p>
-  <p><strong>Date:</strong> {{ message.date }}</p>
-  <p><strong>Account:</strong> {{ message.source }}</p>
-  <p><strong>Folder:</strong> {{ message.folder }}</p>
+  <table class="meta-table">
+    <tr>
+      <td><strong>From:</strong></td>
+      <td>{{ message.sender }}</td>
+    </tr>
+    <tr>
+      <td><strong>To:</strong></td>
+      <td>{{ message.recipients }}</td>
+    </tr>
+    <tr>
+      <td><strong>Date:</strong></td>
+      <td>{{ message.date }}</td>
+    </tr>
+    <tr>
+      <td><strong>Account:</strong></td>
+      <td>{{ message.source }}</td>
+    </tr>
+    <tr>
+      <td><strong>Folder:</strong></td>
+      <td>{{ message.folder }}</td>
+    </tr>
+  </table>
 </div>
 
 <div class="message-actions">
