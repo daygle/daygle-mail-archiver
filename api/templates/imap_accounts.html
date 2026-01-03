@@ -38,8 +38,8 @@
         <td>{{ acc.last_success }}</td>
         <td>{{ acc.last_error }}</td>
         <td>
-            <a href="/imap_accounts/{{ acc.id }}/edit"><i class="fa-solid fa-pen-to-square"></i> Edit</a> |
-            <a href="/imap_accounts/{{ acc.id }}/delete/confirm" class="danger-link"><i class="fa-solid fa-trash"></i> Delete</a>
+            <a href="/imap_accounts/{{ acc.id }}/edit" class="btn btn-sm btn-primary"><i class="fa-solid fa-pen-to-square"></i> Edit</a>
+            <a href="/imap_accounts/{{ acc.id }}/delete/confirm" class="btn btn-sm btn-danger"><i class="fa-solid fa-trash"></i> Delete</a>
         </td>
     </tr>
     {% endfor %}
