@@ -370,6 +370,14 @@ button.test-btn:hover {
     text-align: center;
 }
 
+.message-subject {
+    background: #f3f4f6;
+    padding: 15px;
+    border-radius: 8px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+}
+
 /* Mobile styles */
 @media (max-width: 768px) {
     .burger {
