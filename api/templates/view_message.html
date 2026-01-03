@@ -3,12 +3,6 @@
 {% block content %}
 <h1>{{ message.subject or "(no subject)" }}</h1>
 
-{% if flash %}
-<div class="flash-message">
-  {{ flash }}
-</div>
-{% endif %}
-
 <div class="message-meta">
   <p><strong>From:</strong> {{ message.sender }}</p>
   <p><strong>To:</strong> {{ message.recipients }}</p>
@@ -36,6 +30,10 @@
 
 <h2>Body</h2>
 <div class="message-body">
-  {{ body | safe }}
+  {% if body.html %}
+    {{ body.html | safe }}
+  {% else %}
+    <pre>{{ body.text }}</pre>
+  {% endif %}
 </div>
 {% endblock %}
