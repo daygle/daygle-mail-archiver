@@ -281,7 +281,11 @@ pre {
     justify-content: center;
     gap: 6px;
     padding: 10px 14px;
-    line-height: 1.1;
+    line-height: 1;
+}
+
+.message-actions .btn i {
+    line-height: 1;
 }
 
 
