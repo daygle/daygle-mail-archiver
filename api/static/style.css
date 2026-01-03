@@ -358,6 +358,18 @@ button.test-btn:hover {
     margin-top: 0;
 }
 
+.message-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.message-actions .btn {
+    min-width: 120px; /* Ensures consistent button width */
+    text-align: center;
+}
+
 /* Mobile styles */
 @media (max-width: 768px) {
     .burger {
