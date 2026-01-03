@@ -35,17 +35,21 @@ Follow these steps to get a fully running Daygle instance.
 
 ---
 
-## 1. Clone the repository
+## 🚀 Getting Started
 
-```
-cd /opt/
-git clone https://gitlab.com/daygle/daygle-mail-archiver
+### **Prerequisites**
+- Docker
+- Docker Compose (either `docker compose` or `docker-compose`, depending on your system)
+
+### **Clone the Repository**
+```bash
+git clone https://gitlab.com/daygle/daygle-mail-archiver.git
 cd daygle-mail-archiver
 ```
 
 ---
 
-## 2. Create your `.env` file
+## ⚙️ Configuration
 
 ```
 cp .env.example .env
