@@ -17,16 +17,18 @@
 
       <div class="confirm-buttons">
         <button type="submit" name="mode" value="retain" class="btn btn-warning">
+          <i class="fa-solid fa-folder-minus"></i>
           Delete Account (retain {{ msg_count }} message{% if msg_count != 1 %}s{% endif %})
         </button>
 
         <button type="submit" name="mode" value="delete_messages" class="btn btn-danger">
+          <i class="fa-solid fa-trash"></i>
           Delete Account + {{ msg_count }} message{% if msg_count != 1 %}s{% endif %}
         </button>
       </div>
 
       <div class="confirm-cancel">
-        <a href="/imap_accounts" class="btn btn-secondary">Cancel</a>
+        <a href="/imap_accounts" class="btn btn-secondary"><i class="fa-solid fa-ban"></i> Cancel</a>
       </div>
 
     </form>

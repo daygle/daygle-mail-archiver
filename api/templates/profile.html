@@ -17,7 +17,7 @@
         <label>Confirm New Password</label>
         <input name="confirm_password" type="password" required>
     </div>
-    <button type="submit">Change Password</button>
+    <button type="submit"><i class="fa-solid fa-key"></i> Change Password</button>
 </form>
 
 <h3>Date Format</h3>
@@ -31,7 +31,7 @@
             <option value="%Y/%m/%d %H:%M:%S" {% if date_format == '%Y/%m/%d %H:%M:%S' %}selected{% endif %}>YYYY/MM/DD HH:MM:SS</option>
         </select>
     </div>
-    <button type="submit">Update Format</button>
+    <button type="submit"><i class="fa-solid fa-save"></i> Update Format</button>
 </form>
 
 {% endblock %}

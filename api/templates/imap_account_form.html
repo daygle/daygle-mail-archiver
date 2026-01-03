@@ -64,7 +64,7 @@
     </div>
 
     <div class="form-actions">
-        <button type="submit">{{ "Update Account" if account else "Create Account" }}</button>
+        <button type="submit"><i class="fa-solid fa-save"></i> {{ "Update Account" if account else "Create Account" }}</button>
     </div>
 
 </form>
@@ -87,7 +87,7 @@
     <input type="hidden" name="delete_after_processing" value="{{ 'true' if account and account.delete_after_processing else 'false' }}">
     <input type="hidden" name="enabled" value="{{ 'true' if not account or account.enabled else 'false' }}">
 
-    <button type="submit" class="test-btn">Test Connection</button>
+    <button type="submit" class="test-btn"><i class="fa-solid fa-plug"></i> Test Connection</button>
 
 </form>
 
