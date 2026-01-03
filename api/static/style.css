@@ -316,6 +316,14 @@ pre {
     white-space: pre-wrap;
 }
 
+.message-headers {
+    background: #f3f4f6;
+    padding: 15px;
+    border-radius: 8px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+}
+
 .meta-table {
     width: 100%;
     border-collapse: collapse;
