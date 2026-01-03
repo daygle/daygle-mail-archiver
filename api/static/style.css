@@ -1,244 +1,18 @@
-/* Modern, clean, responsive UI for Daygle */
+/* Daygle Mail Archiver UI (Bootstrap-friendly) */
 
 body {
     margin: 0;
-    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     background: #f5f7fa;
     color: #1a1a1a;
-}
-
-nav {
-    background: #1f2937;
-    color: white;
-    padding: 12px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: relative;
-}
-
-/* Sidebar layout */
-.app {
-    display: flex;
-    min-height: 100vh;
-}
-
-.sidebar {
-    width: 64px;
-    background: #0b1220;
-    color: #d1d5db;
-    padding: 20px 14px;
-    box-shadow: 2px 0 8px rgba(0,0,0,0.08);
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    overflow: auto;
-}
-
-.sidebar .brand a {
-    color: #fff;
-    text-decoration: none;
-    font-weight: 700;
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    margin-bottom: 18px;
-}
-
-.sidebar .brand .brand-text {
-    display: inline-block;
-}
-
-.sidebar-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 20px;
-}
-
-.sidebar-nav a {
-    color: #cbd5e1;
-    text-decoration: none;
-    padding: 10px 8px;
-    border-radius: 6px;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-.sidebar-nav a:hover {
-    background: rgba(255,255,255,0.04);
-    color: #fff;
-}
-
-.sidebar-user {
-    margin-top: 24px;
-    border-top: 1px solid rgba(255,255,255,0.03);
-    padding-top: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.sidebar-username {
-    font-weight: 600;
-    color: #fff;
-    margin-bottom: 6px;
-}
-
-.main {
-    margin-left: 220px;
-    flex: 1;
-    min-height: 100vh;
-    background: transparent;
-}
-
-.topbar {
-    background: transparent;
-    padding: 12px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.burger { display: inline-flex; }
-
-@media (max-width: 900px) {
-    .sidebar { position: relative; width: 100%; height: auto; box-shadow: none; }
-    .main { margin-left: 0; }
-    .sidebar-nav { flex-direction: row; overflow-x: auto; }
-    .sidebar-user { flex-direction: row; gap: 12px; }
-}
-
-/* Top navigation (daygle-like) overrides */
-.app { display: block; }
-.sidebar { display: none !important; }
-.main { margin-left: 0 !important; }
-
-.topnav {
-    background: #0b1220;
-    color: #fff;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 200;
-    box-shadow: 0 1px 6px rgba(0,0,0,0.12);
-}
-
-.topnav-inner {
-    max-width: 1100px;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 8px 16px;
-}
-
-.topnav .brand a { color: #fff; text-decoration: none; font-weight: 700; display:flex; gap:8px; align-items:center; }
-.topnav .brand .brand-text { display: inline-block; }
-
-.topnav-links { display: flex; gap: 8px; margin-left: 12px; }
-.topnav-links a { color: #cbd5e1; text-decoration: none; padding: 6px 10px; border-radius: 6px; font-weight: 600; }
-.topnav-links a:hover, .topnav-links a.active { color: #fff; background: rgba(255,255,255,0.03); }
-
-.topnav-right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
-.topnav-right .username { color: #cbd5e1; font-weight: 600; }
-.topnav-right a { color: #cbd5e1; text-decoration: none; padding: 6px; border-radius: 6px; }
-.topnav-right a:hover { color: #fff; background: rgba(255,255,255,0.03); }
-
-body { padding-top: 56px; }
-
-@media (max-width: 700px) {
-    .topnav-links { display: none; }
-    .topnav .brand .brand-text { display: none; }
-    body { padding-top: 48px; }
-}
-
-.burger {
-    display: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: white;
-    margin-right: 15px;
-}
-
-.nav-left {
-    display: flex;
-    gap: 20px;
-    align-items: center;
-}
-
-.nav-right {
-    display: flex;
-    align-items: center;
-    position: relative;
-}
-
-.username {
-    cursor: pointer;
-    color: #d1d5db;
-    font-weight: 500;
-    padding: 5px 10px;
-    border-radius: 4px;
-}
-
-.username:hover {
-    color: white;
-    background: #374151;
-}
-
-.user-menu {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background: #1f2937;
-    border: 1px solid #374151;
-    border-radius: 4px;
-    display: none;
-    flex-direction: column;
-    min-width: 120px;
-    z-index: 10;
-}
-
-.user-menu a {
-    color: #d1d5db;
-    text-decoration: none;
-    padding: 10px 15px;
-    border-bottom: 1px solid #374151;
-}
-
-.user-menu a:last-child {
-    border-bottom: none;
-}
-
-.user-menu a:hover {
-    color: white;
-    background: #374151;
-}
-
-#user-menu-toggle:checked ~ .user-menu {
-    display: flex;
-}
-
-.nav-left a,
-.nav-right a {
-    color: #d1d5db;
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.nav-left a:hover,
-.nav-right a:hover {
-    color: white;
+    padding-top: 70px; /* space for fixed navbar */
 }
 
 .container {
     max-width: 1100px;
-    margin: 30px auto;
-    background: white;
-    padding: 25px;
+    margin: 32px auto;
+    background: #ffffff;
+    padding: 24px;
     border-radius: 10px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
@@ -280,7 +54,7 @@ input, select, textarea {
     font-size: 15px;
 }
 
-button {
+button:not(.btn) {
     background: #2563eb;
     color: white;
     padding: 10px 18px;
@@ -291,7 +65,7 @@ button {
     margin-top: 10px;
 }
 
-button:hover {
+button:not(.btn):hover {
     background: #1d4ed8;
 }
 
@@ -306,41 +80,14 @@ pre {
     overflow-x: auto;
 }
 
-.main {
-    margin-left: 64px;
+.flash {
+    background: #d1fae5;
     color: #065f46;
     padding: 12px;
     border-radius: 6px;
     margin-bottom: 20px;
-
-/* collapsed (default) to icons-only, expand on hover */
-.sidebar:hover { width: 220px; }
-.sidebar:hover ~ .main { margin-left: 220px; }
-.sidebar .nav-label { display: none; }
-.sidebar:hover .nav-label { display: inline-block; }
-.sidebar .brand .brand-text { display: none; }
-.sidebar:hover .brand .brand-text { display: inline-block; }
-
-.sidebar-nav a { transition: background .12s, color .12s; }
-.sidebar-nav a.active, .sidebar-nav a:hover { background: rgba(255,255,255,0.05); color: #fff; }
-
-/* small-screen override remains as before */
     border: 1px solid #a7f3d0;
-    .sidebar { position: relative; width: 100%; height: auto; box-shadow: none; }
-    .main { margin-left: 0; }
-    .sidebar-nav { flex-direction: row; overflow-x: auto; }
-    .sidebar-user { flex-direction: row; gap: 12px; }
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-}
-
-button.test-btn {
-    background: #059669; /* green */
-}
-
-button.test-btn:hover {
-    background: #047857;
+    font-weight: 500;
 }
 
 .flash-message {
@@ -350,6 +97,27 @@ button.test-btn:hover {
   margin-bottom: 12px;
   border-radius: 4px;
   color: #31572c;
+}
+
+.table-container {
+    overflow-x: auto;
+    background: white;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+}
+
+.table-container table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px;
+}
+
+.table-container th,
+.table-container td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #eee;
+    white-space: nowrap;
 }
 
 .messages-table {
@@ -399,6 +167,14 @@ button.test-btn:hover {
 
 .confirm-modal h2 {
   margin-top: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #b30000;
+}
+
+.confirm-modal strong {
+  color: #333;
 }
 
 .confirm-buttons {
@@ -407,86 +183,16 @@ button.test-btn:hover {
   margin-top: 16px;
 }
 
+.confirm-buttons button {
+  flex: 1;
+}
+
 .confirm-cancel {
   margin-top: 12px;
   text-align: right;
 }
 
-/* Basic button styles if you don't already have them */
-.btn {
-  display: inline-block;
-  padding: 6px 12px;
-  border-radius: 4px;
-  border: 1px solid transparent;
-  font-size: 14px;
-  cursor: pointer;
-  text-decoration: none;
-}
-
-.btn-primary {
-  background: #007bff;
-  color: #fff;
-  border-color: #007bff;
-}
-
-.btn-secondary {
-  background: #6c757d;
-  color: #fff;
-  border-color: #6c757d;
-}
-
-.btn-danger {
-  background: #dc3545;
-  color: #fff;
-  border-color: #dc3545;
-}
-
-.btn-warning {
-  background: #ffc107;
-  color: #212529;
-  border-color: #ffc107;
-}
-
-.table-container {
-    overflow-x: auto;
-    background: white;
-    padding: 10px;
-    border-radius: 6px;
-    border: 1px solid #ddd;
-}
-
-.table-container table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 900px; /* ensures columns don't squish */
-}
-
-.table-container th,
-.table-container td {
-    padding: 6px 8px;
-    border-bottom: 1px solid #eee;
-    white-space: nowrap; /* prevents wrapping */
-}
-
-.confirm-modal h2 {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #b30000;
-}
-
-.confirm-modal strong {
-    color: #333;
-}
-
-.confirm-buttons button {
-    flex: 1;
-}
-
-.danger-link {
-    color: #b30000;
-    font-weight: bold;
-}
+.danger-link { color: #b30000; font-weight: bold; }
 
 .form-row {
     display: flex;
@@ -497,7 +203,7 @@ button.test-btn:hover {
 .form-row input,
 .form-row select {
     flex: 1;
-    width: auto; /* Override full width for flex items */
+    width: auto;
 }
 
 .test-connection-form {
@@ -506,9 +212,7 @@ button.test-btn:hover {
     border-top: 1px solid #e5e7eb;
 }
 
-.test-connection-form button {
-    margin-top: 0;
-}
+.test-connection-form button { margin-top: 0; }
 
 .message-actions {
     display: flex;
@@ -523,7 +227,7 @@ button.test-btn:hover {
     text-align: center;
     box-sizing: border-box;
     display: inline-block;
-    line-height: 38px; /* Center text vertically */
+    line-height: 38px;
 }
 
 .message-subject {
@@ -551,41 +255,6 @@ button.test-btn:hover {
     background: #f9fafb;
 }
 
-/* Mobile styles */
 @media (max-width: 768px) {
-    .burger {
-        display: block;
-    }
-
-    .nav-left {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        background: #1f2937;
-        flex-direction: column;
-        gap: 0;
-        padding: 10px 0;
-        display: none;
-        border-top: 1px solid #374151;
-    }
-
-    .nav-left a {
-        padding: 10px 20px;
-        border-bottom: 1px solid #374151;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    #nav-toggle:checked ~ .nav-left {
-        display: flex;
-    }
-
-    .nav-right {
-        margin-left: auto;
-    }
-
-    .user-menu {
-        right: 20px;
-    }
+    .container { margin: 16px auto; padding: 16px; }
 }

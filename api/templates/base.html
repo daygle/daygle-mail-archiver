@@ -2,42 +2,78 @@
 <html>
 <head>
     <title>Daygle Mail Archiver</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
-    <header class="topnav">
-        <div class="topnav-inner">
-            <div class="brand"><a href="/messages"><i class="fa-solid fa-envelope-open-text"></i><span class="brand-text">Daygle Mail Archiver</span></a></div>
+    <nav class="navbar navbar-expand-sm navbar-dark bg-dark fixed-top">
+        <div class="container-fluid">
+            <button type="button" class="btn btn-primary me-2" data-bs-toggle="offcanvas" data-bs-target="#daygle_navigation" aria-controls="daygle_navigation">
+                <i class="fas fa-bars"></i>
+            </button>
 
-            <nav class="topnav-links">
-                <a href="/messages">Messages</a>
-                <a href="/imap_accounts">IMAP Accounts</a>
-                <a href="/users">Users</a>
-                <a href="/settings">Settings</a>
-                <a href="/logs">Logs</a>
-            </nav>
+            <a class="navbar-brand d-flex align-items-center" href="/messages">
+                <i class="fa-solid fa-envelope-open-text me-2"></i>
+                Daygle Mail Archiver
+            </a>
 
-            <div class="topnav-right">
-                {% if request.session.username %}
-                    <span class="username">{{ request.session.username }}</span>
-                    <a href="/profile" title="Profile"><i class="fa-solid fa-user"></i></a>
-                    <a href="/logout" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></a>
-                {% else %}
-                    <a href="/login">Login</a>
-                {% endif %}
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar" aria-controls="collapsibleNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse justify-content-end" id="collapsibleNavbar">
+                <ul class="navbar-nav">
+                    {% if request.session.username %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout"><i class="fas fa-right-from-bracket"></i> Logout</a>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login"><i class="fas fa-right-to-bracket"></i> Login</a>
+                    </li>
+                    {% endif %}
+                </ul>
             </div>
         </div>
-    </header>
+    </nav>
 
-    <div class="container">
+    <!-- Off-Canvas Menu -->
+    <div class="offcanvas offcanvas-start bg-dark text-white" tabindex="-1" id="daygle_navigation" aria-labelledby="daygle_navigation_label">
+        <div class="offcanvas-header d-flex align-items-center">
+            <h1 class="offcanvas-title mb-0 d-flex align-items-center" id="daygle_navigation_label">
+                <i class="fa-solid fa-envelope-open-text me-2"></i>
+                Daygle Mail Archiver
+            </h1>
+            <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <ul class="list-unstyled mb-0">
+                <li class="mb-2"><a href="/messages" class="text-decoration-none text-white d-flex align-items-center"><i class="fas fa-inbox me-2"></i> Messages</a></li>
+                <li class="mb-2"><a href="/imap_accounts" class="text-decoration-none text-white d-flex align-items-center"><i class="fas fa-server me-2"></i> IMAP Accounts</a></li>
+                <li class="mb-2"><a href="/users" class="text-decoration-none text-white d-flex align-items-center"><i class="fas fa-users me-2"></i> Users</a></li>
+                <li class="mb-2"><a href="/settings" class="text-decoration-none text-white d-flex align-items-center"><i class="fas fa-gear me-2"></i> Settings</a></li>
+                <li class="mb-2"><a href="/logs" class="text-decoration-none text-white d-flex align-items-center"><i class="fas fa-list me-2"></i> Logs</a></li>
+                {% if request.session.username %}
+                <li class="mb-2"><a href="/profile" class="text-decoration-none text-white d-flex align-items-center"><i class="fas fa-user me-2"></i> Profile</a></li>
+                <li class="mb-2"><a href="/logout" class="text-decoration-none text-white d-flex align-items-center"><i class="fas fa-right-from-bracket me-2"></i> Logout</a></li>
+                {% else %}
+                <li class="mb-2"><a href="/login" class="text-decoration-none text-white d-flex align-items-center"><i class="fas fa-right-to-bracket me-2"></i> Login</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="container mt-4">
         {% if flash %}
         <div class="flash">{{ flash }}</div>
         {% endif %}
 
         {% block content %}{% endblock %}
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>
