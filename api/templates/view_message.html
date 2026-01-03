@@ -29,10 +29,10 @@
 </div>
 
 <div class="message-actions">
-  <a href="/messages/{{ message.id }}/download" class="btn btn-secondary">Download EML</a>
+  <a href="/messages/{{ message.id }}/download" class="btn btn-secondary"><i class="fa-solid fa-download"></i> Download EML</a>
 
   <form method="post" action="/messages/{{ message.id }}/delete/confirm" style="display:inline;">
-    <button type="submit" class="btn btn-danger">Delete</button>
+    <button type="submit" class="btn btn-danger"><i class="fa-solid fa-trash"></i> Delete</button>
   </form>
 </div>
 
