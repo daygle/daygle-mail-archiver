@@ -321,7 +321,7 @@ pre {
 
 .form-actions {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
     gap: 15px;
     margin-top: 30px;
@@ -330,10 +330,16 @@ pre {
 }
 
 .test-connection-form {
-    display: contents;
-    margin: 0;
-    padding: 0;
-    border: none;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 15px;
+    margin-top: 0;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+    position: absolute;
+    left: 24px;
+    right: auto;
 }
 
 .test-connection-form button {
