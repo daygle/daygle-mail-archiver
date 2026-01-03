@@ -103,9 +103,20 @@ pre {
   color: #31572c;
 }
 
-.navbar-brand { font-size: 1.05rem; gap: 6px; }
-.offcanvas-title { font-size: 1.05rem; line-height: 1.2; }
-.offcanvas-title img { height: 26px; width: auto; }
+.navbar-brand,
+.offcanvas-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+
+.navbar-brand img,
+.offcanvas-title img {
+  height: 26px;
+  width: auto;
+}
 
 .table-container {
     overflow-x: auto;
