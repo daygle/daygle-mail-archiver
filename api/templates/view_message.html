@@ -55,7 +55,7 @@
   {% if body.html %}
     {{ body.html | safe }}
   {% else %}
-    <pre>{{ body.text }}</pre>
+    <pre class="message-body-text">{{ body.text }}</pre>
   {% endif %}
 </div>
 {% endblock %}
