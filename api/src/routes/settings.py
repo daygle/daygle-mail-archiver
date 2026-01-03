@@ -36,6 +36,7 @@ def settings_form(request: Request):
 def save_settings(
     request: Request,
     page_size: int = Form(...),
+    date_format: str = Form("%Y-%m-%d %H:%M:%S"),
     enable_purge: bool = Form(False),
     retention_value: int = Form(1),
     retention_unit: str = Form("years"),
@@ -51,6 +52,17 @@ def save_settings(
         ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
         """,
         {"v": str(page_size)},
+    )
+
+    # Save date_format to session and database
+    request.session["date_format"] = date_format
+    query(
+        """
+        INSERT INTO settings (key, value)
+        VALUES ('date_format', :v)
+        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
+        """,
+        {"v": date_format},
     )
 
     # Save retention settings

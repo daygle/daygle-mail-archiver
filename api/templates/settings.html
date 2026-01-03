@@ -3,56 +3,87 @@
 
 <h2>Settings</h2>
 
-<form method="post">
-
-    <div class="form-group">
-        <label for="page_size">Page Size</label>
-        <input id="page_size" class="form-control" name="page_size" type="number" value="{{ settings.page_size or '50' }}">
-    </div>
-
-    <div class="form-group">
-        <label for="date_format">Date Format</label>
-        <select id="date_format" class="form-control" name="date_format">
-            <option value="%Y-%m-%d %H:%M:%S" {% if settings.date_format == '%Y-%m-%d %H:%M:%S' %}selected{% endif %}>2024-01-15 14:30:45</option>
-            <option value="%m/%d/%Y %I:%M %p" {% if settings.date_format == '%m/%d/%Y %I:%M %p' %}selected{% endif %}>01/15/2024 02:30 PM</option>
-            <option value="%d/%m/%Y %H:%M:%S" {% if settings.date_format == '%d/%m/%Y %H:%M:%S' %}selected{% endif %}>15/01/2024 14:30:45</option>
-            <option value="%Y-%m-%d %I:%M %p" {% if settings.date_format == '%Y-%m-%d %I:%M %p' %}selected{% endif %}>2024-01-15 02:30 PM</option>
-        </select>
-    </div>
-
-    <div class="form-checkboxes">
-        <div class="form-group checkbox-group">
-            <input id="enable_purge" type="checkbox" name="enable_purge" {% if settings.enable_purge == 'true' %}checked{% endif %}>
-            <label for="enable_purge">Enable Email Purging</label>
+<!-- General Settings Section -->
+<div class="settings-section">
+    <h3>General Settings</h3>
+    <p class="section-description">Configure general application preferences</p>
+    
+    <form method="post">
+        <div class="form-group">
+            <label for="page_size">Page Size</label>
+            <input id="page_size" class="form-control" name="page_size" type="number" value="{{ settings.page_size or '50' }}">
         </div>
-    </div>
 
-    <div class="form-group">
-        <label for="retention_value">Retention Period</label>
-        <div class="form-retention">
-            <input id="retention_value" class="form-control" name="retention_value" type="number" min="1" value="{{ settings.retention_value or '1' }}">
-            <select id="retention_unit" class="form-control" name="retention_unit">
-                <option value="days" {% if settings.retention_unit == 'days' %}selected{% endif %}>Day(s)</option>
-                <option value="months" {% if settings.retention_unit == 'months' %}selected{% endif %}>Month(s)</option>
-                <option value="years" {% if settings.retention_unit == 'years' or not settings.retention_unit %}selected{% endif %}>Year(s)</option>
+        <div class="form-group">
+            <label for="date_format">Date Format</label>
+            <select id="date_format" class="form-control" name="date_format">
+                <option value="%Y-%m-%d %H:%M:%S" {% if settings.date_format == '%Y-%m-%d %H:%M:%S' %}selected{% endif %}>2024-01-15 14:30:45</option>
+                <option value="%m/%d/%Y %I:%M %p" {% if settings.date_format == '%m/%d/%Y %I:%M %p' %}selected{% endif %}>01/15/2024 02:30 PM</option>
+                <option value="%d/%m/%Y %H:%M:%S" {% if settings.date_format == '%d/%m/%Y %H:%M:%S' %}selected{% endif %}>15/01/2024 14:30:45</option>
+                <option value="%Y-%m-%d %I:%M %p" {% if settings.date_format == '%Y-%m-%d %I:%M %p' %}selected{% endif %}>2024-01-15 02:30 PM</option>
             </select>
         </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save"></i> Save</button>
+        </div>
+    </form>
+</div>
+
+<!-- Email Purging Section -->
+<div class="settings-section">
+    <h3>Email Purging</h3>
+    <p class="section-description">Automatically delete old emails based on retention period</p>
+    
+    <form method="post">
+        <div class="form-checkboxes">
+            <div class="form-group checkbox-group">
+                <input id="enable_purge" type="checkbox" name="enable_purge" {% if settings.enable_purge == 'true' %}checked{% endif %}>
+                <label for="enable_purge">Enable Email Purging</label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="retention_value">Retention Period</label>
+            <div class="form-retention">
+                <input id="retention_value" class="form-control" name="retention_value" type="number" min="1" value="{{ settings.retention_value or '1' }}">
+                <select id="retention_unit" class="form-control" name="retention_unit">
+                    <option value="days" {% if settings.retention_unit == 'days' %}selected{% endif %}>Day(s)</option>
+                    <option value="months" {% if settings.retention_unit == 'months' %}selected{% endif %}>Month(s)</option>
+                    <option value="years" {% if settings.retention_unit == 'years' or not settings.retention_unit %}selected{% endif %}>Year(s)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save"></i> Save</button>
+        </div>
+    </form>
+</div>
+
+<!-- Database Backup/Restore Section -->
+<div class="settings-section">
+    <h3>Database Backup & Restore</h3>
+    <p class="section-description">Backup creates a SQL file; restore requires a previously created backup file</p>
+    
+    <div class="backup-container">
+        <div class="backup-section">
+            <h4>Download Backup</h4>
+            <p>Export the entire database to a SQL file for safekeeping</p>
+            <a href="/settings/backup" class="btn btn-primary"><i class="fa-solid fa-download"></i> Download Backup</a>
+        </div>
+
+        <div class="backup-section">
+            <h4>Restore from Backup</h4>
+            <p>Import a previously created backup file to restore the database</p>
+            <form method="post" action="/settings/restore" enctype="multipart/form-data">
+                <div class="file-input-group">
+                    <input type="file" name="file" accept=".sql" required>
+                    <button type="submit" class="btn btn-danger"><i class="fa-solid fa-upload"></i> Restore</button>
+                </div>
+            </form>
+        </div>
     </div>
-
-    <div class="form-actions">
-        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save"></i> Save</button>
-    </div>
-
-</form>
-
-<h3>Database Backup/Restore</h3>
-<p>Use these tools to backup or restore the database. Backup creates a SQL file; restore requires a previously created backup file.</p>
-
-<a href="/settings/backup" class="btn btn-primary"><i class="fa-solid fa-download"></i> Download Backup</a>
-
-<form method="post" action="/settings/restore" enctype="multipart/form-data" style="margin-top: 10px;">
-    <input type="file" name="file" accept=".sql" required>
-    <button type="submit" class="btn btn-danger"><i class="fa-solid fa-upload"></i> Restore from Backup</button>
-</form>
+</div>
 
 {% endblock %}

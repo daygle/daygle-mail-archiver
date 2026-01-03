@@ -151,6 +151,92 @@ select.form-control {
     font-family: inherit;
 }
 
+/* Settings page sections */
+.settings-section {
+    margin-bottom: 40px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.settings-section:last-child {
+    border-bottom: none;
+}
+
+.settings-section h3 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    font-size: 20px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.section-description {
+    margin: 0 0 20px 0;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+/* Backup/Restore layout */
+.backup-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.backup-section {
+    padding: 20px;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.backup-section h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.backup-section p {
+    margin: 0 0 15px 0;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.file-input-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.file-input-group input[type="file"] {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.file-input-group button {
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .backup-container {
+        grid-template-columns: 1fr;
+    }
+
+    .file-input-group {
+        flex-direction: column;
+    }
+
+    .file-input-group input[type="file"] {
+        width: 100%;
+    }
+}
+
 pre {
     background: #f3f4f6;
     padding: 15px;
