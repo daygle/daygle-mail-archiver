@@ -4,6 +4,7 @@
 <h1>{{ message.subject or "(no subject)" }}</h1>
 
 <div class="message-meta">
+  <p><strong>Subject:</strong> {{ message.subject or "(no subject)" }}</p>
   <p><strong>From:</strong> {{ message.sender }}</p>
   <p><strong>To:</strong> {{ message.recipients }}</p>
   <p><strong>Date:</strong> {{ message.date }}</p>
@@ -23,7 +24,7 @@
 
 <h2>Headers</h2>
 <pre class="message-headers">
-{% for k, v in headers.items() %}
+{% for k, v in headers.items() if k.lower() != 'subject' %}
 {{ k }}: {{ v }}
 {% endfor %}
 </pre>
