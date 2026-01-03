@@ -3,35 +3,49 @@
 
 <h2>My Profile</h2>
 
-<h3>Change Password</h3>
-<form method="post" action="/profile/change_password">
-    <div class="form-group">
-        <label>Current Password</label>
-        <input name="current_password" type="password" required>
-    </div>
-    <div class="form-group">
-        <label>New Password</label>
-        <input name="new_password" type="password" required>
-    </div>
-    <div class="form-group">
-        <label>Confirm New Password</label>
-        <input name="confirm_password" type="password" required>
-    </div>
-    <button type="submit"><i class="fa-solid fa-key"></i> Change Password</button>
-</form>
+<!-- Change Password Section -->
+<div class="settings-section">
+    <h3>Change Password</h3>
+    <p class="section-description">Update your account password to keep your account secure</p>
+    
+    <form method="post" action="/profile/change_password">
+        <div class="form-group">
+            <label for="current_password">Current Password</label>
+            <input id="current_password" class="form-control" name="current_password" type="password" required>
+        </div>
+        <div class="form-group">
+            <label for="new_password">New Password</label>
+            <input id="new_password" class="form-control" name="new_password" type="password" required>
+        </div>
+        <div class="form-group">
+            <label for="confirm_password">Confirm New Password</label>
+            <input id="confirm_password" class="form-control" name="confirm_password" type="password" required>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-key"></i> Change Password</button>
+        </div>
+    </form>
+</div>
 
-<h3>Date Format</h3>
-<form method="post" action="/profile/change_date_format">
-    <div class="form-group">
-        <label>Date Format</label>
-        <select name="date_format">
-            <option value="%Y-%m-%d %H:%M:%S" {% if date_format == '%Y-%m-%d %H:%M:%S' %}selected{% endif %}>YYYY-MM-DD HH:MM:SS</option>
-            <option value="%m/%d/%Y %H:%M:%S" {% if date_format == '%m/%d/%Y %H:%M:%S' %}selected{% endif %}>MM/DD/YYYY HH:MM:SS</option>
-            <option value="%d/%m/%Y %H:%M:%S" {% if date_format == '%d/%m/%Y %H:%M:%S' %}selected{% endif %}>DD/MM/YYYY HH:MM:SS</option>
-            <option value="%Y/%m/%d %H:%M:%S" {% if date_format == '%Y/%m/%d %H:%M:%S' %}selected{% endif %}>YYYY/MM/DD HH:MM:SS</option>
-        </select>
-    </div>
-    <button type="submit"><i class="fa-solid fa-save"></i> Update Format</button>
-</form>
+<!-- Date Format Section -->
+<div class="settings-section">
+    <h3>Date Format</h3>
+    <p class="section-description">Select how dates should be displayed throughout the application</p>
+    
+    <form method="post" action="/profile/change_date_format">
+        <div class="form-group">
+            <label for="date_format">Date Format</label>
+            <select id="date_format" class="form-control" name="date_format">
+                <option value="%Y-%m-%d %H:%M:%S" {% if date_format == '%Y-%m-%d %H:%M:%S' %}selected{% endif %}>2024-01-15 14:30:45</option>
+                <option value="%m/%d/%Y %I:%M %p" {% if date_format == '%m/%d/%Y %I:%M %p' %}selected{% endif %}>01/15/2024 02:30 PM</option>
+                <option value="%d/%m/%Y %H:%M:%S" {% if date_format == '%d/%m/%Y %H:%M:%S' %}selected{% endif %}>15/01/2024 14:30:45</option>
+                <option value="%Y-%m-%d %I:%M %p" {% if date_format == '%Y-%m-%d %I:%M %p' %}selected{% endif %}>2024-01-15 02:30 PM</option>
+            </select>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save"></i> Update Format</button>
+        </div>
+    </form>
+</div>
 
 {% endblock %}
