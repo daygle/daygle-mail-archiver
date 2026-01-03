@@ -8,11 +8,6 @@ body {
     padding-top: 70px; /* space for fixed navbar */
 }
 
-  .offcanvas .btn-close {
-    filter: invert(1);
-    opacity: 0.9;
-  }
-
   .offcanvas .btn-close:focus {
     box-shadow: none;
   }
