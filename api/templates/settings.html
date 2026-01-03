@@ -6,20 +6,32 @@
 <form method="post">
 
     <div class="form-group">
-        <label>Page Size</label>
-        <input name="page_size" type="number" value="{{ settings.page_size or '50' }}">
+        <label for="page_size">Page Size</label>
+        <input id="page_size" class="form-control" name="page_size" type="number" value="{{ settings.page_size or '50' }}">
     </div>
 
     <div class="form-group">
-        <label>Enable Email Purging</label>
-        <input name="enable_purge" type="checkbox" {% if settings.enable_purge == 'true' %}checked{% endif %}>
+        <label for="date_format">Date Format</label>
+        <select id="date_format" class="form-control" name="date_format">
+            <option value="%Y-%m-%d %H:%M:%S" {% if settings.date_format == '%Y-%m-%d %H:%M:%S' %}selected{% endif %}>2024-01-15 14:30:45</option>
+            <option value="%m/%d/%Y %I:%M %p" {% if settings.date_format == '%m/%d/%Y %I:%M %p' %}selected{% endif %}>01/15/2024 02:30 PM</option>
+            <option value="%d/%m/%Y %H:%M:%S" {% if settings.date_format == '%d/%m/%Y %H:%M:%S' %}selected{% endif %}>15/01/2024 14:30:45</option>
+            <option value="%Y-%m-%d %I:%M %p" {% if settings.date_format == '%Y-%m-%d %I:%M %p' %}selected{% endif %}>2024-01-15 02:30 PM</option>
+        </select>
+    </div>
+
+    <div class="form-checkboxes">
+        <div class="form-group checkbox-group">
+            <input id="enable_purge" type="checkbox" name="enable_purge" {% if settings.enable_purge == 'true' %}checked{% endif %}>
+            <label for="enable_purge">Enable Email Purging</label>
+        </div>
     </div>
 
     <div class="form-group">
-        <label>Retention Period</label>
-        <div class="form-row">
-            <input name="retention_value" type="number" min="1" value="{{ settings.retention_value or '1' }}">
-            <select name="retention_unit">
+        <label for="retention_value">Retention Period</label>
+        <div class="form-retention">
+            <input id="retention_value" class="form-control" name="retention_value" type="number" min="1" value="{{ settings.retention_value or '1' }}">
+            <select id="retention_unit" class="form-control" name="retention_unit">
                 <option value="days" {% if settings.retention_unit == 'days' %}selected{% endif %}>Day(s)</option>
                 <option value="months" {% if settings.retention_unit == 'months' %}selected{% endif %}>Month(s)</option>
                 <option value="years" {% if settings.retention_unit == 'years' or not settings.retention_unit %}selected{% endif %}>Year(s)</option>
@@ -27,7 +39,9 @@
         </div>
     </div>
 
-    <button type="submit"><i class="fa-solid fa-save"></i> Save</button>
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save"></i> Save</button>
+    </div>
 
 </form>
 

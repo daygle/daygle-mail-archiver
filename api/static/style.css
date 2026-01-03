@@ -137,6 +137,20 @@ button:not(.btn):hover {
     cursor: pointer;
 }
 
+.form-retention {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+select.form-control {
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+}
+
 pre {
     background: #f3f4f6;
     padding: 15px;
