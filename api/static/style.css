@@ -24,7 +24,7 @@ nav {
 }
 
 .sidebar {
-    width: 220px;
+    width: 64px;
     background: #0b1220;
     color: #d1d5db;
     padding: 20px 14px;
@@ -44,6 +44,10 @@ nav {
     gap: 8px;
     align-items: center;
     margin-bottom: 18px;
+}
+
+.sidebar .brand .brand-text {
+    display: inline-block;
 }
 
 .sidebar-nav {
@@ -257,17 +261,30 @@ pre {
     overflow-x: auto;
 }
 
-.flash {
-    background: #d1fae5;
+.main {
+    margin-left: 64px;
     color: #065f46;
     padding: 12px;
     border-radius: 6px;
     margin-bottom: 20px;
-    border: 1px solid #a7f3d0;
-    font-weight: 500;
-}
 
-.form-actions {
+/* collapsed (default) to icons-only, expand on hover */
+.sidebar:hover { width: 220px; }
+.sidebar:hover ~ .main { margin-left: 220px; }
+.sidebar .nav-label { display: none; }
+.sidebar:hover .nav-label { display: inline-block; }
+.sidebar .brand .brand-text { display: none; }
+.sidebar:hover .brand .brand-text { display: inline-block; }
+
+.sidebar-nav a { transition: background .12s, color .12s; }
+.sidebar-nav a.active, .sidebar-nav a:hover { background: rgba(255,255,255,0.05); color: #fff; }
+
+/* small-screen override remains as before */
+    border: 1px solid #a7f3d0;
+    .sidebar { position: relative; width: 100%; height: auto; box-shadow: none; }
+    .main { margin-left: 0; }
+    .sidebar-nav { flex-direction: row; overflow-x: auto; }
+    .sidebar-user { flex-direction: row; gap: 12px; }
     display: flex;
     justify-content: space-between;
     margin-top: 20px;

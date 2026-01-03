@@ -14,18 +14,18 @@
         </div>
 
         <nav class="sidebar-nav">
-            <a href="/messages"><i class="fa-solid fa-inbox"></i> Messages</a>
-            <a href="/imap_accounts"><i class="fa-solid fa-server"></i> IMAP Accounts</a>
-            <a href="/users"><i class="fa-solid fa-users"></i> Users</a>
-            <a href="/settings"><i class="fa-solid fa-gear"></i> Settings</a>
-            <a href="/logs"><i class="fa-solid fa-list"></i> Logs</a>
+            <a href="/messages" title="Messages"><i class="fa-solid fa-inbox"></i><span class="nav-label">Messages</span></a>
+            <a href="/imap_accounts" title="IMAP Accounts"><i class="fa-solid fa-server"></i><span class="nav-label">IMAP Accounts</span></a>
+            <a href="/users" title="Users"><i class="fa-solid fa-users"></i><span class="nav-label">Users</span></a>
+            <a href="/settings" title="Settings"><i class="fa-solid fa-gear"></i><span class="nav-label">Settings</span></a>
+            <a href="/logs" title="Logs"><i class="fa-solid fa-list"></i><span class="nav-label">Logs</span></a>
         </nav>
 
         <div class="sidebar-user">
             {% if request.session.username %}
                 <div class="sidebar-username">{{ request.session.username }}</div>
-                <a href="/profile"><i class="fa-solid fa-user"></i> Profile</a>
-                <a href="/logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+                <a href="/profile" title="Profile"><i class="fa-solid fa-user"></i><span class="nav-label">Profile</span></a>
+                <a href="/logout" title="Logout"><i class="fa-solid fa-right-from-bracket"></i><span class="nav-label">Logout</span></a>
             {% endif %}
         </div>
     </aside>
