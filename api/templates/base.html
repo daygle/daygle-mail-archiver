@@ -7,34 +7,44 @@
 </head>
 <body>
 
-<nav>
-    <input type="checkbox" id="nav-toggle" style="display: none;">
-    <label for="nav-toggle" class="burger">☰</label>
-    <div class="nav-left">
-        <a href="/messages">Messages</a>
-        <a href="/imap_accounts">IMAP Accounts</a>
-        <a href="/users">Users</a>
-        <a href="/settings">Settings</a>
-        <a href="/logs">Logs</a>
-    </div>
-    <div class="nav-right">
-        {% if request.session.username %}
-        <input type="checkbox" id="user-menu-toggle" style="display: none;">
-        <label for="user-menu-toggle" class="username">{{ request.session.username }}</label>
-        <div class="user-menu">
-            <a href="/profile">Profile</a>
-            <a href="/logout">Logout</a>
+<div class="app">
+    <aside class="sidebar">
+        <div class="brand">
+            <a href="/messages"><i class="fa-solid fa-envelope-open-text"></i> Daygle Mail</a>
         </div>
-        {% endif %}
-    </div>
-</nav>
 
-<div class="container">
-    {% if flash %}
-    <div class="flash">{{ flash }}</div>
-    {% endif %}
+        <nav class="sidebar-nav">
+            <a href="/messages"><i class="fa-solid fa-inbox"></i> Messages</a>
+            <a href="/imap_accounts"><i class="fa-solid fa-server"></i> IMAP Accounts</a>
+            <a href="/users"><i class="fa-solid fa-users"></i> Users</a>
+            <a href="/settings"><i class="fa-solid fa-gear"></i> Settings</a>
+            <a href="/logs"><i class="fa-solid fa-list"></i> Logs</a>
+        </nav>
 
-    {% block content %}{% endblock %}
+        <div class="sidebar-user">
+            {% if request.session.username %}
+                <div class="sidebar-username">{{ request.session.username }}</div>
+                <a href="/profile"><i class="fa-solid fa-user"></i> Profile</a>
+                <a href="/logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+            {% endif %}
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <label for="sidebar-toggle" class="burger"> <i class="fa-solid fa-bars"></i> </label>
+            <div class="topbar-right">
+                {% if flash %}
+                <div class="flash">{{ flash }}</div>
+                {% endif %}
+            </div>
+        </header>
+
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
 </div>
 
 </body>
