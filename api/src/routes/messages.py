@@ -112,7 +112,7 @@ def view_message(request: Request, message_id: int):
     msg = request.session.pop("flash", None)
 
     return templates.TemplateResponse(
-        "view_message.html",
+        "message_view.html",
         {
             "request": request,
             "message": row,
