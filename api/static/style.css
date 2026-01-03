@@ -334,12 +334,9 @@ pre {
     justify-content: flex-start;
     align-items: center;
     gap: 15px;
-    margin-top: 0;
+    margin-top: -61px;
     padding-top: 20px;
-    border-top: 1px solid #e5e7eb;
-    position: absolute;
-    left: 24px;
-    right: auto;
+    border-top: none;
 }
 
 .test-connection-form button {
