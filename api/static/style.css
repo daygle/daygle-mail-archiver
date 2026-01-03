@@ -360,13 +360,13 @@ button.test-btn:hover {
 
 .message-actions {
     display: flex;
-    gap: 10px;
+    justify-content: space-between;
     align-items: center;
     margin-top: 10px;
 }
 
 .message-actions .btn {
-    min-width: 120px; /* Ensures consistent button width */
+    min-width: 120px;
     text-align: center;
 }
 
