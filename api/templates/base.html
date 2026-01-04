@@ -163,9 +163,13 @@
         const sidebar = document.getElementById('sidebar');
         const sidebarToggle = document.getElementById('sidebarToggle');
         const sidebarMobileToggle = document.getElementById('sidebarMobileToggle');
+        const sidebarBrand = document.getElementById('sidebarBrand');
 
         function toggleSidebar(e) {
-            if (e) e.stopPropagation();
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
             sidebar.classList.toggle('collapsed');
             localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
         }
@@ -176,8 +180,17 @@
 
         if (sidebarMobileToggle) {
             sidebarMobileToggle.addEventListener('click', (e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 sidebar.classList.toggle('mobile-open');
+            });
+        }
+
+        // Prevent sidebar brand from toggling sidebar
+        if (sidebarBrand) {
+            sidebarBrand.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // Allow the link to navigate normally
             });
         }
 
