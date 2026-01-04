@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 
 from utils.db import query
 from utils.templates import templates
+from utils.timezone import convert_utc_to_user_timezone
 
 router = APIRouter()
 
@@ -31,6 +32,20 @@ def emails_per_day(request: Request):
     if not require_login(request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
+    # Get global date format
+    global_setting = query("SELECT value FROM settings WHERE key = 'date_format'").mappings().first()
+    date_format = global_setting["value"] if global_setting else "%d/%m/%Y %H:%M"
+    
+    # Override with user's date format if set
+    user_id = request.session.get("user_id")
+    user = query("SELECT date_format FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+    if user and user["date_format"]:
+        date_format = user["date_format"]
+    
+    # Use just date portion of format (remove time)
+    if "%H" in date_format or "%I" in date_format:
+        date_format = date_format.split()[0]  # Get first part before space
+
     results = query("""
         SELECT 
             DATE(created_at) as date,
@@ -42,7 +57,7 @@ def emails_per_day(request: Request):
     """).mappings().all()
 
     return {
-        "labels": [row["date"].strftime("%Y-%m-%d") for row in results],
+        "labels": [row["date"].strftime(date_format) for row in results],
         "data": [row["count"] for row in results]
     }
 
@@ -176,6 +191,20 @@ def deletion_stats(request: Request):
     if not require_login(request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
+    # Get global date format
+    global_setting = query("SELECT value FROM settings WHERE key = 'date_format'").mappings().first()
+    date_format = global_setting["value"] if global_setting else "%d/%m/%Y %H:%M"
+    
+    # Override with user's date format if set
+    user_id = request.session.get("user_id")
+    user = query("SELECT date_format FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+    if user and user["date_format"]:
+        date_format = user["date_format"]
+    
+    # Use just date portion of format (remove time)
+    if "%H" in date_format or "%I" in date_format:
+        date_format = date_format.split()[0]  # Get first part before space
+
     # Get deletion stats grouped by type
     results = query("""
         SELECT 
@@ -202,7 +231,7 @@ def deletion_stats(request: Request):
     by_date = defaultdict(lambda: {"manual": 0, "retention": 0, "from_server": 0})
     
     for row in results:
-        date_str = row["deletion_date"].strftime("%Y-%m-%d")
+        date_str = row["deletion_date"].strftime(date_format)
         if row["deletion_type"] == "manual":
             by_date[date_str]["manual"] += row["total_count"]
         elif row["deletion_type"] == "retention":

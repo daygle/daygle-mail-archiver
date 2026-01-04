@@ -103,10 +103,16 @@ def format_datetime(utc_datetime, user_id: int, date_format: str = None):
     # Convert to user's timezone
     local_datetime = convert_utc_to_user_timezone(utc_datetime, user_id)
     
-    # Get user's date format preference if not provided
+    # Get date format preference if not provided
     if date_format is None:
+        # First get global date format
+        global_setting = query("SELECT value FROM settings WHERE key = 'date_format'").mappings().first()
+        date_format = global_setting["value"] if global_setting else "%d/%m/%Y %H:%M"
+        
+        # Override with user's date format if set
         user = query("SELECT date_format FROM users WHERE id = :id", {"id": user_id}).mappings().first()
-        date_format = user["date_format"] if user and user["date_format"] else "%d/%m/%Y %H:%M"
+        if user and user["date_format"]:
+            date_format = user["date_format"]
     
     # Format the datetime
     return local_datetime.strftime(date_format)
