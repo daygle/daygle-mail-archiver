@@ -1,77 +1,83 @@
 {% extends "base.html" %}
+
+{% block page_title %}Support This Project{% endblock %}
+
 {% block content %}
-
-<div style="margin-bottom: 24px;">
-    <h2><i class="fas fa-heart" style="margin-right: 8px;"></i>Support This Project</h2>
-</div>
-
-<div class="settings-section">
-    <h3>Make a Donation</h3>
-    <p class="section-description">
-        Daygle Mail Archiver is free and open source. If you find it useful, please consider supporting its development.
-    </p>
-
-    <div style="max-width: 800px;">
-        <div class="card" style="margin-bottom: 24px;">
-            <div class="card-body">
-                <h5 class="card-title"><i class="fab fa-paypal"></i> Donate via PayPal</h5>
-                <p class="card-text">
-                    Your donation helps maintain and improve this project. Every contribution is greatly appreciated!
-                </p>
-                
-                <form action="https://www.paypal.com/donate" method="post" target="_blank">
-                    <input type="hidden" name="business" value="daygle@daygle.net" />
-                    <input type="hidden" name="no_recurring" value="0" />
-                    <input type="hidden" name="item_name" value="Daygle Mail Archiver Development" />
-                    <input type="hidden" name="currency_code" value="USD" />
-                    
-                    <div style="margin-bottom: 16px;">
-                        <label for="amount" class="form-label">Donation Amount (USD)</label>
-                        <div style="display: flex; gap: 0;">
-                            <span style="padding: 8px 12px; background: var(--background-secondary); border: 1px solid var(--border-color); border-right: none; border-radius: var(--radius-md) 0 0 var(--radius-md);">$</span>
-                            <input type="number" class="form-control" id="amount" name="amount" min="1" step="0.01" placeholder="10.00" style="border-radius: 0 var(--radius-md) var(--radius-md) 0;">
-                        </div>
-                        <small style="color: var(--text-secondary);">Or choose any amount you wish</small>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary btn-lg">
-                        <i class="fab fa-paypal"></i> Donate with PayPal
-                    </button>
-                </form>
-            </div>
+<!-- PayPal Donation Card -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fab fa-paypal"></i>
+            <span>Donate via PayPal</span>
         </div>
-
-        <div class="alert alert-info">
-            <h6><i class="fas fa-info-circle"></i> Other Ways to Support</h6>
-            <ul style="padding-left: 24px; margin-bottom: 0;">
-                <li style="margin-bottom: 8px;">Star the project on GitHub</li>
-                <li style="margin-bottom: 8px;">Report bugs and suggest features</li>
-                <li style="margin-bottom: 8px;">Contribute code or documentation</li>
-                <li style="margin-bottom: 8px;">Share the project with others</li>
-            </ul>
-        </div>
-
-        <div class="card" style="margin-top: 24px; background: var(--background-secondary);">
-            <div class="card-body">
-                <h6 style="margin-bottom: 16px;">Why Donate?</h6>
-                <ul style="padding-left: 24px; font-size: 0.9rem;">
-                    <li style="margin-bottom: 8px;">Supports ongoing development</li>
-                    <li style="margin-bottom: 8px;">Helps with server costs</li>
-                    <li style="margin-bottom: 8px;">Enables new features</li>
-                    <li style="margin-bottom: 8px;">Maintains documentation</li>
-                    <li style="margin-bottom: 8px;">Provides bug fixes</li>
-                </ul>
-                
-                <hr style="margin: 16px 0; border-color: var(--border-color);">
-                
-                <p style="font-size: 0.9rem; margin-bottom: 0;">
-                    <strong>Thank you!</strong><br>
-                    Your support makes this project possible.
-                </p>
+    </div>
+    <div class="card-body">
+        <p style="margin-bottom: 16px;">
+            Daygle Mail Archiver is free and open source. If you find it useful, please consider supporting its development.
+            Your donation helps maintain and improve this project. Every contribution is greatly appreciated!
+        </p>
+        
+        <form action="https://www.paypal.com/donate" method="post" target="_blank">
+            <input type="hidden" name="business" value="daygle@daygle.net" />
+            <input type="hidden" name="no_recurring" value="0" />
+            <input type="hidden" name="item_name" value="Daygle Mail Archiver Development" />
+            <input type="hidden" name="currency_code" value="USD" />
+            
+            <div class="form-group">
+                <label for="amount" class="form-label">Donation Amount (USD)</label>
+                <div style="display: flex; gap: 0; max-width: 300px;">
+                    <span style="padding: 10px 16px; background: var(--background-secondary); border: 1px solid var(--border-color); border-right: none; border-radius: var(--radius-md) 0 0 var(--radius-md); color: var(--text-secondary);">$</span>
+                    <input type="number" class="form-control" id="amount" name="amount" min="1" step="0.01" placeholder="10.00" style="border-radius: 0 var(--radius-md) var(--radius-md) 0; flex: 1;">
                 </div>
+                <small class="form-text">Enter any amount you wish to donate</small>
             </div>
-        </div>
+            
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fab fa-paypal"></i> Donate with PayPal
+            </button>
+        </form>
     </div>
 </div>
 
+<!-- Other Ways to Support Card -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-hands-helping"></i>
+            <span>Other Ways to Support</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <ul style="padding-left: 24px; margin-bottom: 0;">
+            <li style="margin-bottom: 8px;">Star the project on GitHub</li>
+            <li style="margin-bottom: 8px;">Report bugs and suggest features</li>
+            <li style="margin-bottom: 8px;">Contribute code or documentation</li>
+            <li style="margin-bottom: 8px;">Share the project with others</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Why Donate Card -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-heart"></i>
+            <span>Why Donate?</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <ul style="padding-left: 24px; margin-bottom: 16px;">
+            <li style="margin-bottom: 8px;">Supports ongoing development</li>
+            <li style="margin-bottom: 8px;">Helps with server costs</li>
+            <li style="margin-bottom: 8px;">Enables new features</li>
+            <li style="margin-bottom: 8px;">Maintains documentation</li>
+            <li style="margin-bottom: 8px;">Provides bug fixes</li>
+        </ul>
+        
+        <div class="alert alert-info" style="margin-bottom: 0;">
+            <strong>Thank you!</strong><br>
+            Your support makes this project possible.
+        </div>
+    </div>
+</div>
 {% endblock %}
