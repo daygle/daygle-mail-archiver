@@ -25,6 +25,7 @@
                     <th>Username</th>
                     <th>Name</th>
                     <th>Email</th>
+                    <th>Role</th>
                     <th>Status</th>
                     <th>Last Login</th>
                     <th>Created At</th>
@@ -38,6 +39,15 @@
                     <td>{{ user.username }}</td>
                     <td>{{ (user.first_name or '') ~ ' ' ~ (user.last_name or '') if user.first_name or user.last_name else '-' }}</td>
                     <td>{{ user.email or '-' }}</td>
+                    <td>
+                        {% if user.role == 'administrator' %}
+                            <span class="badge bg-primary"><i class="fas fa-user-shield"></i> Administrator</span>
+                        {% elif user.role == 'read_only' %}
+                            <span class="badge bg-info"><i class="fas fa-eye"></i> Read Only</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ user.role }}</span>
+                        {% endif %}
+                    </td>
                     <td>
                         {% if user.enabled %}
                             <span class="badge bg-success">Enabled</span>
@@ -117,6 +127,18 @@
                         </div>
                         <div class="col-md-6">
                             <div class="form-group mb-3">
+                                <label for="create_role">Role <span class="text-danger">*</span></label>
+                                <select id="create_role" class="form-control" name="role" required>
+                                    <option value="administrator">Administrator (Full Access)</option>
+                                    <option value="read_only">Read Only (View Emails Only)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
                                 <label for="create_enabled">Account Status</label>
                                 <select id="create_enabled" class="form-control" name="enabled">
                                     <option value="true" selected>Enabled</option>
@@ -186,6 +208,18 @@
                         </div>
                         <div class="col-md-6">
                             <div class="form-group mb-3">
+                                <label for="edit_role">Role <span class="text-danger">*</span></label>
+                                <select id="edit_role" class="form-control" name="role" required>
+                                    <option value="administrator">Administrator (Full Access)</option>
+                                    <option value="read_only">Read Only (View Emails Only)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
                                 <label for="edit_enabled">Account Status</label>
                                 <select id="edit_enabled" class="form-control" name="enabled">
                                     <option value="true">Enabled</option>
@@ -229,6 +263,7 @@ async function editUser(userId) {
         document.getElementById('edit_first_name').value = user.first_name || '';
         document.getElementById('edit_last_name').value = user.last_name || '';
         document.getElementById('edit_email').value = user.email || '';
+        document.getElementById('edit_role').value = user.role || 'administrator';
         document.getElementById('edit_enabled').value = user.enabled ? 'true' : 'false';
         document.getElementById('edit_password').value = '';
         

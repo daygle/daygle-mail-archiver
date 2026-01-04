@@ -31,9 +31,11 @@
 <div class="message-actions">
   <a href="/emails/{{ message.id }}/download" class="btn btn-secondary"><i class="fa-solid fa-download"></i> Download EML</a>
 
+  {% if request.session.role == 'administrator' %}
   <form method="post" action="/emails/{{ message.id }}/delete/confirm" style="display:inline;">
     <button type="submit" class="btn btn-danger"><i class="fa-solid fa-trash"></i> Delete</button>
   </form>
+  {% endif %}
 </div>
 
 <hr>

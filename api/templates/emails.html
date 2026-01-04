@@ -19,9 +19,11 @@
       <table class="messages-table">
         <thead>
           <tr>
+            {% if request.session.role == 'administrator' %}
             <th>
               <input type="checkbox" id="select-all">
             </th>
+            {% endif %}
             <th>Date</th>
             <th>Account</th>
             <th>Folder</th>
@@ -33,9 +35,11 @@
         <tbody>
           {% for msg in messages %}
           <tr>
+            {% if request.session.role == 'administrator' %}
             <td>
               <input type="checkbox" name="ids" value="{{ msg.id }}" class="msg-checkbox">
             </td>
+            {% endif %}
             <td>{{ msg.date }}</td>
             <td>{{ msg.source }}</td>
             <td>{{ msg.folder }}</td>
@@ -48,16 +52,18 @@
           {% endfor %}
           {% if messages|length == 0 %}
           <tr>
-            <td colspan="7" class="empty-state">No emails found.</td>
+            <td colspan="{% if request.session.role == 'administrator' %}7{% else %}6{% endif %}" class="empty-state">No emails found.</td>
           </tr>
           {% endif %}
         </tbody>
       </table>
 
       <div class="messages-actions">
+        {% if request.session.role == 'administrator' %}
         <button type="submit" class="btn btn-danger" id="delete-selected-btn" disabled>
           <i class="fa-solid fa-trash"></i> Delete Selected
         </button>
+        {% endif %}
       </div>
     </form>
 

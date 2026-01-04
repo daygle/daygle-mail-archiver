@@ -233,7 +233,7 @@ def delete_account(request: Request, id: int, mode: str = Form(...)):
     elif mode == "delete_messages":
         # Delete messages first
         query(
-            "DELETE FROM messages WHERE source = :name",
+            "DELETE FROM emails WHERE source = :name",
             {"name": account["name"]},
         )
         # Then delete account
@@ -268,7 +268,7 @@ def confirm_delete_account(request: Request, id: int):
     msg_count = query(
         """
         SELECT COUNT(*) AS c
-        FROM messages
+        FROM emails
         WHERE source = :name
         """,
         {"name": account["name"]},

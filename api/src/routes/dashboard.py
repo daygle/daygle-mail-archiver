@@ -36,7 +36,7 @@ def emails_per_day(request: Request):
         SELECT 
             DATE(created_at) as date,
             COUNT(*) as count
-        FROM messages
+        FROM emails
         WHERE created_at >= NOW() - INTERVAL '30 days'
         GROUP BY DATE(created_at)
         ORDER BY date
@@ -58,7 +58,7 @@ def top_senders(request: Request):
         SELECT 
             COALESCE(sender, 'Unknown') as sender,
             COUNT(*) as count
-        FROM messages
+        FROM emails
         WHERE sender IS NOT NULL AND sender != ''
         GROUP BY sender
         ORDER BY count DESC
@@ -83,7 +83,7 @@ def top_receivers(request: Request):
         WITH recipients_parsed AS (
             SELECT 
                 TRIM(unnest(string_to_array(recipients, ','))) as recipient
-            FROM messages
+            FROM emails
             WHERE recipients IS NOT NULL AND recipients != ''
         )
         SELECT 
@@ -108,7 +108,7 @@ def total_emails(request: Request):
     if not require_login(request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    results = query("SELECT COUNT(*) as count FROM messages").mappings().first()
+    results = query("SELECT COUNT(*) as count FROM emails").mappings().first()
     
     return {
         "total": results["count"] if results else 0
@@ -140,7 +140,7 @@ def dashboard_stats(request: Request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
     # Total emails
-    total_results = query("SELECT COUNT(*) as count FROM messages").mappings().first()
+    total_results = query("SELECT COUNT(*) as count FROM emails").mappings().first()
     total_emails = total_results["count"] if total_results else 0
 
     # Database size
@@ -158,7 +158,7 @@ def dashboard_stats(request: Request):
     # Emails today
     today_results = query("""
         SELECT COUNT(*) as count 
-        FROM messages 
+        FROM emails 
         WHERE DATE(created_at) = CURRENT_DATE
     """).mappings().first()
     emails_today = today_results["count"] if today_results else 0

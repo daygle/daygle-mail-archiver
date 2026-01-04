@@ -3,9 +3,9 @@
 -- ============================================
 
 -- ----------------------------
--- messages
+-- emails
 -- ----------------------------
-CREATE TABLE IF NOT EXISTS messages (
+CREATE TABLE IF NOT EXISTS emails (
     id SERIAL PRIMARY KEY,
 
     -- IMAP source info
@@ -29,8 +29,8 @@ CREATE TABLE IF NOT EXISTS messages (
 );
 
 -- Full-text search index
-CREATE INDEX IF NOT EXISTS messages_fts_idx
-ON messages
+CREATE INDEX IF NOT EXISTS emails_fts_idx
+ON emails
 USING GIN (
     to_tsvector(
         'simple',
@@ -98,6 +98,7 @@ CREATE TABLE IF NOT EXISTS users (
     first_name TEXT,
     last_name TEXT,
     email TEXT,
+    role TEXT NOT NULL DEFAULT 'administrator',
     date_format TEXT NOT NULL DEFAULT '%d/%m/%Y %H:%M',
     enabled BOOLEAN NOT NULL DEFAULT TRUE,
     last_login TIMESTAMPTZ,
@@ -106,10 +107,11 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- Index on email for lookups
 CREATE INDEX IF NOT EXISTS users_email_idx ON users(email);
+CREATE INDEX IF NOT EXISTS users_role_idx ON users(role);
 
 -- Insert default admin user with no password (set on first login)
-INSERT INTO users (username, password_hash)
-VALUES ('administrator', '')
+INSERT INTO users (username, password_hash, role)
+VALUES ('administrator', '', 'administrator')
 ON CONFLICT (username) DO NOTHING;
 
 -- ----------------------------

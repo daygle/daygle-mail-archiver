@@ -109,7 +109,7 @@ def store_message(
 
     execute(
         """
-        INSERT INTO messages
+        INSERT INTO emails
         (source, folder, uid, subject, sender, recipients, date,
          raw_email, compressed)
         VALUES
@@ -353,7 +353,7 @@ def purge_old_messages():
 
     execute(
         """
-        DELETE FROM messages
+        DELETE FROM emails
         WHERE created_at < :cutoff
         """,
         {"cutoff": cutoff},

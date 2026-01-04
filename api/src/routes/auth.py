@@ -18,7 +18,7 @@ def login_form(request: Request):
 @router.post("/login")
 def login_submit(request: Request, username: str = Form(...), password: str = Form(...)):
     user = query(
-        "SELECT id, username, password_hash, date_format, enabled FROM users WHERE username = :u",
+        "SELECT id, username, password_hash, date_format, role, enabled FROM users WHERE username = :u",
         {"u": username}
     ).mappings().first()
 
@@ -41,6 +41,7 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
         request.session["user_id"] = user["id"]
         request.session["username"] = user["username"]
         request.session["date_format"] = user["date_format"]
+        request.session["role"] = user["role"] or "administrator"
         request.session["needs_password"] = True
         log("info", "auth", f"User {username} initiated first login")
         return RedirectResponse("/set_password", status_code=303)
@@ -49,6 +50,7 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
         request.session["user_id"] = user["id"]
         request.session["username"] = user["username"]
         request.session["date_format"] = user["date_format"]
+        request.session["role"] = user["role"] or "administrator"
         
         # Update last_login timestamp
         query("UPDATE users SET last_login = NOW() WHERE id = :id", {"id": user["id"]})
