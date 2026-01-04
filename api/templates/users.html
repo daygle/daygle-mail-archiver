@@ -10,10 +10,10 @@
             <i class="fas fa-users"></i>
             <span>User Accounts</span>
         </div>
-        <a href="/users/new" class="btn btn-primary">
+        <button class="btn btn-primary" onclick="showCreateUserModal()">
             <i class="fas fa-user-plus"></i>
             <span>Create New User</span>
-        </a>
+        </button>
     </div>
     <div class="card-body" style="padding: 0;">
         <div class="table-container">
@@ -60,15 +60,15 @@
                             {% if user.last_login %}
                                 <small>{{ user.last_login.strftime(request.session.date_format) }}</small>
                             {% else %}
-                                <span class="text-secondary">Never</span>
+                                <span style="color: var(--text-secondary);">Never</span>
                             {% endif %}
                         </td>
                         <td><small>{{ user.created_at.strftime(request.session.date_format) }}</small></td>
                         <td>
-                            <div class="flex gap-2">
-                                <a href="/users/{{ user.id }}/edit" class="btn btn-secondary btn-sm" title="Edit">
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-secondary btn-sm" title="Edit" onclick="editUser({{ user.id }})">
                                     <i class="fas fa-edit"></i>
-                                </a>
+                                </button>
                                 <form method="post" action="/users/{{ user.id }}/toggle" style="display: inline;">
                                     <button type="submit" class="btn {% if user.enabled %}btn-warning{% else %}btn-success{% endif %} btn-sm" title="{{ 'Disable' if user.enabled else 'Enable' }}">
                                         <i class="fas {% if user.enabled %}fa-ban{% else %}fa-check{% endif %}"></i>
@@ -85,7 +85,7 @@
                     {% endfor %}
                     {% if users|length == 0 %}
                     <tr>
-                        <td colspan="8" class="text-center" style="padding: 48px 0;">
+                        <td colspan="8" style="text-align: center; padding: 48px 0;">
                             <div style="color: var(--text-secondary);">
                                 <i class="fas fa-users" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
                                 <p>No users found.</p>
@@ -98,243 +98,152 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-<!-- Existing Users Section -->
-<div class="settings-section">
-    <h3>Existing Users</h3>
-    <p class="section-description">View and manage all user accounts</p>
-    
-    <div class="table-responsive">
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Username</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Last Login</th>
-                    <th>Created At</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for user in users %}
-                <tr>
-                    <td>{{ user.id }}</td>
-                    <td>{{ user.username }}</td>
-                    <td>{{ (user.first_name or '') ~ ' ' ~ (user.last_name or '') if user.first_name or user.last_name else '-' }}</td>
-                    <td>{{ user.email or '-' }}</td>
-                    <td>
-                        {% if user.role == 'administrator' %}
-                            <span class="badge bg-primary"><i class="fas fa-user-shield"></i> Administrator</span>
-                        {% elif user.role == 'read_only' %}
-                            <span class="badge bg-info"><i class="fas fa-eye"></i> Read Only</span>
-                        {% else %}
-                            <span class="badge bg-secondary">{{ user.role }}</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if user.enabled %}
-                            <span class="badge bg-success">Enabled</span>
-                        {% else %}
-                            <span class="badge bg-danger">Disabled</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ user.last_login.strftime(request.session.date_format) if user.last_login else 'Never' }}</td>
-                    <td>{{ user.created_at.strftime(request.session.date_format) }}</td>
-                    <td>
-                        <button type="button" class="btn btn-primary btn-sm user-action-btn" onclick="editUser({{ user.id }})">
-                            <i class="fa-solid fa-edit"></i> Edit
-                        </button>
-                        <form method="post" action="/users/{{ user.id }}/toggle" style="display: inline;">
-                            <button type="submit" class="btn btn-sm user-action-btn {% if user.enabled %}btn-warning{% else %}btn-success{% endif %}">
-                                <i class="fa-solid {% if user.enabled %}fa-ban{% else %}fa-check{% endif %}"></i> 
-                                {{ "Disable" if user.enabled else "Enable" }}
-                            </button>
-                        </form>
-                        <form method="post" action="/users/{{ user.id }}/delete" style="display: inline;">
-                            <button type="submit" class="btn btn-danger btn-sm user-action-btn" onclick="return confirm('Are you sure you want to delete this user?')"><i class="fa-solid fa-trash"></i> Delete</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
 
 <!-- Create User Modal -->
-<div class="modal fade" id="createUserModal" tabindex="-1" aria-labelledby="createUserModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="createUserModalLabel"><i class="fa-solid fa-user-plus"></i> Create New User</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="post" action="/users/create">
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="create_username">Username <span class="text-danger">*</span></label>
-                                <input id="create_username" class="form-control" name="username" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="create_password">Password <span class="text-danger">*</span></label>
-                                <input id="create_password" class="form-control" name="password" type="password" required>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="create_first_name">First Name</label>
-                                <input id="create_first_name" class="form-control" name="first_name">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="create_last_name">Last Name</label>
-                                <input id="create_last_name" class="form-control" name="last_name">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="create_email">Email</label>
-                                <input id="create_email" class="form-control" name="email" type="email">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="create_role">Role <span class="text-danger">*</span></label>
-                                <select id="create_role" class="form-control" name="role" required>
-                                    <option value="administrator">Administrator (Full Access)</option>
-                                    <option value="read_only">Read Only (View Emails Only)</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="create_enabled">Account Status</label>
-                                <select id="create_enabled" class="form-control" name="enabled">
-                                    <option value="true" selected>Enabled</option>
-                                    <option value="false">Disabled</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-user-plus"></i> Create User</button>
-                </div>
-            </form>
+<div class="modal" id="createUserModal" style="display: none;">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h3><i class="fas fa-user-plus"></i> Create New User</h3>
+            <button class="modal-close" onclick="hideCreateUserModal()">&times;</button>
         </div>
+        <form method="post" action="/users/create">
+            <div class="modal-body">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label for="create_username">Username <span style="color: var(--color-danger);">*</span></label>
+                        <input id="create_username" class="form-control" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="create_password">Password <span style="color: var(--color-danger);">*</span></label>
+                        <input id="create_password" class="form-control" name="password" type="password" required>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label for="create_first_name">First Name</label>
+                        <input id="create_first_name" class="form-control" name="first_name">
+                    </div>
+                    <div class="form-group">
+                        <label for="create_last_name">Last Name</label>
+                        <input id="create_last_name" class="form-control" name="last_name">
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label for="create_email">Email</label>
+                        <input id="create_email" class="form-control" name="email" type="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="create_role">Role <span style="color: var(--color-danger);">*</span></label>
+                        <select id="create_role" class="form-control" name="role" required>
+                            <option value="administrator">Administrator (Full Access)</option>
+                            <option value="read_only">Read Only (View Emails Only)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="create_enabled">Account Status</label>
+                    <select id="create_enabled" class="form-control" name="enabled">
+                        <option value="true" selected>Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="hideCreateUserModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-user-plus"></i> Create User</button>
+            </div>
+        </form>
     </div>
 </div>
 
 <!-- Edit User Modal -->
-<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editUserModalLabel"><i class="fa-solid fa-user-edit"></i> Edit User</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="post" id="editUserForm">
-                <div class="modal-body">
-                    <input type="hidden" id="edit_user_id" name="user_id">
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="edit_username">Username <span class="text-danger">*</span></label>
-                                <input id="edit_username" class="form-control" name="username" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="edit_password">New Password <small class="text-muted">(leave blank to keep current)</small></label>
-                                <input id="edit_password" class="form-control" name="password" type="password">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="edit_first_name">First Name</label>
-                                <input id="edit_first_name" class="form-control" name="first_name">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="edit_last_name">Last Name</label>
-                                <input id="edit_last_name" class="form-control" name="last_name">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="edit_email">Email</label>
-                                <input id="edit_email" class="form-control" name="email" type="email">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="edit_role">Role <span class="text-danger">*</span></label>
-                                <select id="edit_role" class="form-control" name="role" required>
-                                    <option value="administrator">Administrator (Full Access)</option>
-                                    <option value="read_only">Read Only (View Emails Only)</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="edit_enabled">Account Status</label>
-                                <select id="edit_enabled" class="form-control" name="enabled">
-                                    <option value="true">Enabled</option>
-                                    <option value="false">Disabled</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="alert alert-info">
-                        <strong>Account Information:</strong><br>
-                        <small>
-                            <strong>Last Login:</strong> <span id="edit_last_login">-</span><br>
-                            <strong>Created:</strong> <span id="edit_created_at">-</span>
-                        </small>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save"></i> Save Changes</button>
-                </div>
-            </form>
+<div class="modal" id="editUserModal" style="display: none;">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h3><i class="fas fa-user-edit"></i> Edit User</h3>
+            <button class="modal-close" onclick="hideEditUserModal()">&times;</button>
         </div>
+        <form method="post" id="editUserForm">
+            <div class="modal-body">
+                <input type="hidden" id="edit_user_id" name="user_id">
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label for="edit_username">Username <span style="color: var(--color-danger);">*</span></label>
+                        <input id="edit_username" class="form-control" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_password">New Password <small style="color: var(--text-secondary);">(leave blank to keep current)</small></label>
+                        <input id="edit_password" class="form-control" name="password" type="password">
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label for="edit_first_name">First Name</label>
+                        <input id="edit_first_name" class="form-control" name="first_name">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_last_name">Last Name</label>
+                        <input id="edit_last_name" class="form-control" name="last_name">
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label for="edit_email">Email</label>
+                        <input id="edit_email" class="form-control" name="email" type="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_role">Role <span style="color: var(--color-danger);">*</span></label>
+                        <select id="edit_role" class="form-control" name="role" required>
+                            <option value="administrator">Administrator (Full Access)</option>
+                            <option value="read_only">Read Only (View Emails Only)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit_enabled">Account Status</label>
+                    <select id="edit_enabled" class="form-control" name="enabled">
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
+                
+                <div class="alert alert-info">
+                    <strong>Account Information:</strong><br>
+                    <small>
+                        <strong>Last Login:</strong> <span id="edit_last_login">-</span><br>
+                        <strong>Created:</strong> <span id="edit_created_at">-</span>
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="hideEditUserModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
+            </div>
+        </form>
     </div>
 </div>
 
 <script>
+function showCreateUserModal() {
+    document.getElementById('createUserModal').style.display = 'flex';
+}
+
+function hideCreateUserModal() {
+    document.getElementById('createUserModal').style.display = 'none';
+}
+
+function hideEditUserModal() {
+    document.getElementById('editUserModal').style.display = 'none';
+}
+
 async function editUser(userId) {
     try {
         const response = await fetch(`/api/users/${userId}`);
@@ -363,13 +272,25 @@ async function editUser(userId) {
         document.getElementById('editUserForm').action = `/users/${userId}/update`;
         
         // Show the modal
-        const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
-        modal.show();
+        document.getElementById('editUserModal').style.display = 'flex';
     } catch (error) {
         console.error('Error loading user:', error);
         alert('Failed to load user details');
     }
 }
+
+// Close modals on background click
+document.getElementById('createUserModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        hideCreateUserModal();
+    }
+});
+
+document.getElementById('editUserModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        hideEditUserModal();
+    }
+});
 </script>
 
 {% endblock %}

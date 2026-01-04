@@ -160,35 +160,28 @@
     </div>
     {% endif %}
 
-    <div class="mt-3">
-        <h5>Status Legend</h5>
-        <ul class="list-unstyled">
-            <li><span class="badge bg-success me-2">Healthy</span> Worker is active and fetching successfully</li>
-            <li><span class="badge bg-warning text-dark me-2">Stale</span> No heartbeat in 3x the poll interval</li>
-            <li><span class="badge bg-danger me-2">Error</span> Last fetch attempt encountered an error</li>
-            <li><span class="badge bg-info me-2">Pending</span> Never been run yet</li>
-            <li><span class="badge bg-secondary me-2">Disabled</span> Account is disabled and not being fetched</li>
-        </ul>
+    <div class="card" style="margin-top: 24px;">
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fas fa-info-circle"></i>
+                <span>Status Legend</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div><span class="badge badge-success" style="margin-right: 8px;">Healthy</span> Worker is active and fetching successfully</div>
+                <div><span class="badge badge-warning" style="margin-right: 8px;">Stale</span> No heartbeat in 3x the poll interval</div>
+                <div><span class="badge badge-danger" style="margin-right: 8px;">Error</span> Last fetch attempt encountered an error</div>
+                <div><span class="badge badge-info" style="margin-right: 8px;">Pending</span> Never been run yet</div>
+                <div><span class="badge badge-secondary" style="margin-right: 8px;">Disabled</span> Account is disabled and not being fetched</div>
+            </div>
+        </div>
     </div>
 
-    <div class="mt-3">
-        <a href="/fetch_accounts" class="btn btn-primary"><i class="fas fa-server me-2"></i>Manage Fetch Accounts</a>
-        <a href="/logs" class="btn btn-secondary"><i class="fas fa-list me-2"></i>View System Logs</a>
+    <div style="margin-top: 24px; display: flex; gap: 12px;">
+        <a href="/fetch_accounts" class="btn btn-primary"><i class="fas fa-server" style="margin-right: 8px;"></i>Manage Fetch Accounts</a>
+        <a href="/logs" class="btn btn-secondary"><i class="fas fa-list" style="margin-right: 8px;"></i>View System Logs</a>
     </div>
 </div>
-
-<style>
-.table-responsive {
-    overflow-x: auto;
-}
-
-.table td {
-    vertical-align: middle;
-}
-
-.table small {
-    font-size: 0.75rem;
-}
-</style>
 
 {% endblock %}
