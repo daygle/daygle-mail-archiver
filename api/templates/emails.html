@@ -23,11 +23,15 @@
                 <div>
                     <input type="text" name="folder" value="{{ folder }}" placeholder="Folder" class="form-control">
                 </div>
-                <div>
-                    <button type="submit" class="btn btn-primary w-100">
+                <div class="flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-1">
                         <i class="fas fa-search"></i>
                         <span>Search</span>
                     </button>
+                    <a href="/emails" class="btn btn-secondary">
+                        <i class="fas fa-times"></i>
+                        <span>Clear</span>
+                    </a>
                 </div>
             </div>
         </form>

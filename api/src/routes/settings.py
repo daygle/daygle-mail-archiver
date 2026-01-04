@@ -38,6 +38,7 @@ def save_settings(
     request: Request,
     page_size: int = Form(...),
     date_format: str = Form("%d/%m/%Y %H:%M"),
+    timezone: str = Form("Australia/Melbourne"),
     enable_purge: bool = Form(False),
     retention_value: int = Form(1),
     retention_unit: str = Form("years"),
@@ -65,6 +66,17 @@ def save_settings(
         ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
         """,
         {"v": date_format},
+    )
+
+    # Save timezone to session and database
+    request.session["timezone"] = timezone
+    query(
+        """
+        INSERT INTO settings (key, value)
+        VALUES ('timezone', :v)
+        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
+        """,
+        {"v": timezone},
     )
 
     # Save retention settings
@@ -102,7 +114,7 @@ def save_settings(
     )
 
     username = request.session.get("username", "unknown")
-    log("info", "Settings", f"User '{username}' updated global settings (page_size={page_size}, date_format={date_format}, enable_purge={enable_purge}, retention={retention_value} {retention_unit}, delete_from_mail_server={retention_delete_from_mail_server})", "")
+    log("info", "Settings", f"User '{username}' updated global settings (page_size={page_size}, date_format={date_format}, timezone={timezone}, enable_purge={enable_purge}, retention={retention_value} {retention_unit}, delete_from_mail_server={retention_delete_from_mail_server})", "")
 
     flash(request, "Settings updated successfully.")
     return RedirectResponse("/settings", status_code=303)

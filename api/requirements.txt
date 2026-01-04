@@ -9,3 +9,4 @@ email-validator
 itsdangerous
 bcrypt
 requests
+pytz

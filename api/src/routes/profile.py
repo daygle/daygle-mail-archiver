@@ -88,23 +88,26 @@ def user_settings_form(request: Request):
         return RedirectResponse("/login", status_code=303)
 
     user_id = request.session["user_id"]
-    user = query("SELECT date_format FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+    user = query("SELECT date_format, timezone FROM users WHERE id = :id", {"id": user_id}).mappings().first()
     current_format = user["date_format"] if user else "%d/%m/%Y %H:%M"
+    current_timezone = user["timezone"] if user and user["timezone"] else "Australia/Melbourne"
 
     msg = request.session.pop("flash", None)
     return templates.TemplateResponse("user_settings.html", {
         "request": request, 
         "flash": msg, 
-        "date_format": current_format
+        "date_format": current_format,
+        "timezone": current_timezone
     })
 
-@router.post("/user_settings/change_date_format")
-def change_date_format(request: Request, date_format: str = Form(...)):
+@router.post("/user_settings/update")
+def update_user_settings(request: Request, date_format: str = Form(...), timezone: str = Form("Australia/Melbourne")):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
     user_id = request.session["user_id"]
-    query("UPDATE users SET date_format = :f WHERE id = :id", {"f": date_format, "id": user_id})
+    query("UPDATE users SET date_format = :f, timezone = :tz WHERE id = :id", {"f": date_format, "tz": timezone, "id": user_id})
     request.session["date_format"] = date_format
-    flash(request, "Date format updated successfully.")
+    request.session["timezone"] = timezone
+    flash(request, "User settings updated successfully.")
     return RedirectResponse("/user_settings", status_code=303)

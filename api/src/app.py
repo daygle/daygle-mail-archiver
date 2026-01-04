@@ -4,8 +4,10 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from jinja2 import Environment, FileSystemLoader
+from fastapi.templating import Jinja2Templates
 
 from routes import emails, fetch_accounts, settings, auth, users, profile, logs, dashboard, worker_status, oauth, donate, help
+from utils.timezone import convert_utc_to_user_timezone, format_datetime
 
 SESSION_SECRET = os.getenv("SESSION_SECRET", "change-me")
 
@@ -24,6 +26,22 @@ else:
     static_dir = BASE_DIR.parent / "static"
 
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
+# Configure Jinja2 templates with custom filters
+templates_dir = BASE_DIR / "templates" if (BASE_DIR / "templates").exists() else BASE_DIR.parent / "templates"
+templates = Jinja2Templates(directory=str(templates_dir))
+
+# Add custom Jinja2 filters for timezone conversion
+def to_user_timezone_filter(utc_datetime, user_id):
+    """Jinja2 filter to convert UTC datetime to user's timezone"""
+    return convert_utc_to_user_timezone(utc_datetime, user_id)
+
+def format_user_datetime_filter(utc_datetime, user_id, date_format=None):
+    """Jinja2 filter to format datetime in user's timezone and format"""
+    return format_datetime(utc_datetime, user_id, date_format)
+
+templates.env.filters['to_user_timezone'] = to_user_timezone_filter
+templates.env.filters['format_user_datetime'] = format_user_datetime_filter
 
 # Routers
 app.include_router(auth.router)

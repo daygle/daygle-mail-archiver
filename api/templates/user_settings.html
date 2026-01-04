@@ -3,17 +3,17 @@
 {% block page_title %}User Settings{% endblock %}
 
 {% block content %}
-<form method="post" action="/user_settings/change_date_format">
-    <!-- Date Format Card -->
+<form method="post" action="/user_settings/update">
+    <!-- Date & Time Settings Card -->
     <div class="card">
         <div class="card-header">
             <div class="card-title">
                 <i class="fas fa-calendar"></i>
-                <span>Date Format</span>
+                <span>Date & Time Settings</span>
             </div>
         </div>
         <div class="card-body">
-            <p class="section-description">Select how dates should be displayed throughout the application</p>
+            <p class="section-description">Configure how dates and times are displayed throughout the application</p>
             
             <div class="form-group">
                 <label for="date_format" class="form-label">Date Format</label>
@@ -24,7 +24,29 @@
                     <option value="%d/%m/%Y %H:%M:%S" {% if date_format == '%d/%m/%Y %H:%M:%S' %}selected{% endif %}>15/01/2024 14:30:45</option>
                     <option value="%Y-%m-%d %I:%M %p" {% if date_format == '%Y-%m-%d %I:%M %p' %}selected{% endif %}>2024-01-15 02:30 PM</option>
                 </select>
-                <small class="form-text">Date and time display format throughout the application</small>
+                <small class="form-text">Date and time display format</small>
+            </div>
+
+            <div class="form-group mt-3">
+                <label for="timezone" class="form-label">Timezone</label>
+                <select id="timezone" class="form-select" name="timezone">
+                    <option value="Australia/Melbourne" {% if timezone == 'Australia/Melbourne' or not timezone %}selected{% endif %}>Australia/Melbourne</option>
+                    <option value="Australia/Sydney" {% if timezone == 'Australia/Sydney' %}selected{% endif %}>Australia/Sydney</option>
+                    <option value="Australia/Brisbane" {% if timezone == 'Australia/Brisbane' %}selected{% endif %}>Australia/Brisbane</option>
+                    <option value="Australia/Perth" {% if timezone == 'Australia/Perth' %}selected{% endif %}>Australia/Perth</option>
+                    <option value="Australia/Adelaide" {% if timezone == 'Australia/Adelaide' %}selected{% endif %}>Australia/Adelaide</option>
+                    <option value="Pacific/Auckland" {% if timezone == 'Pacific/Auckland' %}selected{% endif %}>Pacific/Auckland (New Zealand)</option>
+                    <option value="UTC" {% if timezone == 'UTC' %}selected{% endif %}>UTC</option>
+                    <option value="America/New_York" {% if timezone == 'America/New_York' %}selected{% endif %}>America/New York (EST)</option>
+                    <option value="America/Chicago" {% if timezone == 'America/Chicago' %}selected{% endif %}>America/Chicago (CST)</option>
+                    <option value="America/Los_Angeles" {% if timezone == 'America/Los_Angeles' %}selected{% endif %}>America/Los Angeles (PST)</option>
+                    <option value="Europe/London" {% if timezone == 'Europe/London' %}selected{% endif %}>Europe/London (GMT)</option>
+                    <option value="Europe/Paris" {% if timezone == 'Europe/Paris' %}selected{% endif %}>Europe/Paris (CET)</option>
+                    <option value="Asia/Tokyo" {% if timezone == 'Asia/Tokyo' %}selected{% endif %}>Asia/Tokyo (JST)</option>
+                    <option value="Asia/Singapore" {% if timezone == 'Asia/Singapore' %}selected{% endif %}>Asia/Singapore (SGT)</option>
+                    <option value="Asia/Hong_Kong" {% if timezone == 'Asia/Hong_Kong' %}selected{% endif %}>Asia/Hong Kong (HKT)</option>
+                </select>
+                <small class="form-text">Your preferred timezone for displaying dates and times</small>
             </div>
         </div>
         <div class="card-footer">

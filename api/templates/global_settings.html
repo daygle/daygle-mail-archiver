@@ -30,6 +30,28 @@
                 </select>
                 <small class="form-text">Date and time display format throughout the application</small>
             </div>
+
+            <div class="form-group mt-3">
+                <label for="timezone" class="form-label">Timezone</label>
+                <select id="timezone" class="form-select" name="timezone">
+                    <option value="Australia/Melbourne" {% if settings.timezone == 'Australia/Melbourne' or not settings.timezone %}selected{% endif %}>Australia/Melbourne</option>
+                    <option value="Australia/Sydney" {% if settings.timezone == 'Australia/Sydney' %}selected{% endif %}>Australia/Sydney</option>
+                    <option value="Australia/Brisbane" {% if settings.timezone == 'Australia/Brisbane' %}selected{% endif %}>Australia/Brisbane</option>
+                    <option value="Australia/Perth" {% if settings.timezone == 'Australia/Perth' %}selected{% endif %}>Australia/Perth</option>
+                    <option value="Australia/Adelaide" {% if settings.timezone == 'Australia/Adelaide' %}selected{% endif %}>Australia/Adelaide</option>
+                    <option value="Pacific/Auckland" {% if settings.timezone == 'Pacific/Auckland' %}selected{% endif %}>Pacific/Auckland (New Zealand)</option>
+                    <option value="UTC" {% if settings.timezone == 'UTC' %}selected{% endif %}>UTC</option>
+                    <option value="America/New_York" {% if settings.timezone == 'America/New_York' %}selected{% endif %}>America/New York (EST)</option>
+                    <option value="America/Chicago" {% if settings.timezone == 'America/Chicago' %}selected{% endif %}>America/Chicago (CST)</option>
+                    <option value="America/Los_Angeles" {% if settings.timezone == 'America/Los_Angeles' %}selected{% endif %}>America/Los Angeles (PST)</option>
+                    <option value="Europe/London" {% if settings.timezone == 'Europe/London' %}selected{% endif %}>Europe/London (GMT)</option>
+                    <option value="Europe/Paris" {% if settings.timezone == 'Europe/Paris' %}selected{% endif %}>Europe/Paris (CET)</option>
+                    <option value="Asia/Tokyo" {% if settings.timezone == 'Asia/Tokyo' %}selected{% endif %}>Asia/Tokyo (JST)</option>
+                    <option value="Asia/Singapore" {% if settings.timezone == 'Asia/Singapore' %}selected{% endif %}>Asia/Singapore (SGT)</option>
+                    <option value="Asia/Hong_Kong" {% if settings.timezone == 'Asia/Hong_Kong' %}selected{% endif %}>Asia/Hong Kong (HKT)</option>
+                </select>
+                <small class="form-text">Timezone for displaying dates and times throughout the application</small>
+            </div>
         </div>
     </div>
 

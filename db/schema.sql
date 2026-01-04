@@ -101,6 +101,7 @@ CREATE TABLE IF NOT EXISTS users (
     email TEXT,
     role TEXT NOT NULL DEFAULT 'administrator',
     date_format TEXT NOT NULL DEFAULT '%d/%m/%Y %H:%M',
+    timezone TEXT NOT NULL DEFAULT 'Australia/Melbourne',
     enabled BOOLEAN NOT NULL DEFAULT TRUE,
     last_login TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -126,6 +127,7 @@ CREATE TABLE IF NOT EXISTS settings (
 -- Insert default settings
 INSERT INTO settings (key, value) VALUES ('page_size', '50') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('date_format', '%d/%m/%Y %H:%M') ON CONFLICT (key) DO NOTHING;
+INSERT INTO settings (key, value) VALUES ('timezone', 'Australia/Melbourne') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('enable_purge', 'false') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('retention_value', '1') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('retention_unit', 'years') ON CONFLICT (key) DO NOTHING;
