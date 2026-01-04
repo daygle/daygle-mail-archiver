@@ -163,54 +163,38 @@
 
     <!-- JavaScript -->
     <script>
-        // Wait for DOM to be fully loaded
-        document.addEventListener('DOMContentLoaded', function() {
+        (function() {
+            // Restore sidebar state immediately
             const sidebar = document.getElementById('sidebar');
-            const sidebarToggle = document.getElementById('sidebarToggle');
-            const sidebarMobileToggle = document.getElementById('sidebarMobileToggle');
-            
-            // Restore sidebar state
-            const savedState = localStorage.getItem('sidebarCollapsed');
-            if (savedState === 'true') {
+            if (localStorage.getItem('sidebarCollapsed') === 'true') {
                 sidebar.classList.add('collapsed');
             }
-
-            // Toggle sidebar on button click - using capture phase and stopImmediatePropagation
-            if (sidebarToggle) {
-                // Remove any existing listeners first
-                const newButton = sidebarToggle.cloneNode(true);
-                sidebarToggle.parentNode.replaceChild(newButton, sidebarToggle);
-                
-                newButton.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    e.stopImmediatePropagation();
-                    
-                    sidebar.classList.toggle('collapsed');
-                    localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed') ? 'true' : 'false');
-                    console.log('Sidebar toggled, collapsed:', sidebar.classList.contains('collapsed'));
-                }, true);
-            }
-
+            
+            // Sidebar toggle - simplest possible version
+            document.getElementById('sidebarToggle').onclick = function() {
+                sidebar.classList.toggle('collapsed');
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+                return false;
+            };
+            
             // Mobile toggle
-            if (sidebarMobileToggle) {
-                sidebarMobileToggle.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    e.preventDefault();
+            const mobileToggle = document.getElementById('sidebarMobileToggle');
+            if (mobileToggle) {
+                mobileToggle.onclick = function() {
                     sidebar.classList.toggle('mobile-open');
-                });
+                    return false;
+                };
             }
             
-            // Close sidebar on mobile when clicking outside
+            // Close mobile sidebar when clicking outside
             document.addEventListener('click', function(e) {
                 if (window.innerWidth <= 768) {
-                    const toggleBtn = document.getElementById('sidebarMobileToggle');
-                    if (sidebar && toggleBtn && !sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
+                    if (!sidebar.contains(e.target) && e.target.id !== 'sidebarMobileToggle') {
                         sidebar.classList.remove('mobile-open');
                     }
                 }
             });
-        });
+        })();
 
         // Submenu toggle
         function toggleSubmenu(button) {

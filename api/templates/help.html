@@ -1,10 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="row mb-4">
-    <div class="col">
-        <h2><i class="fas fa-circle-question me-2"></i>Help & Documentation</h2>
-    </div>
+<div style="margin-bottom: 24px;">
+    <h2><i class="fas fa-circle-question" style="margin-right: 8px;"></i>Help & Documentation</h2>
 </div>
 
 <div class="settings-section">
@@ -12,33 +10,33 @@
     <p class="section-description">Learn how to use Daygle Mail Archiver to fetch, store, and manage your emails.</p>
 
     <!-- Quick Start -->
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="fas fa-rocket"></i> Quick Start Guide</h5>
+    <div class="card" style="margin-bottom: 24px;">
+        <div class="card-header">
+            <h5 style="margin-bottom: 0;"><i class="fas fa-rocket"></i> Quick Start Guide</h5>
         </div>
         <div class="card-body">
-            <ol>
-                <li class="mb-2"><strong>Set up a Fetch Account:</strong> Go to Settings → Fetch Accounts and add a new email account (IMAP, Gmail, or Office 365)</li>
-                <li class="mb-2"><strong>Enable the account:</strong> Make sure the "Enabled" checkbox is checked</li>
-                <li class="mb-2"><strong>Start the worker:</strong> The worker will automatically fetch emails based on the poll interval</li>
-                <li class="mb-2"><strong>View your emails:</strong> Navigate to the Emails page to browse and search archived messages</li>
+            <ol style="padding-left: 20px;">
+                <li style="margin-bottom: 12px;"><strong>Set up a Fetch Account:</strong> Go to Settings → Fetch Accounts and add a new email account (IMAP, Gmail, or Office 365)</li>
+                <li style="margin-bottom: 12px;"><strong>Enable the account:</strong> Make sure the "Enabled" checkbox is checked</li>
+                <li style="margin-bottom: 12px;"><strong>Start the worker:</strong> The worker will automatically fetch emails based on the poll interval</li>
+                <li style="margin-bottom: 12px;"><strong>View your emails:</strong> Navigate to the Emails page to browse and search archived messages</li>
             </ol>
         </div>
     </div>
 
     <!-- Adding Fetch Accounts -->
-    <div class="card mb-4">
+    <div class="card" style="margin-bottom: 24px;">
         <div class="card-header">
-            <h5 class="mb-0"><i class="fas fa-server"></i> Adding Fetch Accounts</h5>
+            <h5 style="margin-bottom: 0;"><i class="fas fa-server"></i> Adding Fetch Accounts</h5>
         </div>
         <div class="card-body">
             <h6>IMAP Accounts</h6>
-            <ol>
+            <ol style="padding-left: 20px;">
                 <li>Go to <strong>Settings → Fetch Accounts</strong></li>
                 <li>Click <strong>"Add New Account"</strong></li>
                 <li>Select <strong>"IMAP"</strong> as the account type</li>
                 <li>Enter your IMAP server details:
-                    <ul>
+                    <ul style="padding-left: 20px; margin-top: 8px;">
                         <li><strong>Host:</strong> IMAP server address (e.g., imap.gmail.com)</li>
                         <li><strong>Port:</strong> Usually 993 for SSL, 143 for non-SSL</li>
                         <li><strong>Username:</strong> Your email address</li>
