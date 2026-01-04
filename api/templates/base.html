@@ -27,8 +27,15 @@
             <div class="collapse navbar-collapse justify-content-end" id="collapsibleNavbar">
                 <ul class="navbar-nav">
                     {% if request.session.username %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="/logout"><i class="fas fa-right-from-bracket"></i> Logout</a>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i> {{ request.session.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="/profile"><i class="fas fa-user me-2"></i>Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/logout"><i class="fas fa-right-from-bracket me-2"></i>Logout</a></li>
+                        </ul>
                     </li>
                     {% else %}
                     <li class="nav-item">
@@ -58,13 +65,22 @@
                 <li class="mb-2"><a href="/dashboard" class="text-decoration-none text-white d-flex align-items-center"><i class="fas fa-chart-line me-2"></i> Dashboard</a></li>
                 <li class="mb-2"><a href="/messages" class="text-decoration-none text-white d-flex align-items-center"><i class="fas fa-inbox me-2"></i> Messages</a></li>
                 <li class="mb-2"><a href="/imap_accounts" class="text-decoration-none text-white d-flex align-items-center"><i class="fas fa-server me-2"></i> IMAP Accounts</a></li>
-                <li class="mb-2"><a href="/users" class="text-decoration-none text-white d-flex align-items-center"><i class="fas fa-users me-2"></i> Users</a></li>
-                <li class="mb-2"><a href="/settings" class="text-decoration-none text-white d-flex align-items-center"><i class="fas fa-gear me-2"></i> Settings</a></li>
-                <li class="mb-2"><a href="/logs" class="text-decoration-none text-white d-flex align-items-center"><i class="fas fa-list me-2"></i> Logs</a></li>
-                {% if request.session.username %}
-                <li class="mb-2"><a href="/profile" class="text-decoration-none text-white d-flex align-items-center"><i class="fas fa-user me-2"></i> Profile</a></li>
-                <li class="mb-2"><a href="/logout" class="text-decoration-none text-white d-flex align-items-center"><i class="fas fa-right-from-bracket me-2"></i> Logout</a></li>
-                {% else %}
+                
+                <!-- Settings Menu with Submenu -->
+                <li class="mb-2">
+                    <a class="text-decoration-none text-white d-flex align-items-center" data-bs-toggle="collapse" href="#settingsSubmenu" role="button" aria-expanded="false" aria-controls="settingsSubmenu">
+                        <i class="fas fa-gear me-2"></i> Settings <i class="fas fa-chevron-down ms-auto"></i>
+                    </a>
+                    <div class="collapse" id="settingsSubmenu">
+                        <ul class="list-unstyled ps-4 mt-2">
+                            <li class="mb-2"><a href="/settings" class="text-decoration-none text-white-50 d-flex align-items-center"><i class="fas fa-sliders me-2"></i> Global Settings</a></li>
+                            <li class="mb-2"><a href="/users" class="text-decoration-none text-white-50 d-flex align-items-center"><i class="fas fa-users me-2"></i> Users</a></li>
+                            <li class="mb-2"><a href="/logs" class="text-decoration-none text-white-50 d-flex align-items-center"><i class="fas fa-list me-2"></i> Logs</a></li>
+                        </ul>
+                    </div>
+                </li>
+                
+                {% if not request.session.username %}
                 <li class="mb-2"><a href="/login" class="text-decoration-none text-white d-flex align-items-center"><i class="fas fa-right-to-bracket me-2"></i> Login</a></li>
                 {% endif %}
             </ul>

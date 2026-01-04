@@ -570,3 +570,33 @@ table td .btn-sm {
 @media (max-width: 768px) {
     .container { margin: 16px auto; padding: 16px; }
 }
+
+/* Offcanvas submenu styles */
+.offcanvas-body .collapse ul li a {
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.offcanvas-body .collapse ul li a:hover {
+    color: #ffffff !important;
+    padding-left: 8px;
+}
+
+.offcanvas-body > ul > li > a .fa-chevron-down {
+    font-size: 0.75rem;
+    transition: transform 0.3s ease;
+}
+
+.offcanvas-body > ul > li > a[aria-expanded="true"] .fa-chevron-down {
+    transform: rotate(180deg);
+}
+
+/* User dropdown in navbar */
+#userDropdown {
+    cursor: pointer;
+}
+
+.dropdown-menu {
+    border: 1px solid rgba(0,0,0,.1);
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,.175);
+}
