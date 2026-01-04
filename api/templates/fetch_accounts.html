@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="row mb-4">
+    <div class="col">
+        <h2><i class="fas fa-server me-2"></i>Fetch Accounts</h2>
+    </div>
+    <div class="col text-end">
+        <a href="/fetch_accounts/new" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i> Add New Account
+        </a>
+    </div>
+</div>
+
+<!-- Fetch Accounts Section -->
+<div class="settings-section">
+    <h3>Email Fetch Accounts</h3>
+    <p class="section-description">Manage your email fetch accounts (IMAP, Gmail, O365) and connection settings</p>
+    
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Host/Service</th>
+                    <th>Port</th>
+                    <th>User</th>
+                    <th>SSL</th>
+                    <th>Poll Interval</th>
+                    <th>Enabled</th>
+                    <th>Last Success</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for acc in accounts %}
+                <tr>
+                    <td>{{ acc.id }}</td>
+                    <td>{{ acc.name }}</td>
+                    <td>
+                        {% if acc.account_type == 'imap' %}
+                            <span class="badge bg-primary">IMAP</span>
+                        {% elif acc.account_type == 'gmail' %}
+                            <span class="badge bg-danger">Gmail</span>
+                        {% elif acc.account_type == 'o365' %}
+                            <span class="badge bg-info">O365</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ acc.account_type }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ acc.host or '-' }}</td>
+                    <td>{{ acc.port or '-' }}</td>
+                    <td>{{ acc.username or '-' }}</td>
+                    <td>{{ "Yes" if acc.use_ssl else "No" }}</td>
+                    <td>{{ acc.poll_interval_seconds }}s</td>
+                    <td>
+                        {% if acc.enabled %}
+                            <span class="badge bg-success">Yes</span>
+                        {% else %}
+                            <span class="badge bg-danger">No</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ acc.last_success.strftime(request.session.get('date_format', '%d/%m/%Y %H:%M')) if acc.last_success else 'Never' }}</td>
+                    <td>
+                        <a href="/fetch_accounts/{{ acc.id }}/edit" class="btn btn-sm btn-primary"><i class="fa-solid fa-pen-to-square"></i> Edit</a>
+                        <a href="/fetch_accounts/{{ acc.id }}/delete/confirm" class="btn btn-sm btn-danger"><i class="fa-solid fa-trash"></i> Delete</a>
+                    </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+
+{% endblock %}

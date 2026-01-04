@@ -41,21 +41,31 @@ USING GIN (
 );
 
 -- ----------------------------
--- imap_accounts
+-- fetch_accounts
+-- Supports multiple email fetch methods: IMAP, Gmail API, O365 API
 -- ----------------------------
-CREATE TABLE IF NOT EXISTS imap_accounts (
+CREATE TABLE IF NOT EXISTS fetch_accounts (
     id SERIAL PRIMARY KEY,
 
     name TEXT NOT NULL UNIQUE,
+    account_type TEXT NOT NULL DEFAULT 'imap', -- 'imap', 'gmail', 'o365'
 
-    host TEXT NOT NULL,
-    port INTEGER NOT NULL DEFAULT 993,
-    username TEXT NOT NULL,
-    password_encrypted TEXT NOT NULL,
+    -- IMAP-specific fields
+    host TEXT,
+    port INTEGER DEFAULT 993,
+    username TEXT,
+    password_encrypted TEXT,
+    use_ssl BOOLEAN DEFAULT TRUE,
+    require_starttls BOOLEAN DEFAULT FALSE,
 
-    use_ssl BOOLEAN NOT NULL DEFAULT TRUE,
-    require_starttls BOOLEAN NOT NULL DEFAULT FALSE,
+    -- OAuth2 fields (for Gmail/O365)
+    oauth_client_id TEXT,
+    oauth_client_secret TEXT,
+    oauth_refresh_token TEXT,
+    oauth_access_token TEXT,
+    oauth_token_expiry TIMESTAMPTZ,
 
+    -- Common fields
     poll_interval_seconds INTEGER NOT NULL DEFAULT 300,
     delete_after_processing BOOLEAN NOT NULL DEFAULT FALSE,
     enabled BOOLEAN NOT NULL DEFAULT TRUE,
@@ -66,13 +76,14 @@ CREATE TABLE IF NOT EXISTS imap_accounts (
 );
 
 -- ----------------------------
--- imap_state
--- Tracks last UID per folder per account
+-- fetch_state
+-- Tracks last UID/token per folder per account
 -- ----------------------------
-CREATE TABLE IF NOT EXISTS imap_state (
-    account_id INTEGER NOT NULL REFERENCES imap_accounts(id) ON DELETE CASCADE,
+CREATE TABLE IF NOT EXISTS fetch_state (
+    account_id INTEGER NOT NULL REFERENCES fetch_accounts(id) ON DELETE CASCADE,
     folder TEXT NOT NULL,
     last_uid INTEGER NOT NULL DEFAULT 0,
+    last_sync_token TEXT, -- For Gmail/O365 sync tokens
 
     PRIMARY KEY (account_id, folder)
 );

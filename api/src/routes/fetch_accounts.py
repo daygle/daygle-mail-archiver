@@ -22,17 +22,17 @@ def flash(request: Request, message: str):
     request.session["flash"] = message
 
 
-@router.get("/imap_accounts")
+@router.get("/fetch_accounts")
 def list_accounts(request: Request):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
     accounts = query(
         """
-        SELECT id, name, host, port, username, use_ssl, require_starttls,
+        SELECT id, name, account_type, host, port, username, use_ssl, require_starttls,
                poll_interval_seconds, delete_after_processing, enabled,
                last_heartbeat, last_success, last_error
-        FROM imap_accounts
+        FROM fetch_accounts
         ORDER BY id
         """
     ).mappings().all()
@@ -40,7 +40,7 @@ def list_accounts(request: Request):
     msg = request.session.pop("flash", None)
 
     return templates.TemplateResponse(
-        "imap_accounts.html",
+        "fetch_accounts.html",
         {
             "request": request,
             "accounts": accounts,
@@ -49,7 +49,7 @@ def list_accounts(request: Request):
     )
 
 
-@router.get("/imap_accounts/new")
+@router.get("/fetch_accounts/new")
 def new_account(request: Request):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
@@ -57,7 +57,7 @@ def new_account(request: Request):
     msg = request.session.pop("flash", None)
 
     return templates.TemplateResponse(
-        "imap_account_form.html",
+        "fetch_account_form.html",
         {
             "request": request,
             "account": None,
@@ -66,14 +66,15 @@ def new_account(request: Request):
     )
 
 
-@router.post("/imap_accounts/new")
+@router.post("/fetch_accounts/new")
 def create_account(
     request: Request,
     name: str = Form(...),
-    host: str = Form(...),
-    port: int = Form(...),
-    username: str = Form(...),
-    password: str = Form(...),
+    account_type: str = Form("imap"),
+    host: str = Form(""),
+    port: int = Form(993),
+    username: str = Form(""),
+    password: str = Form(""),
     use_ssl: bool = Form(False),
     require_starttls: bool = Form(False),
     poll_interval_seconds: int = Form(300),
@@ -83,21 +84,22 @@ def create_account(
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    enc = encrypt_password(password)
+    enc = encrypt_password(password) if password else None
 
     query(
         """
-        INSERT INTO imap_accounts
-        (name, host, port, username, password_encrypted,
+        INSERT INTO fetch_accounts
+        (name, account_type, host, port, username, password_encrypted,
          use_ssl, require_starttls, poll_interval_seconds,
          delete_after_processing, enabled)
         VALUES
-        (:name, :host, :port, :username, :password_encrypted,
+        (:name, :account_type, :host, :port, :username, :password_encrypted,
          :use_ssl, :require_starttls, :poll_interval_seconds,
          :delete_after_processing, :enabled)
         """,
         {
             "name": name,
+            "account_type": account_type,
             "host": host,
             "port": port,
             "username": username,
@@ -110,21 +112,21 @@ def create_account(
         },
     )
 
-    flash(request, "IMAP account created successfully")
-    return RedirectResponse("/imap_accounts", status_code=303)
+    flash(request, f"{account_type.upper()} account created successfully")
+    return RedirectResponse("/fetch_accounts", status_code=303)
 
 
-@router.get("/imap_accounts/{id}/edit")
+@router.get("/fetch_accounts/{id}/edit")
 def edit_account(request: Request, id: int):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
     account = query(
         """
-        SELECT id, name, host, port, username, password_encrypted,
+        SELECT id, name, account_type, host, port, username, password_encrypted,
                use_ssl, require_starttls, poll_interval_seconds,
                delete_after_processing, enabled
-        FROM imap_accounts
+        FROM fetch_accounts
         WHERE id = :id
         """,
         {"id": id},
@@ -132,12 +134,12 @@ def edit_account(request: Request, id: int):
 
     if not account:
         flash(request, "Account not found")
-        return RedirectResponse("/imap_accounts", status_code=303)
+        return RedirectResponse("/fetch_accounts", status_code=303)
 
     msg = request.session.pop("flash", None)
 
     return templates.TemplateResponse(
-        "imap_account_form.html",
+        "fetch_account_form.html",
         {
             "request": request,
             "account": account,
@@ -146,14 +148,15 @@ def edit_account(request: Request, id: int):
     )
 
 
-@router.post("/imap_accounts/{id}/edit")
+@router.post("/fetch_accounts/{id}/edit")
 def update_account(
     request: Request,
     id: int,
     name: str = Form(...),
-    host: str = Form(...),
-    port: int = Form(...),
-    username: str = Form(...),
+    account_type: str = Form("imap"),
+    host: str = Form(""),
+    port: int = Form(993),
+    username: str = Form(""),
     password: str = Form(""),
     use_ssl: bool = Form(False),
     require_starttls: bool = Form(False),
@@ -173,8 +176,9 @@ def update_account(
 
     query(
         f"""
-        UPDATE imap_accounts
+        UPDATE fetch_accounts
         SET name = :name,
+            account_type = :account_type,
             host = :host,
             port = :port,
             username = :username,
@@ -189,6 +193,7 @@ def update_account(
         {
             "id": id,
             "name": name,
+            "account_type": account_type,
             "host": host,
             "port": port,
             "username": username,
@@ -201,29 +206,29 @@ def update_account(
         },
     )
 
-    flash(request, "IMAP account updated successfully")
-    return RedirectResponse("/imap_accounts", status_code=303)
+    flash(request, f"{account_type.upper()} account updated successfully")
+    return RedirectResponse("/fetch_accounts", status_code=303)
 
 
-@router.post("/imap_accounts/{id}/delete")
+@router.post("/fetch_accounts/{id}/delete")
 def delete_account(request: Request, id: int, mode: str = Form(...)):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
     account = query(
-        "SELECT id, name FROM imap_accounts WHERE id = :id",
+        "SELECT id, name FROM fetch_accounts WHERE id = :id",
         {"id": id},
     ).mappings().first()
 
     if not account:
         flash(request, "Account not found")
-        return RedirectResponse("/imap_accounts", status_code=303)
+        return RedirectResponse("/fetch_accounts", status_code=303)
 
     if mode == "retain":
         # Delete account only
-        query("DELETE FROM imap_accounts WHERE id = :id", {"id": id})
-        flash(request, f"IMAP account '{account['name']}' deleted. Messages retained.")
-        return RedirectResponse("/imap_accounts", status_code=303)
+        query("DELETE FROM fetch_accounts WHERE id = :id", {"id": id})
+        flash(request, f"Fetch account '{account['name']}' deleted. Messages retained.")
+        return RedirectResponse("/fetch_accounts", status_code=303)
 
     elif mode == "delete_messages":
         # Delete messages first
@@ -232,16 +237,16 @@ def delete_account(request: Request, id: int, mode: str = Form(...)):
             {"name": account["name"]},
         )
         # Then delete account
-        query("DELETE FROM imap_accounts WHERE id = :id", {"id": id})
+        query("DELETE FROM fetch_accounts WHERE id = :id", {"id": id})
 
-        flash(request, f"IMAP account '{account['name']}' and all related messages deleted.")
-        return RedirectResponse("/imap_accounts", status_code=303)
+        flash(request, f"Fetch account '{account['name']}' and all related messages deleted.")
+        return RedirectResponse("/fetch_accounts", status_code=303)
 
     flash(request, "Invalid delete mode.")
-    return RedirectResponse("/imap_accounts", status_code=303)
+    return RedirectResponse("/fetch_accounts", status_code=303)
 
 
-@router.get("/imap_accounts/{id}/delete/confirm")
+@router.get("/fetch_accounts/{id}/delete/confirm")
 def confirm_delete_account(request: Request, id: int):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
@@ -249,7 +254,7 @@ def confirm_delete_account(request: Request, id: int):
     account = query(
         """
         SELECT id, name
-        FROM imap_accounts
+        FROM fetch_accounts
         WHERE id = :id
         """,
         {"id": id},
@@ -257,7 +262,7 @@ def confirm_delete_account(request: Request, id: int):
 
     if not account:
         flash(request, "Account not found")
-        return RedirectResponse("/imap_accounts", status_code=303)
+        return RedirectResponse("/fetch_accounts", status_code=303)
 
     # Count messages linked to this account
     msg_count = query(
@@ -270,7 +275,7 @@ def confirm_delete_account(request: Request, id: int):
     ).mappings().first()["c"]
 
     return templates.TemplateResponse(
-        "imap_account_confirm_delete.html",
+        "fetch_account_confirm_delete.html",
         {
             "request": request,
             "account": account,
@@ -279,13 +284,14 @@ def confirm_delete_account(request: Request, id: int):
     )
 
 
-@router.post("/imap_accounts/test")
+@router.post("/fetch_accounts/test")
 def test_connection(
     request: Request,
     name: str = Form(""),
-    host: str = Form(...),
-    port: int = Form(...),
-    username: str = Form(...),
+    account_type: str = Form("imap"),
+    host: str = Form(""),
+    port: int = Form(993),
+    username: str = Form(""),
     password: str = Form(""),
     use_ssl: bool = Form(False),
     require_starttls: bool = Form(False),
@@ -304,7 +310,7 @@ def test_connection(
         acc = query(
             """
             SELECT password_encrypted
-            FROM imap_accounts
+            FROM fetch_accounts
             WHERE id = :id
             """,
             {"id": account_id},
@@ -378,6 +384,7 @@ def test_connection(
     account = {
         "id": account_id,
         "name": name,
+        "account_type": account_type,
         "host": host,
         "port": port,
         "username": username,
@@ -391,6 +398,6 @@ def test_connection(
     msg = request.session.pop("flash", None)
 
     return templates.TemplateResponse(
-        "imap_account_form.html",
+        "fetch_account_form.html",
         {"request": request, "account": account, "flash": msg},
     )
