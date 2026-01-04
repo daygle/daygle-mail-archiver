@@ -3,30 +3,6 @@
 {% block content %}
 <h2>Worker Status</h2>
 
-<!-- Overall System Health -->
-<div class="settings-section">
-    <div class="alert 
-        {% if system_health == 'healthy' %}alert-success
-        {% elif system_health == 'warning' %}alert-warning
-        {% elif system_health == 'error' %}alert-danger
-        {% elif system_health == 'pending' %}alert-info
-        {% else %}alert-secondary
-        {% endif %}
-        d-flex align-items-center">
-        <i class="fas 
-            {% if system_health == 'healthy' %}fa-check-circle
-            {% elif system_health == 'warning' %}fa-exclamation-triangle
-            {% elif system_health == 'error' %}fa-times-circle
-            {% elif system_health == 'pending' %}fa-clock
-            {% else %}fa-info-circle
-            {% endif %}
-            me-2 fs-4"></i>
-        <div>
-            <strong>System Status:</strong> {{ system_health_label }}
-        </div>
-    </div>
-</div>
-
 <!-- Account Status Table -->
 <div class="settings-section">
     <h3>Fetch Account Status</h3>
