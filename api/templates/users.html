@@ -58,12 +58,12 @@
                         </td>
                         <td>
                             {% if user.last_login %}
-                                <small>{{ user.last_login.strftime(request.session.date_format) }}</small>
+                                <small>{{ user.last_login | format_user_datetime(request.session.user_id) }}</small>
                             {% else %}
                                 <span style="color: var(--text-secondary);">Never</span>
                             {% endif %}
                         </td>
-                        <td><small>{{ user.created_at.strftime(request.session.date_format) }}</small></td>
+                        <td><small>{{ user.created_at | format_user_datetime(request.session.user_id) }}</small></td>
                         <td>
                             <div style="display: flex; gap: 8px;">
                                 <button type="button" class="btn btn-secondary btn-sm" title="Edit" onclick="editUser({{ user.id }})">
@@ -276,8 +276,8 @@ async function editUser(userId) {
         document.getElementById('edit_password').value = '';
         
         // Display read-only info
-        document.getElementById('edit_last_login').textContent = user.last_login ? new Date(user.last_login).toLocaleString() : 'Never';
-        document.getElementById('edit_created_at').textContent = user.created_at ? new Date(user.created_at).toLocaleString() : '-';
+        document.getElementById('edit_last_login').textContent = user.last_login || 'Never';
+        document.getElementById('edit_created_at').textContent = user.created_at || '-';
         
         // Set form action
         document.getElementById('editUserForm').action = `/users/${userId}/update`;

@@ -4,6 +4,7 @@ import bcrypt
 
 from utils.db import query
 from utils.templates import templates
+from utils.timezone import format_datetime
 
 router = APIRouter()
 
@@ -78,6 +79,9 @@ def get_user(request: Request, user_id: int):
     if not user:
         return JSONResponse({"error": "User not found"}, status_code=404)
     
+    # Get current user's ID for timezone conversion
+    current_user_id = request.session.get("user_id")
+    
     return {
         "id": user["id"],
         "username": user["username"],
@@ -86,8 +90,8 @@ def get_user(request: Request, user_id: int):
         "email": user["email"] or "",
         "role": user["role"] or "administrator",
         "enabled": user["enabled"],
-        "last_login": user["last_login"].isoformat() if user["last_login"] else None,
-        "created_at": user["created_at"].isoformat() if user["created_at"] else None
+        "last_login": format_datetime(user["last_login"], current_user_id) if user["last_login"] else None,
+        "created_at": format_datetime(user["created_at"], current_user_id) if user["created_at"] else None
     }
 
 @router.post("/users/{user_id}/update")
