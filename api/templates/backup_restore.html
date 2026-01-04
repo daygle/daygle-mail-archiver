@@ -23,7 +23,7 @@
         </div>
         
         <div class="form-actions">
-            <a href="/settings/backup" class="btn btn-primary btn-lg">
+            <a href="/global-settings/backup" class="btn btn-primary btn-lg">
                 <i class="fas fa-download"></i> Download Database Backup
             </a>
         </div>
@@ -50,7 +50,7 @@
             </small>
         </div>
         
-        <form method="post" action="/settings/restore" enctype="multipart/form-data">
+        <form method="post" action="/global-settings/restore" enctype="multipart/form-data">
             <div class="form-group">
                 <label for="backup_file" class="form-label">Select Backup File (SQL format)</label>
                 <input type="file" id="backup_file" class="form-control" name="file" accept=".sql" required>

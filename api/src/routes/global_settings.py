@@ -17,7 +17,7 @@ def require_login(request: Request):
 def flash(request: Request, message: str):
     request.session["flash"] = message
 
-@router.get("/settings")
+@router.get("/global-settings")
 def settings_form(request: Request):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
@@ -32,7 +32,7 @@ def settings_form(request: Request):
         {"request": request, "settings": settings, "flash": msg},
     )
 
-@router.post("/settings")
+@router.post("/global-settings")
 def save_settings(
     request: Request,
     page_size: int = Form(...),
@@ -116,7 +116,7 @@ def save_settings(
     log("info", "Settings", f"User '{username}' updated global settings (page_size={page_size}, date_format={date_format}, timezone={timezone}, enable_purge={enable_purge}, retention={retention_value} {retention_unit}, delete_from_mail_server={retention_delete_from_mail_server})", "")
 
     flash(request, "Settings updated successfully.")
-    return RedirectResponse("/settings", status_code=303)
+    return RedirectResponse("/global-settings", status_code=303)
 @router.get("/backup")
 def backup_page(request: Request):
     if not require_login(request):
@@ -132,7 +132,7 @@ def restore_page(request: Request):
 
     msg = request.session.pop("flash", None)
     return templates.TemplateResponse("backup_restore.html", {"request": request, "flash": msg})
-@router.get("/settings/backup")
+@router.get("/global-settings/backup")
 def backup_db(request: Request):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
@@ -140,7 +140,7 @@ def backup_db(request: Request):
     dsn = os.getenv("DB_DSN")
     if not dsn:
         flash(request, "DB_DSN not configured.")
-        return RedirectResponse("/settings", status_code=303)
+        return RedirectResponse("/global-settings", status_code=303)
 
     try:
         parsed = urlparse(dsn)
@@ -179,7 +179,7 @@ def backup_db(request: Request):
         flash(request, f"Backup error: {str(e)}")
         return RedirectResponse("/backup", status_code=303)
 
-@router.post("/settings/restore")
+@router.post("/global-settings/restore")
 def restore_db(request: Request, file: UploadFile = File(...)):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)

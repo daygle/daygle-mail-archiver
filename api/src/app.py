@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
-from routes import emails, fetch_accounts, settings, auth, users, profile, logs, dashboard, worker_status, oauth, donate, help
+from routes import emails, fetch_accounts, global_settings, auth, users, profile, logs, dashboard, worker_status, oauth, donate, help
 
 SESSION_SECRET = os.getenv("SESSION_SECRET", "change-me")
 
@@ -34,7 +34,7 @@ app.include_router(oauth.router)
 app.include_router(users.router)
 app.include_router(profile.router)
 app.include_router(logs.router)
-app.include_router(settings.router)
+app.include_router(global_settings.router)
 app.include_router(donate.router)
 app.include_router(help.router)
 
