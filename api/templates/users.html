@@ -3,141 +3,149 @@
 {% block page_title %}User Management{% endblock %}
 
 {% block content %}
-<!-- Users Table Card -->
-<div class="card">
-    <div class="card-header">
-        <div class="card-title">
-            <i class="fas fa-users"></i>
-            <span>User Accounts</span>
+<div style="display: grid; grid-template-columns: 1fr; gap: 20px;" id="usersContainer">
+    <!-- Users Table Card -->
+    <div class="card" id="usersListCard">
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fas fa-users"></i>
+                <span>User Accounts</span>
+            </div>
+            <button type="button" class="btn btn-primary" onclick="showCreateUserForm()">
+                <i class="fas fa-user-plus"></i>
+                <span>Create New User</span>
+            </button>
         </div>
-        <button type="button" class="btn btn-primary" onclick="showCreateUserModal()">
-            <i class="fas fa-user-plus"></i>
-            <span>Create New User</span>
-        </button>
-    </div>
-    <div class="card-body" style="padding: 0;">
-        <div class="table-container">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Username</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Last Login</th>
-                        <th>Created</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for user in users %}
-                    <tr>
-                        <td><strong>{{ user.username }}</strong></td>
-                        <td>{{ (user.first_name or '') ~ ' ' ~ (user.last_name or '') if user.first_name or user.last_name else '-' }}</td>
-                        <td>{{ user.email or '-' }}</td>
-                        <td>
-                            {% if user.role == 'administrator' %}
-                                <span class="badge badge-primary">
-                                    <i class="fas fa-user-shield"></i> Administrator
-                                </span>
-                            {% elif user.role == 'read_only' %}
-                                <span class="badge badge-info">
-                                    <i class="fas fa-eye"></i> Read Only
-                                </span>
-                            {% else %}
-                                <span class="badge badge-secondary">{{ user.role }}</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if user.enabled %}
-                                <span class="badge badge-success"><i class="fas fa-check"></i> Enabled</span>
-                            {% else %}
-                                <span class="badge badge-danger"><i class="fas fa-times"></i> Disabled</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if user.last_login %}
-                                <small>{{ user.last_login | format_user_datetime(request.session.user_id) }}</small>
-                            {% else %}
-                                <span style="color: var(--text-secondary);">Never</span>
-                            {% endif %}
-                        </td>
-                        <td><small>{{ user.created_at | format_user_datetime(request.session.user_id) }}</small></td>
-                        <td>
-                            <div style="display: flex; gap: 8px;">
-                                <button type="button" class="btn btn-secondary btn-sm" title="Edit" onclick="editUser({{ user.id }})">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <form method="post" action="/users/{{ user.id }}/toggle" style="display: inline;">
-                                    <button type="submit" class="btn {% if user.enabled %}btn-warning{% else %}btn-success{% endif %} btn-sm" title="{{ 'Disable' if user.enabled else 'Enable' }}">
-                                        <i class="fas {% if user.enabled %}fa-ban{% else %}fa-check{% endif %}"></i>
+        <div class="card-body" style="padding: 0;">
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Last Login</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td><strong>{{ user.username }}</strong></td>
+                            <td>{{ (user.first_name or '') ~ ' ' ~ (user.last_name or '') if user.first_name or user.last_name else '-' }}</td>
+                            <td>{{ user.email or '-' }}</td>
+                            <td>
+                                {% if user.role == 'administrator' %}
+                                    <span class="badge badge-primary">
+                                        <i class="fas fa-user-shield"></i> Administrator
+                                    </span>
+                                {% elif user.role == 'read_only' %}
+                                    <span class="badge badge-info">
+                                        <i class="fas fa-eye"></i> Read Only
+                                    </span>
+                                {% else %}
+                                    <span class="badge badge-secondary">{{ user.role }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.enabled %}
+                                    <span class="badge badge-success"><i class="fas fa-check"></i> Enabled</span>
+                                {% else %}
+                                    <span class="badge badge-danger"><i class="fas fa-times"></i> Disabled</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.last_login %}
+                                    <small>{{ user.last_login | format_user_datetime(request.session.user_id) }}</small>
+                                {% else %}
+                                    <span style="color: var(--text-secondary);">Never</span>
+                                {% endif %}
+                            </td>
+                            <td><small>{{ user.created_at | format_user_datetime(request.session.user_id) }}</small></td>
+                            <td>
+                                <div style="display: flex; gap: 8px;">
+                                    <button type="button" class="btn btn-secondary btn-sm" title="Edit" onclick="editUser({{ user.id }})">
+                                        <i class="fas fa-edit"></i>
                                     </button>
-                                </form>
-                                <form method="post" action="/users/{{ user.id }}/delete" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this user?');">
-                                    <button type="submit" class="btn btn-danger btn-sm" title="Delete">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                    {% if users|length == 0 %}
-                    <tr>
-                        <td colspan="8" style="text-align: center; padding: 48px 0;">
-                            <div style="color: var(--text-secondary);">
-                                <i class="fas fa-users" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
-                                <p>No users found.</p>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endif %}
-                </tbody>
-            </table>
+                                    <form method="post" action="/users/{{ user.id }}/toggle" style="display: inline;">
+                                        <button type="submit" class="btn {% if user.enabled %}btn-warning{% else %}btn-success{% endif %} btn-sm" title="{{ 'Disable' if user.enabled else 'Enable' }}">
+                                            <i class="fas {% if user.enabled %}fa-ban{% else %}fa-check{% endif %}"></i>
+                                        </button>
+                                    </form>
+                                    <form method="post" action="/users/{{ user.id }}/delete" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                                        <button type="submit" class="btn btn-danger btn-sm" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% if users|length == 0 %}
+                        <tr>
+                            <td colspan="8" style="text-align: center; padding: 48px 0;">
+                                <div style="color: var(--text-secondary);">
+                                    <i class="fas fa-users" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                                    <p>No users found.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-</div>
-
-<!-- Create User Modal -->
-<div class="modal" id="createUserModal" style="display: none;">
-    <div class="modal-content" style="max-width: 600px;">
-        <div class="modal-header">
-            <h3 style="margin: 0;"><i class="fas fa-user-plus"></i> Create New User</h3>
-            <button type="button" class="modal-close" onclick="hideCreateUserModal()">&times;</button>
+    
+    <!-- Create/Edit User Form Card (Initially Hidden) -->
+    <div class="card" id="userFormCard" style="display: none;">
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fas fa-user-plus" id="formIcon"></i>
+                <span id="formTitle">Create New User</span>
+            </div>
+            <button type="button" class="btn btn-secondary" onclick="hideUserForm()">
+                <i class="fas fa-times"></i>
+                <span>Cancel</span>
+            </button>
         </div>
-        <form method="post" action="/users/create">
-            <div class="modal-body">
+        <div class="card-body">
+            <form method="post" id="userForm" action="/users/create">
+                <input type="hidden" id="user_id" name="user_id">
+                
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                     <div class="form-group">
-                        <label for="create_username">Username <span style="color: var(--color-danger);">*</span></label>
-                        <input id="create_username" class="form-control" name="username" required>
+                        <label for="username">Username <span style="color: var(--danger);">*</span></label>
+                        <input id="username" class="form-control" name="username" required>
                     </div>
                     <div class="form-group">
-                        <label for="create_password">Password <span style="color: var(--color-danger);">*</span></label>
-                        <input id="create_password" class="form-control" name="password" type="password" required>
+                        <label for="password">Password <span id="passwordLabel"><span style="color: var(--danger);">*</span></span></label>
+                        <input id="password" class="form-control" name="password" type="password" required>
                     </div>
                 </div>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                     <div class="form-group">
-                        <label for="create_first_name">First Name</label>
-                        <input id="create_first_name" class="form-control" name="first_name">
+                        <label for="first_name">First Name</label>
+                        <input id="first_name" class="form-control" name="first_name">
                     </div>
                     <div class="form-group">
-                        <label for="create_last_name">Last Name</label>
-                        <input id="create_last_name" class="form-control" name="last_name">
+                        <label for="last_name">Last Name</label>
+                        <input id="last_name" class="form-control" name="last_name">
                     </div>
                 </div>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                     <div class="form-group">
-                        <label for="create_email">Email</label>
-                        <input id="create_email" class="form-control" name="email" type="email">
+                        <label for="email">Email</label>
+                        <input id="email" class="form-control" name="email" type="email">
                     </div>
                     <div class="form-group">
-                        <label for="create_role">Role <span style="color: var(--color-danger);">*</span></label>
-                        <select id="create_role" class="form-control" name="role" required>
+                        <label for="role">Role <span style="color: var(--danger);">*</span></label>
+                        <select id="role" class="form-control" name="role" required>
                             <option value="administrator">Administrator (Full Access)</option>
                             <option value="read_only">Read Only (View Emails Only)</option>
                         </select>
@@ -145,59 +153,35 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="create_enabled">Account Status</label>
-                    <select id="create_enabled" class="form-control" name="enabled">
+                    <label for="enabled">Account Status</label>
+                    <select id="enabled" class="form-control" name="enabled">
                         <option value="true" selected>Enabled</option>
                         <option value="false">Disabled</option>
                     </select>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="hideCreateUserModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary"><i class="fas fa-user-plus"></i> Create User</button>
-            </div>
-        </form>
+                
+                <div class="alert alert-info" id="userInfoAlert" style="display: none;">
+                    <strong>Account Information:</strong><br>
+                    <small>
+                        <strong>Last Login:</strong> <span id="last_login">-</span><br>
+                        <strong>Created:</strong> <span id="created_at">-</span>
+                    </small>
+                </div>
+                
+                <div style="display: flex; gap: 12px; margin-top: 24px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        <i class="fas fa-save" id="submitIcon"></i>
+                        <span id="submitText">Create User</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="hideUserForm()">
+                        <i class="fas fa-times"></i>
+                        <span>Cancel</span>
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
-
-<!-- Edit User Modal -->
-<div class="modal" id="editUserModal" style="display: none;">
-    <div class="modal-content" style="max-width: 600px;">
-        <div class="modal-header">
-            <h3 style="margin: 0;"><i class="fas fa-user-edit"></i> Edit User</h3>
-            <button type="button" class="modal-close" onclick="hideEditUserModal()">&times;</button>
-        </div>
-        <form method="post" id="editUserForm">
-            <div class="modal-body">
-                <input type="hidden" id="edit_user_id" name="user_id">
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                    <div class="form-group">
-                        <label for="edit_username">Username <span style="color: var(--color-danger);">*</span></label>
-                        <input id="edit_username" class="form-control" name="username" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit_password">New Password <small style="color: var(--text-secondary);">(leave blank to keep current)</small></label>
-                        <input id="edit_password" class="form-control" name="password" type="password">
-                    </div>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                    <div class="form-group">
-                        <label for="edit_first_name">First Name</label>
-                        <input id="edit_first_name" class="form-control" name="first_name">
-                    </div>
-                    <div class="form-group">
-                        <label for="edit_last_name">Last Name</label>
-                        <input id="edit_last_name" class="form-control" name="last_name">
-                    </div>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                    <div class="form-group">
-                        <label for="edit_email">Email</label>
-                        <input id="edit_email" class="form-control" name="email" type="email">
-                    </div>
                     <div class="form-group">
                         <label for="edit_role">Role <span style="color: var(--color-danger);">*</span></label>
                         <select id="edit_role" class="form-control" name="role" required>
@@ -232,30 +216,44 @@
 </div>
 
 <script>
-// Define functions immediately so onclick handlers can access them
-function showCreateUserModal() {
-    console.log('showCreateUserModal called!');
-    const modal = document.getElementById('createUserModal');
-    modal.style.display = 'flex';
-    setTimeout(() => modal.classList.add('show'), 10);
+function showCreateUserForm() {
+    const container = document.getElementById('usersContainer');
+    const listCard = document.getElementById('usersListCard');
+    const formCard = document.getElementById('userFormCard');
+    const form = document.getElementById('userForm');
+    
+    // Reset form
+    form.reset();
+    form.action = '/users/create';
+    document.getElementById('user_id').value = '';
+    document.getElementById('password').required = true;
+    document.getElementById('userInfoAlert').style.display = 'none';
+    
+    // Update UI text
+    document.getElementById('formTitle').textContent = 'Create New User';
+    document.getElementById('formIcon').className = 'fas fa-user-plus';
+    document.getElementById('submitIcon').className = 'fas fa-user-plus';
+    document.getElementById('submitText').textContent = 'Create User';
+    document.getElementById('passwordLabel').innerHTML = '<span style="color: var(--danger);">*</span>';
+    
+    // Show split view
+    container.style.gridTemplateColumns = '1fr 1fr';
+    formCard.style.display = 'block';
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function hideCreateUserModal() {
-    console.log('hideCreateUserModal called!');
-    const modal = document.getElementById('createUserModal');
-    modal.classList.remove('show');
-    setTimeout(() => modal.style.display = 'none', 300);
-}
-
-function hideEditUserModal() {
-    console.log('hideEditUserModal called!');
-    const modal = document.getElementById('editUserModal');
-    modal.classList.remove('show');
-    setTimeout(() => modal.style.display = 'none', 300);
+function hideUserForm() {
+    const container = document.getElementById('usersContainer');
+    const formCard = document.getElementById('userFormCard');
+    
+    // Hide form and restore full width
+    formCard.style.display = 'none';
+    container.style.gridTemplateColumns = '1fr';
 }
 
 async function editUser(userId) {
-    console.log('editUser called for user:', userId);
     try {
         const response = await fetch(`/api/users/${userId}`);
         const user = await response.json();
@@ -265,47 +263,47 @@ async function editUser(userId) {
             return;
         }
         
+        const container = document.getElementById('usersContainer');
+        const formCard = document.getElementById('userFormCard');
+        const form = document.getElementById('userForm');
+        
         // Populate the form
-        document.getElementById('edit_user_id').value = user.id;
-        document.getElementById('edit_username').value = user.username;
-        document.getElementById('edit_first_name').value = user.first_name || '';
-        document.getElementById('edit_last_name').value = user.last_name || '';
-        document.getElementById('edit_email').value = user.email || '';
-        document.getElementById('edit_role').value = user.role || 'administrator';
-        document.getElementById('edit_enabled').value = user.enabled ? 'true' : 'false';
-        document.getElementById('edit_password').value = '';
+        document.getElementById('user_id').value = user.id;
+        document.getElementById('username').value = user.username;
+        document.getElementById('first_name').value = user.first_name || '';
+        document.getElementById('last_name').value = user.last_name || '';
+        document.getElementById('email').value = user.email || '';
+        document.getElementById('role').value = user.role || 'administrator';
+        document.getElementById('enabled').value = user.enabled ? 'true' : 'false';
+        document.getElementById('password').value = '';
+        document.getElementById('password').required = false;
         
         // Display read-only info
-        document.getElementById('edit_last_login').textContent = user.last_login || 'Never';
-        document.getElementById('edit_created_at').textContent = user.created_at || '-';
+        document.getElementById('last_login').textContent = user.last_login || 'Never';
+        document.getElementById('created_at').textContent = user.created_at || '-';
+        document.getElementById('userInfoAlert').style.display = 'block';
+        
+        // Update UI text
+        document.getElementById('formTitle').textContent = 'Edit User';
+        document.getElementById('formIcon').className = 'fas fa-user-edit';
+        document.getElementById('submitIcon').className = 'fas fa-save';
+        document.getElementById('submitText').textContent = 'Save Changes';
+        document.getElementById('passwordLabel').innerHTML = '<small style="color: var(--text-secondary);">(leave blank to keep current)</small>';
         
         // Set form action
-        document.getElementById('editUserForm').action = `/users/${userId}/update`;
+        form.action = `/users/${userId}/update`;
         
-        // Show the modal
-        const modal = document.getElementById('editUserModal');
-        modal.style.display = 'flex';
-        setTimeout(() => modal.classList.add('show'), 10);
+        // Show split view
+        container.style.gridTemplateColumns = '1fr 1fr';
+        formCard.style.display = 'block';
+        
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
         console.error('Error loading user:', error);
         alert('Failed to load user details');
     }
 }
-
-// Close modals on background click - wait for DOM
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('createUserModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            hideCreateUserModal();
-        }
-    });
-
-    document.getElementById('editUserModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            hideEditUserModal();
-        }
-    });
-});
 </script>
 
 {% endblock %}
