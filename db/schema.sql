@@ -8,7 +8,7 @@
 CREATE TABLE IF NOT EXISTS emails (
     id SERIAL PRIMARY KEY,
 
-    -- IMAP source info
+    -- Source
     source TEXT NOT NULL,
     folder TEXT NOT NULL,
     uid INTEGER NOT NULL,
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS fetch_accounts (
     id SERIAL PRIMARY KEY,
 
     name TEXT NOT NULL UNIQUE,
-    account_type TEXT NOT NULL DEFAULT 'imap', -- 'imap', 'gmail', 'o365'
+    account_type TEXT NOT NULL DEFAULT 'imap',
 
     -- IMAP-specific fields
     host TEXT,
