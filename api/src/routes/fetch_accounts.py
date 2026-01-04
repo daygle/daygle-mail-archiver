@@ -112,6 +112,9 @@ def create_account(
         },
     )
 
+    username = request.session.get("username", "unknown")
+    log("info", "Fetch Accounts", f"User '{username}' created fetch account '{name}' (type: {account_type})", "")
+
     flash(request, f"{account_type.upper()} account created successfully")
     return RedirectResponse("/fetch_accounts", status_code=303)
 
@@ -206,6 +209,9 @@ def update_account(
         },
     )
 
+    username = request.session.get("username", "unknown")
+    log("info", "Fetch Accounts", f"User '{username}' updated fetch account '{name}' (ID: {id})", "")
+
     flash(request, f"{account_type.upper()} account updated successfully")
     return RedirectResponse("/fetch_accounts", status_code=303)
 
@@ -227,6 +233,8 @@ def delete_account(request: Request, id: int, mode: str = Form(...)):
     if mode == "retain":
         # Delete account only
         query("DELETE FROM fetch_accounts WHERE id = :id", {"id": id})
+        username = request.session.get("username", "unknown")
+        log("info", "Fetch Accounts", f"User '{username}' deleted fetch account '{account['name']}' (ID: {id}), emails retained", "")
         flash(request, f"Fetch account '{account['name']}' deleted. Emails retained.")
         return RedirectResponse("/fetch_accounts", status_code=303)
 
@@ -238,6 +246,9 @@ def delete_account(request: Request, id: int, mode: str = Form(...)):
         )
         # Then delete account
         query("DELETE FROM fetch_accounts WHERE id = :id", {"id": id})
+
+        username = request.session.get("username", "unknown")
+        log("warning", "Fetch Accounts", f"User '{username}' deleted fetch account '{account['name']}' (ID: {id}) and all related emails", "")
 
         flash(request, f"Fetch account '{account['name']}' and all related emails deleted.")
         return RedirectResponse("/fetch_accounts", status_code=303)

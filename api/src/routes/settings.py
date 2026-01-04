@@ -7,6 +7,7 @@ from io import BytesIO
 from urllib.parse import urlparse
 
 from utils.db import query
+from utils.logger import log
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -91,6 +92,9 @@ def save_settings(
         {"v": retention_unit},
     )
 
+    username = request.session.get("username", "unknown")
+    log("info", "Settings", f"User '{username}' updated global settings (page_size={page_size}, date_format={date_format}, enable_purge={enable_purge}, retention={retention_value} {retention_unit})", "")
+
     flash(request, "Settings updated successfully.")
     return RedirectResponse("/settings", status_code=303)
 @router.get("/backup")
@@ -142,6 +146,9 @@ def backup_db(request: Request):
             flash(request, f"Backup failed: {result.stderr}")
             return RedirectResponse("/backup", status_code=303)
 
+        username = request.session.get("username", "unknown")
+        log("info", "Database", f"User '{username}' performed database backup", "")
+
         bio = BytesIO(result.stdout.encode('utf-8'))
         return StreamingResponse(
             bio,
@@ -186,6 +193,9 @@ def restore_db(request: Request, file: UploadFile = File(...)):
         if result.returncode != 0:
             flash(request, f"Restore failed: {result.stderr}")
             return RedirectResponse("/restore", status_code=303)
+
+        username = request.session.get("username", "unknown")
+        log("warning", "Database", f"User '{username}' performed database restore from file '{file.filename}'", "")
 
         flash(request, "Database restored successfully.")
         return RedirectResponse("/restore", status_code=303)

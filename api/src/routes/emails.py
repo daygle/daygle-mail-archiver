@@ -8,6 +8,7 @@ from imaplib import IMAP4, IMAP4_SSL
 from utils.db import query
 from utils.email_parser import decompress, parse_email
 from utils.security import decrypt_password, can_delete
+from utils.logger import log
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -334,19 +335,24 @@ def perform_delete(
 
     if mode == "db":
         deleted = _delete_emails_from_db(ids)
+        username = request.session.get("username", "unknown")
+        log("warning", "Emails", f"User '{username}' deleted {deleted} email(s) from database (IDs: {ids})", "")
         flash(request, f"Deleted {deleted} email(s) from the database.")
         return RedirectResponse("/emails", status_code=303)
 
     elif mode == "imap":
         deleted, errors = _delete_emails_from_imap_and_db(ids)
 
+        username = request.session.get("username", "unknown")
         if errors:
             error_text = " | ".join(errors)
+            log("warning", "Emails", f"User '{username}' deleted {deleted} email(s) from IMAP and database with errors (IDs: {ids})", error_text)
             flash(
                 request,
                 f"Deleted {deleted} email(s) from database and IMAP. Some errors occurred: {error_text}",
             )
         else:
+            log("warning", "Emails", f"User '{username}' deleted {deleted} email(s) from IMAP and database (IDs: {ids})", "")
             flash(
                 request,
                 f"Deleted {deleted} email(s) from database and IMAP.",
