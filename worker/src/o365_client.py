@@ -20,7 +20,7 @@ class O365Client:
         """List messages from inbox"""
         if delta_link:
             # Use delta link for incremental sync
-            response = requests.get(delta_link, headers=self.headers)
+            response = requests.get(delta_link, headers=self.headers, timeout=30)
         else:
             params = {
                 "$top": top,
@@ -31,7 +31,8 @@ class O365Client:
             response = requests.get(
                 f"{self.base_url}/mailFolders/inbox/messages",
                 headers=self.headers,
-                params=params
+                params=params,
+                timeout=30
             )
         
         response.raise_for_status()
@@ -41,7 +42,8 @@ class O365Client:
         """Get message in MIME/RFC822 format"""
         response = requests.get(
             f"{self.base_url}/messages/{message_id}/$value",
-            headers=self.headers
+            headers=self.headers,
+            timeout=30
         )
         response.raise_for_status()
         return response.content
@@ -56,7 +58,8 @@ class O365Client:
             response = requests.get(
                 f"{self.base_url}/mailFolders/inbox/messages/delta",
                 headers=self.headers,
-                params=params
+                params=params,
+                timeout=30
             )
             response.raise_for_status()
             data = response.json()
@@ -67,7 +70,7 @@ class O365Client:
     def list_delta(self, delta_link: str) -> List[Dict]:
         """Get messages changed since delta link"""
         try:
-            response = requests.get(delta_link, headers=self.headers)
+            response = requests.get(delta_link, headers=self.headers, timeout=30)
             response.raise_for_status()
             data = response.json()
             return data.get("value", [])
@@ -113,7 +116,8 @@ class O365Client:
             response = requests.get(
                 "https://graph.microsoft.com/v1.0/me",
                 headers=self.headers,
-                params={"$select": "mail,userPrincipalName"}
+                params={"$select": "mail,userPrincipalName"},
+                timeout=30
             )
             response.raise_for_status()
             data = response.json()
@@ -126,7 +130,8 @@ class O365Client:
         try:
             response = requests.delete(
                 f"{self.base_url}/messages/{message_id}",
-                headers=self.headers
+                headers=self.headers,
+                timeout=30
             )
             response.raise_for_status()
             return True

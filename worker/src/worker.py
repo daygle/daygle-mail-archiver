@@ -2,10 +2,13 @@ import time
 import gzip
 import email
 from datetime import datetime, timezone, timedelta
+from collections import defaultdict
 
 from db import query, execute
 from security import decrypt_password
 from imap_client import ImapConnection
+from gmail_client import GmailClient
+from o365_client import O365Client
 
 POLL_INTERVAL_FALLBACK = 300  # seconds
 
@@ -361,6 +364,96 @@ def set_last_sync_token(account_id: int, folder: str, token: str):
         {"id": account_id, "folder": folder, "token": token},
     )
 
+def get_valid_token(account_id: int, account_type: str) -> str:
+    """Get valid OAuth access token, refreshing if necessary"""
+    import requests
+    
+    # Get token from database
+    row = query(
+        """
+        SELECT oauth_access_token, oauth_refresh_token, oauth_token_expiry,
+               oauth_client_id, oauth_client_secret
+        FROM fetch_accounts
+        WHERE id = :id
+        """,
+        {"id": account_id}
+    ).mappings().first()
+    
+    if not row or not row["oauth_access_token"]:
+        return None
+    
+    # Decrypt tokens
+    try:
+        access_token = decrypt_password(row["oauth_access_token"])
+        refresh_token = decrypt_password(row["oauth_refresh_token"]) if row["oauth_refresh_token"] else None
+    except Exception:
+        return None
+    
+    # Check if token is expired
+    now = datetime.now(timezone.utc)
+    expiry = row["oauth_token_expiry"]
+    
+    # If token is still valid (with 5 minute buffer), return it
+    if expiry and expiry > now + timedelta(minutes=5):
+        return access_token
+    
+    # Token expired or about to expire, refresh it
+    if not refresh_token:
+        return None
+    
+    try:
+        if account_type == "gmail":
+            token_url = "https://oauth2.googleapis.com/token"
+        elif account_type == "o365":
+            token_url = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+        else:
+            return None
+        
+        response = requests.post(
+            token_url,
+            data={
+                "client_id": row["oauth_client_id"],
+                "client_secret": row["oauth_client_secret"],
+                "refresh_token": refresh_token,
+                "grant_type": "refresh_token"
+            },
+            timeout=30
+        )
+        response.raise_for_status()
+        token_data = response.json()
+        
+        new_access_token = token_data.get("access_token")
+        new_refresh_token = token_data.get("refresh_token", refresh_token)
+        expires_in = token_data.get("expires_in", 3600)
+        new_expiry = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
+        
+        # Encrypt and store new tokens
+        from security import encrypt_password
+        encrypted_access = encrypt_password(new_access_token)
+        encrypted_refresh = encrypt_password(new_refresh_token)
+        
+        execute(
+            """
+            UPDATE fetch_accounts
+            SET oauth_access_token = :access_token,
+                oauth_refresh_token = :refresh_token,
+                oauth_token_expiry = :expiry
+            WHERE id = :id
+            """,
+            {
+                "access_token": encrypted_access,
+                "refresh_token": encrypted_refresh,
+                "expiry": new_expiry,
+                "id": account_id
+            }
+        )
+        
+        return new_access_token
+        
+    except Exception as e:
+        log_error("OAuth", f"Failed to refresh token for account {account_id}: {e}")
+        return None
+
 def get_settings():
     rows = query("SELECT key, value FROM settings").mappings().all()
     return {r["key"]: r["value"] for r in rows}
@@ -402,7 +495,6 @@ def purge_old_messages():
     # Delete from mail servers if enabled
     if delete_from_mail_server:
         # Group emails by source (fetch account)
-        from collections import defaultdict
         emails_by_source = defaultdict(list)
         for email_rec in emails_to_delete:
             emails_by_source[email_rec["source"]].append(email_rec)
@@ -439,7 +531,6 @@ def purge_old_messages():
                         require_starttls=account["require_starttls"],
                     ) as conn:
                         # Group by folder
-                        from collections import defaultdict
                         emails_by_folder = defaultdict(list)
                         for email_rec in emails:
                             emails_by_folder[email_rec["folder"]].append(email_rec["uid"])

@@ -28,7 +28,8 @@ class GmailClient:
         response = requests.get(
             f"{self.base_url}/messages",
             headers=self.headers,
-            params=params
+            params=params,
+            timeout=30
         )
         response.raise_for_status()
         return response.json()
@@ -38,7 +39,8 @@ class GmailClient:
         response = requests.get(
             f"{self.base_url}/messages/{message_id}",
             headers=self.headers,
-            params={"format": "raw"}
+            params={"format": "raw"},
+            timeout=30
         )
         response.raise_for_status()
         return response.json()
@@ -66,7 +68,8 @@ class GmailClient:
         try:
             response = requests.get(
                 f"{self.base_url}/profile",
-                headers=self.headers
+                headers=self.headers,
+                timeout=30
             )
             response.raise_for_status()
             profile = response.json()
@@ -80,7 +83,8 @@ class GmailClient:
             response = requests.get(
                 f"{self.base_url}/history",
                 headers=self.headers,
-                params={"startHistoryId": start_history_id}
+                params={"startHistoryId": start_history_id},
+                timeout=30
             )
             response.raise_for_status()
             data = response.json()
@@ -122,7 +126,8 @@ class GmailClient:
         try:
             response = requests.post(
                 f"{self.base_url}/messages/{message_id}/trash",
-                headers=self.headers
+                headers=self.headers,
+                timeout=30
             )
             response.raise_for_status()
             return True
