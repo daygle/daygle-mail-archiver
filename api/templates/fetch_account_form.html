@@ -7,7 +7,7 @@
     <input type="hidden" name="account_id" value="{{ account.id if account else '' }}">
 
     <!-- Account Details Card -->
-    <div class="card mb-4">
+    <div class="card" style="margin-bottom: 24px;">
         <div class="card-header">
             <div class="card-title">
                 <i class="fas fa-server"></i>
@@ -34,7 +34,7 @@
     </div>
 
     <!-- IMAP Configuration Card -->
-    <div id="imap_fields" class="card mb-4" style="display: none;">
+    <div id="imap_fields" class="card" style="display: none; margin-bottom: 24px;">
         <div class="card-header">
             <div class="card-title">
                 <i class="fas fa-envelope"></i>
@@ -42,7 +42,7 @@
             </div>
         </div>
         <div class="card-body">
-            <div class="grid grid-cols-2 gap-3">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                 <div class="form-group">
                     <label for="host" class="form-label">Host <span class="text-danger">*</span></label>
                     <input id="host" class="form-control" name="host" value="{{ account.host if account else '' }}" placeholder="imap.example.com">
@@ -54,12 +54,12 @@
                 </div>
             </div>
 
-            <div class="form-group mt-3">
+            <div class="form-group" style="margin-top: 16px;">
                 <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
                 <input id="username" class="form-control" name="username" value="{{ account.username if account else '' }}" placeholder="user@example.com">
             </div>
 
-            <div class="form-group mt-3">
+            <div class="form-group" style="margin-top: 16px;">
                 <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
                 <input id="password" class="form-control" name="password" type="password" placeholder="{{ 'Leave blank to keep existing' if account else 'Enter password' }}">
                 {% if account %}
@@ -67,20 +67,24 @@
                 {% endif %}
             </div>
 
-            <div class="mt-3">
-                <div class="form-check mb-2">
-                    <input class="form-check-input" type="checkbox" id="use_ssl" name="use_ssl" {% if account and account.use_ssl %}checked{% endif %}>
-                    <label class="form-check-label" for="use_ssl">
-                        <strong>Use SSL/TLS</strong>
-                        <small class="d-block text-secondary">Recommended for secure connections (port 993)</small>
+            <div style="margin-top: 16px;">
+                <div style="margin-bottom: 12px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="use_ssl" name="use_ssl" {% if account and account.use_ssl %}checked{% endif %}>
+                        <div>
+                            <strong>Use SSL/TLS</strong>
+                            <small style="display: block; color: var(--text-secondary);">Recommended for secure connections (port 993)</small>
+                        </div>
                     </label>
                 </div>
 
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="require_starttls" name="require_starttls" {% if account and account.require_starttls %}checked{% endif %}>
-                    <label class="form-check-label" for="require_starttls">
-                        <strong>Require STARTTLS</strong>
-                        <small class="d-block text-secondary">For plain connections that upgrade to TLS (port 143)</small>
+                <div>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="require_starttls" name="require_starttls" {% if account and account.require_starttls %}checked{% endif %}>
+                        <div>
+                            <strong>Require STARTTLS</strong>
+                            <small style="display: block; color: var(--text-secondary);">For plain connections that upgrade to TLS (port 143)</small>
+                        </div>
                     </label>
                 </div>
             </div>
@@ -88,7 +92,7 @@
     </div>
 
     <!-- OAuth Configuration Card -->
-    <div id="oauth_fields" class="card mb-4" style="display: none;">
+    <div id="oauth_fields" class="card" style="display: none; margin-bottom: 24px;">
         <div class="card-header">
             <div class="card-title">
                 <i class="fas fa-key"></i>
@@ -96,7 +100,7 @@
             </div>
         </div>
         <div class="card-body">
-            <div class="alert alert-info mb-4">
+            <div class="alert alert-info" style="margin-bottom: 24px;">
                 <i class="fas fa-info-circle"></i>
                 <strong>OAuth Setup Required</strong>
                 <p class="mt-2 mb-2">To use Gmail or Office 365, you need to:</p>
@@ -152,7 +156,7 @@
     </div>
 
     <!-- Fetch Settings Card -->
-    <div class="card mb-4">
+    <div class="card" style="margin-bottom: 24px;">
         <div class="card-header">
             <div class="card-title">
                 <i class="fas fa-cog"></i>
@@ -166,30 +170,36 @@
                 <small class="form-text">How often to check for new emails (minimum 60 seconds)</small>
             </div>
 
-            <div class="mt-4">
-                <div class="form-check mb-3">
-                    <input class="form-check-input" type="checkbox" id="delete_after" name="delete_after_processing" {% if account and account.delete_after_processing %}checked{% endif %}>
-                    <label class="form-check-label" for="delete_after">
-                        <strong>Delete Email After Processing</strong>
-                        <small class="d-block text-secondary">
-                            Gmail: moves to Trash | Office 365: moves to Deleted Items | IMAP: marks as deleted (recoverable)
-                        </small>
+            <div style="margin-top: 24px;">
+                <div style="margin-bottom: 16px;">
+                    <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="delete_after" name="delete_after_processing" {% if account and account.delete_after_processing %}checked{% endif %}>
+                        <div>
+                            <strong>Delete Email After Processing</strong>
+                            <small style="display: block; color: var(--text-secondary);">
+                                Gmail: moves to Trash | Office 365: moves to Deleted Items | IMAP: marks as deleted (recoverable)
+                            </small>
+                        </div>
                     </label>
                 </div>
 
-                <div class="form-check mb-3" id="expunge_deleted_group" style="display: none;">
-                    <input class="form-check-input" type="checkbox" id="expunge_deleted" name="expunge_deleted" {% if account and account.expunge_deleted %}checked{% endif %}>
-                    <label class="form-check-label" for="expunge_deleted">
-                        <strong>Permanently Expunge Deleted (IMAP only)</strong>
-                        <small class="d-block text-danger">⚠️ Warning: Permanently removes deleted emails from server - cannot be recovered</small>
+                <div id="expunge_deleted_group" style="display: none; margin-bottom: 16px;">
+                    <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="expunge_deleted" name="expunge_deleted" {% if account and account.expunge_deleted %}checked{% endif %}>
+                        <div>
+                            <strong>Permanently Expunge Deleted (IMAP only)</strong>
+                            <small style="display: block; color: var(--danger);">⚠️ Warning: Permanently removes deleted emails from server - cannot be recovered</small>
+                        </div>
                     </label>
                 </div>
 
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="enabled" name="enabled" {% if not account or account.enabled %}checked{% endif %}>
-                    <label class="form-check-label" for="enabled">
-                        <strong>Enabled</strong>
-                        <small class="d-block text-secondary">Enable automatic email fetching for this account</small>
+                <div>
+                    <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="enabled" name="enabled" {% if not account or account.enabled %}checked{% endif %}>
+                        <div>
+                            <strong>Enabled</strong>
+                            <small style="display: block; color: var(--text-secondary);">Enable automatic email fetching for this account</small>
+                        </div>
                     </label>
                 </div>
             </div>
@@ -208,163 +218,6 @@
         </a>
     </div>
 </form>
-
-<script>
-    function toggleAccountFields() {
-        const accountType = document.getElementById('account_type').value;
-        const imapFields = document.getElementById('imap_fields');
-        const oauthFields = document.getElementById('oauth_fields');
-        const expungeGroup = document.getElementById('expunge_deleted_group');
-
-        if (accountType === 'imap') {
-            imapFields.style.display = 'block';
-            oauthFields.style.display = 'none';
-            expungeGroup.style.display = 'block';
-        } else {
-            imapFields.style.display = 'none';
-            oauthFields.style.display = 'block';
-            expungeGroup.style.display = 'none';
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', toggleAccountFields);
-</script>
-
-{% endblock %}
-
-        <input type="hidden" name="account_id" value="{{ account.id if account else '' }}">
-
-        <div class="form-group">
-            <label for="name">Account Name <span class="text-danger">*</span></label>
-            <input id="name" class="form-control" name="name" value="{{ account.name if account else '' }}" required>
-        </div>
-
-        <div class="form-group">
-            <label for="account_type">Account Type <span class="text-danger">*</span></label>
-            <select id="account_type" class="form-control" name="account_type" required onchange="toggleAccountFields()">
-                <option value="imap" {% if not account or account.account_type == 'imap' %}selected{% endif %}>IMAP</option>
-                <option value="gmail" {% if account and account.account_type == 'gmail' %}selected{% endif %}>Gmail API</option>
-                <option value="o365" {% if account and account.account_type == 'o365' %}selected{% endif %}>Office 365 API</option>
-            </select>
-            <small class="text-muted">Select the type of email service to fetch from</small>
-        </div>
-
-        <!-- IMAP-specific fields -->
-        <div id="imap_fields" style="display: none;">
-            <div class="form-group">
-                <label for="host">Host</label>
-                <input id="host" class="form-control" name="host" value="{{ account.host if account else '' }}">
-            </div>
-
-            <div class="form-group">
-                <label for="port">Port</label>
-                <input id="port" class="form-control" name="port" type="number" value="{{ account.port if account else '993' }}">
-            </div>
-
-            <div class="form-group">
-                <label for="username">Username</label>
-                <input id="username" class="form-control" name="username" value="{{ account.username if account else '' }}">
-            </div>
-
-            <div class="form-group">
-                <label for="password">Password {% if account %}(leave blank to keep existing){% endif %}</label>
-                <input id="password" class="form-control" name="password" type="password">
-            </div>
-
-            <div class="form-checkboxes">
-                <div class="form-group checkbox-group">
-                    <input type="checkbox" id="use_ssl" name="use_ssl" {% if account and account.use_ssl %}checked{% endif %}>
-                    <label for="use_ssl">Use SSL</label>
-                </div>
-
-                <div class="form-group checkbox-group">
-                    <input type="checkbox" id="require_starttls" name="require_starttls" {% if account and account.require_starttls %}checked{% endif %}>
-                    <label for="require_starttls">Require STARTTLS</label>
-                </div>
-            </div>
-        </div>
-
-        <!-- Gmail/O365 fields (OAuth2) -->
-        <div id="oauth_fields" style="display: none;">
-            <div class="alert alert-info">
-                <strong><i class="fas fa-info-circle"></i> OAuth Setup Required</strong>
-                <p class="mb-2">To use Gmail or Office 365, you need to:</p>
-                <ol class="mb-2">
-                    <li>Create an OAuth app in Google/Microsoft developer console</li>
-                    <li>Enter your Client ID and Client Secret below</li>
-                    <li>Save the account</li>
-                    <li>Click "Authorize" to grant access</li>
-                </ol>
-            </div>
-
-            <div class="form-group">
-                <label for="oauth_client_id">OAuth Client ID <span class="text-danger">*</span></label>
-                <input id="oauth_client_id" class="form-control" name="oauth_client_id" value="{{ account.oauth_client_id if account else '' }}">
-                <small class="text-muted">From your Google/Microsoft OAuth app</small>
-            </div>
-
-            <div class="form-group">
-                <label for="oauth_client_secret">OAuth Client Secret <span class="text-danger">*</span></label>
-                <input id="oauth_client_secret" class="form-control" name="oauth_client_secret" type="password" value="{{ account.oauth_client_secret if account else '' }}">
-                <small class="text-muted">Keep this secret secure</small>
-            </div>
-
-            {% if account and account.oauth_client_id %}
-            <div class="alert alert-success">
-                {% if account.oauth_refresh_token %}
-                    <i class="fas fa-check-circle"></i> OAuth authorized
-                    {% if account.oauth_token_expiry %}
-                        <br><small>Token expires: {{ account.oauth_token_expiry.strftime('%Y-%m-%d %H:%M UTC') }}</small>
-                    {% endif %}
-                {% else %}
-                    <i class="fas fa-exclamation-triangle"></i> OAuth not yet authorized
-                {% endif %}
-            </div>
-
-            {% if account.account_type == 'gmail' %}
-                <a href="/oauth/gmail/start/{{ account.id }}" class="btn btn-danger mb-3">
-                    <i class="fab fa-google"></i> Authorize Gmail
-                </a>
-            {% elif account.account_type == 'o365' %}
-                <a href="/oauth/o365/start/{{ account.id }}" class="btn btn-primary mb-3">
-                    <i class="fab fa-microsoft"></i> Authorize Office 365
-                </a>
-            {% endif %}
-            {% endif %}
-        </div>
-
-        <!-- Common fields -->
-        <div class="form-group">
-            <label for="poll_interval_common">Poll Interval (seconds)</label>
-            <input id="poll_interval_common" class="form-control" name="poll_interval_seconds" type="number" value="{{ account.poll_interval_seconds if account else '300' }}">
-        </div>
-
-        <div class="form-checkboxes">
-            <div class="form-group checkbox-group">
-                <input type="checkbox" id="delete_after" name="delete_after_processing" {% if account and account.delete_after_processing %}checked{% endif %}>
-                <label for="delete_after">Delete Email After Processed</label>
-                <small class="text-muted d-block">Gmail: moves to Trash | Office 365: moves to Deleted Items | IMAP: moves to Trash (or marks deleted)</small>
-            </div>
-
-            <div class="form-group checkbox-group" id="expunge_deleted_group" style="display: none;">
-                <input type="checkbox" id="expunge_deleted" name="expunge_deleted" {% if account and account.expunge_deleted %}checked{% endif %}>
-                <label for="expunge_deleted">Permanently Expunge Deleted (IMAP only)</label>
-                <small class="text-muted d-block">Warning: Permanently removes deleted emails from server - cannot be recovered</small>
-            </div>
-
-            <div class="form-group checkbox-group">
-                <input type="checkbox" id="enabled" name="enabled" {% if not account or account.enabled %}checked{% endif %}>
-                <label for="enabled">Enabled</label>
-            </div>
-        </div>
-
-        <div class="form-actions">
-            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save"></i> {{ "Update Account" if account else "Create Account" }}</button>
-            <a href="/fetch_accounts" class="btn btn-secondary">Cancel</a>
-        </div>
-
-    </form>
-</div>
 
 <script>
     function toggleAccountFields() {
