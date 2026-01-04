@@ -70,7 +70,7 @@ def get_last_uid(account_id: int, folder: str) -> int:
     row = query(
         """
         SELECT last_uid
-        FROM imap_state
+        FROM fetch_state
         WHERE account_id = :id AND folder = :folder
         """,
         {"id": account_id, "folder": folder},
@@ -83,7 +83,7 @@ def get_last_uid(account_id: int, folder: str) -> int:
 def set_last_uid(account_id: int, folder: str, uid: int):
     execute(
         """
-        INSERT INTO imap_state (account_id, folder, last_uid)
+        INSERT INTO fetch_state (account_id, folder, last_uid)
         VALUES (:id, :folder, :uid)
         ON CONFLICT (account_id, folder)
         DO UPDATE SET last_uid = EXCLUDED.last_uid
