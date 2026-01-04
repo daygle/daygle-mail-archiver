@@ -98,13 +98,11 @@
                     {% if request.session.username %}
                     <div class="user-menu">
                         <button type="button" class="user-menu-button" id="userMenuButton">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 14px;">
-                                    {{ request.session.username[0]|upper }}
-                                </div>
-                                <span>{{ request.session.username }}</span>
-                                <i class="fas fa-chevron-down" style="font-size: 12px; opacity: 0.6;"></i>
+                            <div class="user-avatar">
+                                {{ request.session.username[0]|upper }}
                             </div>
+                            <span class="user-name">{{ request.session.username }}</span>
+                            <i class="fas fa-chevron-down" style="font-size: 12px; color: var(--text-secondary); transition: transform 0.2s;"></i>
                         </button>
                         <div class="dropdown-menu" id="userMenuDropdown">
                             <a href="/profile" class="dropdown-item">

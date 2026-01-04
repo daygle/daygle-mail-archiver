@@ -1,33 +1,35 @@
 {% extends "base.html" %}
+
+{% block page_title %}Help & Documentation{% endblock %}
+
 {% block content %}
-
-<div style="margin-bottom: 24px;">
-    <h2><i class="fas fa-circle-question" style="margin-right: 8px;"></i>Help & Documentation</h2>
-</div>
-
-<div class="settings-section">
-    <h3>Getting Started</h3>
-    <p class="section-description">Learn how to use Daygle Mail Archiver to fetch, store, and manage your emails.</p>
-
-    <!-- Quick Start -->
-    <div class="card" style="margin-bottom: 24px;">
-        <div class="card-header">
-            <h5 style="margin-bottom: 0;"><i class="fas fa-rocket"></i> Quick Start Guide</h5>
-        </div>
-        <div class="card-body">
-            <ol style="padding-left: 20px;">
-                <li style="margin-bottom: 12px;"><strong>Set up a Fetch Account:</strong> Go to Settings → Fetch Accounts and add a new email account (IMAP, Gmail, or Office 365)</li>
-                <li style="margin-bottom: 12px;"><strong>Enable the account:</strong> Make sure the "Enabled" checkbox is checked</li>
-                <li style="margin-bottom: 12px;"><strong>Start the worker:</strong> The worker will automatically fetch emails based on the poll interval</li>
-                <li style="margin-bottom: 12px;"><strong>View your emails:</strong> Navigate to the Emails page to browse and search archived messages</li>
-            </ol>
+<!-- Quick Start -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-rocket"></i>
+            <span>Quick Start Guide</span>
         </div>
     </div>
+    <div class="card-body">
+        <p>Learn how to use Daygle Mail Archiver to fetch, store, and manage your emails.</p>
+        <ol style="padding-left: 24px;">
+            <li style="margin-bottom: 12px;"><strong>Set up a Fetch Account:</strong> Go to Settings → Fetch Accounts and add a new email account (IMAP, Gmail, or Office 365)</li>
+            <li style="margin-bottom: 12px;"><strong>Enable the account:</strong> Make sure the "Enabled" checkbox is checked</li>
+            <li style="margin-bottom: 12px;"><strong>Start the worker:</strong> The worker will automatically fetch emails based on the poll interval</li>
+            <li style="margin-bottom: 12px;"><strong>View your emails:</strong> Navigate to the Emails page to browse and search archived messages</li>
+        </ol>
+    </div>
+</div>
 
-    <!-- Adding Fetch Accounts -->
-    <div class="card" style="margin-bottom: 24px;">
-        <div class="card-header">
-            <h5 style="margin-bottom: 0;"><i class="fas fa-server"></i> Adding Fetch Accounts</h5>
+<!-- Adding Fetch Accounts -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-server"></i>
+            <span>Adding Fetch Accounts</span>
+        </div>
+    </div>
         </div>
         <div class="card-body">
             <h6>IMAP Accounts</h6>
@@ -68,14 +70,17 @@
                 <li style="margin-bottom: 8px;">Save the account, then click <strong>"Authorize Office 365"</strong></li>
                 <li style="margin-bottom: 8px;">Complete the Microsoft authorization flow</li>
             </ol>
+    </div>
+</div>
+
+<!-- Managing Emails -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-inbox"></i>
+            <span>Managing Emails</span>
         </div>
     </div>
-
-    <!-- Managing Emails -->
-    <div class="card" style="margin-bottom: 24px;">
-        <div class="card-header">
-            <h5 style="margin-bottom: 0;"><i class="fas fa-inbox"></i> Managing Emails</h5>
-        </div>
         <div class="card-body">
             <h6>Viewing Emails</h6>
             <p>Navigate to the <strong>Emails</strong> page to see all archived messages. You can:</p>
@@ -95,14 +100,17 @@
             <div class="alert alert-warning">
                 <i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> Deletions are permanent and cannot be undone!
             </div>
+    </div>
+</div>
+
+<!-- Worker Status -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-heartbeat"></i>
+            <span>Worker Status Monitoring</span>
         </div>
     </div>
-
-    <!-- Worker Status -->
-    <div class="card" style="margin-bottom: 24px;">
-        <div class="card-header">
-            <h5 style="margin-bottom: 0;"><i class="fas fa-heartbeat"></i> Worker Status Monitoring</h5>
-        </div>
         <div class="card-body">
             <p>The <strong>Worker Status</strong> page shows the health of your email fetch workers:</p>
             <ul style="padding-left: 24px; margin-bottom: 16px;">
@@ -112,14 +120,17 @@
                 <li style="margin-bottom: 8px;"><strong>Recent Errors:</strong> Any errors encountered during fetching</li>
             </ul>
             <p class="mb-0">If the worker status is red, check that the worker process is running and review the error logs.</p>
+    </div>
+</div>
+
+<!-- Settings -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-sliders"></i>
+            <span>Global Settings</span>
         </div>
     </div>
-
-    <!-- Settings -->
-    <div class="card" style="margin-bottom: 24px;">
-        <div class="card-header">
-            <h5 style="margin-bottom: 0;"><i class="fas fa-sliders"></i> Global Settings</h5>
-        </div>
         <div class="card-body">
             <h6>Retention Policy</h6>
             <p>Configure how long emails are kept before automatic deletion:</p>
@@ -134,14 +145,17 @@
 
             <h6 class="mt-3">Page Size & Date Format</h6>
             <p>Control how many items are displayed per page in email listings and configure your preferred date/time format.</p>
+    </div>
+</div>
+
+<!-- Dashboard Analytics -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header" style="background: var(--success); color: white;">
+        <div class="card-title" style="color: white;">
+            <i class="fas fa-chart-line"></i>
+            <span>Dashboard & Analytics</span>
         </div>
     </div>
-
-    <!-- Dashboard Analytics -->
-    <div class="card" style="margin-bottom: 24px;">
-        <div class="card-header" style="background: var(--success); color: white;">
-            <h5 style="margin-bottom: 0;"><i class="fas fa-chart-line"></i> Dashboard & Analytics</h5>
-        </div>
         <div class="card-body">
             <p>The Dashboard provides comprehensive statistics about your email archive:</p>
             <ul style="padding-left: 24px; margin-bottom: 16px;">
@@ -152,14 +166,17 @@
                 <li style="margin-bottom: 8px;"><strong>Storage Metrics:</strong> Database size and total email counts</li>
             </ul>
             <p class="mb-0">All charts are interactive and update in real-time based on your archive data.</p>
+    </div>
+</div>
+
+<!-- Troubleshooting -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header" style="background: var(--warning); color: white;">
+        <div class="card-title" style="color: white;">
+            <i class="fas fa-wrench"></i>
+            <span>Troubleshooting</span>
         </div>
     </div>
-
-    <!-- Troubleshooting -->
-    <div class="card" style="margin-bottom: 24px;">
-        <div class="card-header" style="background: var(--warning); color: white;">
-            <h5 style="margin-bottom: 0;"><i class="fas fa-wrench"></i> Troubleshooting</h5>
-        </div>
         <div class="card-body">
             <h6>Connection Issues</h6>
             <ul style="padding-left: 24px; margin-bottom: 16px;">
@@ -191,14 +208,17 @@
                 <li style="margin-bottom: 8px;">Enable the "Delete after processing" option for accounts that don't need server-side storage</li>
                 <li style="margin-bottom: 8px;">Consider implementing retention policies to limit database size</li>
             </ul>
+    </div>
+</div>
+
+<!-- Email Deletion Behavior -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-trash-alt"></i>
+            <span>Email Deletion Behavior</span>
         </div>
     </div>
-
-    <!-- Email Deletion Behavior -->
-    <div class="card" style="margin-bottom: 24px;">
-        <div class="card-header">
-            <h5 style="margin-bottom: 0;"><i class="fas fa-trash-alt"></i> Email Deletion Behavior</h5>
-        </div>
         <div class="card-body">
             <p>When <strong>"Delete Email After Processed"</strong> is enabled on a fetch account, emails are removed from the mail server after being successfully archived. The behavior differs by account type:</p>
             
@@ -267,23 +287,24 @@
             <div class="alert alert-danger">
                 <i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> The "Permanently Expunge Deleted" option for IMAP accounts irreversibly removes messages from the server. Use with extreme caution!
             </div>
-        </div>
-    </div>
-
-    <!-- Additional Resources -->
-    <div class="card" style="margin-bottom: 24px;">
-        <div class="card-header" style="background: var(--info); color: white;">
-            <h5 style="margin-bottom: 0;"><i class="fas fa-book"></i> Additional Resources</h5>
-        </div>
-        <div class="card-body">
-            <ul style="padding-left: 24px; margin-bottom: 0;">
-                <li style="margin-bottom: 8px;"><strong>GitHub Repository:</strong> View source code and report issues</li>
-                <li style="margin-bottom: 8px;"><strong>Documentation:</strong> Check the README.md for technical details</li>
-                <li style="margin-bottom: 8px;"><strong>Support:</strong> Contact the administrator or check the logs for detailed error information</li>
-                <li style="margin-bottom: 8px;"><strong>Donate:</strong> Support development via the <a href="/donate">Donate</a> page</li>
-            </ul>
-        </div>
     </div>
 </div>
 
+<!-- Additional Resources -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header" style="background: var(--info); color: white;">
+        <div class="card-title" style="color: white;">
+            <i class="fas fa-book"></i>
+            <span>Additional Resources</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <ul style="padding-left: 24px; margin-bottom: 0;">
+            <li style="margin-bottom: 8px;"><strong>GitHub Repository:</strong> View source code and report issues</li>
+            <li style="margin-bottom: 8px;"><strong>Documentation:</strong> Check the README.md for technical details</li>
+            <li style="margin-bottom: 8px;"><strong>Support:</strong> Contact the administrator or check the logs for detailed error information</li>
+            <li style="margin-bottom: 8px;"><strong>Donate:</strong> Support development via the <a href="/donate">Donate</a> page</li>
+        </ul>
+    </div>
+</div>
 {% endblock %}
