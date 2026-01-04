@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="row mb-4">
+    <div class="col">
+        <h2><i class="fas fa-circle-question me-2"></i>Help & Documentation</h2>
+    </div>
+</div>
+
+<div class="settings-section">
+    <h3>Getting Started</h3>
+    <p class="section-description">Learn how to use Daygle Mail Archiver to fetch, store, and manage your emails.</p>
+
+    <!-- Quick Start -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-rocket"></i> Quick Start Guide</h5>
+        </div>
+        <div class="card-body">
+            <ol>
+                <li class="mb-2"><strong>Set up a Fetch Account:</strong> Go to Settings → Fetch Accounts and add a new email account (IMAP, Gmail, or Office 365)</li>
+                <li class="mb-2"><strong>Enable the account:</strong> Make sure the "Enabled" checkbox is checked</li>
+                <li class="mb-2"><strong>Start the worker:</strong> The worker will automatically fetch emails based on the poll interval</li>
+                <li class="mb-2"><strong>View your emails:</strong> Navigate to the Emails page to browse and search archived messages</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Adding Fetch Accounts -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-server"></i> Adding Fetch Accounts</h5>
+        </div>
+        <div class="card-body">
+            <h6>IMAP Accounts</h6>
+            <ol>
+                <li>Go to <strong>Settings → Fetch Accounts</strong></li>
+                <li>Click <strong>"Add New Account"</strong></li>
+                <li>Select <strong>"IMAP"</strong> as the account type</li>
+                <li>Enter your IMAP server details:
+                    <ul>
+                        <li><strong>Host:</strong> IMAP server address (e.g., imap.gmail.com)</li>
+                        <li><strong>Port:</strong> Usually 993 for SSL, 143 for non-SSL</li>
+                        <li><strong>Username:</strong> Your email address</li>
+                        <li><strong>Password:</strong> Your email password or app-specific password</li>
+                        <li><strong>Use SSL:</strong> Check this for secure connections</li>
+                    </ul>
+                </li>
+                <li>Set the poll interval (how often to check for new emails)</li>
+                <li>Click <strong>"Test"</strong> to verify the connection</li>
+                <li>Click <strong>"Create Account"</strong></li>
+            </ol>
+
+            <h6 class="mt-4">Gmail API Accounts</h6>
+            <ol>
+                <li>Create a Google Cloud project and enable Gmail API</li>
+                <li>Create OAuth 2.0 credentials (set redirect URI to: <code>http://your-domain/oauth/gmail/callback</code>)</li>
+                <li>Add a new account and select <strong>"Gmail API"</strong></li>
+                <li>Enter your OAuth Client ID and Client Secret</li>
+                <li>Save the account, then click <strong>"Authorize Gmail"</strong></li>
+                <li>Complete the Google authorization flow</li>
+            </ol>
+
+            <h6 class="mt-4">Office 365 Accounts</h6>
+            <ol>
+                <li>Register an app in Azure AD / Microsoft 365 Admin Center</li>
+                <li>Add Mail.Read permission and create a client secret</li>
+                <li>Add a new account and select <strong>"Office 365 API"</strong></li>
+                <li>Enter your OAuth Client ID and Client Secret</li>
+                <li>Save the account, then click <strong>"Authorize Office 365"</strong></li>
+                <li>Complete the Microsoft authorization flow</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Managing Emails -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-inbox"></i> Managing Emails</h5>
+        </div>
+        <div class="card-body">
+            <h6>Viewing Emails</h6>
+            <p>Navigate to the <strong>Emails</strong> page to see all archived messages. You can:</p>
+            <ul>
+                <li><strong>Search:</strong> Use the search box to find emails by subject, sender, or recipient</li>
+                <li><strong>Filter:</strong> Filter by folder or source account</li>
+                <li><strong>View:</strong> Click "View" to see the full email content</li>
+                <li><strong>Download:</strong> Download the raw email file (.eml format)</li>
+            </ul>
+
+            <h6 class="mt-3">Deleting Emails</h6>
+            <p>You can delete individual emails or perform bulk deletions:</p>
+            <ul>
+                <li>Individual: Click the delete button next to an email</li>
+                <li>Bulk: Use the "Delete All" option with filters to remove multiple emails at once</li>
+            </ul>
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> Deletions are permanent and cannot be undone!
+            </div>
+        </div>
+    </div>
+
+    <!-- Worker Status -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-heartbeat"></i> Worker Status Monitoring</h5>
+        </div>
+        <div class="card-body">
+            <p>The <strong>Worker Status</strong> page shows the health of your email fetch workers:</p>
+            <ul>
+                <li><strong>Status:</strong> Shows if the worker is running (green) or stopped (red)</li>
+                <li><strong>Last Heartbeat:</strong> When the worker last checked in</li>
+                <li><strong>Accounts:</strong> Number of enabled accounts being monitored</li>
+                <li><strong>Recent Errors:</strong> Any errors encountered during fetching</li>
+            </ul>
+            <p class="mb-0">If the worker status is red, check that the worker process is running and review the error logs.</p>
+        </div>
+    </div>
+
+    <!-- Settings -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-sliders"></i> Global Settings</h5>
+        </div>
+        <div class="card-body">
+            <h6>Retention Policy</h6>
+            <p>Configure how long emails are kept before automatic deletion:</p>
+            <ul>
+                <li><strong>Enable Purge:</strong> Turn on automatic deletion</li>
+                <li><strong>Retention Period:</strong> Set how long to keep emails (days, months, or years)</li>
+                <li><strong>Preview:</strong> See which emails would be deleted before enabling</li>
+            </ul>
+
+            <h6 class="mt-3">Page Size</h6>
+            <p>Control how many items are displayed per page in email listings.</p>
+        </div>
+    </div>
+
+    <!-- Troubleshooting -->
+    <div class="card mb-4">
+        <div class="card-header bg-warning">
+            <h5 class="mb-0"><i class="fas fa-wrench"></i> Troubleshooting</h5>
+        </div>
+        <div class="card-body">
+            <h6>Connection Issues</h6>
+            <ul>
+                <li>Use the <strong>Test</strong> button on fetch accounts to verify connectivity</li>
+                <li>For Gmail: Use an app-specific password if using IMAP with 2FA enabled</li>
+                <li>Check firewall settings if connection times out</li>
+                <li>Verify SSL/TLS settings match your email provider's requirements</li>
+            </ul>
+
+            <h6 class="mt-3">OAuth Authorization Failed</h6>
+            <ul>
+                <li>Verify your Client ID and Client Secret are correct</li>
+                <li>Ensure the redirect URI is properly configured in your OAuth app</li>
+                <li>Check that the required API permissions are granted</li>
+                <li>Try re-authorizing from the fetch account edit page</li>
+            </ul>
+
+            <h6 class="mt-3">No Emails Being Fetched</h6>
+            <ul>
+                <li>Check that the account is <strong>Enabled</strong></li>
+                <li>Verify the worker is running (check Worker Status page)</li>
+                <li>Review the Last Error field in the fetch account</li>
+                <li>Check the logs page for detailed error messages</li>
+            </ul>
+
+            <h6 class="mt-3">Performance Issues</h6>
+            <ul>
+                <li>Reduce the poll interval if the server is under heavy load</li>
+                <li>Enable the "Delete after processing" option for accounts that don't need server-side storage</li>
+                <li>Consider implementing retention policies to limit database size</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Additional Resources -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="fas fa-book"></i> Additional Resources</h5>
+        </div>
+        <div class="card-body">
+            <ul class="mb-0">
+                <li><strong>GitHub Repository:</strong> View source code and report issues</li>
+                <li><strong>Documentation:</strong> Check the README.md for technical details</li>
+                <li><strong>Support:</strong> Contact the administrator or check the logs for detailed error information</li>
+                <li><strong>Donate:</strong> Support development via the <a href="/donate">Donate</a> page</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
