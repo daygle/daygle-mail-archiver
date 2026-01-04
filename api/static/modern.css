@@ -185,6 +185,7 @@ input, select, textarea, button {
     white-space: nowrap;
     opacity: 1;
     transition: opacity var(--transition-fast);
+    color: rgba(255, 255, 255, 0.95);
 }
 
 .sidebar.collapsed .brand-text {
