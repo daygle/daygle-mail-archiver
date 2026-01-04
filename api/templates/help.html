@@ -3,7 +3,7 @@
 {% block page_title %}Help & Documentation{% endblock %}
 
 {% block content %}
-<!-- Quick Start -->
+<!-- Quick Start Guide -->
 <div class="card" style="margin-bottom: 24px;">
     <div class="card-header">
         <div class="card-title">
@@ -12,64 +12,73 @@
         </div>
     </div>
     <div class="card-body">
-        <p>Learn how to use Daygle Mail Archiver to fetch, store, and manage your emails.</p>
-        <ol style="padding-left: 24px;">
+        <p style="margin-bottom: 16px;">Learn how to use Daygle Mail Archiver to fetch, store, and manage your emails.</p>
+        <ol style="padding-left: 24px; margin-bottom: 0;">
             <li style="margin-bottom: 12px;"><strong>Set up a Fetch Account:</strong> Go to Settings → Fetch Accounts and add a new email account (IMAP, Gmail, or Office 365)</li>
             <li style="margin-bottom: 12px;"><strong>Enable the account:</strong> Make sure the "Enabled" checkbox is checked</li>
             <li style="margin-bottom: 12px;"><strong>Start the worker:</strong> The worker will automatically fetch emails based on the poll interval</li>
-            <li style="margin-bottom: 12px;"><strong>View your emails:</strong> Navigate to the Emails page to browse and search archived messages</li>
+            <li style="margin-bottom: 0;"><strong>View your emails:</strong> Navigate to the Emails page to browse and search archived messages</li>
         </ol>
     </div>
 </div>
 
-<!-- Adding Fetch Accounts -->
+<!-- Adding IMAP Accounts -->
 <div class="card" style="margin-bottom: 24px;">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-server"></i>
-            <span>Adding Fetch Accounts</span>
+            <span>Adding IMAP Accounts</span>
         </div>
     </div>
+    <div class="card-body">
+        <ol style="padding-left: 24px; margin-bottom: 0;">
+            <li style="margin-bottom: 12px;">Go to <strong>Settings → Fetch Accounts</strong> and click <strong>"Add New Account"</strong></li>
+            <li style="margin-bottom: 12px;">Select <strong>"IMAP"</strong> as the account type</li>
+            <li style="margin-bottom: 12px;">Enter your IMAP server details (host, port, username, password, SSL)</li>
+            <li style="margin-bottom: 12px;">Set the poll interval (how often to check for new emails)</li>
+            <li style="margin-bottom: 12px;">Click <strong>"Test"</strong> to verify the connection</li>
+            <li style="margin-bottom: 0;">Click <strong>"Create Account"</strong> to save</li>
+        </ol>
+    </div>
+</div>
+
+<!-- Adding Gmail API Accounts -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fab fa-google"></i>
+            <span>Adding Gmail API Accounts</span>
         </div>
-        <div class="card-body">
-            <h6>IMAP Accounts</h6>
-            <ol style="padding-left: 20px;">
-                <li>Go to <strong>Settings → Fetch Accounts</strong></li>
-                <li>Click <strong>"Add New Account"</strong></li>
-                <li>Select <strong>"IMAP"</strong> as the account type</li>
-                <li>Enter your IMAP server details:
-                    <ul style="padding-left: 20px; margin-top: 8px;">
-                        <li><strong>Host:</strong> IMAP server address (e.g., imap.gmail.com)</li>
-                        <li><strong>Port:</strong> Usually 993 for SSL, 143 for non-SSL</li>
-                        <li><strong>Username:</strong> Your email address</li>
-                        <li><strong>Password:</strong> Your email password or app-specific password</li>
-                        <li><strong>Use SSL:</strong> Check this for secure connections</li>
-                    </ul>
-                </li>
-                <li>Set the poll interval (how often to check for new emails)</li>
-                <li>Click <strong>"Test"</strong> to verify the connection</li>
-                <li>Click <strong>"Create Account"</strong></li>
-            </ol>
+    </div>
+    <div class="card-body">
+        <ol style="padding-left: 24px; margin-bottom: 0;">
+            <li style="margin-bottom: 12px;">Create a Google Cloud project and enable Gmail API</li>
+            <li style="margin-bottom: 12px;">Create OAuth 2.0 credentials with redirect URI: <code>http://your-domain/oauth/gmail/callback</code></li>
+            <li style="margin-bottom: 12px;">Add a new account and select <strong>"Gmail API"</strong></li>
+            <li style="margin-bottom: 12px;">Enter your OAuth Client ID and Client Secret</li>
+            <li style="margin-bottom: 12px;">Save the account, then click <strong>"Authorize Gmail"</strong></li>
+            <li style="margin-bottom: 0;">Complete the Google authorization flow</li>
+        </ol>
+    </div>
+</div>
 
-            <h6 style="margin-top: 16px;">Gmail API Accounts</h6>
-            <ol style="padding-left: 24px;">
-                <li style="margin-bottom: 8px;">Create a Google Cloud project and enable Gmail API</li>
-                <li style="margin-bottom: 8px;">Create OAuth 2.0 credentials (set redirect URI to: <code>http://your-domain/oauth/gmail/callback</code>)</li>
-                <li style="margin-bottom: 8px;">Add a new account and select <strong>"Gmail API"</strong></li>
-                <li style="margin-bottom: 8px;">Enter your OAuth Client ID and Client Secret</li>
-                <li style="margin-bottom: 8px;">Save the account, then click <strong>"Authorize Gmail"</strong></li>
-                <li style="margin-bottom: 8px;">Complete the Google authorization flow</li>
-            </ol>
-
-            <h6 style="margin-top: 16px;">Office 365 Accounts</h6>
-            <ol style="padding-left: 24px;">
-                <li style="margin-bottom: 8px;">Register an app in Azure AD / Microsoft 365 Admin Center</li>
-                <li style="margin-bottom: 8px;">Add Mail.Read permission and create a client secret</li>
-                <li style="margin-bottom: 8px;">Add a new account and select <strong>"Office 365 API"</strong></li>
-                <li style="margin-bottom: 8px;">Enter your OAuth Client ID and Client Secret</li>
-                <li style="margin-bottom: 8px;">Save the account, then click <strong>"Authorize Office 365"</strong></li>
-                <li style="margin-bottom: 8px;">Complete the Microsoft authorization flow</li>
-            </ol>
+<!-- Adding Office 365 Accounts -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fab fa-microsoft"></i>
+            <span>Adding Office 365 Accounts</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <ol style="padding-left: 24px; margin-bottom: 0;">
+            <li style="margin-bottom: 12px;">Register an app in Azure AD / Microsoft 365 Admin Center</li>
+            <li style="margin-bottom: 12px;">Add Mail.Read permission and create a client secret</li>
+            <li style="margin-bottom: 12px;">Add a new account and select <strong>"Office 365 API"</strong></li>
+            <li style="margin-bottom: 12px;">Enter your OAuth Client ID and Client Secret</li>
+            <li style="margin-bottom: 12px;">Save the account, then click <strong>"Authorize Office 365"</strong></li>
+            <li style="margin-bottom: 0;">Complete the Microsoft authorization flow</li>
+        </ol>
     </div>
 </div>
 
@@ -81,25 +90,12 @@
             <span>Managing Emails</span>
         </div>
     </div>
-        <div class="card-body">
-            <h6>Viewing Emails</h6>
-            <p>Navigate to the <strong>Emails</strong> page to see all archived messages. You can:</p>
-            <ul style="padding-left: 24px; margin-bottom: 16px;">
-                <li style="margin-bottom: 8px;"><strong>Search:</strong> Use the search box to find emails by subject, sender, or recipient</li>
-                <li style="margin-bottom: 8px;"><strong>Filter:</strong> Filter by folder or source account</li>
-                <li style="margin-bottom: 8px;"><strong>View:</strong> Click "View" to see the full email content</li>
-                <li style="margin-bottom: 8px;"><strong>Download:</strong> Download the raw email file (.eml format)</li>
-            </ul>
-
-            <h6 style="margin-top: 16px;">Deleting Emails</h6>
-            <p>You can delete individual emails or perform bulk deletions:</p>
-            <ul style="padding-left: 24px; margin-bottom: 16px;">
-                <li style="margin-bottom: 8px;">Individual: Click the delete button next to an email</li>
-                <li style="margin-bottom: 8px;">Bulk: Use the "Delete All" option with filters to remove multiple emails at once</li>
-            </ul>
-            <div class="alert alert-warning">
-                <i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> Deletions are permanent and cannot be undone!
-            </div>
+    <div class="card-body">
+        <p style="margin-bottom: 16px;"><strong>Viewing Emails:</strong> Navigate to the Emails page to see all archived messages. You can search, filter by folder, view full content, and download raw .eml files.</p>
+        <p style="margin-bottom: 16px;"><strong>Deleting Emails:</strong> Click the delete button next to an email for individual deletion, or use "Delete All" with filters for bulk operations.</p>
+        <div class="alert alert-warning" style="margin-bottom: 0;">
+            <i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> Deletions are permanent and cannot be undone!
+        </div>
     </div>
 </div>
 
@@ -111,19 +107,13 @@
             <span>Worker Status Monitoring</span>
         </div>
     </div>
-        <div class="card-body">
-            <p>The <strong>Worker Status</strong> page shows the health of your email fetch workers:</p>
-            <ul style="padding-left: 24px; margin-bottom: 16px;">
-                <li style="margin-bottom: 8px;"><strong>Status:</strong> Shows if the worker is running (green) or stopped (red)</li>
-                <li style="margin-bottom: 8px;"><strong>Last Heartbeat:</strong> When the worker last checked in</li>
-                <li style="margin-bottom: 8px;"><strong>Accounts:</strong> Number of enabled accounts being monitored</li>
-                <li style="margin-bottom: 8px;"><strong>Recent Errors:</strong> Any errors encountered during fetching</li>
-            </ul>
-            <p class="mb-0">If the worker status is red, check that the worker process is running and review the error logs.</p>
+    <div class="card-body">
+        <p style="margin-bottom: 16px;">The Worker Status page shows the health of your email fetch workers, including status (green=running, red=stopped), last heartbeat, number of accounts being monitored, and recent errors.</p>
+        <p style="margin-bottom: 0;">If the worker status is red, check that the worker process is running and review the error logs.</p>
     </div>
 </div>
 
-<!-- Settings -->
+<!-- Global Settings -->
 <div class="card" style="margin-bottom: 24px;">
     <div class="card-header">
         <div class="card-title">
@@ -131,83 +121,42 @@
             <span>Global Settings</span>
         </div>
     </div>
-        <div class="card-body">
-            <h6>Retention Policy</h6>
-            <p>Configure how long emails are kept before automatic deletion:</p>
-            <ul style="padding-left: 24px; margin-bottom: 16px;">
-                <li style="margin-bottom: 8px;"><strong>Enable Purge:</strong> Turn on automatic deletion of old emails</li>
-                <li style="margin-bottom: 8px;"><strong>Retention Period:</strong> Set how long to keep emails (days, months, or years)</li>
-                <li style="margin-bottom: 8px;"><strong>Delete from Mail Server:</strong> When enabled, retention cleanup will also attempt to remove emails from the original mail servers (IMAP only)</li>
-            </ul>
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i> <strong>Note:</strong> Retention cleanup runs automatically during worker cycles. All deletions are tracked and visible on the Dashboard.
-            </div>
-
-            <h6 class="mt-3">Page Size & Date Format</h6>
-            <p>Control how many items are displayed per page in email listings and configure your preferred date/time format.</p>
+    <div class="card-body">
+        <p style="margin-bottom: 16px;"><strong>Retention Policy:</strong> Configure automatic deletion of old emails. Set retention period (days, months, years) and optionally delete from mail servers (IMAP only).</p>
+        <p style="margin-bottom: 16px;"><strong>Page Size & Date Format:</strong> Control items per page in email listings and configure your preferred date/time display format.</p>
+        <div class="alert alert-info" style="margin-bottom: 0;">
+            <i class="fas fa-info-circle"></i> Retention cleanup runs automatically during worker cycles. All deletions are tracked on the Dashboard.
+        </div>
     </div>
 </div>
 
 <!-- Dashboard Analytics -->
 <div class="card" style="margin-bottom: 24px;">
-    <div class="card-header" style="background: var(--success); color: white;">
-        <div class="card-title" style="color: white;">
+    <div class="card-header">
+        <div class="card-title">
             <i class="fas fa-chart-line"></i>
             <span>Dashboard & Analytics</span>
         </div>
     </div>
-        <div class="card-body">
-            <p>The Dashboard provides comprehensive statistics about your email archive:</p>
-            <ul style="padding-left: 24px; margin-bottom: 16px;">
-                <li style="margin-bottom: 8px;"><strong>Email Volume:</strong> View email trends over the last 30 days</li>
-                <li style="margin-bottom: 8px;"><strong>Top Senders/Receivers:</strong> See who sends and receives the most emails</li>
-                <li style="margin-bottom: 8px;"><strong>Deletion Statistics:</strong> Track manual deletions vs automated retention cleanup</li>
-                <li style="margin-bottom: 8px;"><strong>Mail Server Deletions:</strong> Monitor how many emails were deleted from original servers</li>
-                <li style="margin-bottom: 8px;"><strong>Storage Metrics:</strong> Database size and total email counts</li>
-            </ul>
-            <p class="mb-0">All charts are interactive and update in real-time based on your archive data.</p>
+    <div class="card-body">
+        <p style="margin-bottom: 16px;">The Dashboard provides comprehensive statistics about your email archive including email volume trends, top senders/receivers, deletion statistics, mail server deletions, and storage metrics.</p>
+        <p style="margin-bottom: 0;">All charts are interactive and update in real-time based on your archive data.</p>
     </div>
 </div>
 
 <!-- Troubleshooting -->
 <div class="card" style="margin-bottom: 24px;">
-    <div class="card-header" style="background: var(--warning); color: white;">
-        <div class="card-title" style="color: white;">
+    <div class="card-header">
+        <div class="card-title">
             <i class="fas fa-wrench"></i>
             <span>Troubleshooting</span>
         </div>
     </div>
-        <div class="card-body">
-            <h6>Connection Issues</h6>
-            <ul style="padding-left: 24px; margin-bottom: 16px;">
-                <li style="margin-bottom: 8px;">Use the <strong>Test</strong> button on fetch accounts to verify connectivity</li>
-                <li style="margin-bottom: 8px;">For Gmail: Use an app-specific password if using IMAP with 2FA enabled</li>
-                <li style="margin-bottom: 8px;">Check firewall settings if connection times out</li>
-                <li style="margin-bottom: 8px;">Verify SSL/TLS settings match your email provider's requirements</li>
-            </ul>
-
-            <h6 style="margin-top: 16px;">OAuth Authorization Failed</h6>
-            <ul style="padding-left: 24px; margin-bottom: 16px;">
-                <li style="margin-bottom: 8px;">Verify your Client ID and Client Secret are correct</li>
-                <li style="margin-bottom: 8px;">Ensure the redirect URI is properly configured in your OAuth app</li>
-                <li style="margin-bottom: 8px;">Check that the required API permissions are granted</li>
-                <li style="margin-bottom: 8px;">Try re-authorizing from the fetch account edit page</li>
-            </ul>
-
-            <h6 style="margin-top: 16px;">No Emails Being Fetched</h6>
-            <ul style="padding-left: 24px; margin-bottom: 16px;">
-                <li style="margin-bottom: 8px;">Check that the account is <strong>Enabled</strong></li>
-                <li style="margin-bottom: 8px;">Verify the worker is running (check Worker Status page)</li>
-                <li style="margin-bottom: 8px;">Review the Last Error field in the fetch account</li>
-                <li style="margin-bottom: 8px;">Check the logs page for detailed error messages</li>
-            </ul>
-
-            <h6 style="margin-top: 16px;">Performance Issues</h6>
-            <ul style="padding-left: 24px; margin-bottom: 16px;">
-                <li style="margin-bottom: 8px;">Reduce the poll interval if the server is under heavy load</li>
-                <li style="margin-bottom: 8px;">Enable the "Delete after processing" option for accounts that don't need server-side storage</li>
-                <li style="margin-bottom: 8px;">Consider implementing retention policies to limit database size</li>
-            </ul>
+    <div class="card-body">
+        <p style="margin-bottom: 16px;"><strong>Connection Issues:</strong> Use the Test button on fetch accounts, check firewall settings, verify SSL/TLS settings, and use app-specific passwords for Gmail with 2FA.</p>
+        <p style="margin-bottom: 16px;"><strong>OAuth Authorization Failed:</strong> Verify Client ID and Secret, ensure redirect URI is properly configured, check API permissions, and try re-authorizing.</p>
+        <p style="margin-bottom: 16px;"><strong>No Emails Being Fetched:</strong> Check that the account is Enabled, verify the worker is running, and review error messages in the logs.</p>
+        <p style="margin-bottom: 0;"><strong>Performance Issues:</strong> Reduce poll interval, enable "Delete after processing" option, or implement retention policies to limit database size.</p>
     </div>
 </div>
 
@@ -219,81 +168,23 @@
             <span>Email Deletion Behavior</span>
         </div>
     </div>
-        <div class="card-body">
-            <p>When <strong>"Delete Email After Processed"</strong> is enabled on a fetch account, emails are removed from the mail server after being successfully archived. The behavior differs by account type:</p>
-            
-            <div class="table-responsive">
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Account Type</th>
-                            <th>Delete After Processing</th>
-                            <th>Expunge Deleted (IMAP only)</th>
-                            <th>Result</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td rowspan="3"><strong>IMAP</strong></td>
-                            <td>❌ Off</td>
-                            <td>N/A</td>
-                            <td>Nothing happens - emails remain on server</td>
-                        </tr>
-                        <tr>
-                            <td>✅ On</td>
-                            <td>❌ Off</td>
-                            <td>Marks as deleted (recoverable via mail client)</td>
-                        </tr>
-                        <tr>
-                            <td>✅ On</td>
-                            <td>✅ On</td>
-                            <td><span class="text-danger">Permanently expunges (NOT recoverable)</span></td>
-                        </tr>
-                        <tr>
-                            <td rowspan="2"><strong>Gmail</strong></td>
-                            <td>❌ Off</td>
-                            <td>N/A</td>
-                            <td>Nothing happens - emails remain in inbox</td>
-                        </tr>
-                        <tr>
-                            <td>✅ On</td>
-                            <td>N/A</td>
-                            <td>Moves to Trash (30-day recovery period)</td>
-                        </tr>
-                        <tr>
-                            <td rowspan="2"><strong>Office 365</strong></td>
-                            <td>❌ Off</td>
-                            <td>N/A</td>
-                            <td>Nothing happens - emails remain in inbox</td>
-                        </tr>
-                        <tr>
-                            <td>✅ On</td>
-                            <td>N/A</td>
-                            <td>Moves to Deleted Items (recoverable)</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="alert alert-info" style="margin-top: 16px;">
-                <h6><i class="fas fa-info-circle"></i> Important Notes:</h6>
-                <ul style="padding-left: 24px; margin-bottom: 0;">
-                    <li style="margin-bottom: 8px;"><strong>IMAP:</strong> Messages marked with <code>\Deleted</code> flag appear deleted in most mail clients but remain on the server until expunged</li>
-                    <li style="margin-bottom: 8px;"><strong>Gmail:</strong> Messages moved to Trash are automatically deleted after 30 days</li>
-                    <li style="margin-bottom: 8px;"><strong>Office 365:</strong> Messages in Deleted Items can be recovered until manually emptied or auto-deleted</li>
-                </ul>
-            </div>
-
-            <div class="alert alert-danger">
-                <i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> The "Permanently Expunge Deleted" option for IMAP accounts irreversibly removes messages from the server. Use with extreme caution!
-            </div>
+    <div class="card-body">
+        <p style="margin-bottom: 16px;">When "Delete Email After Processed" is enabled, emails are removed from the mail server after being archived:</p>
+        <ul style="padding-left: 24px; margin-bottom: 16px;">
+            <li style="margin-bottom: 8px;"><strong>IMAP:</strong> Can mark as deleted (recoverable) or permanently expunge (not recoverable)</li>
+            <li style="margin-bottom: 8px;"><strong>Gmail:</strong> Moves to Trash with 30-day recovery period</li>
+            <li style="margin-bottom: 8px;"><strong>Office 365:</strong> Moves to Deleted Items (recoverable until emptied)</li>
+        </ul>
+        <div class="alert alert-danger" style="margin-bottom: 0;">
+            <i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> The "Permanently Expunge Deleted" option for IMAP accounts irreversibly removes messages from the server. Use with extreme caution!
+        </div>
     </div>
 </div>
 
 <!-- Additional Resources -->
-<div class="card" style="margin-bottom: 24px;">
-    <div class="card-header" style="background: var(--info); color: white;">
-        <div class="card-title" style="color: white;">
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
             <i class="fas fa-book"></i>
             <span>Additional Resources</span>
         </div>

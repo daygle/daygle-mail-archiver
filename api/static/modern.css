@@ -770,6 +770,16 @@ textarea.form-control {
     color: var(--success);
 }
 
+.badge-primary {
+    background: rgba(139, 92, 246, 0.1);
+    color: #8b5cf6;
+}
+
+.badge-secondary {
+    background: rgba(107, 114, 128, 0.1);
+    color: #6b7280;
+}
+
 .badge-warning {
     background: rgba(245, 158, 11, 0.1);
     color: var(--warning);
@@ -868,7 +878,7 @@ textarea.form-control {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%);
+    background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
     color: white;
     display: flex;
     align-items: center;
@@ -876,6 +886,7 @@ textarea.form-control {
     font-weight: 600;
     font-size: 0.875rem;
     flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
 }
 
 .user-name {
