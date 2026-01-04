@@ -106,8 +106,8 @@
                             <th>Email</th>
                             <th>Role</th>
                             <th>Status</th>
-                            <th>Last Login</th>
                             <th>Created</th>
+                            <th>Last Login</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -137,6 +137,7 @@
                                     <span class="badge badge-danger"><i class="fas fa-times"></i> Disabled</span>
                                 {% endif %}
                             </td>
+                            <td><small>{{ user.created_at | format_user_datetime(request.session.user_id) }}</small></td>
                             <td>
                                 {% if user.last_login %}
                                     <small>{{ user.last_login | format_user_datetime(request.session.user_id) }}</small>
@@ -144,7 +145,6 @@
                                     <span style="color: var(--text-secondary);">Never</span>
                                 {% endif %}
                             </td>
-                            <td><small>{{ user.created_at | format_user_datetime(request.session.user_id) }}</small></td>
                             <td>
                                 <div style="display: flex; gap: 8px;">
                                     <button type="button" class="btn btn-secondary btn-sm" title="Edit" onclick="editUser({{ user.id }})">
