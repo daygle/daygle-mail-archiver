@@ -19,7 +19,7 @@
                     <img src="/static/daygle-light.png" alt="Daygle" class="logo-dark">
                     <span class="brand-text">Mail Archiver</span>
                 </a>
-                <button type="button" class="sidebar-toggle" id="sidebarToggle" onclick="window.toggleSidebar(); return false;">
+                <button type="button" class="sidebar-toggle" id="sidebarToggle">
                     <i class="fas fa-bars"></i>
                 </button>
             </div>
@@ -163,23 +163,33 @@
 
     <!-- JavaScript -->
     <script>
-        // Define toggle function globally so inline onclick can access it
-        window.toggleSidebar = function() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('collapsed');
-            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed') ? 'true' : 'false');
-            console.log('Sidebar toggled, collapsed:', sidebar.classList.contains('collapsed'));
-        };
-        
         // Wait for DOM to be fully loaded
         document.addEventListener('DOMContentLoaded', function() {
             const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
             const sidebarMobileToggle = document.getElementById('sidebarMobileToggle');
             
             // Restore sidebar state
             const savedState = localStorage.getItem('sidebarCollapsed');
             if (savedState === 'true') {
                 sidebar.classList.add('collapsed');
+            }
+
+            // Toggle sidebar on button click - using capture phase and stopImmediatePropagation
+            if (sidebarToggle) {
+                // Remove any existing listeners first
+                const newButton = sidebarToggle.cloneNode(true);
+                sidebarToggle.parentNode.replaceChild(newButton, sidebarToggle);
+                
+                newButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    
+                    sidebar.classList.toggle('collapsed');
+                    localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed') ? 'true' : 'false');
+                    console.log('Sidebar toggled, collapsed:', sidebar.classList.contains('collapsed'));
+                }, true);
             }
 
             // Mobile toggle
@@ -194,8 +204,8 @@
             // Close sidebar on mobile when clicking outside
             document.addEventListener('click', function(e) {
                 if (window.innerWidth <= 768) {
-                    const toggleButton = sidebarMobileToggle;
-                    if (sidebar && toggleButton && !sidebar.contains(e.target) && !toggleButton.contains(e.target)) {
+                    const toggleBtn = document.getElementById('sidebarMobileToggle');
+                    if (sidebar && toggleBtn && !sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
                         sidebar.classList.remove('mobile-open');
                     }
                 }
