@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="row mb-4">
+    <div class="col">
+        <h2><i class="fas fa-heart me-2"></i>Support This Project</h2>
+    </div>
+</div>
+
+<div class="settings-section">
+    <h3>Make a Donation</h3>
+    <p class="section-description">
+        Daygle Mail Archiver is free and open source. If you find it useful, please consider supporting its development.
+    </p>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fab fa-paypal"></i> Donate via PayPal</h5>
+                    <p class="card-text">
+                        Your donation helps maintain and improve this project. Every contribution is greatly appreciated!
+                    </p>
+                    
+                    <form action="https://www.paypal.com/donate" method="post" target="_blank">
+                        <input type="hidden" name="business" value="daygle@daygle.net" />
+                        <input type="hidden" name="no_recurring" value="0" />
+                        <input type="hidden" name="item_name" value="Daygle Mail Archiver Development" />
+                        <input type="hidden" name="currency_code" value="USD" />
+                        
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Donation Amount (USD)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="amount" name="amount" min="1" step="0.01" placeholder="10.00">
+                            </div>
+                            <small class="text-muted">Or choose any amount you wish</small>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fab fa-paypal"></i> Donate with PayPal
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="alert alert-info">
+                <h6><i class="fas fa-info-circle"></i> Other Ways to Support</h6>
+                <ul class="mb-0">
+                    <li>Star the project on GitHub</li>
+                    <li>Report bugs and suggest features</li>
+                    <li>Contribute code or documentation</li>
+                    <li>Share the project with others</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6 class="card-title">Why Donate?</h6>
+                    <ul class="small">
+                        <li>Supports ongoing development</li>
+                        <li>Helps with server costs</li>
+                        <li>Enables new features</li>
+                        <li>Maintains documentation</li>
+                        <li>Provides bug fixes</li>
+                    </ul>
+                    
+                    <hr>
+                    
+                    <p class="small mb-0">
+                        <strong>Thank you!</strong><br>
+                        Your support makes this project possible.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
