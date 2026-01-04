@@ -21,6 +21,9 @@ This project is built with explicit, maintainable configuration, modular backend
 - **OAuth2 Integration**: Secure authentication for Gmail and Office 365
 - **Worker Status Monitoring**: Real-time health monitoring of fetch workers
 - **Dashboard Analytics**: Visual charts showing email statistics and trends
+- **Test Connection**: Test IMAP, Gmail, and Office 365 connections directly from the UI
+- **Help Documentation**: Built-in help page with comprehensive usage instructions
+- **Donation Support**: Integrated PayPal donation page to support development
 - **Audit Logging**: Complete audit trail of all system actions
 
 ---
@@ -112,33 +115,9 @@ http://localhost:8000/login
 Login:
 
 - Username: `administrator`
-- Password: `administrator`  
+- Password: (empty - you'll be prompted to set a password on first login)
 
----
-
-# Adding IMAP Accounts
-
-1. Go to **IMAP Accounts**  
-2. Click **Add New Account**  
-3. Fill in:
-   - Name  
-   - Host  
-   - Port  
-   - Username  
-   - Password  
-   - SSL / STARTTLS  
-   - Poll interval  
-   - Enabled  
-4. Save  
-
-The worker will:
-
-- decrypt password  
-- connect to IMAP  
-- iterate folders  
-- fetch new messages  
-- compress and store them  
-- update IMAP state  
+After setting your password, you'll be redirected to the Dashboard.  
 
 ---
 
@@ -261,31 +240,34 @@ The worker will now fetch emails automatically using Microsoft Graph API.
 
 Monitor the health and activity of email fetch workers:
 
-1. Navigate to **Settings → Worker Status**
+1. Navigate to **Settings → Worker Status** (from the sidebar menu)
 2. View real-time status for each account:
    - **Health Status**: Healthy, Stale, Error, Pending, or Disabled
    - **Last Heartbeat**: When the worker last checked the account
    - **Last Success**: When emails were last successfully fetched
    - **Last Error**: Any error messages from failed attempts
-3. Use this page to troubleshoot connection issues or OAuth problems
+3. Click the **Test** button on any fetch account to verify connectivity
+4. Use this page to troubleshoot connection issues or OAuth problems
 
 ---
 
 # Browsing Emails
 
-Go to:
-
-```
-/emails
-```
+Click **Emails** in the main navigation menu (sidebar or top menu).
 
 You can:
 
-- search  
-- filter  
-- view message details  
-- view HTML or text body  
-- download `.eml`  
+- **Search**: Full-text search across subjects, senders, and recipients
+- **Filter**: Filter by source account or folder
+- **View**: Click on any email to view the full message details
+- **Download**: Download raw `.eml` files for archival or import into other clients
+- **Delete**: Remove individual emails or perform bulk deletions
+
+## Additional Features
+
+- **Dashboard**: View email statistics, charts, and account status (default page after login)
+- **Help**: Access the built-in help page from the user menu for detailed instructions
+- **Donate**: Support the project via PayPal (link in user menu and sidebar)  
 
 ---
 
