@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
@@ -13,8 +14,9 @@ app = FastAPI()
 # Sessions
 app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET)
 
-# Static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# Static files - use parent directory since we're running from src/
+BASE_DIR = Path(__file__).parent.parent
+app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
 # Routers
 app.include_router(auth.router)

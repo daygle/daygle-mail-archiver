@@ -1,12 +1,10 @@
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import RedirectResponse
-from fastapi.templating import Jinja2Templates
 import bcrypt
 
 from utils.db import query
 from utils.logger import log
-
-templates = Jinja2Templates(directory="templates")
+from . import templates
 
 router = APIRouter()
 
