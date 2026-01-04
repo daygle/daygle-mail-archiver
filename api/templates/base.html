@@ -1,113 +1,256 @@
 <!DOCTYPE html>
-<html>
+<html data-theme="light">
 <head>
     <title>Daygle Mail Archiver</title>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/png" href="/static/daygle.png">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/modern.css">
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
-
-    <nav class="navbar navbar-expand-sm navbar-dark bg-dark fixed-top">
-        <div class="container-fluid">
-            <button type="button" class="btn btn-primary me-2" data-bs-toggle="offcanvas" data-bs-target="#daygle_navigation" aria-controls="daygle_navigation">
-                <i class="fas fa-bars"></i>
-            </button>
-
-            <a class="navbar-brand d-flex align-items-center gap-1" href="/dashboard">
-                <img src="/static/daygle-light.png" alt="daygle.net" style="height:32px; width:auto; margin-right: -4px;">
-                aygle Mail Archiver
-            </a>
-
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar" aria-controls="collapsibleNavbar" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse justify-content-end" id="collapsibleNavbar">
-                <ul class="navbar-nav">
-                    {% if request.session.username %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-user-circle"></i> {{ request.session.username }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            <li><a class="dropdown-item" href="/profile"><i class="fas fa-user me-2"></i>Profile</a></li>
-                            <li><a class="dropdown-item" href="/user_settings"><i class="fas fa-cog me-2"></i>User Settings</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/help"><i class="fas fa-circle-question me-2"></i>Help</a></li>
-                            <li><a class="dropdown-item" href="/donate"><i class="fas fa-heart me-2"></i>Donate</a></li>
-                            <li><a class="dropdown-item" href="/logout"><i class="fas fa-right-from-bracket me-2"></i>Logout</a></li>
-                        </ul>
-                    </li>
-                    {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="/login"><i class="fas fa-right-to-bracket"></i> Login</a>
-                    </li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Off-Canvas Menu -->
-    <div class="offcanvas offcanvas-start bg-dark text-white" tabindex="-1" id="daygle_navigation" aria-labelledby="daygle_navigation_label">
-        <a href="/emails" class="text-decoration-none text-reset">
-            <div class="offcanvas-header d-flex align-items-center">
-                <h1 class="offcanvas-title mb-0 d-flex align-items-center gap-1" id="daygle_navigation_label" style="font-weight: 400;">
-                    <img src="/static/daygle-light.png" alt="daygle.net" style="height:32px; width:auto; margin-right: -4px;">
-                    aygle Mail Archiver
-                </h1>
-                <button type="button" class="btn text-white ms-auto p-0 border-0 bg-transparent" data-bs-dismiss="offcanvas" aria-label="Close">
-                    <i class="fas fa-xmark fa-lg"></i>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="/dashboard" class="sidebar-brand">
+                    <img src="/static/daygle.png" alt="Daygle" class="logo-light">
+                    <img src="/static/daygle-light.png" alt="Daygle" class="logo-dark">
+                    <span class="brand-text">Mail Archiver</span>
+                </a>
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
                 </button>
             </div>
-        </a>
-        <div class="offcanvas-body">
-            <ul class="list-unstyled mb-0">
-                {% if request.session.username %}
-                <li class="mb-3"><a href="/dashboard" class="text-decoration-none text-white d-flex align-items-center py-1"><i class="fas fa-chart-line me-2"></i> Dashboard</a></li>
-                <li class="mb-3"><a href="/emails" class="text-decoration-none text-white d-flex align-items-center py-1"><i class="fas fa-inbox me-2"></i> Emails</a></li>
-                
-                <!-- Settings Menu with Submenu - Only for administrators -->
-                {% if request.session.role == 'administrator' %}
-                <li class="mb-3">
-                    <a class="text-decoration-none text-white d-flex align-items-center py-1 settings-toggle" data-bs-toggle="collapse" href="#settingsSubmenu" role="button" aria-expanded="false" aria-controls="settingsSubmenu" style="cursor: pointer;">
-                        <i class="fas fa-gear me-2"></i> Settings <i class="fas fa-chevron-right ms-auto submenu-chevron"></i>
+
+            {% if request.session.username %}
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <a href="/dashboard" class="nav-link {% if request.url.path == '/dashboard' %}active{% endif %}">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Dashboard</span>
                     </a>
-                    <div class="collapse" id="settingsSubmenu">
-                        <ul class="list-unstyled ps-4 mt-2">
-                            <li class="mb-2"><a href="/fetch_accounts" class="text-decoration-none text-white-50 d-flex align-items-center py-1"><i class="fas fa-server me-2"></i> Fetch Accounts</a></li>
-                            <li class="mb-2"><a href="/worker-status" class="text-decoration-none text-white-50 d-flex align-items-center py-1"><i class="fas fa-heartbeat me-2"></i> Worker Status</a></li>
-                            <li class="mb-2"><a href="/settings" class="text-decoration-none text-white-50 d-flex align-items-center py-1"><i class="fas fa-sliders me-2"></i> Global Settings</a></li>
-                            <li class="mb-2"><a href="/users" class="text-decoration-none text-white-50 d-flex align-items-center py-1"><i class="fas fa-users me-2"></i> User Management</a></li>
-                            <li class="mb-2"><a href="/backup" class="text-decoration-none text-white-50 d-flex align-items-center py-1"><i class="fas fa-download me-2"></i> Backup</a></li>
-                            <li class="mb-2"><a href="/restore" class="text-decoration-none text-white-50 d-flex align-items-center py-1"><i class="fas fa-upload me-2"></i> Restore</a></li>
-                            <li class="mb-2"><a href="/logs" class="text-decoration-none text-white-50 d-flex align-items-center py-1"><i class="fas fa-list me-2"></i> Logs</a></li>
-                        </ul>
+                    <a href="/emails" class="nav-link {% if '/emails' in request.url.path %}active{% endif %}">
+                        <i class="fas fa-inbox"></i>
+                        <span>Emails</span>
+                    </a>
+                </div>
+
+                {% if request.session.role == 'administrator' %}
+                <div class="nav-section">
+                    <div class="nav-section-title">Administration</div>
+                    <a href="/fetch_accounts" class="nav-link {% if '/fetch_account' in request.url.path %}active{% endif %}">
+                        <i class="fas fa-server"></i>
+                        <span>Fetch Accounts</span>
+                    </a>
+                    <a href="/worker-status" class="nav-link {% if '/worker-status' in request.url.path %}active{% endif %}">
+                        <i class="fas fa-heartbeat"></i>
+                        <span>Worker Status</span>
+                    </a>
+                    <a href="/settings" class="nav-link {% if request.url.path == '/settings' %}active{% endif %}">
+                        <i class="fas fa-sliders"></i>
+                        <span>Global Settings</span>
+                    </a>
+                    <a href="/users" class="nav-link {% if '/users' in request.url.path %}active{% endif %}">
+                        <i class="fas fa-users"></i>
+                        <span>User Management</span>
+                    </a>
+                    
+                    <button class="nav-link nav-submenu-toggle" onclick="toggleSubmenu(this)">
+                        <i class="fas fa-database"></i>
+                        <span>Data Management</span>
+                        <i class="fas fa-chevron-down nav-arrow"></i>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="/backup" class="nav-link">
+                            <i class="fas fa-download"></i>
+                            <span>Backup</span>
+                        </a>
+                        <a href="/restore" class="nav-link">
+                            <i class="fas fa-upload"></i>
+                            <span>Restore</span>
+                        </a>
                     </div>
-                </li>
+                    
+                    <a href="/logs" class="nav-link {% if '/logs' in request.url.path %}active{% endif %}">
+                        <i class="fas fa-list"></i>
+                        <span>Logs</span>
+                    </a>
+                </div>
                 {% endif %}
-                
-                <li class="mb-3"><a href="/help" class="text-decoration-none text-white d-flex align-items-center py-1"><i class="fas fa-circle-question me-2"></i> Help</a></li>
-                <li class="mb-3"><a href="/donate" class="text-decoration-none text-white d-flex align-items-center py-1"><i class="fas fa-heart me-2"></i> Donate</a></li>
-                {% else %}
-                <li class="mb-3"><a href="/login" class="text-decoration-none text-white d-flex align-items-center py-1"><i class="fas fa-right-to-bracket me-2"></i> Login</a></li>
+
+                <div class="nav-section">
+                    <a href="/help" class="nav-link {% if '/help' in request.url.path %}active{% endif %}">
+                        <i class="fas fa-circle-question"></i>
+                        <span>Help</span>
+                    </a>
+                    <a href="/donate" class="nav-link">
+                        <i class="fas fa-heart"></i>
+                        <span>Donate</span>
+                    </a>
+                </div>
+            </nav>
+            {% endif %}
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="btn-ghost sidebar-mobile-toggle" id="sidebarMobileToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 class="page-title">{% block page_title %}Daygle Mail Archiver{% endblock %}</h1>
+                </div>
+
+                <div class="topbar-right">
+                    <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+                        <i class="fas fa-sun" id="themeIconLight"></i>
+                        <i class="fas fa-moon" id="themeIconDark" style="display:none;"></i>
+                    </button>
+
+                    {% if request.session.username %}
+                    <div class="user-menu">
+                        <button class="user-menu-button" id="userMenuButton">
+                            <i class="fas fa-user-circle"></i>
+                            <span>{{ request.session.username }}</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="dropdown-menu" id="userMenuDropdown">
+                            <a href="/profile" class="dropdown-item">
+                                <i class="fas fa-user"></i>
+                                <span>Profile</span>
+                            </a>
+                            <a href="/user_settings" class="dropdown-item">
+                                <i class="fas fa-cog"></i>
+                                <span>User Settings</span>
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="/logout" class="dropdown-item">
+                                <i class="fas fa-right-from-bracket"></i>
+                                <span>Logout</span>
+                            </a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <a href="/login" class="btn btn-primary">
+                        <i class="fas fa-right-to-bracket"></i>
+                        <span>Login</span>
+                    </a>
+                    {% endif %}
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="content-container">
+                {% if flash %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <span>{{ flash }}</span>
+                </div>
                 {% endif %}
-            </ul>
+
+                {% block content %}{% endblock %}
+            </div>
         </div>
     </div>
 
-    <div class="container mt-4">
-        {% if flash %}
-        <div class="flash">{{ flash }}</div>
-        {% endif %}
+    <!-- JavaScript -->
+    <script>
+        // Sidebar toggle functionality
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarMobileToggle = document.getElementById('sidebarMobileToggle');
 
-        {% block content %}{% endblock %}
-    </div>
+        function toggleSidebar() {
+            sidebar.classList.toggle('collapsed');
+            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+        }
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', toggleSidebar);
+        }
 
+        if (sidebarMobileToggle) {
+            sidebarMobileToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('mobile-open');
+            });
+        }
+
+        // Restore sidebar state
+        if (localStorage.getItem('sidebarCollapsed') === 'true') {
+            sidebar.classList.add('collapsed');
+        }
+
+        // Close sidebar on mobile when clicking outside
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 768) {
+                if (!sidebar.contains(e.target) && !sidebarMobileToggle.contains(e.target)) {
+                    sidebar.classList.remove('mobile-open');
+                }
+            }
+        });
+
+        // Submenu toggle
+        function toggleSubmenu(button) {
+            const submenu = button.nextElementSibling;
+            const arrow = button.querySelector('.nav-arrow');
+            
+            if (submenu && submenu.classList.contains('nav-submenu')) {
+                submenu.classList.toggle('open');
+                arrow.style.transform = submenu.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
+            }
+        }
+
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIconLight = document.getElementById('themeIconLight');
+        const themeIconDark = document.getElementById('themeIconDark');
+        const html = document.documentElement;
+
+        function setTheme(theme) {
+            html.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            
+            if (theme === 'dark') {
+                themeIconLight.style.display = 'none';
+                themeIconDark.style.display = 'block';
+            } else {
+                themeIconLight.style.display = 'block';
+                themeIconDark.style.display = 'none';
+            }
+        }
+
+        // Restore theme from localStorage
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        setTheme(savedTheme);
+
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                const currentTheme = html.getAttribute('data-theme');
+                setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+            });
+        }
+
+        // User menu dropdown
+        const userMenuButton = document.getElementById('userMenuButton');
+        const userMenuDropdown = document.getElementById('userMenuDropdown');
+
+        if (userMenuButton && userMenuDropdown) {
+            userMenuButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userMenuDropdown.classList.toggle('show');
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', () => {
+                userMenuDropdown.classList.remove('show');
+            });
+        }
+    </script>
+
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

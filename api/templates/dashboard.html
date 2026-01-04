@@ -1,136 +1,106 @@
 {% extends "base.html" %}
 
+{% block page_title %}Dashboard{% endblock %}
+
 {% block content %}
-<div class="row mb-4">
-    <div class="col">
-        <h2><i class="fas fa-chart-line me-2"></i>Dashboard</h2>
-    </div>
-</div>
-
-<!-- Stats Cards -->
-<div class="row mb-4">
-    <div class="col-md-3 mb-3">
-        <div class="card bg-primary text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="card-subtitle mb-2 text-white-50">Total Emails</h6>
-                        <h2 class="card-title mb-0" id="stat-total-emails">
-                            <span class="spinner-border spinner-border-sm" role="status"></span>
-                        </h2>
-                    </div>
-                    <div>
-                        <i class="fas fa-envelope fa-3x opacity-50"></i>
-                    </div>
-                </div>
+<!-- Stats Cards Grid -->
+<div class="stats-grid">
+    <div class="stat-card stat-card-primary">
+        <div class="stat-icon">
+            <i class="fas fa-envelope"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Total Emails</div>
+            <div class="stat-value" id="stat-total-emails">
+                <span class="spinner"></span>
             </div>
         </div>
     </div>
 
-    <div class="col-md-3 mb-3">
-        <div class="card bg-success text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="card-subtitle mb-2 text-white-50">Today</h6>
-                        <h2 class="card-title mb-0" id="stat-emails-today">
-                            <span class="spinner-border spinner-border-sm" role="status"></span>
-                        </h2>
-                    </div>
-                    <div>
-                        <i class="fas fa-calendar-day fa-3x opacity-50"></i>
-                    </div>
-                </div>
+    <div class="stat-card stat-card-success">
+        <div class="stat-icon">
+            <i class="fas fa-calendar-day"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Today</div>
+            <div class="stat-value" id="stat-emails-today">
+                <span class="spinner"></span>
             </div>
         </div>
     </div>
 
-    <div class="col-md-3 mb-3">
-        <div class="card bg-info text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="card-subtitle mb-2 text-white-50">Fetch Accounts</h6>
-                        <h2 class="card-title mb-0" id="stat-total-accounts">
-                            <span class="spinner-border spinner-border-sm" role="status"></span>
-                        </h2>
-                    </div>
-                    <div>
-                        <i class="fas fa-server fa-3x opacity-50"></i>
-                    </div>
-                </div>
+    <div class="stat-card stat-card-info">
+        <div class="stat-icon">
+            <i class="fas fa-server"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Fetch Accounts</div>
+            <div class="stat-value" id="stat-total-accounts">
+                <span class="spinner"></span>
             </div>
         </div>
     </div>
 
-    <div class="col-md-3 mb-3">
-        <div class="card bg-warning text-dark">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="card-subtitle mb-2 text-dark-50">Database Size</h6>
-                        <h2 class="card-title mb-0" id="stat-database-size">
-                            <span class="spinner-border spinner-border-sm" role="status"></span>
-                        </h2>
-                    </div>
-                    <div>
-                        <i class="fas fa-database fa-3x opacity-50"></i>
-                    </div>
-                </div>
+    <div class="stat-card stat-card-warning">
+        <div class="stat-icon">
+            <i class="fas fa-database"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Database Size</div>
+            <div class="stat-value" id="stat-database-size">
+                <span class="spinner"></span>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Charts Row 1 -->
-<div class="row mb-4">
-    <div class="col-md-12 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Emails Per Day (Last 30 Days)</h5>
-            </div>
-            <div class="card-body">
-                <canvas id="emailsPerDayChart" style="height: 300px;"></canvas>
-            </div>
+<!-- Charts Section -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-chart-line"></i>
+            <span>Emails Per Day (Last 30 Days)</span>
         </div>
+    </div>
+    <div class="card-body">
+        <canvas id="emailsPerDayChart" style="height: 300px;"></canvas>
     </div>
 </div>
 
-<!-- Charts Row 2 -->
-<div class="row mb-4">
-    <div class="col-md-12 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-trash-alt me-2"></i>Email Deletions (Last 30 Days)</h5>
-            </div>
-            <div class="card-body">
-                <canvas id="deletionStatsChart" style="height: 300px;"></canvas>
-            </div>
+<div class="card mt-4">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-trash-alt"></i>
+            <span>Email Deletions (Last 30 Days)</span>
         </div>
+    </div>
+    <div class="card-body">
+        <canvas id="deletionStatsChart" style="height: 300px;"></canvas>
     </div>
 </div>
 
-<!-- Charts Row 3 -->
-<div class="row mb-4">
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-paper-plane me-2"></i>Top 10 Senders</h5>
+<div class="grid grid-cols-2 gap-4 mt-4">
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fas fa-paper-plane"></i>
+                <span>Top 10 Senders</span>
             </div>
-            <div class="card-body">
-                <canvas id="topSendersChart" style="height: 400px;"></canvas>
-            </div>
+        </div>
+        <div class="card-body">
+            <canvas id="topSendersChart" style="height: 400px;"></canvas>
         </div>
     </div>
 
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-inbox me-2"></i>Top 10 Receivers</h5>
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fas fa-inbox"></i>
+                <span>Top 10 Receivers</span>
             </div>
-            <div class="card-body">
-                <canvas id="topReceiversChart" style="height: 400px;"></canvas>
-            </div>
+        </div>
+        <div class="card-body">
+            <canvas id="topReceiversChart" style="height: 400px;"></canvas>
         </div>
     </div>
 </div>

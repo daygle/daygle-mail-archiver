@@ -1,65 +1,82 @@
 {% extends "base.html" %}
+
+{% block page_title %}Global Settings{% endblock %}
+
 {% block content %}
-
-<h2><i class="fas fa-sliders me-2"></i>Global Settings</h2>
-
-<!-- General Settings & Email Purging Section -->
 <form method="post">
-    <div class="settings-section">
-        <h3>General Settings</h3>
-        <p class="section-description">Configure general application preferences</p>
-        
-        <div class="form-group">
-            <label for="page_size">Page Size</label>
-            <input id="page_size" class="form-control" name="page_size" type="number" value="{{ settings.page_size or '50' }}">
+    <!-- General Settings Card -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fas fa-cog"></i>
+                <span>General Settings</span>
+            </div>
         </div>
+        <div class="card-body">
+            <div class="form-group">
+                <label for="page_size" class="form-label">Page Size</label>
+                <input id="page_size" class="form-control" name="page_size" type="number" value="{{ settings.page_size or '50' }}" min="10" max="500">
+                <small class="form-text">Number of items to display per page</small>
+            </div>
 
-        <div class="form-group">
-            <label for="date_format">Date Format</label>
-            <select id="date_format" class="form-control" name="date_format">
-                <option value="%d/%m/%Y %H:%M" {% if settings.date_format == '%d/%m/%Y %H:%M' or not settings.date_format %}selected{% endif %}>15/01/2024 14:30</option>
-                <option value="%Y-%m-%d %H:%M:%S" {% if settings.date_format == '%Y-%m-%d %H:%M:%S' %}selected{% endif %}>2024-01-15 14:30:45</option>
-                <option value="%m/%d/%Y %I:%M %p" {% if settings.date_format == '%m/%d/%Y %I:%M %p' %}selected{% endif %}>01/15/2024 02:30 PM</option>
-                <option value="%d/%m/%Y %H:%M:%S" {% if settings.date_format == '%d/%m/%Y %H:%M:%S' %}selected{% endif %}>15/01/2024 14:30:45</option>
-                <option value="%Y-%m-%d %I:%M %p" {% if settings.date_format == '%Y-%m-%d %I:%M %p' %}selected{% endif %}>2024-01-15 02:30 PM</option>
-            </select>
+            <div class="form-group mt-3">
+                <label for="date_format" class="form-label">Date Format</label>
+                <select id="date_format" class="form-select" name="date_format">
+                    <option value="%d/%m/%Y %H:%M" {% if settings.date_format == '%d/%m/%Y %H:%M' or not settings.date_format %}selected{% endif %}>15/01/2024 14:30</option>
+                    <option value="%Y-%m-%d %H:%M:%S" {% if settings.date_format == '%Y-%m-%d %H:%M:%S' %}selected{% endif %}>2024-01-15 14:30:45</option>
+                    <option value="%m/%d/%Y %I:%M %p" {% if settings.date_format == '%m/%d/%Y %I:%M %p' %}selected{% endif %}>01/15/2024 02:30 PM</option>
+                    <option value="%d/%m/%Y %H:%M:%S" {% if settings.date_format == '%d/%m/%Y %H:%M:%S' %}selected{% endif %}>15/01/2024 14:30:45</option>
+                    <option value="%Y-%m-%d %I:%M %p" {% if settings.date_format == '%Y-%m-%d %I:%M %p' %}selected{% endif %}>2024-01-15 02:30 PM</option>
+                </select>
+                <small class="form-text">Date and time display format throughout the application</small>
+            </div>
         </div>
     </div>
 
-    <!-- Email Purging Section -->
-    <div class="settings-section">
-        <h3>Email Purging</h3>
-        <p class="section-description">Automatically delete old emails based on retention period</p>
-        
-        <div class="form-checkboxes">
-            <div class="form-group checkbox-group">
-                <input id="enable_purge" type="checkbox" name="enable_purge" {% if settings.enable_purge == 'true' %}checked{% endif %}>
-                <label for="enable_purge">Enable Email Purging</label>
+    <!-- Email Retention Policy Card -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fas fa-clock"></i>
+                <span>Email Retention Policy</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="enable_purge" name="enable_purge" {% if settings.enable_purge == 'true' %}checked{% endif %}>
+                <label class="form-check-label" for="enable_purge">
+                    <strong>Enable Automatic Email Purging</strong>
+                    <small class="d-block text-secondary">Automatically delete emails older than the retention period</small>
+                </label>
             </div>
             
-            <div class="form-group checkbox-group">
-                <input id="retention_delete_from_mail_server" type="checkbox" name="retention_delete_from_mail_server" {% if settings.retention_delete_from_mail_server == 'true' %}checked{% endif %}>
-                <label for="retention_delete_from_mail_server">Delete from Mail Server (automated)</label>
-                <small class="text-muted d-block">When enabled, retention cleanup will also attempt to delete emails from the original mail servers</small>
+            <div class="form-check mb-4">
+                <input class="form-check-input" type="checkbox" id="retention_delete_from_mail_server" name="retention_delete_from_mail_server" {% if settings.retention_delete_from_mail_server == 'true' %}checked{% endif %}>
+                <label class="form-check-label" for="retention_delete_from_mail_server">
+                    <strong>Delete from Mail Server During Retention Cleanup</strong>
+                    <small class="d-block text-secondary">When enabled, retention cleanup will also attempt to delete emails from the original IMAP mail servers (only applies to IMAP accounts with delete_after_processing enabled)</small>
+                </label>
+            </div>
+
+            <div class="form-group">
+                <label for="retention_value" class="form-label">Retention Period</label>
+                <div class="flex gap-3">
+                    <input id="retention_value" class="form-control" name="retention_value" type="number" min="1" value="{{ settings.retention_value or '1' }}" style="max-width: 150px;">
+                    <select id="retention_unit" class="form-select" name="retention_unit" style="max-width: 200px;">
+                        <option value="days" {% if settings.retention_unit == 'days' %}selected{% endif %}>Day(s)</option>
+                        <option value="months" {% if settings.retention_unit == 'months' %}selected{% endif %}>Month(s)</option>
+                        <option value="years" {% if settings.retention_unit == 'years' or not settings.retention_unit %}selected{% endif %}>Year(s)</option>
+                    </select>
+                </div>
+                <small class="form-text">Emails older than this period will be automatically deleted</small>
             </div>
         </div>
-
-        <div class="form-group">
-            <label for="retention_value">Retention Period</label>
-            <div class="form-retention">
-                <input id="retention_value" class="form-control" name="retention_value" type="number" min="1" value="{{ settings.retention_value or '1' }}">
-                <select id="retention_unit" class="form-control" name="retention_unit">
-                    <option value="days" {% if settings.retention_unit == 'days' %}selected{% endif %}>Day(s)</option>
-                    <option value="months" {% if settings.retention_unit == 'months' %}selected{% endif %}>Month(s)</option>
-                    <option value="years" {% if settings.retention_unit == 'years' or not settings.retention_unit %}selected{% endif %}>Year(s)</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="form-actions">
-            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save"></i> Save Settings</button>
+        <div class="card-footer">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i>
+                <span>Save Settings</span>
+            </button>
         </div>
     </div>
 </form>
-
 {% endblock %}

@@ -1,99 +1,138 @@
 {% extends "base.html" %}
 
+{% block page_title %}Emails{% endblock %}
+
 {% block content %}
-<div class="row mb-4">
-    <div class="col">
-        <h2><i class="fas fa-envelope me-2"></i>Emails</h2>
+<!-- Filters Card -->
+<div class="card mb-4">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-filter"></i>
+            <span>Search & Filter</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <form method="get" action="/emails">
+            <div class="grid grid-cols-4 gap-3">
+                <div>
+                    <input type="text" name="q" value="{{ q }}" placeholder="Search subject, sender, recipients" class="form-control">
+                </div>
+                <div>
+                    <input type="text" name="account" value="{{ account }}" placeholder="Account" class="form-control">
+                </div>
+                <div>
+                    <input type="text" name="folder" value="{{ folder }}" placeholder="Folder" class="form-control">
+                </div>
+                <div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i>
+                        <span>Search</span>
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
 
-<!-- Emails Section -->
-<div class="settings-section">
-    <h3>Archived Emails</h3>
-    <p class="section-description">View and manage your archived emails</p>
-
-    <form method="get" action="/emails" class="mb-3">
-      <div class="row g-2">
-        <div class="col-md-4">
-          <input type="text" name="q" value="{{ q }}" placeholder="Search subject, sender, recipients" class="form-control">
+<!-- Emails Table Card -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-inbox"></i>
+            <span>Archived Emails</span>
         </div>
-        <div class="col-md-3">
-          <input type="text" name="account" value="{{ account }}" placeholder="Account" class="form-control">
-        </div>
-        <div class="col-md-3">
-          <input type="text" name="folder" value="{{ folder }}" placeholder="Folder" class="form-control">
-        </div>
-        <div class="col-md-2">
-          <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-filter"></i> Filter</button>
-        </div>
-      </div>
-    </form>
-
-    <form method="post" action="/emails/delete/confirm" id="emails-bulk-form">
-      <div class="table-responsive">
-        <table class="table table-hover">
-          <thead>
-            <tr>
-              {% if request.session.role == 'administrator' %}
-              <th>
-                <input type="checkbox" id="select-all">
-              </th>
-              {% endif %}
-              <th>Date</th>
-              <th>Account</th>
-              <th>Folder</th>
-              <th>From</th>
-              <th>To</th>
-              <th>Subject</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for email in emails %}
-            <tr>
-              {% if request.session.role == 'administrator' %}
-              <td>
-                <input type="checkbox" name="ids" value="{{ email.id }}" class="email-checkbox">
-              </td>
-              {% endif %}
-              <td>{{ email.date }}</td>
-              <td>{{ email.source }}</td>
-              <td>{{ email.folder }}</td>
-              <td>{{ email.sender }}</td>
-              <td>{{ email.recipients }}</td>
-              <td>
-                <a href="/emails/{{ email.id }}">{{ email.subject or "(no subject)" }}</a>
-              </td>
-            </tr>
-            {% endfor %}
-            {% if emails|length == 0 %}
-            <tr>
-              <td colspan="{% if request.session.role == 'administrator' %}7{% else %}6{% endif %}" class="text-center">No emails found.</td>
-            </tr>
-            {% endif %}
-          </tbody>
-        </table>
-      </div>
-
-      {% if request.session.role == 'administrator' %}
-      <div class="mb-3">
-        <button type="submit" class="btn btn-danger" id="delete-selected-btn" disabled>
-          <i class="fa-solid fa-trash"></i> Delete Selected
+        {% if request.session.role == 'administrator' %}
+        <button type="button" class="btn btn-danger btn-sm" id="delete-selected-btn" disabled onclick="document.getElementById('emails-bulk-form').submit()">
+            <i class="fas fa-trash"></i>
+            <span>Delete Selected</span>
         </button>
-      </div>
-      {% endif %}
-    </form>
-
-    <div class="pagination">
-      {% if page > 1 %}
-      <a href="/emails?page={{ page - 1 }}&page_size={{ page_size }}&q={{ q }}&account={{ account }}&folder={{ folder }}" class="btn btn-sm btn-secondary">Previous</a>
-      {% endif %}
-
-      <span class="mx-3">Page {{ page }}</span>
-
-      {% if (page * page_size) < total %}
-      <a href="/emails?page={{ page + 1 }}&page_size={{ page_size }}&q={{ q }}&account={{ account }}&folder={{ folder }}" class="btn btn-sm btn-secondary">Next</a>
-      {% endif %}
+        {% endif %}
     </div>
+    <div class="card-body" style="padding: 0;">
+        <form method="post" action="/emails/delete/confirm" id="emails-bulk-form">
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            {% if request.session.role == 'administrator' %}
+                            <th style="width: 40px;">
+                                <input type="checkbox" id="select-all" class="form-check-input">
+                            </th>
+                            {% endif %}
+                            <th>Date</th>
+                            <th>Account</th>
+                            <th>Folder</th>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Subject</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for email in emails %}
+                        <tr>
+                            {% if request.session.role == 'administrator' %}
+                            <td>
+                                <input type="checkbox" name="ids" value="{{ email.id }}" class="form-check-input email-checkbox">
+                            </td>
+                            {% endif %}
+                            <td>{{ email.date }}</td>
+                            <td>
+                                <span class="badge badge-primary">{{ email.source }}</span>
+                            </td>
+                            <td>
+                                <span class="badge badge-secondary">{{ email.folder }}</span>
+                            </td>
+                            <td>{{ email.sender }}</td>
+                            <td>{{ email.recipients }}</td>
+                            <td>
+                                <a href="/emails/{{ email.id }}" class="link">
+                                    {{ email.subject or "(no subject)" }}
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% if emails|length == 0 %}
+                        <tr>
+                            <td colspan="{% if request.session.role == 'administrator' %}7{% else %}6{% endif %}" class="text-center" style="padding: 48px 0;">
+                                <div style="color: var(--text-secondary);">
+                                    <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                                    <p>No emails found.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Pagination -->
+    {% if page > 1 or (page * page_size) < total %}
+    <div class="card-footer">
+        <div class="flex items-center justify-between">
+            <div>
+                {% if page > 1 %}
+                <a href="/emails?page={{ page - 1 }}&page_size={{ page_size }}&q={{ q }}&account={{ account }}&folder={{ folder }}" class="btn btn-secondary">
+                    <i class="fas fa-chevron-left"></i>
+                    <span>Previous</span>
+                </a>
+                {% endif %}
+            </div>
+            
+            <span class="text-secondary">Page {{ page }} of {{ (total / page_size) | round(0, 'ceil') | int }}</span>
+            
+            <div>
+                {% if (page * page_size) < total %}
+                <a href="/emails?page={{ page + 1 }}&page_size={{ page_size }}&q={{ q }}&account={{ account }}&folder={{ folder }}" class="btn btn-secondary">
+                    <span>Next</span>
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
 <script>
@@ -104,7 +143,7 @@
 
     function updateDeleteButton() {
       const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
-      deleteBtn.disabled = !anyChecked;
+      if (deleteBtn) deleteBtn.disabled = !anyChecked;
     }
 
     if (selectAll) {

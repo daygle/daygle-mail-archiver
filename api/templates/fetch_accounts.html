@@ -1,77 +1,105 @@
 {% extends "base.html" %}
-{% block content %}
 
-<div class="row mb-4">
-    <div class="col">
-        <h2><i class="fas fa-server me-2"></i>Fetch Accounts</h2>
-    </div>
-    <div class="col text-end">
+{% block page_title %}Fetch Accounts{% endblock %}
+
+{% block content %}
+<!-- Fetch Accounts Card -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-server"></i>
+            <span>Email Fetch Accounts</span>
+        </div>
         <a href="/fetch_accounts/new" class="btn btn-primary">
-            <i class="fa-solid fa-plus"></i> Add New Account
+            <i class="fas fa-plus"></i>
+            <span>Add New Account</span>
         </a>
     </div>
-</div>
-
-<!-- Fetch Accounts Section -->
-<div class="settings-section">
-    <h3>Email Fetch Accounts</h3>
-    <p class="section-description">Manage your email fetch accounts (IMAP, Gmail, O365) and connection settings</p>
-    
-    <div class="table-responsive">
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Host/Service</th>
-                    <th>Port</th>
-                    <th>User</th>
-                    <th>SSL</th>
-                    <th>Poll Interval</th>
-                    <th>Enabled</th>
-                    <th>Last Success</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for acc in accounts %}
-                <tr>
-                    <td>{{ acc.id }}</td>
-                    <td>{{ acc.name }}</td>
-                    <td>
-                        {% if acc.account_type == 'imap' %}
-                            <span class="badge bg-primary">IMAP</span>
-                        {% elif acc.account_type == 'gmail' %}
-                            <span class="badge bg-danger">Gmail</span>
-                        {% elif acc.account_type == 'o365' %}
-                            <span class="badge bg-info">O365</span>
-                        {% else %}
-                            <span class="badge bg-secondary">{{ acc.account_type }}</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ acc.host or '-' }}</td>
-                    <td>{{ acc.port or '-' }}</td>
-                    <td>{{ acc.username or '-' }}</td>
-                    <td>{{ "Yes" if acc.use_ssl else "No" }}</td>
-                    <td>{{ acc.poll_interval_seconds }}s</td>
-                    <td>
-                        {% if acc.enabled %}
-                            <span class="badge bg-success">Yes</span>
-                        {% else %}
-                            <span class="badge bg-danger">No</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ acc.last_success.strftime(request.session.get('date_format', '%d/%m/%Y %H:%M')) if acc.last_success else 'Never' }}</td>
-                    <td>
-                        <a href="/fetch_accounts/{{ acc.id }}/edit" class="btn btn-sm btn-primary"><i class="fa-solid fa-pen-to-square"></i> Edit</a>
-                        <a href="/fetch_accounts/{{ acc.id }}/test" class="btn btn-sm btn-info"><i class="fa-solid fa-plug"></i> Test</a>
-                        <a href="/fetch_accounts/{{ acc.id }}/delete/confirm" class="btn btn-sm btn-danger"><i class="fa-solid fa-trash"></i> Delete</a>
-                    </td>
-            </tr>
-            {% endfor %}
-        </table>
+    <div class="card-body" style="padding: 0;">
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Host/Service</th>
+                        <th>User</th>
+                        <th>Poll Interval</th>
+                        <th>Enabled</th>
+                        <th>Last Success</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for acc in accounts %}
+                    <tr>
+                        <td><strong>{{ acc.name }}</strong></td>
+                        <td>
+                            {% if acc.account_type == 'imap' %}
+                                <span class="badge badge-primary"><i class="fas fa-envelope"></i> IMAP</span>
+                            {% elif acc.account_type == 'gmail' %}
+                                <span class="badge badge-danger"><i class="fab fa-google"></i> Gmail</span>
+                            {% elif acc.account_type == 'o365' %}
+                                <span class="badge badge-info"><i class="fab fa-microsoft"></i> O365</span>
+                            {% else %}
+                                <span class="badge badge-secondary">{{ acc.account_type }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ acc.host or '-' }}
+                            {% if acc.port and acc.account_type == 'imap' %}
+                                :{{ acc.port }}
+                                {% if acc.use_ssl %}<i class="fas fa-lock text-success" title="SSL Enabled"></i>{% endif %}
+                            {% endif %}
+                        </td>
+                        <td>{{ acc.username or '-' }}</td>
+                        <td>{{ acc.poll_interval_seconds }}s</td>
+                        <td>
+                            {% if acc.enabled %}
+                                <span class="badge badge-success"><i class="fas fa-check"></i> Enabled</span>
+                            {% else %}
+                                <span class="badge badge-danger"><i class="fas fa-times"></i> Disabled</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if acc.last_success %}
+                                <small>{{ acc.last_success.strftime(request.session.get('date_format', '%d/%m/%Y %H:%M')) }}</small>
+                            {% else %}
+                                <span class="text-secondary">Never</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="flex gap-2">
+                                <a href="/fetch_accounts/{{ acc.id }}/edit" class="btn btn-secondary btn-sm" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="/fetch_accounts/{{ acc.id }}/test" class="btn btn-info btn-sm" title="Test Connection">
+                                    <i class="fas fa-plug"></i>
+                                </a>
+                                <a href="/fetch_accounts/{{ acc.id }}/delete/confirm" class="btn btn-danger btn-sm" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if accounts|length == 0 %}
+                    <tr>
+                        <td colspan="8" class="text-center" style="padding: 48px 0;">
+                            <div style="color: var(--text-secondary);">
+                                <i class="fas fa-server" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                                <p>No fetch accounts configured.</p>
+                                <a href="/fetch_accounts/new" class="btn btn-primary mt-3">
+                                    <i class="fas fa-plus"></i>
+                                    <span>Add Your First Account</span>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
-
 {% endblock %}
