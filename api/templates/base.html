@@ -164,7 +164,8 @@
         const sidebarToggle = document.getElementById('sidebarToggle');
         const sidebarMobileToggle = document.getElementById('sidebarMobileToggle');
 
-        function toggleSidebar() {
+        function toggleSidebar(e) {
+            if (e) e.stopPropagation();
             sidebar.classList.toggle('collapsed');
             localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
         }
@@ -174,7 +175,8 @@
         }
 
         if (sidebarMobileToggle) {
-            sidebarMobileToggle.addEventListener('click', () => {
+            sidebarMobileToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
                 sidebar.classList.toggle('mobile-open');
             });
         }
