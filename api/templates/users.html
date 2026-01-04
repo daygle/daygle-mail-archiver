@@ -235,23 +235,27 @@
 // Define functions immediately so onclick handlers can access them
 function showCreateUserModal() {
     console.log('showCreateUserModal called!');
-    alert('Opening create user modal...');
-    document.getElementById('createUserModal').style.display = 'flex';
+    const modal = document.getElementById('createUserModal');
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('show'), 10);
 }
 
 function hideCreateUserModal() {
     console.log('hideCreateUserModal called!');
-    document.getElementById('createUserModal').style.display = 'none';
+    const modal = document.getElementById('createUserModal');
+    modal.classList.remove('show');
+    setTimeout(() => modal.style.display = 'none', 300);
 }
 
 function hideEditUserModal() {
     console.log('hideEditUserModal called!');
-    document.getElementById('editUserModal').style.display = 'none';
+    const modal = document.getElementById('editUserModal');
+    modal.classList.remove('show');
+    setTimeout(() => modal.style.display = 'none', 300);
 }
 
 async function editUser(userId) {
     console.log('editUser called for user:', userId);
-    alert('Loading user ' + userId + '...');
     try {
         const response = await fetch(`/api/users/${userId}`);
         const user = await response.json();
@@ -279,7 +283,9 @@ async function editUser(userId) {
         document.getElementById('editUserForm').action = `/users/${userId}/update`;
         
         // Show the modal
-        document.getElementById('editUserModal').style.display = 'flex';
+        const modal = document.getElementById('editUserModal');
+        modal.style.display = 'flex';
+        setTimeout(() => modal.classList.add('show'), 10);
     } catch (error) {
         console.error('Error loading user:', error);
         alert('Failed to load user details');

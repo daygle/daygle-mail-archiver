@@ -172,12 +172,10 @@
             
             // Sidebar toggle - simplest possible version
             document.getElementById('sidebarToggle').onclick = function(e) {
-                console.log('SIDEBAR TOGGLE CLICKED!');
                 e.preventDefault();
                 e.stopPropagation();
                 sidebar.classList.toggle('collapsed');
                 localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-                console.log('Sidebar is now:', sidebar.classList.contains('collapsed') ? 'collapsed' : 'expanded');
                 return false;
             };
             

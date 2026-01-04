@@ -218,10 +218,21 @@ input, select, textarea, button {
     padding: 8px;
     border-radius: var(--radius-md);
     transition: background-color var(--transition-fast);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .sidebar-toggle:hover {
     background: rgba(255, 255, 255, 0.1);
+}
+
+/* Ensure toggle button is always visible even when sidebar is collapsed */
+.sidebar.collapsed .sidebar-toggle {
+    display: flex;
+    opacity: 1;
+    visibility: visible;
 }
 
 /* Navigation Menu */
