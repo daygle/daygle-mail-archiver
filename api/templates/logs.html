@@ -4,13 +4,13 @@
 
 {% block content %}
 <div class="card">
-    <div class="card-header">
+    <div class="card-header" style="display: flex; align-items: center; justify-content: space-between;">
         <div class="card-title">
             <i class="fas fa-file-alt"></i>
             <span>System Logs</span>
         </div>
-        <form method="get" class="flex gap-2" style="margin: 0;">
-            <select id="log_level" class="form-select" name="level" onchange="this.form.submit()" style="width: auto;">
+        <form method="get" style="margin: 0;">
+            <select id="log_level" class="form-select" name="level" onchange="this.form.submit()" style="width: auto; min-width: 150px;">
                 <option value="all" {% if current_level == 'all' %}selected{% endif %}>All Levels</option>
                 <option value="error" {% if current_level == 'error' %}selected{% endif %}>Error Only</option>
                 <option value="warning" {% if current_level == 'warning' %}selected{% endif %}>Warning Only</option>
