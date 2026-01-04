@@ -68,7 +68,7 @@
                         <td>
                             {% if acc.last_heartbeat %}
                                 <div><strong>{{ acc.heartbeat_ago }}</strong></div>
-                                <small style="color: var(--text-secondary);">{{ acc.last_heartbeat.strftime('%Y-%m-%d %H:%M:%S UTC') }}</small>
+                                <small style="color: var(--text-secondary);">{{ acc.last_heartbeat | format_user_datetime(request.session.user_id) }}</small>
                             {% else %}
                                 <span style="color: var(--text-secondary);">Never</span>
                             {% endif %}
@@ -76,7 +76,7 @@
                         <td>
                             {% if acc.last_success %}
                                 <div style="color: var(--success); font-weight: 600;">{{ acc.success_ago }}</div>
-                                <small style="color: var(--text-secondary);">{{ acc.last_success.strftime('%Y-%m-%d %H:%M:%S UTC') }}</small>
+                                <small style="color: var(--text-secondary);">{{ acc.last_success | format_user_datetime(request.session.user_id) }}</small>
                             {% else %}
                                 <span style="color: var(--text-secondary);">Never</span>
                             {% endif %}
