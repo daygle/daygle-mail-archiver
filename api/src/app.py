@@ -26,11 +26,7 @@ app.include_router(oauth.router)
 app.include_router(users.router)
 app.include_router(profile.router)
 app.include_router(logs.router)
-app.include_router(worker_status.router)
 app.include_router(settings.router)
-app.include_router(users.router)
-app.include_router(profile.router)
-app.include_router(logs.router)
 
 @app.get("/")
 def root():
