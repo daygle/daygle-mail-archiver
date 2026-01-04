@@ -21,7 +21,7 @@ def flash(request: Request, message: str):
     request.session["flash"] = message
 
 
-@router.get("/messages", response_class=HTMLResponse)
+@router.get("/emails", response_class=HTMLResponse)
 def list_messages(
     request: Request,
     page: int = 1,
@@ -73,7 +73,7 @@ def list_messages(
     msg = request.session.pop("flash", None)
 
     return templates.TemplateResponse(
-        "messages.html",
+        "emails.html",
         {
             "request": request,
             "messages": rows,
@@ -88,7 +88,7 @@ def list_messages(
     )
 
 
-@router.get("/messages/{message_id}", response_class=HTMLResponse)
+@router.get("/emails/{message_id}", response_class=HTMLResponse)
 def view_message(request: Request, message_id: int):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
@@ -112,7 +112,7 @@ def view_message(request: Request, message_id: int):
     msg = request.session.pop("flash", None)
 
     return templates.TemplateResponse(
-        "message_view.html",
+        "email_view.html",
         {
             "request": request,
             "message": row,
@@ -123,7 +123,7 @@ def view_message(request: Request, message_id: int):
     )
 
 
-@router.get("/messages/{message_id}/download")
+@router.get("/emails/{message_id}/download")
 def download_message(request: Request, message_id: int):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
@@ -145,18 +145,18 @@ def download_message(request: Request, message_id: int):
     return StreamingResponse(
         iter([raw]),
         media_type="message/rfc822",
-        headers={"Content-Disposition": f'attachment; filename="message-{message_id}.eml"'},
+        headers={"Content-Disposition": f'attachment; filename="email-{message_id}.eml"'},
     )
 
 
-@router.post("/messages/delete/confirm", response_class=HTMLResponse)
+@router.post("/emails/delete/confirm", response_class=HTMLResponse)
 def confirm_bulk_delete(
     request: Request,
     ids: List[int] = Form(...),
-    return_url: str = Form("/messages"),
+    return_url: str = Form("/emails"),
 ):
     """
-    Bulk delete confirmation for multiple messages.
+    Bulk delete confirmation for multiple emails.
     """
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
@@ -168,7 +168,7 @@ def confirm_bulk_delete(
     count = len(ids)
 
     return templates.TemplateResponse(
-        "messages_confirm_delete.html",
+        "emails_confirm_delete.html",
         {
             "request": request,
             "ids": ids,
@@ -178,42 +178,42 @@ def confirm_bulk_delete(
     )
 
 
-@router.post("/messages/{message_id}/delete/confirm", response_class=HTMLResponse)
+@router.post("/emails/{message_id}/delete/confirm", response_class=HTMLResponse)
 def confirm_single_delete(request: Request, message_id: int):
     """
-    Single message delete confirmation.
+    Single email delete confirmation.
     Reuses the same confirmation template as bulk delete.
     """
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    # Verify the message exists
+    # Verify the email exists
     row = query(
         "SELECT id FROM messages WHERE id = :id",
         {"id": message_id},
     ).mappings().first()
 
     if not row:
-        return HTMLResponse("Message not found", status_code=404)
+        return HTMLResponse("Email not found", status_code=404)
 
     ids = [message_id]
     count = 1
 
     return templates.TemplateResponse(
-        "messages_confirm_delete.html",
+        "emails_confirm_delete.html",
         {
             "request": request,
             "ids": ids,
             "count": count,
-            "return_url": f"/messages/{message_id}",
+            "return_url": f"/emails/{message_id}",
         },
     )
 
 
 def _delete_messages_from_db(ids: List[int]) -> int:
     """
-    Delete messages from the database only.
-    Returns number of messages deleted.
+    Delete emails from the database only.
+    Returns number of emails deleted.
     """
     deleted = 0
     for mid in ids:
@@ -228,7 +228,7 @@ def _delete_messages_from_db(ids: List[int]) -> int:
 
 def _delete_messages_from_imap_and_db(ids: List[int]) -> tuple[int, list[str]]:
     """
-    Delete messages from IMAP (based on source/folder/uid) and then from DB.
+    Delete emails from IMAP (based on source/folder/uid) and then from DB.
     Returns (deleted_count, errors).
     """
     errors: list[str] = []
@@ -245,25 +245,25 @@ def _delete_messages_from_imap_and_db(ids: List[int]) -> tuple[int, list[str]]:
         ).mappings().first()
 
         if not msg_row:
-            errors.append(f"Message {mid} not found")
+            errors.append(f"Email {mid} not found")
             continue
 
         account = query(
             """
             SELECT name, host, port, username, password_encrypted,
                    use_ssl, require_starttls
-            FROM imap_accounts
+            FROM fetch_accounts
             WHERE name = :name
             """,
             {"name": msg_row["source"]},
         ).mappings().first()
 
         if not account:
-            errors.append(f"No IMAP account found for source '{msg_row['source']}' (message {mid})")
+            errors.append(f"No fetch account found for source '{msg_row['source']}' (email {mid})")
             continue
 
         try:
-            # Connect to IMAP using same style as /imap_accounts/test
+            # Connect to IMAP using same style as /fetch_accounts/test
             if account["use_ssl"]:
                 conn = IMAP4_SSL(account["host"], account["port"])
             else:
@@ -281,11 +281,11 @@ def _delete_messages_from_imap_and_db(ids: List[int]) -> tuple[int, list[str]]:
             uid_str = str(msg_row["uid"])
             typ, _ = conn.uid("STORE", uid_str, "+FLAGS", r"(\Deleted)")
             if typ != "OK":
-                raise RuntimeError(f"Failed to flag message {mid} for deletion on IMAP")
+                raise RuntimeError(f"Failed to flag email {mid} for deletion on IMAP")
 
             typ, _ = conn.expunge()
             if typ != "OK":
-                raise RuntimeError(f"Failed to expunge message {mid} on IMAP")
+                raise RuntimeError(f"Failed to expunge email {mid} on IMAP")
 
             conn.logout()
 
@@ -297,17 +297,17 @@ def _delete_messages_from_imap_and_db(ids: List[int]) -> tuple[int, list[str]]:
             deleted += 1
 
         except Exception as e:
-            errors.append(f"Message {mid}: {e}")
+            errors.append(f"Email {mid}: {e}")
 
     return deleted, errors
 
 
-@router.post("/messages/delete")
+@router.post("/emails/delete")
 def perform_delete(
     request: Request,
     ids: List[int] = Form(...),
     mode: str = Form(...),  # "db" or "imap"
-    return_url: str = Form("/messages"),
+    return_url: str = Form("/emails"),
 ):
     """
     Perform the actual delete, either:
@@ -322,8 +322,8 @@ def perform_delete(
 
     if mode == "db":
         deleted = _delete_messages_from_db(ids)
-        flash(request, f"Deleted {deleted} message(s) from the database.")
-        return RedirectResponse("/messages", status_code=303)
+        flash(request, f"Deleted {deleted} email(s) from the database.")
+        return RedirectResponse("/emails", status_code=303)
 
     elif mode == "imap":
         deleted, errors = _delete_messages_from_imap_and_db(ids)
@@ -332,16 +332,16 @@ def perform_delete(
             error_text = " | ".join(errors)
             flash(
                 request,
-                f"Deleted {deleted} message(s) from database and IMAP. Some errors occurred: {error_text}",
+                f"Deleted {deleted} email(s) from database and IMAP. Some errors occurred: {error_text}",
             )
         else:
             flash(
                 request,
-                f"Deleted {deleted} message(s) from database and IMAP.",
+                f"Deleted {deleted} email(s) from database and IMAP.",
             )
 
-        return RedirectResponse("/messages", status_code=303)
+        return RedirectResponse("/emails", status_code=303)
 
     else:
         flash(request, "Invalid delete mode selected.")
-        return RedirectResponse(return_url or "/messages", status_code=303)
+        return RedirectResponse(return_url or "/emails", status_code=303)

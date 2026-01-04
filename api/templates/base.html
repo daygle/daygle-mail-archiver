@@ -15,7 +15,7 @@
                 <i class="fas fa-bars"></i>
             </button>
 
-            <a class="navbar-brand d-flex align-items-center gap-1" href="/messages">
+            <a class="navbar-brand d-flex align-items-center gap-1" href="/emails">
                 <img src="/static/daygle-light.png" alt="daygle.net" style="height:32px; width:auto; margin-right: -4px;">
                 aygle Mail Archiver
             </a>
@@ -50,7 +50,7 @@
 
     <!-- Off-Canvas Menu -->
     <div class="offcanvas offcanvas-start bg-dark text-white" tabindex="-1" id="daygle_navigation" aria-labelledby="daygle_navigation_label">
-        <a href="/messages" class="text-decoration-none text-reset">
+        <a href="/emails" class="text-decoration-none text-reset">
             <div class="offcanvas-header d-flex align-items-center">
                 <h1 class="offcanvas-title mb-0 d-flex align-items-center gap-1" id="daygle_navigation_label" style="font-weight: 400;">
                     <img src="/static/daygle-light.png" alt="daygle.net" style="height:32px; width:auto; margin-right: -4px;">
@@ -64,8 +64,7 @@
         <div class="offcanvas-body">
             <ul class="list-unstyled mb-0">
                 <li class="mb-3"><a href="/dashboard" class="text-decoration-none text-white d-flex align-items-center py-1"><i class="fas fa-chart-line me-2"></i> Dashboard</a></li>
-                <li class="mb-3"><a href="/messages" class="text-decoration-none text-white d-flex align-items-center py-1"><i class="fas fa-inbox me-2"></i> Messages</a></li>
-                <li class="mb-3"><a href="/fetch_accounts" class="text-decoration-none text-white d-flex align-items-center py-1"><i class="fas fa-server me-2"></i> Fetch Accounts</a></li>
+                <li class="mb-3"><a href="/emails" class="text-decoration-none text-white d-flex align-items-center py-1"><i class="fas fa-inbox me-2"></i> Emails</a></li>
                 
                 <!-- Settings Menu with Submenu -->
                 <li class="mb-3">
@@ -74,6 +73,8 @@
                     </a>
                     <div class="collapse" id="settingsSubmenu">
                         <ul class="list-unstyled ps-4 mt-2">
+                            <li class="mb-2"><a href="/fetch_accounts" class="text-decoration-none text-white-50 d-flex align-items-center py-1"><i class="fas fa-server me-2"></i> Fetch Accounts</a></li>
+                            <li class="mb-2"><a href="/worker-status" class="text-decoration-none text-white-50 d-flex align-items-center py-1"><i class="fas fa-heartbeat me-2"></i> Worker Status</a></li>
                             <li class="mb-2"><a href="/settings" class="text-decoration-none text-white-50 d-flex align-items-center py-1"><i class="fas fa-sliders me-2"></i> Global Settings</a></li>
                             <li class="mb-2"><a href="/users" class="text-decoration-none text-white-50 d-flex align-items-center py-1"><i class="fas fa-users me-2"></i> User Management</a></li>
                             <li class="mb-2"><a href="/backup" class="text-decoration-none text-white-50 d-flex align-items-center py-1"><i class="fas fa-download me-2"></i> Backup</a></li>

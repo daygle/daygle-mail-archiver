@@ -152,7 +152,7 @@ def dashboard_stats(request: Request):
     db_size = size_results["size"] if size_results else "0 bytes"
 
     # Total accounts
-    accounts_results = query("SELECT COUNT(*) as count FROM imap_accounts").mappings().first()
+    accounts_results = query("SELECT COUNT(*) as count FROM fetch_accounts").mappings().first()
     total_accounts = accounts_results["count"] if accounts_results else 0
 
     # Emails today

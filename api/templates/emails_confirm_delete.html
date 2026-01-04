@@ -4,11 +4,11 @@
 <div class="confirm-overlay">
   <div class="confirm-modal">
     <h2>Confirm Deletion</h2>
-    <p>You are about to delete {{ count }} message{% if count != 1 %}s{% endif %}.</p>
+    <p>You are about to delete {{ count }} email{% if count != 1 %}s{% endif %}.</p>
 
     <p>Choose how you want to delete them:</p>
 
-    <form method="post" action="/messages/delete">
+    <form method="post" action="/emails/delete">
       {% for id in ids %}
       <input type="hidden" name="ids" value="{{ id }}">
       {% endfor %}

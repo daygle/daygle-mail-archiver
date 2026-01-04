@@ -1,21 +1,21 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Messages</h2>
+<h2>Emails</h2>
 
-<!-- Messages Section -->
+<!-- Emails Section -->
 <div class="settings-section">
-    <h3>Email Messages</h3>
-    <p class="section-description">View and manage your archived email messages</p>
+    <h3>Archived Emails</h3>
+    <p class="section-description">View and manage your archived emails</p>
 
-    <form method="get" action="/messages" class="messages-filter-form">
+    <form method="get" action="/emails" class="messages-filter-form">
       <input type="text" name="q" value="{{ q }}" placeholder="Search subject, sender, recipients">
       <input type="text" name="account" value="{{ account }}" placeholder="Account">
       <input type="text" name="folder" value="{{ folder }}" placeholder="Folder">
       <button type="submit" class="btn btn-primary"><i class="fa-solid fa-filter"></i> Filter</button>
     </form>
 
-    <form method="post" action="/messages/delete/confirm" id="messages-bulk-form">
+    <form method="post" action="/emails/delete/confirm" id="messages-bulk-form">
       <table class="messages-table">
         <thead>
           <tr>
@@ -42,13 +42,13 @@
             <td>{{ msg.sender }}</td>
             <td>{{ msg.recipients }}</td>
             <td>
-              <a href="/messages/{{ msg.id }}">{{ msg.subject or "(no subject)" }}</a>
+              <a href="/emails/{{ msg.id }}">{{ msg.subject or "(no subject)" }}</a>
             </td>
           </tr>
           {% endfor %}
           {% if messages|length == 0 %}
           <tr>
-            <td colspan="7" class="empty-state">No messages found.</td>
+            <td colspan="7" class="empty-state">No emails found.</td>
           </tr>
           {% endif %}
         </tbody>
@@ -63,13 +63,13 @@
 
     <div class="pagination">
       {% if page > 1 %}
-      <a href="/messages?page={{ page - 1 }}&page_size={{ page_size }}&q={{ q }}&account={{ account }}&folder={{ folder }}">Previous</a>
+      <a href="/emails?page={{ page - 1 }}&page_size={{ page_size }}&q={{ q }}&account={{ account }}&folder={{ folder }}">Previous</a>
       {% endif %}
 
       <span>Page {{ page }}</span>
 
       {% if (page * page_size) < total %}
-      <a href="/messages?page={{ page + 1 }}&page_size={{ page_size }}&q={{ q }}&account={{ account }}&folder={{ folder }}">Next</a>
+      <a href="/emails?page={{ page + 1 }}&page_size={{ page_size }}&q={{ q }}&account={{ account }}&folder={{ folder }}">Next</a>
       {% endif %}
     </div>
 </div>

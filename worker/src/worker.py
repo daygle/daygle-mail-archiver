@@ -27,7 +27,7 @@ def log_error(source: str, message: str, details: str = "", level: str = "error"
 def update_heartbeat(account_id: int):
     execute(
         """
-        UPDATE imap_accounts
+        UPDATE fetch_accounts
         SET last_heartbeat = :ts
         WHERE id = :id
         """,
@@ -37,7 +37,7 @@ def update_heartbeat(account_id: int):
 def update_success(account_id: int):
     execute(
         """
-        UPDATE imap_accounts
+        UPDATE fetch_accounts
         SET last_success = :ts, last_error = NULL
         WHERE id = :id
         """,
@@ -47,7 +47,7 @@ def update_success(account_id: int):
 def update_error(account_id: int, msg: str):
     execute(
         """
-        UPDATE imap_accounts
+        UPDATE fetch_accounts
         SET last_error = :msg
         WHERE id = :id
         """,
@@ -60,8 +60,8 @@ def get_accounts():
         SELECT id, name, host, port, username, password_encrypted,
                use_ssl, require_starttls, poll_interval_seconds,
                delete_after_processing, enabled
-        FROM imap_accounts
-        WHERE enabled = TRUE
+        FROM fetch_accounts
+        WHERE enabled = TRUE AND account_type = 'imap'
         """
     ).mappings().all()
     return rows
