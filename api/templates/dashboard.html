@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2><i class="fas fa-chart-line me-2"></i>Dashboard</h2>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-subtitle mb-2 text-white-50">Total Emails</h6>
+                        <h2 class="card-title mb-0" id="stat-total-emails">
+                            <span class="spinner-border spinner-border-sm" role="status"></span>
+                        </h2>
+                    </div>
+                    <div>
+                        <i class="fas fa-envelope fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-subtitle mb-2 text-white-50">Today</h6>
+                        <h2 class="card-title mb-0" id="stat-emails-today">
+                            <span class="spinner-border spinner-border-sm" role="status"></span>
+                        </h2>
+                    </div>
+                    <div>
+                        <i class="fas fa-calendar-day fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-subtitle mb-2 text-white-50">IMAP Accounts</h6>
+                        <h2 class="card-title mb-0" id="stat-total-accounts">
+                            <span class="spinner-border spinner-border-sm" role="status"></span>
+                        </h2>
+                    </div>
+                    <div>
+                        <i class="fas fa-server fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-subtitle mb-2 text-dark-50">Database Size</h6>
+                        <h2 class="card-title mb-0" id="stat-database-size">
+                            <span class="spinner-border spinner-border-sm" role="status"></span>
+                        </h2>
+                    </div>
+                    <div>
+                        <i class="fas fa-database fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row 1 -->
+<div class="row mb-4">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Emails Per Day (Last 30 Days)</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="emailsPerDayChart" style="height: 300px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row 2 -->
+<div class="row mb-4">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-paper-plane me-2"></i>Top 10 Senders</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="topSendersChart" style="height: 400px;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-inbox me-2"></i>Top 10 Receivers</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="topReceiversChart" style="height: 400px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<script>
+// Chart configurations
+const chartColors = [
+    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+    '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF6384'
+];
+
+// Load stats
+async function loadStats() {
+    try {
+        const response = await fetch('/api/dashboard/stats');
+        const data = await response.json();
+        
+        document.getElementById('stat-total-emails').textContent = data.total_emails.toLocaleString();
+        document.getElementById('stat-emails-today').textContent = data.emails_today.toLocaleString();
+        document.getElementById('stat-total-accounts').textContent = data.total_accounts.toLocaleString();
+        document.getElementById('stat-database-size').textContent = data.database_size;
+    } catch (error) {
+        console.error('Error loading stats:', error);
+    }
+}
+
+// Emails Per Day Chart
+async function loadEmailsPerDay() {
+    try {
+        const response = await fetch('/api/dashboard/emails-per-day');
+        const data = await response.json();
+        
+        const ctx = document.getElementById('emailsPerDayChart');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Emails',
+                    data: data.data,
+                    borderColor: '#36A2EB',
+                    backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error loading emails per day chart:', error);
+    }
+}
+
+// Top Senders Chart
+async function loadTopSenders() {
+    try {
+        const response = await fetch('/api/dashboard/top-senders');
+        const data = await response.json();
+        
+        const ctx = document.getElementById('topSendersChart');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Emails Sent',
+                    data: data.data,
+                    backgroundColor: chartColors,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error loading top senders chart:', error);
+    }
+}
+
+// Top Receivers Chart
+async function loadTopReceivers() {
+    try {
+        const response = await fetch('/api/dashboard/top-receivers');
+        const data = await response.json();
+        
+        const ctx = document.getElementById('topReceiversChart');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Emails Received',
+                    data: data.data,
+                    backgroundColor: chartColors,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error loading top receivers chart:', error);
+    }
+}
+
+// Load all data
+document.addEventListener('DOMContentLoaded', function() {
+    loadStats();
+    loadEmailsPerDay();
+    loadTopSenders();
+    loadTopReceivers();
+});
+</script>
+
+{% endblock %}
