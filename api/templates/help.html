@@ -72,25 +72,25 @@
     </div>
 
     <!-- Managing Emails -->
-    <div class="card mb-4">
+    <div class="card" style="margin-bottom: 24px;">
         <div class="card-header">
-            <h5 class="mb-0"><i class="fas fa-inbox"></i> Managing Emails</h5>
+            <h5 style="margin-bottom: 0;"><i class="fas fa-inbox"></i> Managing Emails</h5>
         </div>
         <div class="card-body">
             <h6>Viewing Emails</h6>
             <p>Navigate to the <strong>Emails</strong> page to see all archived messages. You can:</p>
-            <ul>
-                <li><strong>Search:</strong> Use the search box to find emails by subject, sender, or recipient</li>
-                <li><strong>Filter:</strong> Filter by folder or source account</li>
-                <li><strong>View:</strong> Click "View" to see the full email content</li>
-                <li><strong>Download:</strong> Download the raw email file (.eml format)</li>
+            <ul style="padding-left: 24px; margin-bottom: 16px;">
+                <li style="margin-bottom: 8px;"><strong>Search:</strong> Use the search box to find emails by subject, sender, or recipient</li>
+                <li style="margin-bottom: 8px;"><strong>Filter:</strong> Filter by folder or source account</li>
+                <li style="margin-bottom: 8px;"><strong>View:</strong> Click "View" to see the full email content</li>
+                <li style="margin-bottom: 8px;"><strong>Download:</strong> Download the raw email file (.eml format)</li>
             </ul>
 
-            <h6 class="mt-3">Deleting Emails</h6>
+            <h6 style="margin-top: 16px;">Deleting Emails</h6>
             <p>You can delete individual emails or perform bulk deletions:</p>
-            <ul>
-                <li>Individual: Click the delete button next to an email</li>
-                <li>Bulk: Use the "Delete All" option with filters to remove multiple emails at once</li>
+            <ul style="padding-left: 24px; margin-bottom: 16px;">
+                <li style="margin-bottom: 8px;">Individual: Click the delete button next to an email</li>
+                <li style="margin-bottom: 8px;">Bulk: Use the "Delete All" option with filters to remove multiple emails at once</li>
             </ul>
             <div class="alert alert-warning">
                 <i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> Deletions are permanent and cannot be undone!
@@ -99,34 +99,34 @@
     </div>
 
     <!-- Worker Status -->
-    <div class="card mb-4">
+    <div class="card" style="margin-bottom: 24px;">
         <div class="card-header">
-            <h5 class="mb-0"><i class="fas fa-heartbeat"></i> Worker Status Monitoring</h5>
+            <h5 style="margin-bottom: 0;"><i class="fas fa-heartbeat"></i> Worker Status Monitoring</h5>
         </div>
         <div class="card-body">
             <p>The <strong>Worker Status</strong> page shows the health of your email fetch workers:</p>
-            <ul>
-                <li><strong>Status:</strong> Shows if the worker is running (green) or stopped (red)</li>
-                <li><strong>Last Heartbeat:</strong> When the worker last checked in</li>
-                <li><strong>Accounts:</strong> Number of enabled accounts being monitored</li>
-                <li><strong>Recent Errors:</strong> Any errors encountered during fetching</li>
+            <ul style="padding-left: 24px; margin-bottom: 16px;">
+                <li style="margin-bottom: 8px;"><strong>Status:</strong> Shows if the worker is running (green) or stopped (red)</li>
+                <li style="margin-bottom: 8px;"><strong>Last Heartbeat:</strong> When the worker last checked in</li>
+                <li style="margin-bottom: 8px;"><strong>Accounts:</strong> Number of enabled accounts being monitored</li>
+                <li style="margin-bottom: 8px;"><strong>Recent Errors:</strong> Any errors encountered during fetching</li>
             </ul>
             <p class="mb-0">If the worker status is red, check that the worker process is running and review the error logs.</p>
         </div>
     </div>
 
     <!-- Settings -->
-    <div class="card mb-4">
+    <div class="card" style="margin-bottom: 24px;">
         <div class="card-header">
-            <h5 class="mb-0"><i class="fas fa-sliders"></i> Global Settings</h5>
+            <h5 style="margin-bottom: 0;"><i class="fas fa-sliders"></i> Global Settings</h5>
         </div>
         <div class="card-body">
             <h6>Retention Policy</h6>
             <p>Configure how long emails are kept before automatic deletion:</p>
-            <ul>
-                <li><strong>Enable Purge:</strong> Turn on automatic deletion of old emails</li>
-                <li><strong>Retention Period:</strong> Set how long to keep emails (days, months, or years)</li>
-                <li><strong>Delete from Mail Server:</strong> When enabled, retention cleanup will also attempt to remove emails from the original mail servers (IMAP only)</li>
+            <ul style="padding-left: 24px; margin-bottom: 16px;">
+                <li style="margin-bottom: 8px;"><strong>Enable Purge:</strong> Turn on automatic deletion of old emails</li>
+                <li style="margin-bottom: 8px;"><strong>Retention Period:</strong> Set how long to keep emails (days, months, or years)</li>
+                <li style="margin-bottom: 8px;"><strong>Delete from Mail Server:</strong> When enabled, retention cleanup will also attempt to remove emails from the original mail servers (IMAP only)</li>
             </ul>
             <div class="alert alert-info">
                 <i class="fas fa-info-circle"></i> <strong>Note:</strong> Retention cleanup runs automatically during worker cycles. All deletions are tracked and visible on the Dashboard.
@@ -138,66 +138,66 @@
     </div>
 
     <!-- Dashboard Analytics -->
-    <div class="card mb-4">
-        <div class="card-header bg-success text-white">
-            <h5 class="mb-0"><i class="fas fa-chart-line"></i> Dashboard & Analytics</h5>
+    <div class="card" style="margin-bottom: 24px;">
+        <div class="card-header" style="background: var(--success); color: white;">
+            <h5 style="margin-bottom: 0;"><i class="fas fa-chart-line"></i> Dashboard & Analytics</h5>
         </div>
         <div class="card-body">
             <p>The Dashboard provides comprehensive statistics about your email archive:</p>
-            <ul>
-                <li><strong>Email Volume:</strong> View email trends over the last 30 days</li>
-                <li><strong>Top Senders/Receivers:</strong> See who sends and receives the most emails</li>
-                <li><strong>Deletion Statistics:</strong> Track manual deletions vs automated retention cleanup</li>
-                <li><strong>Mail Server Deletions:</strong> Monitor how many emails were deleted from original servers</li>
-                <li><strong>Storage Metrics:</strong> Database size and total email counts</li>
+            <ul style="padding-left: 24px; margin-bottom: 16px;">
+                <li style="margin-bottom: 8px;"><strong>Email Volume:</strong> View email trends over the last 30 days</li>
+                <li style="margin-bottom: 8px;"><strong>Top Senders/Receivers:</strong> See who sends and receives the most emails</li>
+                <li style="margin-bottom: 8px;"><strong>Deletion Statistics:</strong> Track manual deletions vs automated retention cleanup</li>
+                <li style="margin-bottom: 8px;"><strong>Mail Server Deletions:</strong> Monitor how many emails were deleted from original servers</li>
+                <li style="margin-bottom: 8px;"><strong>Storage Metrics:</strong> Database size and total email counts</li>
             </ul>
             <p class="mb-0">All charts are interactive and update in real-time based on your archive data.</p>
         </div>
     </div>
 
     <!-- Troubleshooting -->
-    <div class="card mb-4">
-        <div class="card-header bg-warning">
-            <h5 class="mb-0"><i class="fas fa-wrench"></i> Troubleshooting</h5>
+    <div class="card" style="margin-bottom: 24px;">
+        <div class="card-header" style="background: var(--warning); color: white;">
+            <h5 style="margin-bottom: 0;"><i class="fas fa-wrench"></i> Troubleshooting</h5>
         </div>
         <div class="card-body">
             <h6>Connection Issues</h6>
-            <ul>
-                <li>Use the <strong>Test</strong> button on fetch accounts to verify connectivity</li>
-                <li>For Gmail: Use an app-specific password if using IMAP with 2FA enabled</li>
-                <li>Check firewall settings if connection times out</li>
-                <li>Verify SSL/TLS settings match your email provider's requirements</li>
+            <ul style="padding-left: 24px; margin-bottom: 16px;">
+                <li style="margin-bottom: 8px;">Use the <strong>Test</strong> button on fetch accounts to verify connectivity</li>
+                <li style="margin-bottom: 8px;">For Gmail: Use an app-specific password if using IMAP with 2FA enabled</li>
+                <li style="margin-bottom: 8px;">Check firewall settings if connection times out</li>
+                <li style="margin-bottom: 8px;">Verify SSL/TLS settings match your email provider's requirements</li>
             </ul>
 
-            <h6 class="mt-3">OAuth Authorization Failed</h6>
-            <ul>
-                <li>Verify your Client ID and Client Secret are correct</li>
-                <li>Ensure the redirect URI is properly configured in your OAuth app</li>
-                <li>Check that the required API permissions are granted</li>
-                <li>Try re-authorizing from the fetch account edit page</li>
+            <h6 style="margin-top: 16px;">OAuth Authorization Failed</h6>
+            <ul style="padding-left: 24px; margin-bottom: 16px;">
+                <li style="margin-bottom: 8px;">Verify your Client ID and Client Secret are correct</li>
+                <li style="margin-bottom: 8px;">Ensure the redirect URI is properly configured in your OAuth app</li>
+                <li style="margin-bottom: 8px;">Check that the required API permissions are granted</li>
+                <li style="margin-bottom: 8px;">Try re-authorizing from the fetch account edit page</li>
             </ul>
 
-            <h6 class="mt-3">No Emails Being Fetched</h6>
-            <ul>
-                <li>Check that the account is <strong>Enabled</strong></li>
-                <li>Verify the worker is running (check Worker Status page)</li>
-                <li>Review the Last Error field in the fetch account</li>
-                <li>Check the logs page for detailed error messages</li>
+            <h6 style="margin-top: 16px;">No Emails Being Fetched</h6>
+            <ul style="padding-left: 24px; margin-bottom: 16px;">
+                <li style="margin-bottom: 8px;">Check that the account is <strong>Enabled</strong></li>
+                <li style="margin-bottom: 8px;">Verify the worker is running (check Worker Status page)</li>
+                <li style="margin-bottom: 8px;">Review the Last Error field in the fetch account</li>
+                <li style="margin-bottom: 8px;">Check the logs page for detailed error messages</li>
             </ul>
 
-            <h6 class="mt-3">Performance Issues</h6>
-            <ul>
-                <li>Reduce the poll interval if the server is under heavy load</li>
-                <li>Enable the "Delete after processing" option for accounts that don't need server-side storage</li>
-                <li>Consider implementing retention policies to limit database size</li>
+            <h6 style="margin-top: 16px;">Performance Issues</h6>
+            <ul style="padding-left: 24px; margin-bottom: 16px;">
+                <li style="margin-bottom: 8px;">Reduce the poll interval if the server is under heavy load</li>
+                <li style="margin-bottom: 8px;">Enable the "Delete after processing" option for accounts that don't need server-side storage</li>
+                <li style="margin-bottom: 8px;">Consider implementing retention policies to limit database size</li>
             </ul>
         </div>
     </div>
 
     <!-- Email Deletion Behavior -->
-    <div class="card mb-4">
+    <div class="card" style="margin-bottom: 24px;">
         <div class="card-header">
-            <h5 class="mb-0"><i class="fas fa-trash-alt"></i> Email Deletion Behavior</h5>
+            <h5 style="margin-bottom: 0;"><i class="fas fa-trash-alt"></i> Email Deletion Behavior</h5>
         </div>
         <div class="card-body">
             <p>When <strong>"Delete Email After Processed"</strong> is enabled on a fetch account, emails are removed from the mail server after being successfully archived. The behavior differs by account type:</p>
@@ -255,12 +255,12 @@
                 </table>
             </div>
 
-            <div class="alert alert-info mt-3">
+            <div class="alert alert-info" style="margin-top: 16px;">
                 <h6><i class="fas fa-info-circle"></i> Important Notes:</h6>
-                <ul class="mb-0">
-                    <li><strong>IMAP:</strong> Messages marked with <code>\Deleted</code> flag appear deleted in most mail clients but remain on the server until expunged</li>
-                    <li><strong>Gmail:</strong> Messages moved to Trash are automatically deleted after 30 days</li>
-                    <li><strong>Office 365:</strong> Messages in Deleted Items can be recovered until manually emptied or auto-deleted</li>
+                <ul style="padding-left: 24px; margin-bottom: 0;">
+                    <li style="margin-bottom: 8px;"><strong>IMAP:</strong> Messages marked with <code>\Deleted</code> flag appear deleted in most mail clients but remain on the server until expunged</li>
+                    <li style="margin-bottom: 8px;"><strong>Gmail:</strong> Messages moved to Trash are automatically deleted after 30 days</li>
+                    <li style="margin-bottom: 8px;"><strong>Office 365:</strong> Messages in Deleted Items can be recovered until manually emptied or auto-deleted</li>
                 </ul>
             </div>
 
@@ -271,16 +271,16 @@
     </div>
 
     <!-- Additional Resources -->
-    <div class="card mb-4">
-        <div class="card-header bg-info text-white">
-            <h5 class="mb-0"><i class="fas fa-book"></i> Additional Resources</h5>
+    <div class="card" style="margin-bottom: 24px;">
+        <div class="card-header" style="background: var(--info); color: white;">
+            <h5 style="margin-bottom: 0;"><i class="fas fa-book"></i> Additional Resources</h5>
         </div>
         <div class="card-body">
-            <ul class="mb-0">
-                <li><strong>GitHub Repository:</strong> View source code and report issues</li>
-                <li><strong>Documentation:</strong> Check the README.md for technical details</li>
-                <li><strong>Support:</strong> Contact the administrator or check the logs for detailed error information</li>
-                <li><strong>Donate:</strong> Support development via the <a href="/donate">Donate</a> page</li>
+            <ul style="padding-left: 24px; margin-bottom: 0;">
+                <li style="margin-bottom: 8px;"><strong>GitHub Repository:</strong> View source code and report issues</li>
+                <li style="margin-bottom: 8px;"><strong>Documentation:</strong> Check the README.md for technical details</li>
+                <li style="margin-bottom: 8px;"><strong>Support:</strong> Contact the administrator or check the logs for detailed error information</li>
+                <li style="margin-bottom: 8px;"><strong>Donate:</strong> Support development via the <a href="/donate">Donate</a> page</li>
             </ul>
         </div>
     </div>

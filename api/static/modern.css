@@ -367,6 +367,14 @@ input, select, textarea, button {
     max-height: 500px;
 }
 
+.nav-submenu-toggle {
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+
 .nav-submenu-toggle .nav-arrow {
     transition: transform var(--transition-fast);
 }
@@ -378,6 +386,10 @@ input, select, textarea, button {
 .nav-submenu .nav-link {
     padding-left: 44px;
     font-size: 0.9375rem;
+}
+
+.sidebar-mobile-toggle {
+    display: none;
 }
 
 /* Sidebar Footer */
