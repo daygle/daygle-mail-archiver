@@ -65,6 +65,7 @@
                     <td>{{ acc.last_success.strftime(request.session.get('date_format', '%d/%m/%Y %H:%M')) if acc.last_success else 'Never' }}</td>
                     <td>
                         <a href="/fetch_accounts/{{ acc.id }}/edit" class="btn btn-sm btn-primary"><i class="fa-solid fa-pen-to-square"></i> Edit</a>
+                        <a href="/fetch_accounts/{{ acc.id }}/test" class="btn btn-sm btn-info"><i class="fa-solid fa-plug"></i> Test</a>
                         <a href="/fetch_accounts/{{ acc.id }}/delete/confirm" class="btn btn-sm btn-danger"><i class="fa-solid fa-trash"></i> Delete</a>
                     </td>
             </tr>

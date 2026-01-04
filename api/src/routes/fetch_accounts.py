@@ -284,6 +284,101 @@ def confirm_delete_account(request: Request, id: int):
     )
 
 
+@router.get("/fetch_accounts/{id}/test")
+def test_account_connection(request: Request, id: int):
+    """Test connection for an existing fetch account"""
+    if not require_login(request):
+        return RedirectResponse("/login", status_code=303)
+
+    # Load account details
+    acc = query(
+        """
+        SELECT id, name, account_type, host, port, username, password_encrypted, 
+               use_ssl, require_starttls, oauth_access_token, oauth_refresh_token
+        FROM fetch_accounts
+        WHERE id = :id
+        """,
+        {"id": id},
+    ).mappings().first()
+
+    if not acc:
+        flash(request, "Account not found")
+        return RedirectResponse("/fetch_accounts", status_code=303)
+
+    account_type = acc["account_type"]
+    
+    try:
+        if account_type == "imap":
+            # Test IMAP connection
+            from utils.security import decrypt_password
+            
+            password = decrypt_password(acc["password_encrypted"]) if acc["password_encrypted"] else ""
+            
+            if acc["use_ssl"]:
+                conn = IMAP4_SSL(acc["host"], acc["port"])
+                conn.login(acc["username"], password)
+            else:
+                conn = IMAP4(acc["host"], acc["port"])
+                if acc["require_starttls"]:
+                    conn.starttls()
+                conn.login(acc["username"], password)
+            
+            conn.logout()
+            flash(request, f"✓ IMAP connection successful to {acc['host']}")
+            
+        elif account_type == "gmail":
+            # Test Gmail API connection
+            import requests
+            from utils.oauth_helpers import get_valid_token
+            
+            access_token = get_valid_token(id, "gmail")
+            if not access_token:
+                flash(request, "✗ Gmail authentication failed - please re-authorize")
+            else:
+                # Test API call
+                headers = {"Authorization": f"Bearer {access_token}"}
+                response = requests.get(
+                    "https://gmail.googleapis.com/gmail/v1/users/me/profile",
+                    headers=headers,
+                    timeout=10
+                )
+                if response.status_code == 200:
+                    email = response.json().get("emailAddress", "unknown")
+                    flash(request, f"✓ Gmail API connection successful ({email})")
+                else:
+                    flash(request, f"✗ Gmail API connection failed: {response.status_code}")
+                    
+        elif account_type == "o365":
+            # Test Office 365 Graph API connection
+            import requests
+            from utils.oauth_helpers import get_valid_token
+            
+            access_token = get_valid_token(id, "o365")
+            if not access_token:
+                flash(request, "✗ Office 365 authentication failed - please re-authorize")
+            else:
+                # Test API call
+                headers = {"Authorization": f"Bearer {access_token}"}
+                response = requests.get(
+                    "https://graph.microsoft.com/v1.0/me",
+                    headers=headers,
+                    timeout=10
+                )
+                if response.status_code == 200:
+                    user = response.json()
+                    email = user.get("mail") or user.get("userPrincipalName", "unknown")
+                    flash(request, f"✓ Office 365 API connection successful ({email})")
+                else:
+                    flash(request, f"✗ Office 365 API connection failed: {response.status_code}")
+        else:
+            flash(request, f"✗ Unknown account type: {account_type}")
+            
+    except Exception as e:
+        flash(request, f"✗ Connection failed: {str(e)}")
+
+    return RedirectResponse("/fetch_accounts", status_code=303)
+
+
 @router.post("/fetch_accounts/test")
 def test_connection(
     request: Request,
