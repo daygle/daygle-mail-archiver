@@ -1,83 +1,135 @@
 {% extends "base.html" %}
 
+{% block page_title %}Worker Status{% endblock %}
+
 {% block content %}
-<h2>Worker Status</h2>
-
-<!-- Account Status Table -->
-<div class="settings-section">
-    <h3>Fetch Account Status</h3>
-    <p class="section-description">Monitor the health and activity of email fetch workers</p>
-
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-heartbeat"></i>
+            <span>Worker Status</span>
+        </div>
+    </div>
     {% if accounts|length == 0 %}
-    <div class="alert alert-info">
-        <i class="fas fa-info-circle me-2"></i>
-        No fetch accounts configured. <a href="/fetch_accounts/new">Create one now</a>.
+    <div class="card-body">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            <span>No fetch accounts configured. <a href="/fetch_accounts/new" class="link">Create one now</a>.</span>
+        </div>
     </div>
     {% else %}
-    <div class="table-responsive">
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>Status</th>
-                    <th>Account Name</th>
-                    <th>Type</th>
-                    <th>Last Heartbeat</th>
-                    <th>Last Success</th>
-                    <th>Poll Interval</th>
-                    <th>Last Error</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for acc in accounts %}
-                <tr class="
-                    {% if acc.health == 'healthy' %}table-success
-                    {% elif acc.health == 'error' %}table-danger
-                    {% elif acc.health == 'stale' %}table-warning
-                    {% elif acc.health == 'disabled' %}table-secondary
-                    {% endif %}">
-                    <td>
-                        <span class="badge 
-                            {% if acc.health == 'healthy' %}bg-success
-                            {% elif acc.health == 'error' %}bg-danger
-                            {% elif acc.health == 'stale' %}bg-warning text-dark
-                            {% elif acc.health == 'disabled' %}bg-secondary
-                            {% elif acc.health == 'pending' %}bg-info
-                            {% endif %}">
-                            <i class="fas 
-                                {% if acc.health == 'healthy' %}fa-check-circle
-                                {% elif acc.health == 'error' %}fa-times-circle
-                                {% elif acc.health == 'stale' %}fa-exclamation-triangle
-                                {% elif acc.health == 'disabled' %}fa-ban
-                                {% elif acc.health == 'pending' %}fa-clock
-                                {% endif %}
-                                me-1"></i>
-                            {{ acc.health_label }}
-                        </span>
-                    </td>
-                    <td>
-                        <a href="/fetch_accounts/{{ acc.id }}/edit">{{ acc.name }}</a>
-                    </td>
-                    <td>
-                        <span class="badge 
-                            {% if acc.account_type == 'imap' %}bg-primary
-                            {% elif acc.account_type == 'gmail' %}bg-danger
-                            {% elif acc.account_type == 'o365' %}bg-info
-                            {% endif %}">
-                            {{ acc.account_type|upper }}
-                        </span>
-                    </td>
-                    <td>
-                        {% if acc.last_heartbeat %}
-                            <span class="text-muted">{{ acc.heartbeat_ago }}</span>
-                            <br>
-                            <small class="text-muted">{{ acc.last_heartbeat.strftime('%Y-%m-%d %H:%M:%S UTC') }}</small>
-                        {% else %}
-                            <span class="text-muted">Never</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if acc.last_success %}
-                            <span class="text-success fw-bold">{{ acc.success_ago }}</span>
+    <div class="card-body" style="padding: 0;">
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Account Name</th>
+                        <th>Type</th>
+                        <th>Last Heartbeat</th>
+                        <th>Last Success</th>
+                        <th>Poll Interval</th>
+                        <th>Last Error</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for acc in accounts %}
+                    <tr>
+                        <td>
+                            <span class="badge 
+                                {% if acc.health == 'healthy' %}badge-success
+                                {% elif acc.health == 'error' %}badge-danger
+                                {% elif acc.health == 'stale' %}badge-warning
+                                {% elif acc.health == 'disabled' %}badge-secondary
+                                {% elif acc.health == 'pending' %}badge-info
+                                {% endif %}">
+                                <i class="fas 
+                                    {% if acc.health == 'healthy' %}fa-check-circle
+                                    {% elif acc.health == 'error' %}fa-times-circle
+                                    {% elif acc.health == 'stale' %}fa-exclamation-triangle
+                                    {% elif acc.health == 'disabled' %}fa-ban
+                                    {% elif acc.health == 'pending' %}fa-clock
+                                    {% endif %}"></i>
+                                {{ acc.health_label }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="/fetch_accounts/{{ acc.id }}/edit" class="link"><strong>{{ acc.name }}</strong></a>
+                        </td>
+                        <td>
+                            <span class="badge 
+                                {% if acc.account_type == 'imap' %}badge-primary
+                                {% elif acc.account_type == 'gmail' %}badge-danger
+                                {% elif acc.account_type == 'o365' %}badge-info
+                                {% endif %}">
+                                {{ acc.account_type|upper }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if acc.last_heartbeat %}
+                                <div><strong>{{ acc.heartbeat_ago }}</strong></div>
+                                <small style="color: var(--text-secondary);">{{ acc.last_heartbeat.strftime('%Y-%m-%d %H:%M:%S UTC') }}</small>
+                            {% else %}
+                                <span style="color: var(--text-secondary);">Never</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if acc.last_success %}
+                                <div style="color: var(--success); font-weight: 600;">{{ acc.success_ago }}</div>
+                                <small style="color: var(--text-secondary);">{{ acc.last_success.strftime('%Y-%m-%d %H:%M:%S UTC') }}</small>
+                            {% else %}
+                                <span style="color: var(--text-secondary);">Never</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if acc.poll_interval %}
+                                {{ acc.poll_interval }}s
+                            {% else %}
+                                <span style="color: var(--text-secondary);">Default (300s)</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if acc.last_error %}
+                                <span style="color: var(--danger);">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    {{ acc.last_error[:100] }}{% if acc.last_error|length > 100 %}...{% endif %}
+                                </span>
+                            {% else %}
+                                <span style="color: var(--text-secondary);">None</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer">
+        <div class="mb-3">
+            <strong style="font-size: 0.9375rem;">Status Legend:</strong>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; margin-top: 12px;">
+                <div><span class="badge badge-success">Healthy</span> Worker is active and fetching successfully</div>
+                <div><span class="badge badge-warning">Stale</span> No heartbeat in 3x the poll interval</div>
+                <div><span class="badge badge-danger">Error</span> Last fetch attempt encountered an error</div>
+                <div><span class="badge badge-info">Pending</span> Never been run yet</div>
+                <div><span class="badge badge-secondary">Disabled</span> Account is disabled and not being fetched</div>
+            </div>
+        </div>
+        <div class="flex gap-3 mt-4">
+            <a href="/fetch_accounts" class="btn btn-primary">
+                <i class="fas fa-server"></i>
+                <span>Manage Fetch Accounts</span>
+            </a>
+            <a href="/logs" class="btn btn-secondary">
+                <i class="fas fa-list"></i>
+                <span>View System Logs</span>
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
                             <br>
                             <small class="text-muted">{{ acc.last_success.strftime('%Y-%m-%d %H:%M:%S UTC') }}</small>
                         {% else %}

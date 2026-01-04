@@ -1,15 +1,93 @@
 {% extends "base.html" %}
 
+{% block page_title %}{{ email.subject or "(no subject)" }}{% endblock %}
+
 {% block content %}
-<div class="row mb-4">
-    <div class="col">
-        <h2><i class="fas fa-envelope-open me-2"></i>{{ email.subject or "(no subject)" }}</h2>
+<!-- Email Metadata Card -->
+<div class="card mb-4">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-envelope-open"></i>
+            <span>Email Details</span>
+        </div>
+        <div class="flex gap-2">
+            <a href="/emails" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back</span>
+            </a>
+            <a href="/emails/{{ email.id }}/download" class="btn btn-primary btn-sm">
+                <i class="fas fa-download"></i>
+                <span>Download EML</span>
+            </a>
+            {% if request.session.role == 'administrator' %}
+            <form method="post" action="/emails/{{ email.id }}/delete/confirm" style="display:inline;">
+                <button type="submit" class="btn btn-danger btn-sm">
+                    <i class="fas fa-trash"></i>
+                    <span>Delete</span>
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <div class="table-container">
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <td width="120" style="background: var(--bg-secondary); font-weight: 600;">Subject</td>
+                        <td><strong>{{ email.subject or "(no subject)" }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td style="background: var(--bg-secondary); font-weight: 600;">From</td>
+                        <td>{{ email.sender }}</td>
+                    </tr>
+                    <tr>
+                        <td style="background: var(--bg-secondary); font-weight: 600;">To</td>
+                        <td>{{ email.recipients }}</td>
+                    </tr>
+                    <tr>
+                        <td style="background: var(--bg-secondary); font-weight: 600;">Date</td>
+                        <td>{{ email.date }}</td>
+                    </tr>
+                    <tr>
+                        <td style="background: var(--bg-secondary); font-weight: 600;">Account</td>
+                        <td><span class="badge badge-primary">{{ email.source }}</span></td>
+                    </tr>
+                    <tr>
+                        <td style="background: var(--bg-secondary); font-weight: 600;">Folder</td>
+                        <td><span class="badge badge-secondary">{{ email.folder }}</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
-<div class="settings-section">
-    <h3>Email Details</h3>
-    <p class="section-description">View email content and metadata</p>
+<!-- Headers Card -->
+<div class="card mb-4">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-list"></i>
+            <span>Email Headers</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <pre style="background: var(--bg-secondary); padding: 16px; border-radius: var(--radius-md); overflow-x: auto; font-family: 'Courier New', monospace; font-size: 0.875rem;">
+{% for k, v in headers.items() %}
+{{ k }}: {{ v }}
+{% endfor %}</pre>
+    </div>
+</div>
+
+<!-- Body Card -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-file-alt"></i>
+            <span>Email Body</span>
+        </div>
+    </div>
+    <div class="card-body">
 
     <div class="table-responsive mb-3">
         <table class="table table-bordered">
@@ -38,34 +116,14 @@
         </table>
     </div>
 
-    <div class="mb-3">
-        <a href="/emails" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Back to Emails</a>
-        <a href="/emails/{{ email.id }}/download" class="btn btn-primary"><i class="fa-solid fa-download"></i> Download EML</a>
-
-        {% if request.session.role == 'administrator' %}
-        <form method="post" action="/emails/{{ email.id }}/delete/confirm" style="display:inline;">
-            <button type="submit" class="btn btn-danger"><i class="fa-solid fa-trash"></i> Delete</button>
-        </form>
+        {% if body.html %}
+            <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; background: white;">
+                {{ body.html | safe }}
+            </div>
+        {% else %}
+            <pre style="background: var(--bg-secondary); padding: 16px; border-radius: var(--radius-md); overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;">{{ body.text }}</pre>
         {% endif %}
     </div>
-</div>
-
-<div class="settings-section">
-    <h3>Headers</h3>
-    <pre class="message-headers">
-{% for k, v in headers.items() %}
-{{ k }}: {{ v }}
-{% endfor %}
-    </pre>
-</div>
-
-<div class="settings-section">
-    <h3>Body</h3>
-    {% if body.html %}
-        <div class="message-body-html">{{ body.html | safe }}</div>
-    {% else %}
-        <pre class="message-body-text">{{ body.text }}</pre>
-    {% endif %}
 </div>
 
 {% endblock %}

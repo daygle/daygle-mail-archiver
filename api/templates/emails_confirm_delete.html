@@ -1,32 +1,49 @@
 {% extends "base.html" %}
 
+{% block page_title %}Confirm Deletion{% endblock %}
+
 {% block content %}
-<div class="confirm-overlay">
-  <div class="confirm-modal">
-    <h2>Confirm Deletion</h2>
-    <p>You are about to delete {{ count }} email{% if count != 1 %}s{% endif %}.</p>
+<div style="max-width: 600px; margin: 0 auto;">
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i>
+                <span>Confirm Deletion</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-warning">
+                <i class="fas fa-info-circle"></i>
+                <span>You are about to delete <strong>{{ count }}</strong> email{% if count != 1 %}s{% endif %}.</span>
+            </div>
 
-    <p>Choose how you want to delete them:</p>
+            <p style="margin-top: 20px; margin-bottom: 20px;"><strong>Choose how you want to delete them:</strong></p>
 
-    <form method="post" action="/emails/delete">
-      {% for id in ids %}
-      <input type="hidden" name="ids" value="{{ id }}">
-      {% endfor %}
-      <input type="hidden" name="return_url" value="{{ return_url }}">
+            <form method="post" action="/emails/delete">
+                {% for id in ids %}
+                <input type="hidden" name="ids" value="{{ id }}">
+                {% endfor %}
+                <input type="hidden" name="return_url" value="{{ return_url }}">
 
-      <div class="confirm-buttons">
-        <button type="submit" name="mode" value="db" class="btn btn-danger">
-          <i class="fa-solid fa-database"></i> Database Only
-        </button>
-        <button type="submit" name="mode" value="imap" class="btn btn-warning">
-          <i class="fa-solid fa-cloud-arrow-down"></i> Database and Mail Server
-        </button>
-      </div>
+                <div style="display: grid; gap: 12px; margin-bottom: 20px;">
+                    <button type="submit" name="mode" value="db" class="btn btn-danger w-100">
+                        <i class="fas fa-database"></i>
+                        <span>Delete from Database Only</span>
+                    </button>
+                    <button type="submit" name="mode" value="imap" class="btn btn-warning w-100">
+                        <i class="fas fa-server"></i>
+                        <span>Delete from Database and Mail Server</span>
+                    </button>
+                </div>
 
-      <div class="confirm-cancel">
-        <a href="{{ return_url }}" class="btn btn-secondary"><i class="fa-solid fa-ban"></i> Cancel</a>
-      </div>
-    </form>
-  </div>
+                <div class="text-center">
+                    <a href="{{ return_url }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i>
+                        <span>Cancel</span>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}

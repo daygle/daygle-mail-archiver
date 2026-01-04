@@ -1,35 +1,27 @@
 {% extends "base.html" %}
+
+{% block page_title %}System Logs{% endblock %}
+
 {% block content %}
-
-<div class="row mb-4">
-    <div class="col">
-        <h2><i class="fas fa-file-alt me-2"></i>Log Viewer</h2>
-    </div>
-</div>
-
-<!-- Log Viewer Section -->
-<div class="settings-section">
-    <h3>System Logs</h3>
-    <p class="section-description">View system logs and error messages</p>
-
-    <div class="mb-3">
-        <form method="get" class="log-filter-form">
-            <div class="row g-2">
-                <div class="col-md-3">
-                    <label for="log_level" class="form-label">Filter by Level:</label>
-                    <select id="log_level" class="form-control" name="level" onchange="this.form.submit()">
-                        <option value="all" {% if current_level == 'all' %}selected{% endif %}>All</option>
-                        <option value="error" {% if current_level == 'error' %}selected{% endif %}>Error</option>
-                        <option value="warning" {% if current_level == 'warning' %}selected{% endif %}>Warning</option>
-                        <option value="info" {% if current_level == 'info' %}selected{% endif %}>Info</option>
-                    </select>
-                </div>
-            </div>
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-file-alt"></i>
+            <span>System Logs</span>
+        </div>
+        <form method="get" class="flex gap-2" style="margin: 0;">
+            <select id="log_level" class="form-select" name="level" onchange="this.form.submit()" style="width: auto;">
+                <option value="all" {% if current_level == 'all' %}selected{% endif %}>All Levels</option>
+                <option value="error" {% if current_level == 'error' %}selected{% endif %}>Error Only</option>
+                <option value="warning" {% if current_level == 'warning' %}selected{% endif %}>Warning Only</option>
+                <option value="info" {% if current_level == 'info' %}selected{% endif %}>Info Only</option>
+            </select>
         </form>
     </div>
+    <div class="card-body" style="padding: 0;">
 
-    <div class="table-responsive">
-        <table class="table table-hover">
+        <div class="table-container">
+            <table class="table">
             <thead>
                 <tr>
                     <th>Time</th>
@@ -41,25 +33,35 @@
             <tbody>
                 {% for e in errors %}
                 <tr>
-                    <td>{{ e.timestamp.strftime(request.session.date_format) }}</td>
+                    <td><small>{{ e.timestamp.strftime(request.session.date_format) }}</small></td>
                     <td>
                         {% if e.level == 'error' %}
-                            <span class="badge bg-danger">{{ e.level }}</span>
+                            <span class="badge badge-danger"><i class="fas fa-times-circle"></i> {{ e.level }}</span>
                         {% elif e.level == 'warning' %}
-                            <span class="badge bg-warning">{{ e.level }}</span>
+                            <span class="badge badge-warning"><i class="fas fa-exclamation-triangle"></i> {{ e.level }}</span>
                         {% elif e.level == 'info' %}
-                            <span class="badge bg-info">{{ e.level }}</span>
+                            <span class="badge badge-info"><i class="fas fa-info-circle"></i> {{ e.level }}</span>
                         {% else %}
-                            <span class="badge bg-secondary">{{ e.level }}</span>
+                            <span class="badge badge-secondary">{{ e.level }}</span>
                         {% endif %}
                     </td>
-                    <td>{{ e.source }}</td>
+                    <td><span class="badge badge-secondary">{{ e.source }}</span></td>
                     <td>{{ e.message }}</td>
                 </tr>
                 {% endfor %}
+                {% if errors|length == 0 %}
+                <tr>
+                    <td colspan="4" class="text-center" style="padding: 48px 0;">
+                        <div style="color: var(--text-secondary);">
+                            <i class="fas fa-check-circle" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                            <p>No log entries found.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endif %}
             </tbody>
         </table>
+        </div>
     </div>
 </div>
-
 {% endblock %}

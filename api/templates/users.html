@@ -1,16 +1,104 @@
 {% extends "base.html" %}
-{% block content %}
 
-<div class="row mb-4">
-    <div class="col">
-        <h2><i class="fas fa-users me-2"></i>User Management</h2>
+{% block page_title %}User Management{% endblock %}
+
+{% block content %}
+<!-- Users Table Card -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-users"></i>
+            <span>User Accounts</span>
+        </div>
+        <a href="/users/new" class="btn btn-primary">
+            <i class="fas fa-user-plus"></i>
+            <span>Create New User</span>
+        </a>
     </div>
-    <div class="col text-end">
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createUserModal">
-            <i class="fa-solid fa-user-plus"></i> Create New User
-        </button>
+    <div class="card-body" style="padding: 0;">
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Last Login</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td><strong>{{ user.username }}</strong></td>
+                        <td>{{ (user.first_name or '') ~ ' ' ~ (user.last_name or '') if user.first_name or user.last_name else '-' }}</td>
+                        <td>{{ user.email or '-' }}</td>
+                        <td>
+                            {% if user.role == 'administrator' %}
+                                <span class="badge badge-primary">
+                                    <i class="fas fa-user-shield"></i> Administrator
+                                </span>
+                            {% elif user.role == 'read_only' %}
+                                <span class="badge badge-info">
+                                    <i class="fas fa-eye"></i> Read Only
+                                </span>
+                            {% else %}
+                                <span class="badge badge-secondary">{{ user.role }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.enabled %}
+                                <span class="badge badge-success"><i class="fas fa-check"></i> Enabled</span>
+                            {% else %}
+                                <span class="badge badge-danger"><i class="fas fa-times"></i> Disabled</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.last_login %}
+                                <small>{{ user.last_login.strftime(request.session.date_format) }}</small>
+                            {% else %}
+                                <span class="text-secondary">Never</span>
+                            {% endif %}
+                        </td>
+                        <td><small>{{ user.created_at.strftime(request.session.date_format) }}</small></td>
+                        <td>
+                            <div class="flex gap-2">
+                                <a href="/users/{{ user.id }}/edit" class="btn btn-secondary btn-sm" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form method="post" action="/users/{{ user.id }}/toggle" style="display: inline;">
+                                    <button type="submit" class="btn {% if user.enabled %}btn-warning{% else %}btn-success{% endif %} btn-sm" title="{{ 'Disable' if user.enabled else 'Enable' }}">
+                                        <i class="fas {% if user.enabled %}fa-ban{% else %}fa-check{% endif %}"></i>
+                                    </button>
+                                </form>
+                                <form method="post" action="/users/{{ user.id }}/delete" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                                    <button type="submit" class="btn btn-danger btn-sm" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if users|length == 0 %}
+                    <tr>
+                        <td colspan="8" class="text-center" style="padding: 48px 0;">
+                            <div style="color: var(--text-secondary);">
+                                <i class="fas fa-users" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                                <p>No users found.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
+{% endblock %}
 
 <!-- Existing Users Section -->
 <div class="settings-section">
