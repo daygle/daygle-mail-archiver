@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, Form
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 import bcrypt
 
@@ -19,7 +19,11 @@ def list_users(request: Request):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    users = query("SELECT id, username, enabled, created_at FROM users ORDER BY id").mappings().all()
+    users = query("""
+        SELECT id, username, first_name, last_name, email, enabled, last_login, created_at 
+        FROM users 
+        ORDER BY id
+    """).mappings().all()
     msg = request.session.pop("flash", None)
 
     return templates.TemplateResponse(
@@ -28,16 +32,115 @@ def list_users(request: Request):
     )
 
 @router.post("/users/create")
-def create_user(request: Request, username: str = Form(...), password: str = Form(...)):
+def create_user(
+    request: Request, 
+    username: str = Form(...), 
+    password: str = Form(...),
+    first_name: str = Form(""),
+    last_name: str = Form(""),
+    email: str = Form(""),
+    enabled: bool = Form(True)
+):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
     hash_pw = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
     try:
-        query("INSERT INTO users (username, password_hash) VALUES (:u, :h)", {"u": username, "h": hash_pw})
+        query("""
+            INSERT INTO users (username, password_hash, first_name, last_name, email, enabled) 
+            VALUES (:u, :h, :fn, :ln, :e, :en)
+        """, {
+            "u": username, 
+            "h": hash_pw, 
+            "fn": first_name,
+            "ln": last_name,
+            "e": email,
+            "en": enabled
+        })
         flash(request, f"User {username} created successfully.")
     except Exception as e:
         flash(request, f"User creation failed: {str(e)}")
+    return RedirectResponse("/users", status_code=303)
+
+@router.get("/api/users/{user_id}")
+def get_user(request: Request, user_id: int):
+    """API endpoint to get user details for editing"""
+    if not require_login(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    user = query("""
+        SELECT id, username, first_name, last_name, email, enabled, last_login, created_at 
+        FROM users 
+        WHERE id = :id
+    """, {"id": user_id}).mappings().first()
+    
+    if not user:
+        return JSONResponse({"error": "User not found"}, status_code=404)
+    
+    return {
+        "id": user["id"],
+        "username": user["username"],
+        "first_name": user["first_name"] or "",
+        "last_name": user["last_name"] or "",
+        "email": user["email"] or "",
+        "enabled": user["enabled"],
+        "last_login": user["last_login"].isoformat() if user["last_login"] else None,
+        "created_at": user["created_at"].isoformat() if user["created_at"] else None
+    }
+
+@router.post("/users/{user_id}/update")
+def update_user(
+    request: Request,
+    user_id: int,
+    username: str = Form(...),
+    first_name: str = Form(""),
+    last_name: str = Form(""),
+    email: str = Form(""),
+    enabled: bool = Form(False),
+    password: str = Form("")
+):
+    if not require_login(request):
+        return RedirectResponse("/login", status_code=303)
+
+    current_user_id = request.session.get("user_id")
+    
+    try:
+        if password:
+            # Update with new password
+            hash_pw = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+            query("""
+                UPDATE users 
+                SET username = :u, first_name = :fn, last_name = :ln, 
+                    email = :e, enabled = :en, password_hash = :h
+                WHERE id = :id
+            """, {
+                "u": username,
+                "fn": first_name,
+                "ln": last_name,
+                "e": email,
+                "en": enabled if user_id != current_user_id else True,  # Don't disable own account
+                "h": hash_pw,
+                "id": user_id
+            })
+        else:
+            # Update without password change
+            query("""
+                UPDATE users 
+                SET username = :u, first_name = :fn, last_name = :ln, 
+                    email = :e, enabled = :en
+                WHERE id = :id
+            """, {
+                "u": username,
+                "fn": first_name,
+                "ln": last_name,
+                "e": email,
+                "en": enabled if user_id != current_user_id else True,  # Don't disable own account
+                "id": user_id
+            })
+        flash(request, "User updated successfully.")
+    except Exception as e:
+        flash(request, f"User update failed: {str(e)}")
+    
     return RedirectResponse("/users", status_code=303)
 
 @router.post("/users/{user_id}/delete")

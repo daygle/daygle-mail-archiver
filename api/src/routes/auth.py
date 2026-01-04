@@ -51,6 +51,10 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
         request.session["user_id"] = user["id"]
         request.session["username"] = user["username"]
         request.session["date_format"] = user["date_format"]
+        
+        # Update last_login timestamp
+        query("UPDATE users SET last_login = NOW() WHERE id = :id", {"id": user["id"]})
+        
         log("info", "auth", f"User {username} logged in successfully")
         return RedirectResponse("/messages", status_code=303)
 

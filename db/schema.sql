@@ -84,10 +84,17 @@ CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     username TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
+    first_name TEXT,
+    last_name TEXT,
+    email TEXT,
     date_format TEXT NOT NULL DEFAULT '%Y-%m-%d %H:%M:%S',
     enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    last_login TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Index on email for lookups
+CREATE INDEX IF NOT EXISTS users_email_idx ON users(email);
 
 -- Insert default admin user with no password (set on first login)
 INSERT INTO users (username, password_hash)
