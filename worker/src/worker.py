@@ -59,9 +59,9 @@ def get_accounts():
         """
         SELECT id, name, host, port, username, password_encrypted,
                use_ssl, require_starttls, poll_interval_seconds,
-               delete_after_processing, enabled
+               delete_after_processing, enabled, account_type
         FROM fetch_accounts
-        WHERE enabled = TRUE AND account_type = 'imap'
+        WHERE enabled = TRUE
         """
     ).mappings().all()
     return rows
@@ -132,9 +132,34 @@ def store_message(
 def process_account(account):
     account_id = account["id"]
     name = account["name"]
+    account_type = account.get("account_type", "imap")
     source = name  # used as source label in messages table
 
     update_heartbeat(account_id)
+
+    try:
+        if account_type == "imap":
+            process_imap_account(account)
+        elif account_type == "gmail":
+            process_gmail_account(account)
+        elif account_type == "o365":
+            process_o365_account(account)
+        else:
+            raise ValueError(f"Unknown account type: {account_type}")
+        
+        update_success(account_id)
+
+    except Exception as e:
+        msg = f"Error processing account {account_id}: {e}"
+        log_error(source, msg)
+        update_error(account_id, msg)
+
+
+def process_imap_account(account):
+    """Process IMAP account"""
+    account_id = account["id"]
+    name = account["name"]
+    source = name
 
     try:
         password = decrypt_password(account["password_encrypted"])
@@ -144,69 +169,164 @@ def process_account(account):
         update_error(account_id, msg)
         return
 
-    try:
-        with ImapConnection(
-            host=account["host"],
-            port=account["port"],
-            username=account["username"],
-            password=password,
-            use_ssl=account["use_ssl"],
-            require_starttls=account["require_starttls"],
-        ) as conn:
+    with ImapConnection(
+        host=account["host"],
+        port=account["port"],
+        username=account["username"],
+        password=password,
+        use_ssl=account["use_ssl"],
+        require_starttls=account["require_starttls"],
+    ) as conn:
 
-            status, mailboxes = conn.list()
+        status, mailboxes = conn.list()
+        if status != "OK":
+            raise RuntimeError(f"LIST failed: {status}")
+
+        # Iterate over all mailboxes
+        for mbox in mailboxes:
+            parts = mbox.decode().split(" ")
+            folder = parts[-1].strip('"')
+
+            conn.select(folder, readonly=True)
+
+            last_uid = get_last_uid(account_id, folder)
+
+            # UID search: all messages with UID greater than last_uid
+            if last_uid > 0:
+                criteria = f"(UID {last_uid+1}:*)"
+            else:
+                criteria = "ALL"
+
+            status, data = conn.uid("SEARCH", None, criteria)
             if status != "OK":
-                raise RuntimeError(f"LIST failed: {status}")
+                continue
 
-            # Simple approach: iterate over all mailboxes
-            for mbox in mailboxes:
-                parts = mbox.decode().split(" ")
-                folder = parts[-1].strip('"')
+            if not data or not data[0]:
+                continue
 
-                # Optional: skip special folders if desired
-                # Here we just process everything.
-                conn.select(folder, readonly=True)
+            uids = [int(u) for u in data[0].split()]
+            max_uid = last_uid
 
-                last_uid = get_last_uid(account_id, folder)
-
-                # UID search: all messages with UID greater than last_uid
-                if last_uid > 0:
-                    criteria = f"(UID {last_uid+1}:*)"
-                else:
-                    criteria = "ALL"
-
-                status, data = conn.uid("SEARCH", None, criteria)
-                if status != "OK":
+            for uid in uids:
+                if uid <= last_uid:
                     continue
 
-                if not data or not data[0]:
+                status, msg_data = conn.uid("FETCH", str(uid), "(RFC822)")
+                if status != "OK" or not msg_data or not msg_data[0]:
                     continue
 
-                uids = [int(u) for u in data[0].split()]
-                max_uid = last_uid
+                raw = msg_data[0][1]
+                store_message(source, folder, uid, raw)
+                if uid > max_uid:
+                    max_uid = uid
 
-                for uid in uids:
-                    if uid <= last_uid:
-                        continue
+            if max_uid > last_uid:
+                set_last_uid(account_id, folder, max_uid)
 
-                    status, msg_data = conn.uid("FETCH", str(uid), "(RFC822)")
-                    if status != "OK" or not msg_data or not msg_data[0]:
-                        continue
 
-                    raw = msg_data[0][1]
-                    store_message(source, folder, uid, raw)
-                    if uid > max_uid:
-                        max_uid = uid
+def process_gmail_account(account):
+    """Process Gmail account via API"""
+    account_id = account["id"]
+    name = account["name"]
+    source = name
+    folder = "INBOX"  # Gmail uses labels, we'll use INBOX as folder
 
-                if max_uid > last_uid:
-                    set_last_uid(account_id, folder, max_uid)
+    # Get valid access token
+    access_token = get_valid_token(account_id, "gmail")
+    if not access_token:
+        raise Exception("Failed to get valid Gmail access token")
 
-        update_success(account_id)
+    client = GmailClient(access_token)
 
-    except Exception as e:
-        msg = f"Error processing account {account_id}: {e}"
-        log_error(source, msg)
-        update_error(account_id, msg)
+    # Get last sync token for delta sync
+    last_sync_token = get_last_sync_token(account_id, folder)
+
+    # Fetch new message IDs
+    message_ids = client.fetch_new_messages(last_sync_token)
+
+    # Process each message
+    for msg_id in message_ids:
+        try:
+            # Get message in raw RFC822 format
+            raw_email = client.get_message_raw(msg_id)
+            if raw_email:
+                # Use message_id hash as UID equivalent
+                uid = hash(msg_id) & 0x7FFFFFFF  # Keep as positive int
+                store_message(source, folder, uid, raw_email)
+        except Exception as e:
+            log_error(source, f"Failed to fetch Gmail message {msg_id}: {e}")
+
+    # Update sync token for next run
+    new_sync_token = client.get_sync_token()
+    if new_sync_token:
+        set_last_sync_token(account_id, folder, new_sync_token)
+
+
+def process_o365_account(account):
+    """Process Office 365 account via Graph API"""
+    account_id = account["id"]
+    name = account["name"]
+    source = name
+    folder = "INBOX"
+
+    # Get valid access token
+    access_token = get_valid_token(account_id, "o365")
+    if not access_token:
+        raise Exception("Failed to get valid Office 365 access token")
+
+    client = O365Client(access_token)
+
+    # Get last delta link for incremental sync
+    last_delta_link = get_last_sync_token(account_id, folder)
+
+    # Fetch new message IDs
+    message_ids = client.fetch_new_messages(last_delta_link)
+
+    # Process each message
+    for msg_id in message_ids:
+        try:
+            # Get message in MIME format
+            raw_email = client.get_message_mime(msg_id)
+            if raw_email:
+                # Use message_id hash as UID equivalent
+                uid = hash(msg_id) & 0x7FFFFFFF  # Keep as positive int
+                store_message(source, folder, uid, raw_email)
+        except Exception as e:
+            log_error(source, f"Failed to fetch O365 message {msg_id}: {e}")
+
+    # Update delta link for next run
+    new_delta_link = client.get_delta_link()
+    if new_delta_link:
+        set_last_sync_token(account_id, folder, new_delta_link)
+
+
+def get_last_sync_token(account_id: int, folder: str) -> str:
+    """Get last sync token (for Gmail/O365 delta sync)"""
+    row = query(
+        """
+        SELECT last_sync_token
+        FROM fetch_state
+        WHERE account_id = :id AND folder = :folder
+        """,
+        {"id": account_id, "folder": folder},
+    ).mappings().first()
+
+    if row and row["last_sync_token"]:
+        return row["last_sync_token"]
+    return None
+
+
+def set_last_sync_token(account_id: int, folder: str, token: str):
+    """Store sync token for next delta sync"""
+    execute(
+        """
+        INSERT INTO fetch_state (account_id, folder, last_sync_token)
+        VALUES (:id, :folder, :token)
+        ON CONFLICT (account_id, folder)
+        DO UPDATE SET last_sync_token = EXCLUDED.last_sync_token
+        """,
+        {"id": account_id, "folder": folder, "token": token},
+    )
 
 def get_settings():
     rows = query("SELECT key, value FROM settings").mappings().all()
