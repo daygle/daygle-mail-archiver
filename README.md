@@ -145,12 +145,12 @@ The worker will:
 
 ---
 
-# Browsing Messages
+# Browsing Emails
 
 Go to:
 
 ```
-/messages
+/emails
 ```
 
 You can:

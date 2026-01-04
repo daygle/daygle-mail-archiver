@@ -56,7 +56,7 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
         query("UPDATE users SET last_login = NOW() WHERE id = :id", {"id": user["id"]})
         
         log("info", "auth", f"User {username} logged in successfully")
-        return RedirectResponse("/messages", status_code=303)
+        return RedirectResponse("/dashboard", status_code=303)
 
     log("warning", "auth", f"Failed login attempt for user: {username}")
     return templates.TemplateResponse(
@@ -80,7 +80,7 @@ def set_password(request: Request, password: str = Form(...)):
     hash_pw = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
     query("UPDATE users SET password_hash = :h WHERE id = :id", {"h": hash_pw, "id": user_id})
     del request.session["needs_password"]
-    return RedirectResponse("/messages", status_code=303)
+    return RedirectResponse("/dashboard", status_code=303)
 
 @router.get("/logout")
 def logout(request: Request):
