@@ -56,15 +56,9 @@
                 <input id="host" class="form-control" name="host" value="{{ account.host if account else '' }}">
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="port">Port</label>
-                    <input id="port" class="form-control" name="port" type="number" value="{{ account.port if account else '993' }}">
-                </div>
-                <div class="form-group">
-                    <label for="poll_interval">Poll Interval (seconds)</label>
-                    <input id="poll_interval" class="form-control" name="poll_interval_seconds" type="number" value="{{ account.poll_interval_seconds if account else '300' }}">
-                </div>
+            <div class="form-group">
+                <label for="port">Port</label>
+                <input id="port" class="form-control" name="port" type="number" value="{{ account.port if account else '993' }}">
             </div>
 
             <div class="form-group">
