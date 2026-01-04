@@ -2,16 +2,15 @@ from typing import List
 
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
-from fastapi.templating import Jinja2Templates
 from imaplib import IMAP4, IMAP4_SSL
 
 from utils.db import query
 from utils.email_parser import decompress, parse_email
 from utils.security import decrypt_password, can_delete
 from utils.logger import log
+from utils.templates import templates
 
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
 
 
 def require_login(request: Request):

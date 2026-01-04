@@ -1,15 +1,14 @@
 """OAuth2 routes for Gmail and Office 365 integration"""
 from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse, HTMLResponse
-from fastapi.templating import Jinja2Templates
 import urllib.parse
 import requests
 from datetime import datetime, timezone, timedelta
 
 from utils.db import query, execute
+from utils.templates import templates
 
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
 
 
 def require_login(request: Request):

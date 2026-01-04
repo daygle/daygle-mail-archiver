@@ -4,15 +4,14 @@ import sys
 
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import RedirectResponse
-from fastapi.templating import Jinja2Templates
 
 from utils.db import query
 from utils.security import encrypt_password
 from utils.logger import log
+from utils.templates import templates
 from imaplib import IMAP4, IMAP4_SSL
 
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
 
 
 def require_login(request: Request):

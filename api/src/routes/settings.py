@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Request, Form, UploadFile, File
 from fastapi.responses import RedirectResponse, StreamingResponse
-from fastapi.templating import Jinja2Templates
 import subprocess
 import os
 from io import BytesIO
@@ -8,9 +7,9 @@ from urllib.parse import urlparse
 
 from utils.db import query
 from utils.logger import log
+from utils.templates import templates
 
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
 
 def require_login(request: Request):
     return "user_id" in request.session
