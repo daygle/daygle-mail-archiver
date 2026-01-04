@@ -87,38 +87,67 @@ def create_account(
 
     enc = encrypt_password(password) if password else None
 
-    query(
-        """
-        INSERT INTO fetch_accounts
-        (name, account_type, host, port, username, password_encrypted,
-         use_ssl, require_starttls, poll_interval_seconds,
-         delete_after_processing, expunge_deleted, enabled)
-        VALUES
-        (:name, :account_type, :host, :port, :username, :password_encrypted,
-         :use_ssl, :require_starttls, :poll_interval_seconds,
-         :delete_after_processing, :expunge_deleted, :enabled)
-        """,
-        {
+    try:
+        query(
+            """
+            INSERT INTO fetch_accounts
+            (name, account_type, host, port, username, password_encrypted,
+             use_ssl, require_starttls, poll_interval_seconds,
+             delete_after_processing, expunge_deleted, enabled)
+            VALUES
+            (:name, :account_type, :host, :port, :username, :password_encrypted,
+             :use_ssl, :require_starttls, :poll_interval_seconds,
+             :delete_after_processing, :expunge_deleted, :enabled)
+            """,
+            {
+                "name": name,
+                "account_type": account_type,
+                "host": host,
+                "port": port,
+                "username": username,
+                "password_encrypted": enc,
+                "use_ssl": use_ssl,
+                "require_starttls": require_starttls,
+                "poll_interval_seconds": poll_interval_seconds,
+                "delete_after_processing": delete_after_processing,
+                "expunge_deleted": expunge_deleted,
+                "enabled": enabled,
+            },
+        )
+
+        username_session = request.session.get("username", "unknown")
+        log("info", "Fetch Accounts", f"User '{username_session}' created fetch account '{name}' (type: {account_type})", "")
+
+        flash(request, f"{account_type.upper()} account created successfully")
+        return RedirectResponse("/fetch_accounts", status_code=303)
+    
+    except Exception as e:
+        # Handle duplicate name error
+        if "duplicate key" in str(e) or "unique constraint" in str(e).lower():
+            flash(request, f"Account name '{name}' already exists. Please choose a different name.")
+        else:
+            flash(request, f"Failed to create account: {str(e)}")
+        
+        # Return to form with data
+        account = {
             "name": name,
             "account_type": account_type,
             "host": host,
             "port": port,
             "username": username,
-            "password_encrypted": enc,
             "use_ssl": use_ssl,
             "require_starttls": require_starttls,
             "poll_interval_seconds": poll_interval_seconds,
             "delete_after_processing": delete_after_processing,
             "expunge_deleted": expunge_deleted,
             "enabled": enabled,
-        },
-    )
-
-    username = request.session.get("username", "unknown")
-    log("info", "Fetch Accounts", f"User '{username}' created fetch account '{name}' (type: {account_type})", "")
-
-    flash(request, f"{account_type.upper()} account created successfully")
-    return RedirectResponse("/fetch_accounts", status_code=303)
+        }
+        
+        msg = request.session.pop("flash", None)
+        return templates.TemplateResponse(
+            "fetch_account_form.html",
+            {"request": request, "account": account, "flash": msg}
+        )
 
 
 @router.get("/fetch_accounts/{id}/edit")
@@ -180,45 +209,56 @@ def update_account(
         enc = None
         password_sql = ""
 
-    query(
-        f"""
-        UPDATE fetch_accounts
-        SET name = :name,
-            account_type = :account_type,
-            host = :host,
-            port = :port,
-            username = :username,
-            {password_sql}
-            use_ssl = :use_ssl,
-            require_starttls = :require_starttls,
-            poll_interval_seconds = :poll_interval_seconds,
-            delete_after_processing = :delete_after_processing,
-            expunge_deleted = :expunge_deleted,
-            enabled = :enabled
-        WHERE id = :id
-        """,
-        {
-            "id": id,
-            "name": name,
-            "account_type": account_type,
-            "host": host,
-            "port": port,
-            "username": username,
-            "password_encrypted": enc,
-            "use_ssl": use_ssl,
-            "require_starttls": require_starttls,
-            "poll_interval_seconds": poll_interval_seconds,
-            "delete_after_processing": delete_after_processing,
-            "expunge_deleted": expunge_deleted,
-            "enabled": enabled,
-        },
-    )
+    try:
+        query(
+            f"""
+            UPDATE fetch_accounts
+            SET name = :name,
+                account_type = :account_type,
+                host = :host,
+                port = :port,
+                username = :username,
+                {password_sql}
+                use_ssl = :use_ssl,
+                require_starttls = :require_starttls,
+                poll_interval_seconds = :poll_interval_seconds,
+                delete_after_processing = :delete_after_processing,
+                expunge_deleted = :expunge_deleted,
+                enabled = :enabled
+            WHERE id = :id
+            """,
+            {
+                "id": id,
+                "name": name,
+                "account_type": account_type,
+                "host": host,
+                "port": port,
+                "username": username,
+                "password_encrypted": enc,
+                "use_ssl": use_ssl,
+                "require_starttls": require_starttls,
+                "poll_interval_seconds": poll_interval_seconds,
+                "delete_after_processing": delete_after_processing,
+                "expunge_deleted": expunge_deleted,
+                "enabled": enabled,
+            },
+        )
 
-    username = request.session.get("username", "unknown")
-    log("info", "Fetch Accounts", f"User '{username}' updated fetch account '{name}' (ID: {id})", "")
+        username_session = request.session.get("username", "unknown")
+        log("info", "Fetch Accounts", f"User '{username_session}' updated fetch account '{name}' (ID: {id})", "")
 
-    flash(request, f"{account_type.upper()} account updated successfully")
-    return RedirectResponse("/fetch_accounts", status_code=303)
+        flash(request, f"{account_type.upper()} account updated successfully")
+        return RedirectResponse("/fetch_accounts", status_code=303)
+    
+    except Exception as e:
+        # Handle duplicate name error
+        if "duplicate key" in str(e) or "unique constraint" in str(e).lower():
+            flash(request, f"Account name '{name}' already exists. Please choose a different name.")
+        else:
+            flash(request, f"Failed to update account: {str(e)}")
+        
+        # Redirect back to edit form
+        return RedirectResponse(f"/fetch_accounts/{id}/edit", status_code=303)
 
 
 @router.post("/fetch_accounts/{id}/delete")
