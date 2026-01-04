@@ -3,9 +3,14 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from datetime import datetime, timezone
 
 from utils.db import query
+from utils.logger import log
 from utils.templates import templates
 
 router = APIRouter()
+
+# Constants for health check thresholds
+DEFAULT_POLL_INTERVAL = 300  # 5 minutes in seconds
+HEARTBEAT_MULTIPLIER = 3  # Consider stale if no heartbeat in 3x poll interval
 
 
 def require_login(request: Request):
@@ -18,20 +23,35 @@ def worker_status(request: Request):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    # Get all fetch accounts with their worker status
-    accounts = query("""
-        SELECT 
-            id,
-            name,
-            account_type,
-            enabled,
-            last_heartbeat,
-            last_success,
-            last_error,
-            poll_interval_seconds
-        FROM fetch_accounts
-        ORDER BY name
-    """).mappings().all()
+    try:
+        # Get all fetch accounts with their worker status
+        accounts = query("""
+            SELECT 
+                id,
+                name,
+                account_type,
+                enabled,
+                last_heartbeat,
+                last_success,
+                last_error,
+                poll_interval_seconds
+            FROM fetch_accounts
+            ORDER BY name
+        """).mappings().all()
+    except Exception as e:
+        username = request.session.get("username", "unknown")
+        log("error", "Worker Status", f"Failed to fetch worker status for user '{username}': {str(e)}", "")
+        flash = "Failed to load worker status. Please try again."
+        return templates.TemplateResponse(
+            "worker_status.html",
+            {
+                "request": request,
+                "accounts": [],
+                "system_health": "error",
+                "system_health_label": "Error Loading Status",
+                "flash": flash,
+            },
+        )
 
     now = datetime.now(timezone.utc)
     
@@ -54,9 +74,14 @@ def worker_status(request: Request):
             status["health"] = "disabled"
             status["health_label"] = "Disabled"
         elif acc["last_heartbeat"]:
-            time_since_heartbeat = (now - acc["last_heartbeat"]).total_seconds()
-            # Consider unhealthy if no heartbeat in 3x the poll interval (default to 5 minutes)
-            max_interval = (acc["poll_interval_seconds"] or 300) * 3
+            # Ensure last_heartbeat has timezone info
+            last_heartbeat = acc["last_heartbeat"]
+            if last_heartbeat.tzinfo is None:
+                last_heartbeat = last_heartbeat.replace(tzinfo=timezone.utc)
+            
+            time_since_heartbeat = (now - last_heartbeat).total_seconds()
+            # Consider unhealthy if no heartbeat in 3x the poll interval
+            max_interval = (acc["poll_interval_seconds"] or DEFAULT_POLL_INTERVAL) * HEARTBEAT_MULTIPLIER
             
             if acc["last_error"]:
                 status["health"] = "error"
@@ -124,11 +149,21 @@ def worker_status(request: Request):
 
 def format_time_ago(now: datetime, past: datetime) -> str:
     """Format a time difference in a human-readable way"""
+    if not past:
+        return "Never"
+    
+    # Ensure both datetimes are timezone-aware
     if past.tzinfo is None:
         past = past.replace(tzinfo=timezone.utc)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
     
     delta = now - past
     seconds = int(delta.total_seconds())
+    
+    # Handle negative deltas (clock skew or future dates)
+    if seconds < 0:
+        return "Just now"
     
     if seconds < 60:
         return f"{seconds}s ago"

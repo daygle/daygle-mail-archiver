@@ -6,32 +6,60 @@ from utils.templates import templates
 
 router = APIRouter()
 
+ALLOWED_LOG_LEVELS = ["all", "info", "warning", "error"]
+
 def require_login(request: Request):
     return "user_id" in request.session
 
 @router.get("/logs")
-def logs(request: Request, level: str = "all"):
+def logs(request: Request, level: str = "all", page: int = 1, page_size: int = 100):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
-
-    where = ""
-    params = {}
+    
+    # Validate log level
+    if level not in ALLOWED_LOG_LEVELS:
+        level = "all"
+    
+    # Validate pagination parameters
+    page = max(1, page)
+    page_size = min(max(10, page_size), 500)  # Between 10 and 500
+    offset = (page - 1) * page_size
+    
+    # Build WHERE clause
+    where_clause = ""
+    params = {"limit": page_size, "offset": offset}
+    
     if level != "all":
-        where = "WHERE level = :level"
+        where_clause = "WHERE level = :level"
         params["level"] = level
-
-    rows = query(
-        f"""
+    
+    # Get total count for pagination
+    count_query = f"SELECT COUNT(*) as total FROM logs {where_clause}"
+    total_result = query(count_query, params).mappings().first()
+    total_logs = total_result["total"] if total_result else 0
+    total_pages = (total_logs + page_size - 1) // page_size  # Ceiling division
+    
+    # Get paginated logs
+    logs_query = f"""
         SELECT id, timestamp, level, source, message, details
         FROM logs
-        {where}
+        {where_clause}
         ORDER BY timestamp DESC
-        LIMIT 200
-        """,
-        params
-    ).mappings().all()
+        LIMIT :limit OFFSET :offset
+    """
+    
+    rows = query(logs_query, params).mappings().all()
 
     return templates.TemplateResponse(
         "logs.html",
-        {"request": request, "errors": rows, "current_level": level},
+        {
+            "request": request,
+            "logs": rows,
+            "current_level": level,
+            "page": page,
+            "page_size": page_size,
+            "total_logs": total_logs,
+            "total_pages": total_pages,
+            "allowed_levels": ALLOWED_LOG_LEVELS
+        },
     )

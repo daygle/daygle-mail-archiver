@@ -1,4 +1,3 @@
-import base64
 import traceback
 import sys
 
@@ -6,7 +5,7 @@ from fastapi import APIRouter, Request, Form
 from fastapi.responses import RedirectResponse
 
 from utils.db import query
-from utils.security import encrypt_password
+from utils.security import encrypt_password, decrypt_password
 from utils.logger import log
 from utils.templates import templates
 from imaplib import IMAP4, IMAP4_SSL
@@ -159,7 +158,7 @@ def edit_account(request: Request, id: int):
         """
         SELECT id, name, account_type, host, port, username, password_encrypted,
                use_ssl, require_starttls, poll_interval_seconds,
-               delete_after_processing, enabled
+               delete_after_processing, expunge_deleted, enabled
         FROM fetch_accounts
         WHERE id = :id
         """,
@@ -366,21 +365,26 @@ def test_account_connection(request: Request, id: int):
     try:
         if account_type == "imap":
             # Test IMAP connection
-            from utils.security import decrypt_password
-            
             password = decrypt_password(acc["password_encrypted"]) if acc["password_encrypted"] else ""
             
-            if acc["use_ssl"]:
-                conn = IMAP4_SSL(acc["host"], acc["port"])
-                conn.login(acc["username"], password)
-            else:
-                conn = IMAP4(acc["host"], acc["port"])
-                if acc["require_starttls"]:
-                    conn.starttls()
-                conn.login(acc["username"], password)
-            
-            conn.logout()
-            flash(request, f"✓ IMAP connection successful to {acc['host']}")
+            conn = None
+            try:
+                if acc["use_ssl"]:
+                    conn = IMAP4_SSL(acc["host"], acc["port"])
+                    conn.login(acc["username"], password)
+                else:
+                    conn = IMAP4(acc["host"], acc["port"])
+                    if acc["require_starttls"]:
+                        conn.starttls()
+                    conn.login(acc["username"], password)
+                
+                flash(request, f"✓ IMAP connection successful to {acc['host']}")
+            finally:
+                if conn:
+                    try:
+                        conn.logout()
+                    except:
+                        pass
             
         elif account_type == "gmail":
             # Test Gmail API connection
@@ -456,9 +460,6 @@ def test_connection(
     # Load and decrypt stored password if none was provided
     # ---------------------------------------------------------
     if not password and account_id:
-        from utils.db import query
-        from utils.security import decrypt_password
-
         acc = query(
             """
             SELECT password_encrypted
@@ -471,6 +472,7 @@ def test_connection(
         if acc and acc["password_encrypted"]:
             password = decrypt_password(acc["password_encrypted"])
 
+    conn = None
     try:
         if use_ssl:
             conn = IMAP4_SSL(host, port)
@@ -499,6 +501,8 @@ def test_connection(
                     conn.login(username, password)
 
                 elif b"AUTH=PLAIN" in caps_flat:
+                    import base64
+                    
                     def try_plain(authzid, authcid, pw):
                         auth_string = base64.b64encode(
                             f"{authzid}\0{authcid}\0{pw}".encode("utf-8")
@@ -511,13 +515,7 @@ def test_connection(
                         try:
                             try_plain(username, username, password)
                         except Exception:
-                            try:
-                                try_plain("", username, password)
-                            except Exception:
-                                try:
-                                    try_plain(username, username, password)
-                                except Exception:
-                                    raise RuntimeError("SASL PLAIN authentication failed for all variants")
+                            raise RuntimeError("SASL PLAIN authentication failed for all variants")
 
                 else:
                     raise RuntimeError("Server does not advertise AUTH=LOGIN or AUTH=PLAIN after STARTTLS")
@@ -525,13 +523,18 @@ def test_connection(
             else:
                 conn.login(username, password)
 
-        conn.logout()
         flash(request, "Connection successful")
 
     except Exception as e:
         print("=== IMAP TEST ERROR ===", file=sys.stderr)
         traceback.print_exc()
-        flash(request, f"Connection failed: {e}")
+        flash(request, f"Connection failed: {str(e)}")
+    finally:
+        if conn:
+            try:
+                conn.logout()
+            except:
+                pass
 
     account = {
         "id": account_id,

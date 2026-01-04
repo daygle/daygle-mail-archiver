@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import RedirectResponse, JSONResponse
 import bcrypt
+import re
 
-from utils.db import query
+from utils.db import query, execute
+from utils.logger import log
 from utils.templates import templates
 from utils.timezone import format_datetime
 
@@ -44,10 +46,51 @@ def create_user(
 ):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
-
-    hash_pw = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    
+    admin_username = request.session.get("username", "unknown")
+    
+    # Sanitize inputs
+    username = username.strip()
+    first_name = first_name.strip()
+    last_name = last_name.strip()
+    email = email.strip()
+    
+    # Validate username
+    if not username or len(username) < 3:
+        flash(request, "Username must be at least 3 characters long.")
+        return RedirectResponse("/users", status_code=303)
+    
+    # Check username uniqueness
+    existing = query("SELECT id FROM users WHERE username = :u", {"u": username}).mappings().first()
+    if existing:
+        flash(request, f"Username '{username}' already exists.")
+        return RedirectResponse("/users", status_code=303)
+    
+    # Validate password strength
+    if len(password) < 8:
+        flash(request, "Password must be at least 8 characters long.")
+        return RedirectResponse("/users", status_code=303)
+    
+    if not re.search(r"[a-z]", password):
+        flash(request, "Password must contain at least one lowercase letter.")
+        return RedirectResponse("/users", status_code=303)
+    
+    if not re.search(r"[A-Z]", password):
+        flash(request, "Password must contain at least one uppercase letter.")
+        return RedirectResponse("/users", status_code=303)
+    
+    if not re.search(r"[0-9]", password):
+        flash(request, "Password must contain at least one number.")
+        return RedirectResponse("/users", status_code=303)
+    
+    # Validate email format if provided
+    if email and not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email):
+        flash(request, "Invalid email format.")
+        return RedirectResponse("/users", status_code=303)
+    
     try:
-        query("""
+        hash_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        execute("""
             INSERT INTO users (username, password_hash, first_name, last_name, email, role, enabled) 
             VALUES (:u, :h, :fn, :ln, :e, :r, :en)
         """, {
@@ -59,9 +102,11 @@ def create_user(
             "r": role,
             "en": enabled
         })
+        log("info", "Users", f"Admin '{admin_username}' created new user '{username}' with role '{role}'", "")
         flash(request, f"User {username} created successfully.")
     except Exception as e:
-        flash(request, f"User creation failed: {str(e)}")
+        log("error", "Users", f"Failed to create user '{username}' by admin '{admin_username}': {str(e)}", "")
+        flash(request, "User creation failed. Please try again.")
     return RedirectResponse("/users", status_code=303)
 
 @router.get("/api/users/{user_id}")
@@ -70,29 +115,34 @@ def get_user(request: Request, user_id: int):
     if not require_login(request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    user = query("""
-        SELECT id, username, first_name, last_name, email, role, enabled, last_login, created_at 
-        FROM users 
-        WHERE id = :id
-    """, {"id": user_id}).mappings().first()
-    
-    if not user:
-        return JSONResponse({"error": "User not found"}, status_code=404)
-    
-    # Get current user's ID for timezone conversion
-    current_user_id = request.session.get("user_id")
-    
-    return {
-        "id": user["id"],
-        "username": user["username"],
-        "first_name": user["first_name"] or "",
-        "last_name": user["last_name"] or "",
-        "email": user["email"] or "",
-        "role": user["role"] or "administrator",
-        "enabled": user["enabled"],
-        "last_login": format_datetime(user["last_login"], current_user_id) if user["last_login"] else None,
-        "created_at": format_datetime(user["created_at"], current_user_id) if user["created_at"] else None
-    }
+    try:
+        user = query("""
+            SELECT id, username, first_name, last_name, email, role, enabled, last_login, created_at 
+            FROM users 
+            WHERE id = :id
+        """, {"id": user_id}).mappings().first()
+        
+        if not user:
+            return JSONResponse({"error": "User not found"}, status_code=404)
+        
+        # Get current user's ID for timezone conversion
+        current_user_id = request.session.get("user_id")
+        
+        return {
+            "id": user["id"],
+            "username": user["username"],
+            "first_name": user["first_name"] or "",
+            "last_name": user["last_name"] or "",
+            "email": user["email"] or "",
+            "role": user["role"] or "administrator",
+            "enabled": user["enabled"],
+            "last_login": format_datetime(user["last_login"], current_user_id) if user["last_login"] else None,
+            "created_at": format_datetime(user["created_at"], current_user_id) if user["created_at"] else None
+        }
+    except Exception as e:
+        admin_username = request.session.get("username", "unknown")
+        log("error", "Users", f"Failed to fetch user {user_id} for admin '{admin_username}': {str(e)}", "")
+        return JSONResponse({"error": "Failed to load user data"}, status_code=500)
 
 @router.post("/users/{user_id}/update")
 def update_user(
@@ -110,12 +160,55 @@ def update_user(
         return RedirectResponse("/login", status_code=303)
 
     current_user_id = request.session.get("user_id")
+    admin_username = request.session.get("username", "unknown")
+    
+    # Sanitize inputs
+    username = username.strip()
+    first_name = first_name.strip()
+    last_name = last_name.strip()
+    email = email.strip()
+    
+    # Validate username
+    if not username or len(username) < 3:
+        flash(request, "Username must be at least 3 characters long.")
+        return RedirectResponse("/users", status_code=303)
+    
+    # Check username uniqueness (excluding current user)
+    existing = query(
+        "SELECT id FROM users WHERE username = :u AND id != :id",
+        {"u": username, "id": user_id}
+    ).mappings().first()
+    if existing:
+        flash(request, f"Username '{username}' already exists.")
+        return RedirectResponse("/users", status_code=303)
+    
+    # Validate email format if provided
+    if email and not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email):
+        flash(request, "Invalid email format.")
+        return RedirectResponse("/users", status_code=303)
     
     try:
         if password:
+            # Validate password strength if changing
+            if len(password) < 8:
+                flash(request, "Password must be at least 8 characters long.")
+                return RedirectResponse("/users", status_code=303)
+            
+            if not re.search(r"[a-z]", password):
+                flash(request, "Password must contain at least one lowercase letter.")
+                return RedirectResponse("/users", status_code=303)
+            
+            if not re.search(r"[A-Z]", password):
+                flash(request, "Password must contain at least one uppercase letter.")
+                return RedirectResponse("/users", status_code=303)
+            
+            if not re.search(r"[0-9]", password):
+                flash(request, "Password must contain at least one number.")
+                return RedirectResponse("/users", status_code=303)
+            
             # Update with new password
-            hash_pw = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
-            query("""
+            hash_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            execute("""
                 UPDATE users 
                 SET username = :u, first_name = :fn, last_name = :ln, 
                     email = :e, role = :r, enabled = :en, password_hash = :h
@@ -126,13 +219,14 @@ def update_user(
                 "ln": last_name,
                 "e": email,
                 "r": role,
-                "en": enabled if user_id != current_user_id else True,  # Don't disable own account
+                "en": enabled if user_id != current_user_id else True,
                 "h": hash_pw,
                 "id": user_id
             })
+            log("warning", "Users", f"Admin '{admin_username}' updated user '{username}' (ID: {user_id}) including password reset", "")
         else:
             # Update without password change
-            query("""
+            execute("""
                 UPDATE users 
                 SET username = :u, first_name = :fn, last_name = :ln, 
                     email = :e, role = :r, enabled = :en
@@ -143,12 +237,14 @@ def update_user(
                 "ln": last_name,
                 "e": email,
                 "r": role,
-                "en": enabled if user_id != current_user_id else True,  # Don't disable own account
+                "en": enabled if user_id != current_user_id else True,
                 "id": user_id
             })
+            log("info", "Users", f"Admin '{admin_username}' updated user '{username}' (ID: {user_id})", "")
         flash(request, "User updated successfully.")
     except Exception as e:
-        flash(request, f"User update failed: {str(e)}")
+        log("error", "Users", f"Failed to update user {user_id} by admin '{admin_username}': {str(e)}", "")
+        flash(request, "User update failed. Please try again.")
     
     return RedirectResponse("/users", status_code=303)
 
@@ -158,15 +254,23 @@ def delete_user(request: Request, user_id: int):
         return RedirectResponse("/login", status_code=303)
 
     current_user_id = request.session.get("user_id")
+    admin_username = request.session.get("username", "unknown")
+    
     if user_id == current_user_id:
         flash(request, "Cannot delete your own account.")
         return RedirectResponse("/users", status_code=303)
 
     try:
-        query("DELETE FROM users WHERE id = :id", {"id": user_id})
+        # Get username before deletion for logging
+        user = query("SELECT username FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+        username = user["username"] if user else f"ID {user_id}"
+        
+        execute("DELETE FROM users WHERE id = :id", {"id": user_id})
+        log("warning", "Users", f"Admin '{admin_username}' deleted user '{username}' (ID: {user_id})", "")
         flash(request, "User deleted successfully.")
     except Exception as e:
-        flash(request, f"User deletion failed: {str(e)}")
+        log("error", "Users", f"Failed to delete user {user_id} by admin '{admin_username}': {str(e)}", "")
+        flash(request, "User deletion failed. Please try again.")
     return RedirectResponse("/users", status_code=303)
 
 @router.post("/users/{user_id}/toggle")
@@ -175,17 +279,28 @@ def toggle_user_enabled(request: Request, user_id: int):
         return RedirectResponse("/login", status_code=303)
 
     current_user_id = request.session.get("user_id")
+    admin_username = request.session.get("username", "unknown")
+    
     if user_id == current_user_id:
         flash(request, "Cannot disable your own account.")
         return RedirectResponse("/users", status_code=303)
 
     try:
+        # Get username for logging
+        user = query("SELECT username, enabled FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+        if not user:
+            flash(request, "User not found.")
+            return RedirectResponse("/users", status_code=303)
+        
         # Toggle the enabled status
-        query(
+        execute(
             "UPDATE users SET enabled = NOT enabled WHERE id = :id",
             {"id": user_id}
         )
+        new_status = "disabled" if user["enabled"] else "enabled"
+        log("warning", "Users", f"Admin '{admin_username}' {new_status} user '{user['username']}' (ID: {user_id})", "")
         flash(request, "User status updated successfully.")
     except Exception as e:
-        flash(request, f"User status update failed: {str(e)}")
+        log("error", "Users", f"Failed to toggle user {user_id} by admin '{admin_username}': {str(e)}", "")
+        flash(request, "User status update failed. Please try again.")
     return RedirectResponse("/users", status_code=303)

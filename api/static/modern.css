@@ -20,6 +20,7 @@
     
     --border-color: #e5e7eb;
     --border-light: #f3f4f6;
+    --border-hover: #d1d5db;
     
     --accent-primary: #3b82f6;
     --accent-hover: #2563eb;
@@ -65,6 +66,7 @@
     
     --border-color: #374151;
     --border-light: #1f2937;
+    --border-hover: #4b5563;
     
     --accent-primary: #3b82f6;
     --accent-hover: #60a5fa;
@@ -90,6 +92,19 @@ html {
     font-size: 16px;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+}
+
+/* Respect user's reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }
 
 body {
@@ -102,6 +117,18 @@ body {
 
 input, select, textarea, button {
     font-family: inherit;
+}
+
+/* Enhanced focus styles for accessibility */
+*:focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+}
+
+button:focus-visible,
+.btn:focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
 }
 
 /* ========================================
@@ -343,6 +370,12 @@ input, select, textarea, button {
 
 .sidebar.collapsed .nav-section-title {
     display: none;
+}
+
+.nav-arrow {
+    font-size: 0.75rem;
+    transition: transform var(--transition-fast);
+    margin-left: auto;
 }
 
 .sidebar.collapsed .nav-arrow {
@@ -676,7 +709,7 @@ input, select, textarea, button {
 }
 
 .form-select:focus {
-    border-color: var(--primary);
+    border-color: var(--accent-primary);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
@@ -947,12 +980,25 @@ textarea.form-control {
 
 /* Loading Spinner */
 .spinner {
+    display: inline-block;
     width: 20px;
     height: 20px;
     border: 2px solid var(--border-color);
     border-top-color: var(--accent-primary);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
+}
+
+.spinner-sm {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+}
+
+.spinner-lg {
+    width: 32px;
+    height: 32px;
+    border-width: 3px;
 }
 
 @keyframes spin {
@@ -1034,7 +1080,7 @@ textarea.form-control {
 }
 
 .modal-close:hover {
-    background: var(--background-secondary);
+    background: var(--bg-secondary);
     color: var(--text-primary);
 }
 
@@ -1418,6 +1464,60 @@ textarea.form-control {
 
 .w-100 { width: 100%; }
 
+/* ========================================
+   Print Styles
+   ======================================== */
+
+@media print {
+    body {
+        background: white;
+        color: black;
+    }
+    
+    .sidebar,
+    .topbar,
+    .btn,
+    .nav-section,
+    .theme-toggle,
+    .user-menu,
+    .sidebar-mobile-toggle {
+        display: none !important;
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
+    }
+    
+    .content-container {
+        max-width: 100%;
+        padding: 0;
+    }
+    
+    .card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+        break-inside: avoid;
+    }
+    
+    .table {
+        border-collapse: collapse;
+    }
+    
+    .table th,
+    .table td {
+        border: 1px solid #ddd;
+    }
+    
+    a[href]:after {
+        content: " (" attr(href) ")";
+        font-size: 0.8em;
+    }
+    
+    .no-print {
+        display: none !important;
+    }
+}
+
 /* Links */
 a {
     color: var(--accent-primary);
@@ -1440,18 +1540,9 @@ a:hover {
     text-decoration: underline;
 }
 
-/* Spinner */
-.spinner {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
+/* Additional spinner variants */
+.spinner-light {
+    border-color: rgba(255, 255, 255, 0.3);
     border-top-color: currentColor;
-    border-radius: 50%;
-    animation: spin 0.6s linear infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
 }
 

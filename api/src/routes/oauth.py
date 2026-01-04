@@ -1,11 +1,13 @@
 """OAuth2 routes for Gmail and Office 365 integration"""
 from fastapi import APIRouter, Request
-from fastapi.responses import RedirectResponse, HTMLResponse
+from fastapi.responses import RedirectResponse
 import urllib.parse
 import requests
 from datetime import datetime, timezone, timedelta
 
 from utils.db import query, execute
+from utils.logger import log
+from utils.security import encrypt_password
 from utils.templates import templates
 
 router = APIRouter()
@@ -23,13 +25,16 @@ def gmail_oauth_start(request: Request, account_id: int):
     
     # Get account details
     account = query(
-        "SELECT oauth_client_id FROM fetch_accounts WHERE id = :id",
+        "SELECT oauth_client_id, oauth_client_secret FROM fetch_accounts WHERE id = :id",
         {"id": account_id}
     ).mappings().first()
     
-    if not account or not account["oauth_client_id"]:
-        request.session["flash"] = "OAuth Client ID not configured for this account"
+    if not account or not account["oauth_client_id"] or not account["oauth_client_secret"]:
+        request.session["flash"] = "OAuth Client ID and Secret must be configured for this account"
         return RedirectResponse(f"/fetch_accounts/{account_id}/edit", status_code=303)
+    
+    username = request.session.get("username", "unknown")
+    log("info", "OAuth", f"User '{username}' initiated Gmail OAuth for account {account_id}", "")
     
     # Build OAuth URL
     redirect_uri = request.url_for("gmail_oauth_callback", account_id=account_id)
@@ -82,14 +87,22 @@ def gmail_oauth_callback(request: Request, account_id: int, code: str = None, er
     }
     
     try:
-        response = requests.post(token_url, data=data)
+        response = requests.post(token_url, data=data, timeout=30)
         response.raise_for_status()
         token_data = response.json()
         
-        access_token = token_data["access_token"]
+        access_token = token_data.get("access_token")
         refresh_token = token_data.get("refresh_token")
+        
+        if not access_token:
+            raise ValueError("No access token received from Google")
+        
         expires_in = token_data.get("expires_in", 3600)
         expiry = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
+        
+        # Encrypt tokens before storing
+        encrypted_access = encrypt_password(access_token)
+        encrypted_refresh = encrypt_password(refresh_token) if refresh_token else None
         
         # Store tokens
         execute(
@@ -101,18 +114,30 @@ def gmail_oauth_callback(request: Request, account_id: int, code: str = None, er
             WHERE id = :id
             """,
             {
-                "access_token": access_token,
-                "refresh_token": refresh_token,
+                "access_token": encrypted_access,
+                "refresh_token": encrypted_refresh,
                 "expiry": expiry,
                 "id": account_id
             }
         )
         
+        username = request.session.get("username", "unknown")
+        log("info", "OAuth", f"User '{username}' successfully completed Gmail OAuth for account {account_id}", "")
+        
         request.session["flash"] = "Gmail OAuth authorization successful!"
         return RedirectResponse(f"/fetch_accounts/{account_id}/edit", status_code=303)
         
+    except requests.exceptions.Timeout:
+        log("error", "OAuth", f"Gmail OAuth timeout for account {account_id}", "")
+        request.session["flash"] = "OAuth request timed out. Please try again."
+        return RedirectResponse(f"/fetch_accounts/{account_id}/edit", status_code=303)
+    except requests.exceptions.RequestException as e:
+        log("error", "OAuth", f"Gmail OAuth request failed for account {account_id}: {str(e)}", "")
+        request.session["flash"] = "OAuth request failed. Please check your credentials and try again."
+        return RedirectResponse(f"/fetch_accounts/{account_id}/edit", status_code=303)
     except Exception as e:
-        request.session["flash"] = f"OAuth token exchange failed: {str(e)}"
+        log("error", "OAuth", f"Gmail OAuth error for account {account_id}: {str(e)}", "")
+        request.session["flash"] = "OAuth authorization failed. Please try again."
         return RedirectResponse(f"/fetch_accounts/{account_id}/edit", status_code=303)
 
 
@@ -124,13 +149,16 @@ def o365_oauth_start(request: Request, account_id: int):
     
     # Get account details
     account = query(
-        "SELECT oauth_client_id FROM fetch_accounts WHERE id = :id",
+        "SELECT oauth_client_id, oauth_client_secret FROM fetch_accounts WHERE id = :id",
         {"id": account_id}
     ).mappings().first()
     
-    if not account or not account["oauth_client_id"]:
-        request.session["flash"] = "OAuth Client ID not configured for this account"
+    if not account or not account["oauth_client_id"] or not account["oauth_client_secret"]:
+        request.session["flash"] = "OAuth Client ID and Secret must be configured for this account"
         return RedirectResponse(f"/fetch_accounts/{account_id}/edit", status_code=303)
+    
+    username = request.session.get("username", "unknown")
+    log("info", "OAuth", f"User '{username}' initiated Office 365 OAuth for account {account_id}", "")
     
     # Build OAuth URL
     redirect_uri = request.url_for("o365_oauth_callback", account_id=account_id)
@@ -183,14 +211,22 @@ def o365_oauth_callback(request: Request, account_id: int, code: str = None, err
     }
     
     try:
-        response = requests.post(token_url, data=data)
+        response = requests.post(token_url, data=data, timeout=30)
         response.raise_for_status()
         token_data = response.json()
         
-        access_token = token_data["access_token"]
+        access_token = token_data.get("access_token")
         refresh_token = token_data.get("refresh_token")
+        
+        if not access_token:
+            raise ValueError("No access token received from Microsoft")
+        
         expires_in = token_data.get("expires_in", 3600)
         expiry = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
+        
+        # Encrypt tokens before storing
+        encrypted_access = encrypt_password(access_token)
+        encrypted_refresh = encrypt_password(refresh_token) if refresh_token else None
         
         # Store tokens
         execute(
@@ -202,16 +238,28 @@ def o365_oauth_callback(request: Request, account_id: int, code: str = None, err
             WHERE id = :id
             """,
             {
-                "access_token": access_token,
-                "refresh_token": refresh_token,
+                "access_token": encrypted_access,
+                "refresh_token": encrypted_refresh,
                 "expiry": expiry,
                 "id": account_id
             }
         )
         
+        username = request.session.get("username", "unknown")
+        log("info", "OAuth", f"User '{username}' successfully completed Office 365 OAuth for account {account_id}", "")
+        
         request.session["flash"] = "Office 365 OAuth authorization successful!"
         return RedirectResponse(f"/fetch_accounts/{account_id}/edit", status_code=303)
         
+    except requests.exceptions.Timeout:
+        log("error", "OAuth", f"Office 365 OAuth timeout for account {account_id}", "")
+        request.session["flash"] = "OAuth request timed out. Please try again."
+        return RedirectResponse(f"/fetch_accounts/{account_id}/edit", status_code=303)
+    except requests.exceptions.RequestException as e:
+        log("error", "OAuth", f"Office 365 OAuth request failed for account {account_id}: {str(e)}", "")
+        request.session["flash"] = "OAuth request failed. Please check your credentials and try again."
+        return RedirectResponse(f"/fetch_accounts/{account_id}/edit", status_code=303)
     except Exception as e:
-        request.session["flash"] = f"OAuth token exchange failed: {str(e)}"
+        log("error", "OAuth", f"Office 365 OAuth error for account {account_id}: {str(e)}", "")
+        request.session["flash"] = "OAuth authorization failed. Please try again."
         return RedirectResponse(f"/fetch_accounts/{account_id}/edit", status_code=303)
