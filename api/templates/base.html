@@ -19,7 +19,7 @@
                     <img src="/static/daygle-light.png" alt="Daygle" class="logo-dark">
                     <span class="brand-text">Mail Archiver</span>
                 </a>
-                <button type="button" class="sidebar-toggle" id="sidebarToggle">
+                <button type="button" class="sidebar-toggle" id="sidebarToggle" onclick="window.toggleSidebar(); return false;">
                     <i class="fas fa-bars"></i>
                 </button>
             </div>
@@ -163,28 +163,23 @@
 
     <!-- JavaScript -->
     <script>
+        // Define toggle function globally so inline onclick can access it
+        window.toggleSidebar = function() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed') ? 'true' : 'false');
+            console.log('Sidebar toggled, collapsed:', sidebar.classList.contains('collapsed'));
+        };
+        
         // Wait for DOM to be fully loaded
         document.addEventListener('DOMContentLoaded', function() {
             const sidebar = document.getElementById('sidebar');
-            const sidebarToggle = document.getElementById('sidebarToggle');
             const sidebarMobileToggle = document.getElementById('sidebarMobileToggle');
             
-            // Restore sidebar state first before adding any event listeners
+            // Restore sidebar state
             const savedState = localStorage.getItem('sidebarCollapsed');
             if (savedState === 'true') {
                 sidebar.classList.add('collapsed');
-            }
-
-            // Toggle sidebar on button click
-            if (sidebarToggle) {
-                sidebarToggle.addEventListener('click', function(e) {
-                    console.log('Toggle clicked, current state:', sidebar.classList.contains('collapsed'));
-                    sidebar.classList.toggle('collapsed');
-                    const isCollapsed = sidebar.classList.contains('collapsed');
-                    localStorage.setItem('sidebarCollapsed', isCollapsed ? 'true' : 'false');
-                    console.log('New state:', isCollapsed);
-                    return false;
-                }, true);
             }
 
             // Mobile toggle
@@ -199,7 +194,7 @@
             // Close sidebar on mobile when clicking outside
             document.addEventListener('click', function(e) {
                 if (window.innerWidth <= 768) {
-                    const toggleButton = sidebarMobileToggle || sidebarToggle;
+                    const toggleButton = sidebarMobileToggle;
                     if (sidebar && toggleButton && !sidebar.contains(e.target) && !toggleButton.contains(e.target)) {
                         sidebar.classList.remove('mobile-open');
                     }

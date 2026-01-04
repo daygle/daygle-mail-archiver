@@ -232,64 +232,67 @@
 </div>
 
 <script>
-function showCreateUserModal() {
-    document.getElementById('createUserModal').style.display = 'flex';
-}
+document.addEventListener('DOMContentLoaded', function() {
+    // Modal functions
+    window.showCreateUserModal = function() {
+        document.getElementById('createUserModal').style.display = 'flex';
+    };
 
-function hideCreateUserModal() {
-    document.getElementById('createUserModal').style.display = 'none';
-}
+    window.hideCreateUserModal = function() {
+        document.getElementById('createUserModal').style.display = 'none';
+    };
 
-function hideEditUserModal() {
-    document.getElementById('editUserModal').style.display = 'none';
-}
+    window.hideEditUserModal = function() {
+        document.getElementById('editUserModal').style.display = 'none';
+    };
 
-async function editUser(userId) {
-    try {
-        const response = await fetch(`/api/users/${userId}`);
-        const user = await response.json();
-        
-        if (user.error) {
-            alert('Error loading user: ' + user.error);
-            return;
+    window.editUser = async function(userId) {
+        try {
+            const response = await fetch(`/api/users/${userId}`);
+            const user = await response.json();
+            
+            if (user.error) {
+                alert('Error loading user: ' + user.error);
+                return;
+            }
+            
+            // Populate the form
+            document.getElementById('edit_user_id').value = user.id;
+            document.getElementById('edit_username').value = user.username;
+            document.getElementById('edit_first_name').value = user.first_name || '';
+            document.getElementById('edit_last_name').value = user.last_name || '';
+            document.getElementById('edit_email').value = user.email || '';
+            document.getElementById('edit_role').value = user.role || 'administrator';
+            document.getElementById('edit_enabled').value = user.enabled ? 'true' : 'false';
+            document.getElementById('edit_password').value = '';
+            
+            // Display read-only info
+            document.getElementById('edit_last_login').textContent = user.last_login ? new Date(user.last_login).toLocaleString() : 'Never';
+            document.getElementById('edit_created_at').textContent = user.created_at ? new Date(user.created_at).toLocaleString() : '-';
+            
+            // Set form action
+            document.getElementById('editUserForm').action = `/users/${userId}/update`;
+            
+            // Show the modal
+            document.getElementById('editUserModal').style.display = 'flex';
+        } catch (error) {
+            console.error('Error loading user:', error);
+            alert('Failed to load user details');
         }
-        
-        // Populate the form
-        document.getElementById('edit_user_id').value = user.id;
-        document.getElementById('edit_username').value = user.username;
-        document.getElementById('edit_first_name').value = user.first_name || '';
-        document.getElementById('edit_last_name').value = user.last_name || '';
-        document.getElementById('edit_email').value = user.email || '';
-        document.getElementById('edit_role').value = user.role || 'administrator';
-        document.getElementById('edit_enabled').value = user.enabled ? 'true' : 'false';
-        document.getElementById('edit_password').value = '';
-        
-        // Display read-only info
-        document.getElementById('edit_last_login').textContent = user.last_login ? new Date(user.last_login).toLocaleString() : 'Never';
-        document.getElementById('edit_created_at').textContent = user.created_at ? new Date(user.created_at).toLocaleString() : '-';
-        
-        // Set form action
-        document.getElementById('editUserForm').action = `/users/${userId}/update`;
-        
-        // Show the modal
-        document.getElementById('editUserModal').style.display = 'flex';
-    } catch (error) {
-        console.error('Error loading user:', error);
-        alert('Failed to load user details');
-    }
-}
+    };
 
-// Close modals on background click
-document.getElementById('createUserModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        hideCreateUserModal();
-    }
-});
+    // Close modals on background click
+    document.getElementById('createUserModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            hideCreateUserModal();
+        }
+    });
 
-document.getElementById('editUserModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        hideEditUserModal();
-    }
+    document.getElementById('editUserModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            hideEditUserModal();
+        }
+    });
 });
 </script>
 
