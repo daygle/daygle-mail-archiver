@@ -146,10 +146,10 @@
 </div>
 
 <script>
-function toggleAccountFields() {
-    const accountType = document.getElementById('account_type').value;
-    const imapFields = document.getElementById('imap_fields');
-    const oauthFields = document.getElementById('oauth_fields');
+    function toggleAccountFields() {
+        const accountType = document.getElementById('account_type').value;
+        const imapFields = document.getElementById('imap_fields');
+        const oauthFields = document.getElementById('oauth_fields');
         const expungeGroup = document.getElementById('expunge_deleted_group');
 
         if (accountType === 'imap') {
@@ -160,7 +160,10 @@ function toggleAccountFields() {
             imapFields.style.display = 'none';
             oauthFields.style.display = 'block';
             expungeGroup.style.display = 'none';
-document.addEventListener('DOMContentLoaded', toggleAccountFields);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', toggleAccountFields);
 </script>
 
 {% endblock %}
