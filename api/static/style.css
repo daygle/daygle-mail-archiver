@@ -582,13 +582,21 @@ table td .btn-sm {
     padding-left: 8px;
 }
 
-.offcanvas-body > ul > li > a .fa-chevron-down {
+.offcanvas-body > ul > li > a {
+    transition: all 0.2s ease;
+}
+
+.offcanvas-body > ul > li > a:hover {
+    opacity: 0.8;
+}
+
+.submenu-chevron {
     font-size: 0.75rem;
     transition: transform 0.3s ease;
 }
 
-.offcanvas-body > ul > li > a[aria-expanded="true"] .fa-chevron-down {
-    transform: rotate(180deg);
+.settings-toggle[aria-expanded="true"] .submenu-chevron {
+    transform: rotate(90deg);
 }
 
 /* User dropdown in navbar */

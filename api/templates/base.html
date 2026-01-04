@@ -62,26 +62,26 @@
         </a>
         <div class="offcanvas-body">
             <ul class="list-unstyled mb-0">
-                <li class="mb-2"><a href="/dashboard" class="text-decoration-none text-white d-flex align-items-center"><i class="fas fa-chart-line me-2"></i> Dashboard</a></li>
-                <li class="mb-2"><a href="/messages" class="text-decoration-none text-white d-flex align-items-center"><i class="fas fa-inbox me-2"></i> Messages</a></li>
-                <li class="mb-2"><a href="/imap_accounts" class="text-decoration-none text-white d-flex align-items-center"><i class="fas fa-server me-2"></i> IMAP Accounts</a></li>
+                <li class="mb-3"><a href="/dashboard" class="text-decoration-none text-white d-flex align-items-center py-1"><i class="fas fa-chart-line me-2"></i> Dashboard</a></li>
+                <li class="mb-3"><a href="/messages" class="text-decoration-none text-white d-flex align-items-center py-1"><i class="fas fa-inbox me-2"></i> Messages</a></li>
+                <li class="mb-3"><a href="/imap_accounts" class="text-decoration-none text-white d-flex align-items-center py-1"><i class="fas fa-server me-2"></i> IMAP Accounts</a></li>
                 
                 <!-- Settings Menu with Submenu -->
-                <li class="mb-2">
-                    <a class="text-decoration-none text-white d-flex align-items-center" data-bs-toggle="collapse" href="#settingsSubmenu" role="button" aria-expanded="false" aria-controls="settingsSubmenu">
-                        <i class="fas fa-gear me-2"></i> Settings <i class="fas fa-chevron-down ms-auto"></i>
+                <li class="mb-3">
+                    <a class="text-decoration-none text-white d-flex align-items-center py-1 settings-toggle" data-bs-toggle="collapse" href="#settingsSubmenu" role="button" aria-expanded="false" aria-controls="settingsSubmenu" style="cursor: pointer;">
+                        <i class="fas fa-gear me-2"></i> Settings <i class="fas fa-chevron-right ms-auto submenu-chevron"></i>
                     </a>
                     <div class="collapse" id="settingsSubmenu">
                         <ul class="list-unstyled ps-4 mt-2">
-                            <li class="mb-2"><a href="/settings" class="text-decoration-none text-white-50 d-flex align-items-center"><i class="fas fa-sliders me-2"></i> Global Settings</a></li>
-                            <li class="mb-2"><a href="/users" class="text-decoration-none text-white-50 d-flex align-items-center"><i class="fas fa-users me-2"></i> Users</a></li>
-                            <li class="mb-2"><a href="/logs" class="text-decoration-none text-white-50 d-flex align-items-center"><i class="fas fa-list me-2"></i> Logs</a></li>
+                            <li class="mb-2"><a href="/settings" class="text-decoration-none text-white-50 d-flex align-items-center py-1"><i class="fas fa-sliders me-2"></i> Global Settings</a></li>
+                            <li class="mb-2"><a href="/users" class="text-decoration-none text-white-50 d-flex align-items-center py-1"><i class="fas fa-users me-2"></i> Users</a></li>
+                            <li class="mb-2"><a href="/logs" class="text-decoration-none text-white-50 d-flex align-items-center py-1"><i class="fas fa-list me-2"></i> Logs</a></li>
                         </ul>
                     </div>
                 </li>
                 
                 {% if not request.session.username %}
-                <li class="mb-2"><a href="/login" class="text-decoration-none text-white d-flex align-items-center"><i class="fas fa-right-to-bracket me-2"></i> Login</a></li>
+                <li class="mb-3"><a href="/login" class="text-decoration-none text-white d-flex align-items-center py-1"><i class="fas fa-right-to-bracket me-2"></i> Login</a></li>
                 {% endif %}
             </ul>
         </div>
