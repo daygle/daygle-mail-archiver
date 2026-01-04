@@ -4,7 +4,7 @@ from fastapi import APIRouter, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from imaplib import IMAP4, IMAP4_SSL
 
-from utils.db import query
+from utils.db import query, execute
 from utils.email_parser import decompress, parse_email
 from utils.security import decrypt_password, can_delete
 from utils.logger import log
@@ -220,17 +220,21 @@ def confirm_single_delete(request: Request, email_id: int):
 
 def _delete_emails_from_db(ids: List[int]) -> int:
     """Delete emails from the database only. Returns number of emails deleted."""
-    deleted = 0
-    for mid in ids:
-        res = query(
-            "DELETE FROM emails WHERE id = :id",
-            {"id": mid},
-        )
-        deleted += 1
+    if not ids:
+        return 0
+    
+    # Delete all at once for better performance
+    placeholders = ",".join(f":id{i}" for i in range(len(ids)))
+    params = {f"id{i}": email_id for i, email_id in enumerate(ids)}
+    
+    result = query(
+        f"DELETE FROM emails WHERE id IN ({placeholders}) RETURNING id",
+        params,
+    )
+    deleted = len(result.fetchall())
     
     # Track deletion statistics
     if deleted > 0:
-        from utils.db import execute
         execute(
             """
             INSERT INTO deletion_stats (deletion_date, deletion_type, count, deleted_from_mail_server)
@@ -280,6 +284,7 @@ def _delete_emails_from_imap_and_db(ids: List[int]) -> tuple[int, list[str]]:
             errors.append(f"No fetch account found for source '{email_row['source']}' (email {mid})")
             continue
 
+        conn = None
         try:
             # Connect to IMAP using same style as /fetch_accounts/test
             if account["use_ssl"]:
@@ -305,8 +310,6 @@ def _delete_emails_from_imap_and_db(ids: List[int]) -> tuple[int, list[str]]:
             if typ != "OK":
                 raise RuntimeError(f"Failed to expunge email {mid} on mail server")
 
-            conn.logout()
-
             # Only delete from DB if IMAP delete succeeded
             query(
                 "DELETE FROM emails WHERE id = :id",
@@ -315,11 +318,17 @@ def _delete_emails_from_imap_and_db(ids: List[int]) -> tuple[int, list[str]]:
             deleted += 1
 
         except Exception as e:
-            errors.append(f"Email {mid}: {e}")
+            errors.append(f"Email {mid}: {str(e)}")
+        finally:
+            # Ensure connection is closed even if errors occur
+            if conn:
+                try:
+                    conn.logout()
+                except:
+                    pass
 
     # Track deletion statistics
     if deleted > 0:
-        from utils.db import execute
         execute(
             """
             INSERT INTO deletion_stats (deletion_date, deletion_type, count, deleted_from_mail_server)
