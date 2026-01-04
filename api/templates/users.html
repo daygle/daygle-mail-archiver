@@ -182,38 +182,6 @@
         </div>
     </div>
 </div>
-                    <div class="form-group">
-                        <label for="edit_role">Role <span style="color: var(--color-danger);">*</span></label>
-                        <select id="edit_role" class="form-control" name="role" required>
-                            <option value="administrator">Administrator (Full Access)</option>
-                            <option value="read_only">Read Only (View Emails Only)</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="edit_enabled">Account Status</label>
-                    <select id="edit_enabled" class="form-control" name="enabled">
-                        <option value="true">Enabled</option>
-                        <option value="false">Disabled</option>
-                    </select>
-                </div>
-                
-                <div class="alert alert-info">
-                    <strong>Account Information:</strong><br>
-                    <small>
-                        <strong>Last Login:</strong> <span id="edit_last_login">-</span><br>
-                        <strong>Created:</strong> <span id="edit_created_at">-</span>
-                    </small>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="hideEditUserModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
-            </div>
-        </form>
-    </div>
-</div>
 
 <script>
 function showCreateUserForm() {
