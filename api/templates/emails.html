@@ -1,81 +1,97 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Emails</h2>
+<div class="row mb-4">
+    <div class="col">
+        <h2><i class="fas fa-envelope me-2"></i>Emails</h2>
+    </div>
+</div>
 
 <!-- Emails Section -->
 <div class="settings-section">
     <h3>Archived Emails</h3>
     <p class="section-description">View and manage your archived emails</p>
 
-    <form method="get" action="/emails" class="messages-filter-form">
-      <input type="text" name="q" value="{{ q }}" placeholder="Search subject, sender, recipients">
-      <input type="text" name="account" value="{{ account }}" placeholder="Account">
-      <input type="text" name="folder" value="{{ folder }}" placeholder="Folder">
-      <button type="submit" class="btn btn-primary"><i class="fa-solid fa-filter"></i> Filter</button>
+    <form method="get" action="/emails" class="mb-3">
+      <div class="row g-2">
+        <div class="col-md-4">
+          <input type="text" name="q" value="{{ q }}" placeholder="Search subject, sender, recipients" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <input type="text" name="account" value="{{ account }}" placeholder="Account" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <input type="text" name="folder" value="{{ folder }}" placeholder="Folder" class="form-control">
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-filter"></i> Filter</button>
+        </div>
+      </div>
     </form>
 
-    <form method="post" action="/emails/delete/confirm" id="messages-bulk-form">
-      <table class="messages-table">
-        <thead>
-          <tr>
-            {% if request.session.role == 'administrator' %}
-            <th>
-              <input type="checkbox" id="select-all">
-            </th>
+    <form method="post" action="/emails/delete/confirm" id="emails-bulk-form">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              {% if request.session.role == 'administrator' %}
+              <th>
+                <input type="checkbox" id="select-all">
+              </th>
+              {% endif %}
+              <th>Date</th>
+              <th>Account</th>
+              <th>Folder</th>
+              <th>From</th>
+              <th>To</th>
+              <th>Subject</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for email in emails %}
+            <tr>
+              {% if request.session.role == 'administrator' %}
+              <td>
+                <input type="checkbox" name="ids" value="{{ email.id }}" class="email-checkbox">
+              </td>
+              {% endif %}
+              <td>{{ email.date }}</td>
+              <td>{{ email.source }}</td>
+              <td>{{ email.folder }}</td>
+              <td>{{ email.sender }}</td>
+              <td>{{ email.recipients }}</td>
+              <td>
+                <a href="/emails/{{ email.id }}">{{ email.subject or "(no subject)" }}</a>
+              </td>
+            </tr>
+            {% endfor %}
+            {% if emails|length == 0 %}
+            <tr>
+              <td colspan="{% if request.session.role == 'administrator' %}7{% else %}6{% endif %}" class="text-center">No emails found.</td>
+            </tr>
             {% endif %}
-            <th>Date</th>
-            <th>Account</th>
-            <th>Folder</th>
-            <th>From</th>
-            <th>To</th>
-            <th>Subject</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for msg in messages %}
-          <tr>
-            {% if request.session.role == 'administrator' %}
-            <td>
-              <input type="checkbox" name="ids" value="{{ msg.id }}" class="msg-checkbox">
-            </td>
-            {% endif %}
-            <td>{{ msg.date }}</td>
-            <td>{{ msg.source }}</td>
-            <td>{{ msg.folder }}</td>
-            <td>{{ msg.sender }}</td>
-            <td>{{ msg.recipients }}</td>
-            <td>
-              <a href="/emails/{{ msg.id }}">{{ msg.subject or "(no subject)" }}</a>
-            </td>
-          </tr>
-          {% endfor %}
-          {% if messages|length == 0 %}
-          <tr>
-            <td colspan="{% if request.session.role == 'administrator' %}7{% else %}6{% endif %}" class="empty-state">No emails found.</td>
-          </tr>
-          {% endif %}
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </div>
 
-      <div class="messages-actions">
-        {% if request.session.role == 'administrator' %}
+      {% if request.session.role == 'administrator' %}
+      <div class="mb-3">
         <button type="submit" class="btn btn-danger" id="delete-selected-btn" disabled>
           <i class="fa-solid fa-trash"></i> Delete Selected
         </button>
-        {% endif %}
       </div>
+      {% endif %}
     </form>
 
     <div class="pagination">
       {% if page > 1 %}
-      <a href="/emails?page={{ page - 1 }}&page_size={{ page_size }}&q={{ q }}&account={{ account }}&folder={{ folder }}">Previous</a>
+      <a href="/emails?page={{ page - 1 }}&page_size={{ page_size }}&q={{ q }}&account={{ account }}&folder={{ folder }}" class="btn btn-sm btn-secondary">Previous</a>
       {% endif %}
 
-      <span>Page {{ page }}</span>
+      <span class="mx-3">Page {{ page }}</span>
 
       {% if (page * page_size) < total %}
-      <a href="/emails?page={{ page + 1 }}&page_size={{ page_size }}&q={{ q }}&account={{ account }}&folder={{ folder }}">Next</a>
+      <a href="/emails?page={{ page + 1 }}&page_size={{ page_size }}&q={{ q }}&account={{ account }}&folder={{ folder }}" class="btn btn-sm btn-secondary">Next</a>
       {% endif %}
     </div>
 </div>
@@ -83,7 +99,7 @@
 <script>
   (function () {
     const selectAll = document.getElementById('select-all');
-    const checkboxes = document.querySelectorAll('.msg-checkbox');
+    const checkboxes = document.querySelectorAll('.email-checkbox');
     const deleteBtn = document.getElementById('delete-selected-btn');
 
     function updateDeleteButton() {

@@ -227,11 +227,11 @@ def delete_account(request: Request, id: int, mode: str = Form(...)):
     if mode == "retain":
         # Delete account only
         query("DELETE FROM fetch_accounts WHERE id = :id", {"id": id})
-        flash(request, f"Fetch account '{account['name']}' deleted. Messages retained.")
+        flash(request, f"Fetch account '{account['name']}' deleted. Emails retained.")
         return RedirectResponse("/fetch_accounts", status_code=303)
 
     elif mode == "delete_messages":
-        # Delete messages first
+        # Delete emails first
         query(
             "DELETE FROM emails WHERE source = :name",
             {"name": account["name"]},
@@ -239,7 +239,7 @@ def delete_account(request: Request, id: int, mode: str = Form(...)):
         # Then delete account
         query("DELETE FROM fetch_accounts WHERE id = :id", {"id": id})
 
-        flash(request, f"Fetch account '{account['name']}' and all related messages deleted.")
+        flash(request, f"Fetch account '{account['name']}' and all related emails deleted.")
         return RedirectResponse("/fetch_accounts", status_code=303)
 
     flash(request, "Invalid delete mode.")
@@ -264,8 +264,8 @@ def confirm_delete_account(request: Request, id: int):
         flash(request, "Account not found")
         return RedirectResponse("/fetch_accounts", status_code=303)
 
-    # Count messages linked to this account
-    msg_count = query(
+    # Count emails linked to this account
+    email_count = query(
         """
         SELECT COUNT(*) AS c
         FROM emails
@@ -279,7 +279,7 @@ def confirm_delete_account(request: Request, id: int):
         {
             "request": request,
             "account": account,
-            "msg_count": msg_count,
+            "email_count": email_count,
         },
     )
 

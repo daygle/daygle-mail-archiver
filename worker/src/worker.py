@@ -91,15 +91,15 @@ def set_last_uid(account_id: int, folder: str, uid: int):
         {"id": account_id, "folder": folder, "uid": uid},
     )
 
-def store_message(
+def store_email(
     source: str,
     folder: str,
     uid: int,
-    msg_bytes: bytes,
+    email_bytes: bytes,
 ):
-    compressed_bytes = gzip.compress(msg_bytes)
+    compressed_bytes = gzip.compress(email_bytes)
 
-    msg = email.message_from_bytes(msg_bytes)
+    msg = email.message_from_bytes(email_bytes)
     subject = msg.get("Subject", "")
     sender = msg.get("From", "")
     recipients = ", ".join(
@@ -133,7 +133,7 @@ def process_account(account):
     account_id = account["id"]
     name = account["name"]
     account_type = account.get("account_type", "imap")
-    source = name  # used as source label in messages table
+    source = name  # used as source label in emails table
 
     update_heartbeat(account_id)
 
@@ -241,20 +241,20 @@ def process_gmail_account(account):
     # Get last sync token for delta sync
     last_sync_token = get_last_sync_token(account_id, folder)
 
-    # Fetch new message IDs
-    message_ids = client.fetch_new_messages(last_sync_token)
+    # Fetch new email IDs
+    email_ids = client.fetch_new_messages(last_sync_token)
 
-    # Process each message
-    for msg_id in message_ids:
+    # Process each email
+    for msg_id in email_ids:
         try:
-            # Get message in raw RFC822 format
+            # Get email in raw RFC822 format
             raw_email = client.get_message_raw(msg_id)
             if raw_email:
-                # Use message_id hash as UID equivalent
-                uid = hash(msg_id) & 0x7FFFFFFF  # Keep as positive int
-                store_message(source, folder, uid, raw_email)
+                # Use email_id hash as UID equivalent
+                uid = abs(hash(msg_id)) % (10**9)
+                store_email(source, folder, uid, raw_email)
         except Exception as e:
-            log_error(source, f"Failed to fetch Gmail message {msg_id}: {e}")
+            log_error(source, f"Failed to fetch Gmail email {msg_id}: {e}")
 
     # Update sync token for next run
     new_sync_token = client.get_sync_token()
@@ -279,20 +279,20 @@ def process_o365_account(account):
     # Get last delta link for incremental sync
     last_delta_link = get_last_sync_token(account_id, folder)
 
-    # Fetch new message IDs
-    message_ids = client.fetch_new_messages(last_delta_link)
+    # Fetch new email IDs
+    email_ids = client.fetch_new_messages(last_delta_link)
 
-    # Process each message
-    for msg_id in message_ids:
+    # Process each email
+    for msg_id in email_ids:
         try:
-            # Get message in MIME format
+            # Get email in MIME format
             raw_email = client.get_message_mime(msg_id)
             if raw_email:
-                # Use message_id hash as UID equivalent
-                uid = hash(msg_id) & 0x7FFFFFFF  # Keep as positive int
-                store_message(source, folder, uid, raw_email)
+                # Use email_id hash as UID equivalent
+                uid = abs(hash(msg_id)) % (10**9)
+                store_email(source, folder, uid, raw_email)
         except Exception as e:
-            log_error(source, f"Failed to fetch O365 message {msg_id}: {e}")
+            log_error(source, f"Failed to fetch O365 email {msg_id}: {e}")
 
     # Update delta link for next run
     new_delta_link = client.get_delta_link()
@@ -371,8 +371,8 @@ def main_loop():
             process_account(account)
             # No per-account sleep here; we do a global sleep after all accounts
 
-        # Purge old messages after processing all accounts
-        purge_old_messages()
+        # Purge old emails after processing all accounts
+        purge_old_emails()
 
         # Sleep before next cycle
         time.sleep(POLL_INTERVAL_FALLBACK)

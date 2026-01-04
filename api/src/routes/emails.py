@@ -7,7 +7,7 @@ from imaplib import IMAP4, IMAP4_SSL
 
 from utils.db import query
 from utils.email_parser import decompress, parse_email
-from utils.security import decrypt_password
+from utils.security import decrypt_password, can_delete
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -22,7 +22,7 @@ def flash(request: Request, message: str):
 
 
 @router.get("/emails", response_class=HTMLResponse)
-def list_messages(
+def list_emails(
     request: Request,
     page: int = 1,
     page_size: int = 50,
@@ -76,7 +76,7 @@ def list_messages(
         "emails.html",
         {
             "request": request,
-            "messages": rows,
+            "emails": rows,
             "page": page,
             "page_size": page_size,
             "total": total,
@@ -88,8 +88,8 @@ def list_messages(
     )
 
 
-@router.get("/emails/{message_id}", response_class=HTMLResponse)
-def view_message(request: Request, message_id: int):
+@router.get("/emails/{email_id}", response_class=HTMLResponse)
+def view_email(request: Request, email_id: int):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
@@ -100,11 +100,11 @@ def view_message(request: Request, message_id: int):
         FROM emails
         WHERE id = :id
         """,
-        {"id": message_id},
+        {"id": email_id},
     ).mappings().first()
 
     if not row:
-        return HTMLResponse("Message not found", status_code=404)
+        return HTMLResponse("Email not found", status_code=404)
 
     raw = decompress(row["raw_email"], row["compressed"])
     parsed = parse_email(raw)
@@ -115,7 +115,7 @@ def view_message(request: Request, message_id: int):
         "email_view.html",
         {
             "request": request,
-            "message": row,
+            "email": row,
             "headers": parsed["headers"],
             "body": parsed["body"],
             "flash": msg,
@@ -123,8 +123,8 @@ def view_message(request: Request, message_id: int):
     )
 
 
-@router.get("/emails/{message_id}/download")
-def download_message(request: Request, message_id: int):
+@router.get("/emails/{email_id}/download")
+def download_email(request: Request, email_id: int):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
@@ -134,7 +134,7 @@ def download_message(request: Request, message_id: int):
         FROM emails
         WHERE id = :id
         """,
-        {"id": message_id},
+        {"id": email_id},
     ).mappings().first()
 
     if not row:
@@ -145,7 +145,7 @@ def download_message(request: Request, message_id: int):
     return StreamingResponse(
         iter([raw]),
         media_type="message/rfc822",
-        headers={"Content-Disposition": f'attachment; filename="email-{message_id}.eml"'},
+        headers={"Content-Disposition": f'attachment; filename="email-{email_id}.eml"'},
     )
 
 
@@ -160,6 +160,10 @@ def confirm_bulk_delete(
     """
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
+    
+    if not can_delete(request):
+        flash(request, "You don't have permission to delete emails.")
+        return RedirectResponse(return_url or "/emails", status_code=303)
 
     # Ensure ids is a list (FastAPI will usually do this for multiple checkboxes)
     if not isinstance(ids, list):
@@ -178,25 +182,29 @@ def confirm_bulk_delete(
     )
 
 
-@router.post("/emails/{message_id}/delete/confirm", response_class=HTMLResponse)
-def confirm_single_delete(request: Request, message_id: int):
+@router.post("/emails/{email_id}/delete/confirm", response_class=HTMLResponse)
+def confirm_single_delete(request: Request, email_id: int):
     """
     Single email delete confirmation.
     Reuses the same confirmation template as bulk delete.
     """
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
+    
+    if not can_delete(request):
+        flash(request, "You don't have permission to delete emails.")
+        return RedirectResponse(f"/emails/{email_id}", status_code=303)
 
     # Verify the email exists
     row = query(
         "SELECT id FROM emails WHERE id = :id",
-        {"id": message_id},
+        {"id": email_id},
     ).mappings().first()
 
     if not row:
         return HTMLResponse("Email not found", status_code=404)
 
-    ids = [message_id]
+    ids = [email_id]
     count = 1
 
     return templates.TemplateResponse(
@@ -205,12 +213,12 @@ def confirm_single_delete(request: Request, message_id: int):
             "request": request,
             "ids": ids,
             "count": count,
-            "return_url": f"/emails/{message_id}",
+            "return_url": f"/emails/{email_id}",
         },
     )
 
 
-def _delete_messages_from_db(ids: List[int]) -> int:
+def _delete_emails_from_db(ids: List[int]) -> int:
     """
     Delete emails from the database only.
     Returns number of emails deleted.
@@ -226,7 +234,7 @@ def _delete_messages_from_db(ids: List[int]) -> int:
     return deleted
 
 
-def _delete_messages_from_imap_and_db(ids: List[int]) -> tuple[int, list[str]]:
+def _delete_emails_from_imap_and_db(ids: List[int]) -> tuple[int, list[str]]:
     """
     Delete emails from IMAP (based on source/folder/uid) and then from DB.
     Returns (deleted_count, errors).
@@ -235,7 +243,7 @@ def _delete_messages_from_imap_and_db(ids: List[int]) -> tuple[int, list[str]]:
     deleted = 0
 
     for mid in ids:
-        msg_row = query(
+        email_row = query(
             """
             SELECT id, source, folder, uid
             FROM emails
@@ -244,7 +252,7 @@ def _delete_messages_from_imap_and_db(ids: List[int]) -> tuple[int, list[str]]:
             {"id": mid},
         ).mappings().first()
 
-        if not msg_row:
+        if not email_row:
             errors.append(f"Email {mid} not found")
             continue
 
@@ -255,11 +263,11 @@ def _delete_messages_from_imap_and_db(ids: List[int]) -> tuple[int, list[str]]:
             FROM fetch_accounts
             WHERE name = :name
             """,
-            {"name": msg_row["source"]},
+            {"name": email_row["source"]},
         ).mappings().first()
 
         if not account:
-            errors.append(f"No fetch account found for source '{msg_row['source']}' (email {mid})")
+            errors.append(f"No fetch account found for source '{email_row['source']}' (email {mid})")
             continue
 
         try:
@@ -275,10 +283,10 @@ def _delete_messages_from_imap_and_db(ids: List[int]) -> tuple[int, list[str]]:
             conn.login(account["username"], password)
 
             # Select the folder and delete by UID
-            folder = msg_row["folder"]
+            folder = email_row["folder"]
             conn.select(folder)
 
-            uid_str = str(msg_row["uid"])
+            uid_str = str(email_row["uid"])
             typ, _ = conn.uid("STORE", uid_str, "+FLAGS", r"(\Deleted)")
             if typ != "OK":
                 raise RuntimeError(f"Failed to flag email {mid} for deletion on IMAP")
@@ -316,17 +324,21 @@ def perform_delete(
     """
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
+    
+    if not can_delete(request):
+        flash(request, "You don't have permission to delete emails.")
+        return RedirectResponse(return_url or "/emails", status_code=303)
 
     if not isinstance(ids, list):
         ids = [ids]
 
     if mode == "db":
-        deleted = _delete_messages_from_db(ids)
+        deleted = _delete_emails_from_db(ids)
         flash(request, f"Deleted {deleted} email(s) from the database.")
         return RedirectResponse("/emails", status_code=303)
 
     elif mode == "imap":
-        deleted, errors = _delete_messages_from_imap_and_db(ids)
+        deleted, errors = _delete_emails_from_imap_and_db(ids)
 
         if errors:
             error_text = " | ".join(errors)

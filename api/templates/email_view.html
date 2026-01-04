@@ -1,38 +1,38 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>{{ message.subject or "(no subject)" }}</h1>
+<h1>{{ email.subject or "(no subject)" }}</h1>
 
 <div class="message-meta">
   <table class="meta-table">
     <tr>
       <td><strong>From:</strong></td>
-      <td>{{ message.sender }}</td>
+      <td>{{ email.sender }}</td>
     </tr>
     <tr>
       <td><strong>To:</strong></td>
-      <td>{{ message.recipients }}</td>
+      <td>{{ email.recipients }}</td>
     </tr>
     <tr>
       <td><strong>Date:</strong></td>
-      <td>{{ message.date }}</td>
+      <td>{{ email.date }}</td>
     </tr>
     <tr>
       <td><strong>Account:</strong></td>
-      <td>{{ message.source }}</td>
+      <td>{{ email.source }}</td>
     </tr>
     <tr>
       <td><strong>Folder:</strong></td>
-      <td>{{ message.folder }}</td>
+      <td>{{ email.folder }}</td>
     </tr>
   </table>
 </div>
 
 <div class="message-actions">
-  <a href="/emails/{{ message.id }}/download" class="btn btn-secondary"><i class="fa-solid fa-download"></i> Download EML</a>
+  <a href="/emails/{{ email.id }}/download" class="btn btn-secondary"><i class="fa-solid fa-download"></i> Download EML</a>
 
   {% if request.session.role == 'administrator' %}
-  <form method="post" action="/emails/{{ message.id }}/delete/confirm" style="display:inline;">
+  <form method="post" action="/emails/{{ email.id }}/delete/confirm" style="display:inline;">
     <button type="submit" class="btn btn-danger"><i class="fa-solid fa-trash"></i> Delete</button>
   </form>
   {% endif %}
@@ -49,7 +49,7 @@
 
 <h2>Subject</h2>
 <pre class="message-subject">
-{{ message.subject or "(no subject)" }}
+{{ email.subject or "(no subject)" }}
 </pre>
 
 <h2>Body</h2>
