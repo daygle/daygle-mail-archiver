@@ -3,9 +3,9 @@
 {% block page_title %}User Management{% endblock %}
 
 {% block content %}
-<div style="display: grid; grid-template-columns: 1fr; gap: 20px;" id="usersContainer">
+<div style="display: grid; grid-template-columns: 1fr; gap: 20px; transition: grid-template-columns 0.3s ease;" id="usersContainer">
     <!-- Users Table Card -->
-    <div class="card" id="usersListCard">
+    <div class="card" id="usersListCard" style="min-width: 0;">
         <div class="card-header">
             <div class="card-title">
                 <i class="fas fa-users"></i>
@@ -101,7 +101,7 @@
     </div>
     
     <!-- Create/Edit User Form Card (Initially Hidden) -->
-    <div class="card" id="userFormCard" style="display: none;">
+    <div class="card" id="userFormCard" style="display: none; min-width: 0;">
         <div class="card-header">
             <div class="card-title">
                 <i class="fas fa-user-plus" id="formIcon"></i>
