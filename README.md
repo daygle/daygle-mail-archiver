@@ -330,10 +330,21 @@ The **Dashboard** displays deletion analytics:
 
 ---
 
-# Worker Logs
+# Viewing Logs
 
+**Worker Logs** (email fetching process):
 ```
 docker compose logs -f worker
+```
+
+**API Logs** (web application):
+```
+docker compose logs -f api
+```
+
+**All Services**:
+```
+docker compose logs -f
 ```
 
 ---
