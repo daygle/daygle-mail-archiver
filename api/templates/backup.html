@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2><i class="fas fa-download me-2"></i>Database Backup</h2>
+
+<div class="settings-section">
+    <h3>Download Backup</h3>
+    <p class="section-description">Export the entire database to a SQL file for safekeeping. This creates a complete snapshot of all data including messages, accounts, users, and settings.</p>
+    
+    <div class="alert alert-info">
+        <strong><i class="fas fa-info-circle"></i> Backup Information:</strong><br>
+        <small>
+            The backup file will be in SQL format and can be used to restore the database to its current state.<br>
+            Store backup files in a secure location outside of this system.
+        </small>
+    </div>
+    
+    <div class="form-actions">
+        <a href="/settings/backup" class="btn btn-primary btn-lg"><i class="fa-solid fa-download"></i> Download Database Backup</a>
+    </div>
+</div>
+
+{% endblock %}

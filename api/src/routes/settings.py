@@ -93,7 +93,21 @@ def save_settings(
 
     flash(request, "Settings updated successfully.")
     return RedirectResponse("/settings", status_code=303)
+@router.get("/backup")
+def backup_page(request: Request):
+    if not require_login(request):
+        return RedirectResponse("/login", status_code=303)
 
+    msg = request.session.pop("flash", None)
+    return templates.TemplateResponse("backup.html", {"request": request, "flash": msg})
+
+@router.get("/restore")
+def restore_page(request: Request):
+    if not require_login(request):
+        return RedirectResponse("/login", status_code=303)
+
+    msg = request.session.pop("flash", None)
+    return templates.TemplateResponse("restore.html", {"request": request, "flash": msg})
 @router.get("/settings/backup")
 def backup_db(request: Request):
     if not require_login(request):
@@ -126,7 +140,7 @@ def backup_db(request: Request):
 
         if result.returncode != 0:
             flash(request, f"Backup failed: {result.stderr}")
-            return RedirectResponse("/settings", status_code=303)
+            return RedirectResponse("/backup", status_code=303)
 
         bio = BytesIO(result.stdout.encode('utf-8'))
         return StreamingResponse(
@@ -136,7 +150,7 @@ def backup_db(request: Request):
         )
     except Exception as e:
         flash(request, f"Backup error: {str(e)}")
-        return RedirectResponse("/settings", status_code=303)
+        return RedirectResponse("/backup", status_code=303)
 
 @router.post("/settings/restore")
 def restore_db(request: Request, file: UploadFile = File(...)):
@@ -146,7 +160,7 @@ def restore_db(request: Request, file: UploadFile = File(...)):
     dsn = os.getenv("DB_DSN")
     if not dsn:
         flash(request, "DB_DSN not configured.")
-        return RedirectResponse("/settings", status_code=303)
+        return RedirectResponse("/restore", status_code=303)
 
     try:
         parsed = urlparse(dsn)
@@ -171,10 +185,10 @@ def restore_db(request: Request, file: UploadFile = File(...)):
 
         if result.returncode != 0:
             flash(request, f"Restore failed: {result.stderr}")
-            return RedirectResponse("/settings", status_code=303)
+            return RedirectResponse("/restore", status_code=303)
 
         flash(request, "Database restored successfully.")
-        return RedirectResponse("/settings", status_code=303)
+        return RedirectResponse("/restore", status_code=303)
     except Exception as e:
         flash(request, f"Restore error: {str(e)}")
-        return RedirectResponse("/settings", status_code=303)
+        return RedirectResponse("/restore", status_code=303)
