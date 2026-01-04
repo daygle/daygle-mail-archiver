@@ -25,12 +25,12 @@
             
             <div class="form-group">
                 <label for="amount" class="form-label">Donation Amount</label>
-                <div style="display: flex; gap: 12px; align-items: flex-start;">
+                <div style="display: flex; gap: 12px; align-items: stretch;">
                     <div style="display: flex; gap: 0; flex: 1; max-width: 300px;">
                         <span id="currencySymbol" style="padding: 10px 16px; background: var(--background-secondary); border: 1px solid var(--border-color); border-right: none; border-radius: var(--radius-md) 0 0 var(--radius-md); color: var(--text-secondary);">$</span>
                         <input type="number" class="form-control" id="amount" name="amount" min="1" step="0.01" placeholder="10.00" style="border-radius: 0 var(--radius-md) var(--radius-md) 0; flex: 1;">
                     </div>
-                    <div style="flex: 0 0 auto; min-width: 200px;">
+                    <div style="flex: 0 0 auto; min-width: 200px; display: flex;">
                         <select class="form-select" id="currency" name="currency" style="height: 100%;">
                             <option value="AUD" data-symbol="$" selected>AUD - Australian Dollar</option>
                             <option value="USD" data-symbol="$">USD - US Dollar</option>
