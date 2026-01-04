@@ -102,14 +102,13 @@
     
     <!-- Create/Edit User Form Card (Initially Hidden) -->
     <div class="card" id="userFormCard" style="display: none; min-width: 0;">
-        <div class="card-header">
+        <div class="card-header" style="display: flex; align-items: center; justify-content: space-between;">
             <div class="card-title">
                 <i class="fas fa-user-plus" id="formIcon"></i>
                 <span id="formTitle">Create New User</span>
             </div>
-            <button type="button" class="btn btn-secondary" onclick="hideUserForm()">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="hideUserForm()" title="Cancel">
                 <i class="fas fa-times"></i>
-                <span>Cancel</span>
             </button>
         </div>
         <div class="card-body">
