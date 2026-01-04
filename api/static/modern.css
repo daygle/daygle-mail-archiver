@@ -517,6 +517,7 @@ input, select, textarea, button {
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
     transition: transform var(--transition-base), box-shadow var(--transition-base);
+    position: relative;
 }
 
 .stat-card:hover {
