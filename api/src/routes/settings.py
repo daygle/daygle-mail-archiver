@@ -112,7 +112,7 @@ def backup_page(request: Request):
         return RedirectResponse("/login", status_code=303)
 
     msg = request.session.pop("flash", None)
-    return templates.TemplateResponse("backup.html", {"request": request, "flash": msg})
+    return templates.TemplateResponse("backup_restore.html", {"request": request, "flash": msg})
 
 @router.get("/restore")
 def restore_page(request: Request):
@@ -120,7 +120,7 @@ def restore_page(request: Request):
         return RedirectResponse("/login", status_code=303)
 
     msg = request.session.pop("flash", None)
-    return templates.TemplateResponse("restore.html", {"request": request, "flash": msg})
+    return templates.TemplateResponse("backup_restore.html", {"request": request, "flash": msg})
 @router.get("/settings/backup")
 def backup_db(request: Request):
     if not require_login(request):

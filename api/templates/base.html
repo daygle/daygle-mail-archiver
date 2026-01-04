@@ -15,8 +15,8 @@
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-brand" id="sidebarBrand" style="cursor: pointer;">
-                    <img src="/static/daygle.png" alt="Daygle" class="logo-light">
-                    <img src="/static/daygle-light.png" alt="Daygle" class="logo-dark">
+                    <img src="/static/daygle.png" alt="Daygle" class="logo-dark">
+                    <img src="/static/daygle-light.png" alt="Daygle" class="logo-light">
                     <span class="brand-text">Mail Archiver</span>
                 </div>
             </div>
@@ -53,7 +53,7 @@
                         <i class="fas fa-users"></i>
                         <span>User Management</span>
                     </a>
-                    <a href="/backup-restore" class="nav-link {% if '/backup' in request.url.path or '/restore' in request.url.path %}active{% endif %}">
+                    <a href="/backup" class="nav-link {% if '/backup' in request.url.path or '/restore' in request.url.path %}active{% endif %}">
                         <i class="fas fa-database"></i>
                         <span>Backup/Restore</span>
                     </a>

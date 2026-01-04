@@ -161,6 +161,8 @@ input, select, textarea, button {
 }
 
 /* Show/hide logos based on theme */
+/* daygle.png = black/dark logo, show in light theme */
+/* daygle-light.png = white/light logo, show in dark theme */
 [data-theme="light"] .logo-dark {
     display: inline-block;
 }
