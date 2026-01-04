@@ -166,10 +166,7 @@
         const sidebarBrand = document.getElementById('sidebarBrand');
 
         function toggleSidebar(e) {
-            if (e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
+            e.stopPropagation();
             sidebar.classList.toggle('collapsed');
             localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
         }
@@ -180,7 +177,6 @@
 
         if (sidebarMobileToggle) {
             sidebarMobileToggle.addEventListener('click', (e) => {
-                e.preventDefault();
                 e.stopPropagation();
                 sidebar.classList.toggle('mobile-open');
             });
