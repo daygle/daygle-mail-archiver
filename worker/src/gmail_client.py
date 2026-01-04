@@ -116,3 +116,15 @@ class GmailClient:
                     break
         
         return message_ids
+    
+    def delete_message(self, message_id: str) -> bool:
+        """Delete a message by moving it to trash"""
+        try:
+            response = requests.post(
+                f"{self.base_url}/messages/{message_id}/trash",
+                headers=self.headers
+            )
+            response.raise_for_status()
+            return True
+        except Exception:
+            return False

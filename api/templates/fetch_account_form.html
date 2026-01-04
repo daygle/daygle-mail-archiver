@@ -122,6 +122,13 @@
             <div class="form-group checkbox-group">
                 <input type="checkbox" id="delete_after" name="delete_after_processing" {% if account and account.delete_after_processing %}checked{% endif %}>
                 <label for="delete_after">Delete Email After Processed</label>
+                <small class="text-muted d-block">Gmail: moves to Trash | Office 365: moves to Deleted Items | IMAP: moves to Trash (or marks deleted)</small>
+            </div>
+
+            <div class="form-group checkbox-group" id="expunge_deleted_group" style="display: none;">
+                <input type="checkbox" id="expunge_deleted" name="expunge_deleted" {% if account and account.expunge_deleted %}checked{% endif %}>
+                <label for="expunge_deleted">Permanently Expunge Deleted (IMAP only)</label>
+                <small class="text-muted d-block">Warning: Permanently removes deleted emails from server - cannot be recovered</small>
             </div>
 
             <div class="form-group checkbox-group">
@@ -143,17 +150,16 @@ function toggleAccountFields() {
     const accountType = document.getElementById('account_type').value;
     const imapFields = document.getElementById('imap_fields');
     const oauthFields = document.getElementById('oauth_fields');
-    
-    if (accountType === 'imap') {
-        imapFields.style.display = 'block';
-        oauthFields.style.display = 'none';
-    } else {
-        imapFields.style.display = 'none';
-        oauthFields.style.display = 'block';
-    }
-}
+        const expungeGroup = document.getElementById('expunge_deleted_group');
 
-// Initialize on page load
+        if (accountType === 'imap') {
+            imapFields.style.display = 'block';
+            oauthFields.style.display = 'none';
+            expungeGroup.style.display = 'block';
+        } else {
+            imapFields.style.display = 'none';
+            oauthFields.style.display = 'block';
+            expungeGroup.style.display = 'none';
 document.addEventListener('DOMContentLoaded', toggleAccountFields);
 </script>
 

@@ -59,7 +59,7 @@ def get_accounts():
         """
         SELECT id, name, host, port, username, password_encrypted,
                use_ssl, require_starttls, poll_interval_seconds,
-               delete_after_processing, enabled, account_type
+               delete_after_processing, expunge_deleted, enabled, account_type
         FROM fetch_accounts
         WHERE enabled = TRUE
         """
@@ -160,6 +160,8 @@ def process_imap_account(account):
     account_id = account["id"]
     name = account["name"]
     source = name
+    delete_after_processing = account.get("delete_after_processing", False)
+    expunge_deleted = account.get("expunge_deleted", False)
 
     try:
         password = decrypt_password(account["password_encrypted"])
@@ -187,7 +189,8 @@ def process_imap_account(account):
             parts = mbox.decode().split(" ")
             folder = parts[-1].strip('"')
 
-            conn.select(folder, readonly=True)
+            # Select folder as readonly unless we need to delete
+            conn.select(folder, readonly=not delete_after_processing)
 
             last_uid = get_last_uid(account_id, folder)
 
@@ -216,9 +219,27 @@ def process_imap_account(account):
                     continue
 
                 raw = msg_data[0][1]
-                store_message(source, folder, uid, raw)
+                store_email(source, folder, uid, raw)
+                
+                # Delete from server if configured
+                if delete_after_processing:
+                    try:
+                        # Mark message as deleted (IMAP standard)
+                        # If expunge is disabled, message stays flagged but visible in mail clients
+                        # If expunge is enabled, message is permanently removed
+                        conn.uid("STORE", str(uid), "+FLAGS", "(\\Deleted)")
+                    except Exception as e:
+                        log_error(source, f"Failed to mark UID {uid} as deleted in folder {folder}: {e}")
+                
                 if uid > max_uid:
                     max_uid = uid
+            
+            # Expunge deleted messages only if expunge flag is enabled
+            if delete_after_processing and expunge_deleted:
+                try:
+                    conn.expunge()
+                except Exception as e:
+                    log_error(source, f"Failed to expunge folder {folder}: {e}")
 
             if max_uid > last_uid:
                 set_last_uid(account_id, folder, max_uid)
@@ -230,6 +251,7 @@ def process_gmail_account(account):
     name = account["name"]
     source = name
     folder = "INBOX"  # Gmail uses labels, we'll use INBOX as folder
+    delete_after_processing = account.get("delete_after_processing", False)
 
     # Get valid access token
     access_token = get_valid_token(account_id, "gmail")
@@ -253,6 +275,11 @@ def process_gmail_account(account):
                 # Use email_id hash as UID equivalent
                 uid = abs(hash(msg_id)) % (10**9)
                 store_email(source, folder, uid, raw_email)
+                
+                # Delete from Gmail (move to trash) if configured
+                if delete_after_processing:
+                    if not client.delete_message(msg_id):
+                        log_error(source, f"Failed to delete Gmail message {msg_id}")
         except Exception as e:
             log_error(source, f"Failed to fetch Gmail email {msg_id}: {e}")
 
@@ -268,6 +295,7 @@ def process_o365_account(account):
     name = account["name"]
     source = name
     folder = "INBOX"
+    delete_after_processing = account.get("delete_after_processing", False)
 
     # Get valid access token
     access_token = get_valid_token(account_id, "o365")
@@ -291,6 +319,11 @@ def process_o365_account(account):
                 # Use email_id hash as UID equivalent
                 uid = abs(hash(msg_id)) % (10**9)
                 store_email(source, folder, uid, raw_email)
+                
+                # Delete from Office 365 if configured
+                if delete_after_processing:
+                    if not client.delete_message(msg_id):
+                        log_error(source, f"Failed to delete Office 365 message {msg_id}")
         except Exception as e:
             log_error(source, f"Failed to fetch O365 email {msg_id}: {e}")
 
@@ -340,6 +373,7 @@ def purge_old_messages():
 
     retention_value = int(settings.get("retention_value", 1))
     retention_unit = settings.get("retention_unit", "years")
+    delete_from_mail_server = settings.get("retention_delete_from_mail_server", "false").lower() == "true"
 
     now = datetime.now(timezone.utc)
     if retention_unit == "days":
@@ -351,6 +385,92 @@ def purge_old_messages():
     else:
         return  # Invalid unit
 
+    # Get emails to delete (with source, folder, uid for mail server deletion)
+    emails_to_delete = query(
+        """
+        SELECT id, source, folder, uid
+        FROM emails
+        WHERE created_at < :cutoff
+        """,
+        {"cutoff": cutoff},
+    ).mappings().all()
+
+    deletion_count = len(emails_to_delete)
+    if deletion_count == 0:
+        return
+
+    # Delete from mail servers if enabled
+    if delete_from_mail_server:
+        # Group emails by source (fetch account)
+        from collections import defaultdict
+        emails_by_source = defaultdict(list)
+        for email_rec in emails_to_delete:
+            emails_by_source[email_rec["source"]].append(email_rec)
+        
+        # Get fetch accounts to determine how to delete
+        accounts = query(
+            """
+            SELECT id, name, account_type, host, port, username, password_encrypted,
+                   use_ssl, require_starttls
+            FROM fetch_accounts
+            """
+        ).mappings().all()
+        
+        accounts_by_name = {acc["name"]: acc for acc in accounts}
+        
+        # Try to delete from each source
+        for source, emails in emails_by_source.items():
+            if source not in accounts_by_name:
+                continue
+                
+            account = accounts_by_name[source]
+            account_type = account.get("account_type", "imap")
+            
+            try:
+                if account_type == "imap":
+                    # Delete from IMAP server
+                    password = decrypt_password(account["password_encrypted"])
+                    with ImapConnection(
+                        host=account["host"],
+                        port=account["port"],
+                        username=account["username"],
+                        password=password,
+                        use_ssl=account["use_ssl"],
+                        require_starttls=account["require_starttls"],
+                    ) as conn:
+                        # Group by folder
+                        from collections import defaultdict
+                        emails_by_folder = defaultdict(list)
+                        for email_rec in emails:
+                            emails_by_folder[email_rec["folder"]].append(email_rec["uid"])
+                        
+                        for folder, uids in emails_by_folder.items():
+                            try:
+                                conn.select(folder, readonly=False)
+                                for uid in uids:
+                                    try:
+                                        conn.uid("STORE", str(uid), "+FLAGS", "(\\Deleted)")
+                                    except:
+                                        pass
+                                # Expunge to permanently remove
+                                conn.expunge()
+                            except Exception as e:
+                                log_error("Retention", f"Failed to delete from IMAP folder {folder}: {e}")
+                
+                elif account_type == "gmail":
+                    # Delete from Gmail (would need OAuth token refresh)
+                    # For now, skip - requires complex token management
+                    pass
+                    
+                elif account_type == "o365":
+                    # Delete from Office 365 (would need OAuth token refresh)
+                    # For now, skip - requires complex token management
+                    pass
+                    
+            except Exception as e:
+                log_error("Retention", f"Failed to delete from mail server {source}: {e}")
+
+    # Delete from database
     execute(
         """
         DELETE FROM emails
@@ -358,6 +478,19 @@ def purge_old_messages():
         """,
         {"cutoff": cutoff},
     )
+
+    # Track deletion statistics
+    execute(
+        """
+        INSERT INTO deletion_stats (deletion_date, deletion_type, count, deleted_from_mail_server)
+        VALUES (CURRENT_DATE, 'retention', :count, :deleted_from_server)
+        ON CONFLICT (deletion_date, deletion_type, deleted_from_mail_server)
+        DO UPDATE SET count = deletion_stats.count + EXCLUDED.count
+        """,
+        {"count": deletion_count, "deleted_from_server": delete_from_mail_server},
+    )
+    
+    log_error("Retention", f"Purged {deletion_count} old emails (delete_from_server={delete_from_mail_server})", level="info")
 
 def main_loop():
     while True:

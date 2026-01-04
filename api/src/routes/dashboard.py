@@ -169,3 +169,55 @@ def dashboard_stats(request: Request):
         "total_accounts": total_accounts,
         "emails_today": emails_today
     }
+
+
+@router.get("/api/dashboard/deletion-stats")
+def deletion_stats(request: Request):
+    """Get deletion statistics for the last 30 days"""
+    if not require_login(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    # Get deletion stats grouped by type
+    results = query("""
+        SELECT 
+            deletion_date,
+            deletion_type,
+            deleted_from_mail_server,
+            SUM(count) as total_count
+        FROM deletion_stats
+        WHERE deletion_date >= CURRENT_DATE - INTERVAL '30 days'
+        GROUP BY deletion_date, deletion_type, deleted_from_mail_server
+        ORDER BY deletion_date
+    """).mappings().all()
+
+    # Organize data for chart
+    data = {
+        "labels": [],
+        "manual": [],
+        "retention": [],
+        "deleted_from_server": []
+    }
+    
+    # Group by date
+    from collections import defaultdict
+    by_date = defaultdict(lambda: {"manual": 0, "retention": 0, "from_server": 0})
+    
+    for row in results:
+        date_str = row["deletion_date"].strftime("%Y-%m-%d")
+        if row["deletion_type"] == "manual":
+            by_date[date_str]["manual"] += row["total_count"]
+        elif row["deletion_type"] == "retention":
+            by_date[date_str]["retention"] += row["total_count"]
+        
+        if row["deleted_from_mail_server"]:
+            by_date[date_str]["from_server"] += row["total_count"]
+    
+    # Sort by date and build arrays
+    sorted_dates = sorted(by_date.keys())
+    for date_str in sorted_dates:
+        data["labels"].append(date_str)
+        data["manual"].append(by_date[date_str]["manual"])
+        data["retention"].append(by_date[date_str]["retention"])
+        data["deleted_from_server"].append(by_date[date_str]["from_server"])
+    
+    return data

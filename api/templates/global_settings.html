@@ -36,6 +36,12 @@
                 <input id="enable_purge" type="checkbox" name="enable_purge" {% if settings.enable_purge == 'true' %}checked{% endif %}>
                 <label for="enable_purge">Enable Email Purging</label>
             </div>
+            
+            <div class="form-group checkbox-group">
+                <input id="retention_delete_from_mail_server" type="checkbox" name="retention_delete_from_mail_server" {% if settings.retention_delete_from_mail_server == 'true' %}checked{% endif %}>
+                <label for="retention_delete_from_mail_server">Delete from Mail Server (automated)</label>
+                <small class="text-muted d-block">When enabled, retention cleanup will also attempt to delete emails from the original mail servers</small>
+            </div>
         </div>
 
         <div class="form-group">

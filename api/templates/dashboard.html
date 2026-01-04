@@ -98,6 +98,20 @@
 
 <!-- Charts Row 2 -->
 <div class="row mb-4">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-trash-alt me-2"></i>Email Deletions (Last 30 Days)</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="deletionStatsChart" style="height: 300px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row 3 -->
+<div class="row mb-4">
     <div class="col-md-6 mb-4">
         <div class="card">
             <div class="card-header">
@@ -281,9 +295,78 @@ async function loadTopReceivers() {
 document.addEventListener('DOMContentLoaded', function() {
     loadStats();
     loadEmailsPerDay();
+    loadDeletionStats();
     loadTopSenders();
     loadTopReceivers();
 });
+
+// Deletion Stats Chart
+async function loadDeletionStats() {
+    try {
+        const response = await fetch('/api/dashboard/deletion-stats');
+        const data = await response.json();
+        
+        const ctx = document.getElementById('deletionStatsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.labels,
+                datasets: [
+                    {
+                        label: 'Manual Deletions',
+                        data: data.manual,
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Retention Cleanup',
+                        data: data.retention,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Deleted from Mail Server',
+                        data: data.deleted_from_server,
+                        backgroundColor: 'rgba(255, 206, 86, 0.6)',
+                        borderColor: 'rgba(255, 206, 86, 1)',
+                        borderWidth: 1,
+                        type: 'line'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error loading deletion stats:', error);
+    }
+}
 </script>
 
 {% endblock %}

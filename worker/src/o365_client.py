@@ -120,3 +120,15 @@ class O365Client:
             return data.get("mail") or data.get("userPrincipalName")
         except:
             return None
+    
+    def delete_message(self, message_id: str) -> bool:
+        """Delete a message"""
+        try:
+            response = requests.delete(
+                f"{self.base_url}/messages/{message_id}",
+                headers=self.headers
+            )
+            response.raise_for_status()
+            return True
+        except Exception:
+            return False

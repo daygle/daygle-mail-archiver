@@ -79,6 +79,7 @@ def create_account(
     require_starttls: bool = Form(False),
     poll_interval_seconds: int = Form(300),
     delete_after_processing: bool = Form(False),
+    expunge_deleted: bool = Form(False),
     enabled: bool = Form(True),
 ):
     if not require_login(request):
@@ -91,11 +92,11 @@ def create_account(
         INSERT INTO fetch_accounts
         (name, account_type, host, port, username, password_encrypted,
          use_ssl, require_starttls, poll_interval_seconds,
-         delete_after_processing, enabled)
+         delete_after_processing, expunge_deleted, enabled)
         VALUES
         (:name, :account_type, :host, :port, :username, :password_encrypted,
          :use_ssl, :require_starttls, :poll_interval_seconds,
-         :delete_after_processing, :enabled)
+         :delete_after_processing, :expunge_deleted, :enabled)
         """,
         {
             "name": name,
@@ -108,6 +109,7 @@ def create_account(
             "require_starttls": require_starttls,
             "poll_interval_seconds": poll_interval_seconds,
             "delete_after_processing": delete_after_processing,
+            "expunge_deleted": expunge_deleted,
             "enabled": enabled,
         },
     )
@@ -165,6 +167,7 @@ def update_account(
     require_starttls: bool = Form(False),
     poll_interval_seconds: int = Form(300),
     delete_after_processing: bool = Form(False),
+    expunge_deleted: bool = Form(False),
     enabled: bool = Form(True),
 ):
     if not require_login(request):
@@ -190,6 +193,7 @@ def update_account(
             require_starttls = :require_starttls,
             poll_interval_seconds = :poll_interval_seconds,
             delete_after_processing = :delete_after_processing,
+            expunge_deleted = :expunge_deleted,
             enabled = :enabled
         WHERE id = :id
         """,
@@ -205,6 +209,7 @@ def update_account(
             "require_starttls": require_starttls,
             "poll_interval_seconds": poll_interval_seconds,
             "delete_after_processing": delete_after_processing,
+            "expunge_deleted": expunge_deleted,
             "enabled": enabled,
         },
     )
@@ -403,6 +408,7 @@ def test_connection(
     require_starttls: bool = Form(False),
     poll_interval_seconds: int = Form(300),
     delete_after_processing: bool = Form(False),
+    expunge_deleted: bool = Form(False),
     enabled: bool = Form(True),
     account_id: int = Form(None),
 ):
@@ -498,6 +504,7 @@ def test_connection(
         "require_starttls": require_starttls,
         "poll_interval_seconds": poll_interval_seconds,
         "delete_after_processing": delete_after_processing,
+        "expunge_deleted": expunge_deleted,
         "enabled": enabled,
     }
 

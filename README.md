@@ -17,6 +17,8 @@ This project is built with explicit, maintainable configuration, modular backend
 - **Search & Filter**: Full-text search across subjects, senders, and recipients
 - **Raw Email Storage**: Stores complete RFC822 format with compression
 - **Retention Policies**: Automatic purging of old emails based on configurable rules
+- **Deletion Tracking**: Dashboard analytics showing manual and automated deletion statistics
+- **Mail Server Cleanup**: Optional deletion from mail servers during retention cleanup
 - **User Management**: Multi-user system with role-based access
 - **OAuth2 Integration**: Secure authentication for Gmail and Office 365
 - **Worker Status Monitoring**: Real-time health monitoring of fetch workers
@@ -236,6 +238,28 @@ The worker will now fetch emails automatically using Microsoft Graph API.
 
 ---
 
+# Email Deletion Behavior
+
+When "Delete Email After Processed" is enabled, emails are removed from the mail server after being archived. The behavior differs by account type:
+
+| Account Type | Delete After Processing | Expunge Deleted (IMAP only) | Result |
+|--------------|------------------------|------------------------------|--------|
+| IMAP | ❌ Off | N/A | Nothing happens - emails remain on server |
+| IMAP | ✅ On | ❌ Off | Marks as deleted (recoverable via mail client) |
+| IMAP | ✅ On | ✅ On | Marks as deleted AND permanently expunges (not recoverable) |
+| Gmail | ❌ Off | N/A | Nothing happens - emails remain in inbox |
+| Gmail | ✅ On | N/A | Moves to Trash (30-day recovery period) |
+| O365 | ❌ Off | N/A | Nothing happens - emails remain in inbox |
+| O365 | ✅ On | N/A | Moves to Deleted Items (recoverable) |
+
+**Notes:**
+- **IMAP**: Messages marked with `\Deleted` flag appear deleted in most mail clients but remain on the server until expunged
+- **Gmail**: Messages moved to Trash are automatically deleted after 30 days
+- **Office 365**: Messages in Deleted Items can be recovered until manually emptied or auto-deleted
+- **Warning**: The "Expunge Deleted" option for IMAP permanently removes messages and cannot be undone!
+
+---
+
 # Worker Status Monitoring
 
 Monitor the health and activity of email fetch workers:
@@ -263,7 +287,42 @@ You can:
 - **Download**: Download raw `.eml` files for archival or import into other clients
 - **Delete**: Remove individual emails or perform bulk deletions
 
-## Additional Features
+---
+
+# Retention Policy & Deletion Management
+
+## Configuring Retention
+
+Navigate to **Settings → Global Settings** to configure email retention:
+
+1. **Enable Email Purging**: Check this to activate automatic cleanup
+2. **Retention Period**: Set how long to keep emails (e.g., "1 years", "90 days")
+3. **Delete from Mail Server**: Enable to also remove emails from original mail servers during retention cleanup
+   - When enabled, IMAP accounts will have emails permanently expunged
+   - Gmail/Office 365 accounts currently only delete from database (mail server deletion pending OAuth implementation)
+
+## Deletion Behavior
+
+The system tracks all deletions for dashboard analytics:
+
+- **Manual Deletions**: When users delete emails through the UI
+  - "Database Only": Removes from archive, keeps on mail server
+  - "Database and Mail Server": Removes from both locations
+- **Retention Cleanup**: Automated deletions based on retention policy
+  - Runs automatically during worker cycles
+  - Can optionally delete from mail servers
+  - Statistics tracked separately from manual deletions
+
+## Dashboard Statistics
+
+The **Dashboard** displays deletion analytics:
+- Manual vs retention deletions over last 30 days
+- Count of emails deleted from mail servers
+- Visual charts showing deletion patterns
+
+---
+
+# Additional Features
 
 - **Dashboard**: View email statistics, charts, and account status (default page after login)
 - **Help**: Access the built-in help page from the user menu for detailed instructions

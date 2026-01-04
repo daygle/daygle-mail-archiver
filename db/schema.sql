@@ -68,6 +68,7 @@ CREATE TABLE IF NOT EXISTS fetch_accounts (
     -- Common fields
     poll_interval_seconds INTEGER NOT NULL DEFAULT 300,
     delete_after_processing BOOLEAN NOT NULL DEFAULT FALSE,
+    expunge_deleted BOOLEAN NOT NULL DEFAULT FALSE, -- IMAP only: permanently expunge deleted messages
     enabled BOOLEAN NOT NULL DEFAULT TRUE,
 
     last_heartbeat TIMESTAMPTZ,
@@ -128,6 +129,7 @@ INSERT INTO settings (key, value) VALUES ('date_format', '%d/%m/%Y %H:%M') ON CO
 INSERT INTO settings (key, value) VALUES ('enable_purge', 'false') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('retention_value', '1') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('retention_unit', 'years') ON CONFLICT (key) DO NOTHING;
+INSERT INTO settings (key, value) VALUES ('retention_delete_from_mail_server', 'false') ON CONFLICT (key) DO NOTHING;
 
 -- ----------------------------
 -- logs
@@ -139,4 +141,18 @@ CREATE TABLE IF NOT EXISTS logs (
     source TEXT,
     message TEXT NOT NULL,
     details TEXT
+);
+
+-- ----------------------------
+-- deletion_stats
+-- Tracks email deletions for dashboard analytics
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS deletion_stats (
+    id SERIAL PRIMARY KEY,
+    deletion_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    deletion_type TEXT NOT NULL, -- 'manual' or 'retention'
+    count INTEGER NOT NULL DEFAULT 0,
+    deleted_from_mail_server BOOLEAN NOT NULL DEFAULT FALSE,
+    
+    UNIQUE (deletion_date, deletion_type, deleted_from_mail_server)
 );

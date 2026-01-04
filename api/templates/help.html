@@ -126,13 +126,34 @@
             <h6>Retention Policy</h6>
             <p>Configure how long emails are kept before automatic deletion:</p>
             <ul>
-                <li><strong>Enable Purge:</strong> Turn on automatic deletion</li>
+                <li><strong>Enable Purge:</strong> Turn on automatic deletion of old emails</li>
                 <li><strong>Retention Period:</strong> Set how long to keep emails (days, months, or years)</li>
-                <li><strong>Preview:</strong> See which emails would be deleted before enabling</li>
+                <li><strong>Delete from Mail Server:</strong> When enabled, retention cleanup will also attempt to remove emails from the original mail servers (IMAP only)</li>
             </ul>
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> <strong>Note:</strong> Retention cleanup runs automatically during worker cycles. All deletions are tracked and visible on the Dashboard.
+            </div>
 
-            <h6 class="mt-3">Page Size</h6>
-            <p>Control how many items are displayed per page in email listings.</p>
+            <h6 class="mt-3">Page Size & Date Format</h6>
+            <p>Control how many items are displayed per page in email listings and configure your preferred date/time format.</p>
+        </div>
+    </div>
+
+    <!-- Dashboard Analytics -->
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0"><i class="fas fa-chart-line"></i> Dashboard & Analytics</h5>
+        </div>
+        <div class="card-body">
+            <p>The Dashboard provides comprehensive statistics about your email archive:</p>
+            <ul>
+                <li><strong>Email Volume:</strong> View email trends over the last 30 days</li>
+                <li><strong>Top Senders/Receivers:</strong> See who sends and receives the most emails</li>
+                <li><strong>Deletion Statistics:</strong> Track manual deletions vs automated retention cleanup</li>
+                <li><strong>Mail Server Deletions:</strong> Monitor how many emails were deleted from original servers</li>
+                <li><strong>Storage Metrics:</strong> Database size and total email counts</li>
+            </ul>
+            <p class="mb-0">All charts are interactive and update in real-time based on your archive data.</p>
         </div>
     </div>
 
@@ -172,6 +193,82 @@
                 <li>Enable the "Delete after processing" option for accounts that don't need server-side storage</li>
                 <li>Consider implementing retention policies to limit database size</li>
             </ul>
+        </div>
+    </div>
+
+    <!-- Email Deletion Behavior -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-trash-alt"></i> Email Deletion Behavior</h5>
+        </div>
+        <div class="card-body">
+            <p>When <strong>"Delete Email After Processed"</strong> is enabled on a fetch account, emails are removed from the mail server after being successfully archived. The behavior differs by account type:</p>
+            
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Account Type</th>
+                            <th>Delete After Processing</th>
+                            <th>Expunge Deleted (IMAP only)</th>
+                            <th>Result</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td rowspan="3"><strong>IMAP</strong></td>
+                            <td>❌ Off</td>
+                            <td>N/A</td>
+                            <td>Nothing happens - emails remain on server</td>
+                        </tr>
+                        <tr>
+                            <td>✅ On</td>
+                            <td>❌ Off</td>
+                            <td>Marks as deleted (recoverable via mail client)</td>
+                        </tr>
+                        <tr>
+                            <td>✅ On</td>
+                            <td>✅ On</td>
+                            <td><span class="text-danger">Permanently expunges (NOT recoverable)</span></td>
+                        </tr>
+                        <tr>
+                            <td rowspan="2"><strong>Gmail</strong></td>
+                            <td>❌ Off</td>
+                            <td>N/A</td>
+                            <td>Nothing happens - emails remain in inbox</td>
+                        </tr>
+                        <tr>
+                            <td>✅ On</td>
+                            <td>N/A</td>
+                            <td>Moves to Trash (30-day recovery period)</td>
+                        </tr>
+                        <tr>
+                            <td rowspan="2"><strong>Office 365</strong></td>
+                            <td>❌ Off</td>
+                            <td>N/A</td>
+                            <td>Nothing happens - emails remain in inbox</td>
+                        </tr>
+                        <tr>
+                            <td>✅ On</td>
+                            <td>N/A</td>
+                            <td>Moves to Deleted Items (recoverable)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert alert-info mt-3">
+                <h6><i class="fas fa-info-circle"></i> Important Notes:</h6>
+                <ul class="mb-0">
+                    <li><strong>IMAP:</strong> Messages marked with <code>\Deleted</code> flag appear deleted in most mail clients but remain on the server until expunged</li>
+                    <li><strong>Gmail:</strong> Messages moved to Trash are automatically deleted after 30 days</li>
+                    <li><strong>Office 365:</strong> Messages in Deleted Items can be recovered until manually emptied or auto-deleted</li>
+                </ul>
+            </div>
+
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> The "Permanently Expunge Deleted" option for IMAP accounts irreversibly removes messages from the server. Use with extreme caution!
+            </div>
         </div>
     </div>
 

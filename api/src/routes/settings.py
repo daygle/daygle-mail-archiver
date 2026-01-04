@@ -41,6 +41,7 @@ def save_settings(
     enable_purge: bool = Form(False),
     retention_value: int = Form(1),
     retention_unit: str = Form("years"),
+    retention_delete_from_mail_server: bool = Form(False),
 ):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
@@ -91,9 +92,17 @@ def save_settings(
         """,
         {"v": retention_unit},
     )
+    query(
+        """
+        INSERT INTO settings (key, value)
+        VALUES ('retention_delete_from_mail_server', :v)
+        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
+        """,
+        {"v": str(retention_delete_from_mail_server).lower()},
+    )
 
     username = request.session.get("username", "unknown")
-    log("info", "Settings", f"User '{username}' updated global settings (page_size={page_size}, date_format={date_format}, enable_purge={enable_purge}, retention={retention_value} {retention_unit})", "")
+    log("info", "Settings", f"User '{username}' updated global settings (page_size={page_size}, date_format={date_format}, enable_purge={enable_purge}, retention={retention_value} {retention_unit}, delete_from_mail_server={retention_delete_from_mail_server})", "")
 
     flash(request, "Settings updated successfully.")
     return RedirectResponse("/settings", status_code=303)

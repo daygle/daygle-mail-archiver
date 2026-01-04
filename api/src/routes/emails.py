@@ -220,24 +220,34 @@ def confirm_single_delete(request: Request, email_id: int):
 
 
 def _delete_emails_from_db(ids: List[int]) -> int:
-    """
-    Delete emails from the database only.
-    Returns number of emails deleted.
-    """
+    """Delete emails from the database only. Returns number of emails deleted."""
     deleted = 0
     for mid in ids:
         res = query(
             "DELETE FROM emails WHERE id = :id",
             {"id": mid},
         )
-        # res.rowcount may or may not be meaningful depending on driver, so we just increment optimistically
         deleted += 1
+    
+    # Track deletion statistics
+    if deleted > 0:
+        from utils.db import execute
+        execute(
+            """
+            INSERT INTO deletion_stats (deletion_date, deletion_type, count, deleted_from_mail_server)
+            VALUES (CURRENT_DATE, 'manual', :count, FALSE)
+            ON CONFLICT (deletion_date, deletion_type, deleted_from_mail_server)
+            DO UPDATE SET count = deletion_stats.count + EXCLUDED.count
+            """,
+            {"count": deleted},
+        )
+    
     return deleted
 
 
 def _delete_emails_from_imap_and_db(ids: List[int]) -> tuple[int, list[str]]:
     """
-    Delete emails from IMAP (based on source/folder/uid) and then from DB.
+    Delete emails from mail server (IMAP/Gmail/O365) and then from DB.
     Returns (deleted_count, errors).
     """
     errors: list[str] = []
@@ -290,11 +300,11 @@ def _delete_emails_from_imap_and_db(ids: List[int]) -> tuple[int, list[str]]:
             uid_str = str(email_row["uid"])
             typ, _ = conn.uid("STORE", uid_str, "+FLAGS", r"(\Deleted)")
             if typ != "OK":
-                raise RuntimeError(f"Failed to flag email {mid} for deletion on IMAP")
+                raise RuntimeError(f"Failed to flag email {mid} for deletion on mail server")
 
             typ, _ = conn.expunge()
             if typ != "OK":
-                raise RuntimeError(f"Failed to expunge email {mid} on IMAP")
+                raise RuntimeError(f"Failed to expunge email {mid} on mail server")
 
             conn.logout()
 
@@ -307,6 +317,19 @@ def _delete_emails_from_imap_and_db(ids: List[int]) -> tuple[int, list[str]]:
 
         except Exception as e:
             errors.append(f"Email {mid}: {e}")
+
+    # Track deletion statistics
+    if deleted > 0:
+        from utils.db import execute
+        execute(
+            """
+            INSERT INTO deletion_stats (deletion_date, deletion_type, count, deleted_from_mail_server)
+            VALUES (CURRENT_DATE, 'manual', :count, TRUE)
+            ON CONFLICT (deletion_date, deletion_type, deleted_from_mail_server)
+            DO UPDATE SET count = deletion_stats.count + EXCLUDED.count
+            """,
+            {"count": deleted},
+        )
 
     return deleted, errors
 
@@ -321,7 +344,7 @@ def perform_delete(
     """
     Perform the actual delete, either:
     - Database Only
-    - Database and IMAP
+    - Database and Mail Server (IMAP/Gmail/O365)
     """
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
@@ -349,13 +372,13 @@ def perform_delete(
             log("warning", "Emails", f"User '{username}' deleted {deleted} email(s) from IMAP and database with errors (IDs: {ids})", error_text)
             flash(
                 request,
-                f"Deleted {deleted} email(s) from database and IMAP. Some errors occurred: {error_text}",
+                f"Deleted {deleted} email(s) from database and mail server. Some errors occurred: {error_text}",
             )
         else:
             log("warning", "Emails", f"User '{username}' deleted {deleted} email(s) from IMAP and database (IDs: {ids})", "")
             flash(
                 request,
-                f"Deleted {deleted} email(s) from database and IMAP.",
+                f"Deleted {deleted} email(s) from database and mail server.",
             )
 
         return RedirectResponse("/emails", status_code=303)
