@@ -40,7 +40,7 @@ def emails_per_day(request: Request):
         WHERE created_at >= NOW() - INTERVAL '30 days'
         GROUP BY DATE(created_at)
         ORDER BY date
-    """)
+    """).mappings().all()
 
     return {
         "labels": [row["date"].strftime("%Y-%m-%d") for row in results],
@@ -63,7 +63,7 @@ def top_senders(request: Request):
         GROUP BY sender
         ORDER BY count DESC
         LIMIT 10
-    """)
+    """).mappings().all()
 
     return {
         "labels": [row["sender"] for row in results],
@@ -94,7 +94,7 @@ def top_receivers(request: Request):
         GROUP BY recipient
         ORDER BY count DESC
         LIMIT 10
-    """)
+    """).mappings().all()
 
     return {
         "labels": [row["recipient"] for row in results],
@@ -108,14 +108,14 @@ def total_emails(request: Request):
     if not require_login(request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    results = query("SELECT COUNT(*) as count FROM messages")
+    results = query("SELECT COUNT(*) as count FROM messages").mappings().first()
     
     return {
-        "total": results[0]["count"] if results else 0
+        "total": results["count"] if results else 0
     }
 
 
-@router.get("/api/dashboard/database-size")
+@router.get("/api/database-size")
 def database_size(request: Request):
     """Get database size"""
     if not require_login(request):
@@ -125,11 +125,11 @@ def database_size(request: Request):
         SELECT 
             pg_size_pretty(pg_database_size(current_database())) as size,
             pg_database_size(current_database()) as size_bytes
-    """)
+    """).mappings().first()
     
     return {
-        "size": results[0]["size"] if results else "0 bytes",
-        "size_bytes": results[0]["size_bytes"] if results else 0
+        "size": results["size"] if results else "0 bytes",
+        "size_bytes": results["size_bytes"] if results else 0
     }
 
 
@@ -140,28 +140,28 @@ def dashboard_stats(request: Request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
     # Total emails
-    total_results = query("SELECT COUNT(*) as count FROM messages")
-    total_emails = total_results[0]["count"] if total_results else 0
+    total_results = query("SELECT COUNT(*) as count FROM messages").mappings().first()
+    total_emails = total_results["count"] if total_results else 0
 
     # Database size
     size_results = query("""
         SELECT 
             pg_size_pretty(pg_database_size(current_database())) as size,
             pg_database_size(current_database()) as size_bytes
-    """)
-    db_size = size_results[0]["size"] if size_results else "0 bytes"
+    """).mappings().first()
+    db_size = size_results["size"] if size_results else "0 bytes"
 
     # Total accounts
-    accounts_results = query("SELECT COUNT(*) as count FROM imap_accounts")
-    total_accounts = accounts_results[0]["count"] if accounts_results else 0
+    accounts_results = query("SELECT COUNT(*) as count FROM imap_accounts").mappings().first()
+    total_accounts = accounts_results["count"] if accounts_results else 0
 
     # Emails today
     today_results = query("""
         SELECT COUNT(*) as count 
         FROM messages 
         WHERE DATE(created_at) = CURRENT_DATE
-    """)
-    emails_today = today_results[0]["count"] if today_results else 0
+    """).mappings().first()
+    emails_today = today_results["count"] if today_results else 0
 
     return {
         "total_emails": total_emails,
