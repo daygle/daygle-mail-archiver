@@ -234,18 +234,24 @@
 <script>
 // Define functions immediately so onclick handlers can access them
 function showCreateUserModal() {
+    console.log('showCreateUserModal called!');
+    alert('Opening create user modal...');
     document.getElementById('createUserModal').style.display = 'flex';
 }
 
 function hideCreateUserModal() {
+    console.log('hideCreateUserModal called!');
     document.getElementById('createUserModal').style.display = 'none';
 }
 
 function hideEditUserModal() {
+    console.log('hideEditUserModal called!');
     document.getElementById('editUserModal').style.display = 'none';
 }
 
 async function editUser(userId) {
+    console.log('editUser called for user:', userId);
+    alert('Loading user ' + userId + '...');
     try {
         const response = await fetch(`/api/users/${userId}`);
         const user = await response.json();
