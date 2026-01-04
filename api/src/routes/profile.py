@@ -20,11 +20,17 @@ def profile_form(request: Request):
         return RedirectResponse("/login", status_code=303)
 
     user_id = request.session["user_id"]
-    user = query("SELECT date_format FROM users WHERE id = :id", {"id": user_id}).mappings().first()
-    current_format = user["date_format"] if user else "%Y-%m-%d"
+    user = query("""
+        SELECT username, first_name, last_name, email, last_login, created_at 
+        FROM users WHERE id = :id
+    """, {"id": user_id}).mappings().first()
 
     msg = request.session.pop("flash", None)
-    return templates.TemplateResponse("profile.html", {"request": request, "flash": msg, "date_format": current_format})
+    return templates.TemplateResponse("profile.html", {
+        "request": request, 
+        "flash": msg, 
+        "user": user
+    })
 
 @router.post("/profile/change_password")
 def change_password(
@@ -56,7 +62,43 @@ def change_password(
     flash(request, "Password changed successfully.")
     return RedirectResponse("/profile", status_code=303)
 
-@router.post("/profile/change_date_format")
+@router.post("/profile/update_info")
+def update_info(
+    request: Request,
+    first_name: str = Form(""),
+    last_name: str = Form(""),
+    email: str = Form("")
+):
+    if not require_login(request):
+        return RedirectResponse("/login", status_code=303)
+
+    user_id = request.session["user_id"]
+    query("""
+        UPDATE users 
+        SET first_name = :fn, last_name = :ln, email = :e 
+        WHERE id = :id
+    """, {"fn": first_name, "ln": last_name, "e": email, "id": user_id})
+    
+    flash(request, "Profile updated successfully.")
+    return RedirectResponse("/profile", status_code=303)
+
+@router.get("/user_settings")
+def user_settings_form(request: Request):
+    if not require_login(request):
+        return RedirectResponse("/login", status_code=303)
+
+    user_id = request.session["user_id"]
+    user = query("SELECT date_format FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+    current_format = user["date_format"] if user else "%d/%m/%Y %H:%M"
+
+    msg = request.session.pop("flash", None)
+    return templates.TemplateResponse("user_settings.html", {
+        "request": request, 
+        "flash": msg, 
+        "date_format": current_format
+    })
+
+@router.post("/user_settings/change_date_format")
 def change_date_format(request: Request, date_format: str = Form(...)):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
@@ -65,4 +107,4 @@ def change_date_format(request: Request, date_format: str = Form(...)):
     query("UPDATE users SET date_format = :f WHERE id = :id", {"f": date_format, "id": user_id})
     request.session["date_format"] = date_format
     flash(request, "Date format updated successfully.")
-    return RedirectResponse("/profile", status_code=303)
+    return RedirectResponse("/user_settings", status_code=303)

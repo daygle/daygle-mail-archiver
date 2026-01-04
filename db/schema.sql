@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS users (
     first_name TEXT,
     last_name TEXT,
     email TEXT,
-    date_format TEXT NOT NULL DEFAULT '%Y-%m-%d %H:%M:%S',
+    date_format TEXT NOT NULL DEFAULT '%d/%m/%Y %H:%M',
     enabled BOOLEAN NOT NULL DEFAULT TRUE,
     last_login TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
