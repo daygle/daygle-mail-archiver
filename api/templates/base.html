@@ -14,14 +14,11 @@
         <!-- Sidebar Navigation -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <a href="/dashboard" class="sidebar-brand" id="sidebarBrand">
+                <div class="sidebar-brand" id="sidebarBrand" style="cursor: pointer;">
                     <img src="/static/daygle.png" alt="Daygle" class="logo-light">
                     <img src="/static/daygle-light.png" alt="Daygle" class="logo-dark">
                     <span class="brand-text">Mail Archiver</span>
-                </a>
-                <button type="button" class="sidebar-toggle" id="sidebarToggle">
-                    <i class="fas fa-bars"></i>
-                </button>
+                </div>
             </div>
 
             {% if request.session.username %}
@@ -170,8 +167,8 @@
                 sidebar.classList.add('collapsed');
             }
             
-            // Sidebar toggle - simplest possible version
-            document.getElementById('sidebarToggle').onclick = function(e) {
+            // Make logo/brand clickable to toggle sidebar
+            document.getElementById('sidebarBrand').onclick = function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 sidebar.classList.toggle('collapsed');
