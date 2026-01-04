@@ -19,7 +19,7 @@
                     <img src="/static/daygle-light.png" alt="Daygle" class="logo-dark">
                     <span class="brand-text">Mail Archiver</span>
                 </a>
-                <button class="sidebar-toggle" id="sidebarToggle">
+                <button type="button" class="sidebar-toggle" id="sidebarToggle">
                     <i class="fas fa-bars"></i>
                 </button>
             </div>
@@ -106,17 +106,21 @@
                 </div>
 
                 <div class="topbar-right">
-                    <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+                    <button type="button" class="theme-toggle" id="themeToggle" title="Toggle theme">
                         <i class="fas fa-sun" id="themeIconLight"></i>
                         <i class="fas fa-moon" id="themeIconDark" style="display:none;"></i>
                     </button>
 
                     {% if request.session.username %}
                     <div class="user-menu">
-                        <button class="user-menu-button" id="userMenuButton">
-                            <i class="fas fa-user-circle"></i>
-                            <span>{{ request.session.username }}</span>
-                            <i class="fas fa-chevron-down"></i>
+                        <button type="button" class="user-menu-button" id="userMenuButton">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 14px;">
+                                    {{ request.session.username[0]|upper }}
+                                </div>
+                                <span>{{ request.session.username }}</span>
+                                <i class="fas fa-chevron-down" style="font-size: 12px; opacity: 0.6;"></i>
+                            </div>
                         </button>
                         <div class="dropdown-menu" id="userMenuDropdown">
                             <a href="/profile" class="dropdown-item">
@@ -177,8 +181,11 @@
                     e.stopPropagation();
                     e.preventDefault();
                     
+                    console.log('Toggle clicked, current state:', sidebar.classList.contains('collapsed'));
                     sidebar.classList.toggle('collapsed');
-                    localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed') ? 'true' : 'false');
+                    const isCollapsed = sidebar.classList.contains('collapsed');
+                    localStorage.setItem('sidebarCollapsed', isCollapsed ? 'true' : 'false');
+                    console.log('New state:', isCollapsed);
                 });
             }
 
