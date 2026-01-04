@@ -33,7 +33,7 @@
             <tbody>
                 {% for e in errors %}
                 <tr>
-                    <td><small>{{ e.timestamp.strftime(request.session.date_format) }}</small></td>
+                    <td><small>{{ e.timestamp | format_user_datetime(request.session.user_id) }}</small></td>
                     <td>
                         {% if e.level == 'error' %}
                             <span class="badge badge-danger"><i class="fas fa-times-circle"></i> {{ e.level }}</span>
