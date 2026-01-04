@@ -14,9 +14,16 @@ app = FastAPI()
 # Sessions
 app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET)
 
-# Static files - use parent directory since we're running from src/
-BASE_DIR = Path(__file__).parent.parent
-app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+# Static files - handle both Docker (running from /app) and local (running from src/)
+BASE_DIR = Path(__file__).parent
+if (BASE_DIR / "static").exists():
+    # Running from Docker (/app/app.py with /app/static)
+    static_dir = BASE_DIR / "static"
+else:
+    # Running locally from src/ with ../static
+    static_dir = BASE_DIR.parent / "static"
+
+app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 # Routers
 app.include_router(auth.router)
