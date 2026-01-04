@@ -14,12 +14,12 @@
         <!-- Sidebar Navigation -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <a href="/dashboard" class="sidebar-brand">
+                <a href="/dashboard" class="sidebar-brand" onclick="event.stopPropagation();">
                     <img src="/static/daygle.png" alt="Daygle" class="logo-light">
                     <img src="/static/daygle-light.png" alt="Daygle" class="logo-dark">
                     <span class="brand-text">Mail Archiver</span>
                 </a>
-                <button class="sidebar-toggle" id="sidebarToggle">
+                <button class="sidebar-toggle" id="sidebarToggle" onclick="event.stopPropagation();">
                     <i class="fas fa-bars"></i>
                 </button>
             </div>
@@ -189,7 +189,8 @@
         // Close sidebar on mobile when clicking outside
         document.addEventListener('click', (e) => {
             if (window.innerWidth <= 768) {
-                if (!sidebar.contains(e.target) && !sidebarMobileToggle.contains(e.target)) {
+                const toggleButton = sidebarMobileToggle || sidebarToggle;
+                if (toggleButton && !sidebar.contains(e.target) && !toggleButton.contains(e.target)) {
                     sidebar.classList.remove('mobile-open');
                 }
             }
