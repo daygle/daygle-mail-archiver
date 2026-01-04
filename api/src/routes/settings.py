@@ -36,7 +36,7 @@ def settings_form(request: Request):
 def save_settings(
     request: Request,
     page_size: int = Form(...),
-    date_format: str = Form("%Y-%m-%d %H:%M:%S"),
+    date_format: str = Form("%d/%m/%Y %H:%M"),
     enable_purge: bool = Form(False),
     retention_value: int = Form(1),
     retention_unit: str = Form("years"),

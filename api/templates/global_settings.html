@@ -17,6 +17,7 @@
         <div class="form-group">
             <label for="date_format">Date Format</label>
             <select id="date_format" class="form-control" name="date_format">
+                <option value="%d/%m/%Y %H:%M" {% if settings.date_format == '%d/%m/%Y %H:%M' or not settings.date_format %}selected{% endif %}>15/01/2024 14:30</option>
                 <option value="%Y-%m-%d %H:%M:%S" {% if settings.date_format == '%Y-%m-%d %H:%M:%S' %}selected{% endif %}>2024-01-15 14:30:45</option>
                 <option value="%m/%d/%Y %I:%M %p" {% if settings.date_format == '%m/%d/%Y %I:%M %p' %}selected{% endif %}>01/15/2024 02:30 PM</option>
                 <option value="%d/%m/%Y %H:%M:%S" {% if settings.date_format == '%d/%m/%Y %H:%M:%S' %}selected{% endif %}>15/01/2024 14:30:45</option>
