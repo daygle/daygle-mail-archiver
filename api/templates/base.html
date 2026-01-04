@@ -179,7 +179,7 @@
                     
                     sidebar.classList.toggle('collapsed');
                     localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed') ? 'true' : 'false');
-                }, { passive: false });
+                });
             }
 
             // Mobile toggle
@@ -188,18 +188,18 @@
                     e.stopPropagation();
                     e.preventDefault();
                     sidebar.classList.toggle('mobile-open');
-                }, { passive: false });
+                });
             }
-        });
-
-        // Close sidebar on mobile when clicking outside
-        document.addEventListener('click', (e) => {
-            if (window.innerWidth <= 768) {
-                const toggleButton = sidebarMobileToggle || sidebarToggle;
-                if (toggleButton && !sidebar.contains(e.target) && !toggleButton.contains(e.target)) {
-                    sidebar.classList.remove('mobile-open');
+            
+            // Close sidebar on mobile when clicking outside
+            document.addEventListener('click', function(e) {
+                if (window.innerWidth <= 768) {
+                    const toggleButton = sidebarMobileToggle || sidebarToggle;
+                    if (sidebar && toggleButton && !sidebar.contains(e.target) && !toggleButton.contains(e.target)) {
+                        sidebar.classList.remove('mobile-open');
+                    }
                 }
-            }
+            });
         });
 
         // Submenu toggle
