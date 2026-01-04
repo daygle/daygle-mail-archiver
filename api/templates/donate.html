@@ -17,16 +17,38 @@
             Your donation helps maintain and improve this project. Every contribution is greatly appreciated!
         </p>
         
-        <form action="https://www.paypal.com/donate" method="post" target="_blank">
+        <form action="https://www.paypal.com/donate" method="post" target="_blank" id="donationForm">
             <input type="hidden" name="business" value="daygle@daygle.net" />
             <input type="hidden" name="no_recurring" value="0" />
             <input type="hidden" name="item_name" value="Daygle Mail Archiver Development" />
-            <input type="hidden" name="currency_code" value="USD" />
+            <input type="hidden" name="currency_code" value="AUD" id="currencyCodeInput" />
             
             <div class="form-group">
-                <label for="amount" class="form-label">Donation Amount (USD)</label>
+                <label for="currency" class="form-label">Currency</label>
+                <select class="form-select" id="currency" name="currency">
+                    <option value="AUD" data-symbol="$" selected>AUD - Australian Dollar</option>
+                    <option value="USD" data-symbol="$">USD - US Dollar</option>
+                    <option value="EUR" data-symbol="€">EUR - Euro</option>
+                    <option value="GBP" data-symbol="£">GBP - British Pound</option>
+                    <option value="CAD" data-symbol="$">CAD - Canadian Dollar</option>
+                    <option value="JPY" data-symbol="¥">JPY - Japanese Yen</option>
+                    <option value="CHF" data-symbol="CHF">CHF - Swiss Franc</option>
+                    <option value="SEK" data-symbol="kr">SEK - Swedish Krona</option>
+                    <option value="NOK" data-symbol="kr">NOK - Norwegian Krone</option>
+                    <option value="DKK" data-symbol="kr">DKK - Danish Krone</option>
+                    <option value="NZD" data-symbol="$">NZD - New Zealand Dollar</option>
+                    <option value="MXN" data-symbol="$">MXN - Mexican Peso</option>
+                    <option value="SGD" data-symbol="$">SGD - Singapore Dollar</option>
+                    <option value="HKD" data-symbol="$">HKD - Hong Kong Dollar</option>
+                    <option value="INR" data-symbol="₹">INR - Indian Rupee</option>
+                    <option value="BRL" data-symbol="R$">BRL - Brazilian Real</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="amount" class="form-label">Donation Amount</label>
                 <div style="display: flex; gap: 0; max-width: 300px;">
-                    <span style="padding: 10px 16px; background: var(--background-secondary); border: 1px solid var(--border-color); border-right: none; border-radius: var(--radius-md) 0 0 var(--radius-md); color: var(--text-secondary);">$</span>
+                    <span id="currencySymbol" style="padding: 10px 16px; background: var(--background-secondary); border: 1px solid var(--border-color); border-right: none; border-radius: var(--radius-md) 0 0 var(--radius-md); color: var(--text-secondary);">$</span>
                     <input type="number" class="form-control" id="amount" name="amount" min="1" step="0.01" placeholder="10.00" style="border-radius: 0 var(--radius-md) var(--radius-md) 0; flex: 1;">
                 </div>
                 <small class="form-text">Enter any amount you wish to donate</small>
@@ -80,4 +102,25 @@
         </div>
     </div>
 </div>
+
+<script>
+    // Currency selector handler
+    (function() {
+        const currencySelect = document.getElementById('currency');
+        const currencySymbol = document.getElementById('currencySymbol');
+        const currencyCodeInput = document.getElementById('currencyCodeInput');
+        
+        currencySelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const symbol = selectedOption.getAttribute('data-symbol');
+            const currencyCode = selectedOption.value;
+            
+            // Update the displayed symbol
+            currencySymbol.textContent = symbol;
+            
+            // Update the hidden input for PayPal
+            currencyCodeInput.value = currencyCode;
+        });
+    })();
+</script>
 {% endblock %}
