@@ -1,61 +1,71 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>{{ email.subject or "(no subject)" }}</h1>
-
-<div class="message-meta">
-  <table class="meta-table">
-    <tr>
-      <td><strong>From:</strong></td>
-      <td>{{ email.sender }}</td>
-    </tr>
-    <tr>
-      <td><strong>To:</strong></td>
-      <td>{{ email.recipients }}</td>
-    </tr>
-    <tr>
-      <td><strong>Date:</strong></td>
-      <td>{{ email.date }}</td>
-    </tr>
-    <tr>
-      <td><strong>Account:</strong></td>
-      <td>{{ email.source }}</td>
-    </tr>
-    <tr>
-      <td><strong>Folder:</strong></td>
-      <td>{{ email.folder }}</td>
-    </tr>
-  </table>
+<div class="row mb-4">
+    <div class="col">
+        <h2><i class="fas fa-envelope-open me-2"></i>{{ email.subject or "(no subject)" }}</h2>
+    </div>
 </div>
 
-<div class="message-actions">
-  <a href="/emails/{{ email.id }}/download" class="btn btn-secondary"><i class="fa-solid fa-download"></i> Download EML</a>
+<div class="settings-section">
+    <h3>Email Details</h3>
+    <p class="section-description">View email content and metadata</p>
 
-  {% if request.session.role == 'administrator' %}
-  <form method="post" action="/emails/{{ email.id }}/delete/confirm" style="display:inline;">
-    <button type="submit" class="btn btn-danger"><i class="fa-solid fa-trash"></i> Delete</button>
-  </form>
-  {% endif %}
+    <div class="table-responsive mb-3">
+        <table class="table table-bordered">
+            <tbody>
+                <tr>
+                    <td width="15%"><strong>From:</strong></td>
+                    <td>{{ email.sender }}</td>
+                </tr>
+                <tr>
+                    <td><strong>To:</strong></td>
+                    <td>{{ email.recipients }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Date:</strong></td>
+                    <td>{{ email.date }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Account:</strong></td>
+                    <td>{{ email.source }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Folder:</strong></td>
+                    <td>{{ email.folder }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mb-3">
+        <a href="/emails" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Back to Emails</a>
+        <a href="/emails/{{ email.id }}/download" class="btn btn-primary"><i class="fa-solid fa-download"></i> Download EML</a>
+
+        {% if request.session.role == 'administrator' %}
+        <form method="post" action="/emails/{{ email.id }}/delete/confirm" style="display:inline;">
+            <button type="submit" class="btn btn-danger"><i class="fa-solid fa-trash"></i> Delete</button>
+        </form>
+        {% endif %}
+    </div>
 </div>
 
-<hr>
-
-<h2>Headers</h2>
-<pre class="message-headers">
+<div class="settings-section">
+    <h3>Headers</h3>
+    <pre class="message-headers">
 {% for k, v in headers.items() %}
 {{ k }}: {{ v }}
 {% endfor %}
-</pre>
+    </pre>
+</div>
 
-<h2>Subject</h2>
-<pre class="message-subject">
-{{ email.subject or "(no subject)" }}
-</pre>
+<div class="settings-section">
+    <h3>Body</h3>
+    {% if body.html %}
+        <div class="message-body-html">{{ body.html | safe }}</div>
+    {% else %}
+        <pre class="message-body-text">{{ body.text }}</pre>
+    {% endif %}
+</div>
 
-<h2>Body</h2>
-{% if body.html %}
-  <div class="message-body-html">{{ body.html | safe }}</div>
-{% else %}
-  <pre class="message-body-text">{{ body.text }}</pre>
-{% endif %}
 {% endblock %}
