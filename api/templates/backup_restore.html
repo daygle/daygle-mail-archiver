@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block page_title %}Backup & Restore{% endblock %}
+
+{% block content %}
+<!-- Database Backup Section -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-download"></i>
+            <span>Database Backup</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <p class="section-description">Export the entire database to a SQL file for safekeeping. This creates a complete snapshot of all data including emails, accounts, users, and settings.</p>
+        
+        <div class="alert alert-info">
+            <strong><i class="fas fa-info-circle"></i> Backup Information:</strong><br>
+            <small>
+                The backup file will be in SQL format and can be used to restore the database to its current state.<br>
+                Store backup files in a secure location outside of this system.
+            </small>
+        </div>
+        
+        <div class="form-actions">
+            <a href="/settings/backup" class="btn btn-primary btn-lg">
+                <i class="fas fa-download"></i> Download Database Backup
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Database Restore Section -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-upload"></i>
+            <span>Database Restore</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <p class="section-description">Import a previously created backup file to restore the database. This will replace all current data with the data from the backup file.</p>
+        
+        <div class="alert alert-warning">
+            <strong><i class="fas fa-exclamation-triangle"></i> Warning:</strong><br>
+            <small>
+                Restoring from a backup will overwrite all existing data in the database.<br>
+                Make sure you have a current backup before proceeding.<br>
+                This operation cannot be undone.
+            </small>
+        </div>
+        
+        <form method="post" action="/settings/restore" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="backup_file" class="form-label">Select Backup File (SQL format)</label>
+                <input type="file" id="backup_file" class="form-control" name="file" accept=".sql" required>
+                <small class="form-text">Choose a SQL backup file to restore</small>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-danger btn-lg" onclick="return confirm('Are you sure you want to restore the database? This will overwrite all current data!')">
+                    <i class="fas fa-upload"></i> Restore Database
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

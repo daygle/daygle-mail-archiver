@@ -1,28 +1,38 @@
 {% extends "base.html" %}
+
+{% block page_title %}User Settings{% endblock %}
+
 {% block content %}
-
-<h2><i class="fas fa-cog me-2"></i>User Settings</h2>
-
-<!-- Date Format Section -->
-<div class="settings-section">
-    <h3>Date Format</h3>
-    <p class="section-description">Select how dates should be displayed throughout the application</p>
-    
-    <form method="post" action="/user_settings/change_date_format">
-        <div class="form-group">
-            <label for="date_format">Date Format</label>
-            <select id="date_format" class="form-control" name="date_format">
-                <option value="%d/%m/%Y %H:%M" {% if date_format == '%d/%m/%Y %H:%M' %}selected{% endif %}>15/01/2024 14:30</option>
-                <option value="%Y-%m-%d %H:%M:%S" {% if date_format == '%Y-%m-%d %H:%M:%S' %}selected{% endif %}>2024-01-15 14:30:45</option>
-                <option value="%m/%d/%Y %I:%M %p" {% if date_format == '%m/%d/%Y %I:%M %p' %}selected{% endif %}>01/15/2024 02:30 PM</option>
-                <option value="%d/%m/%Y %H:%M:%S" {% if date_format == '%d/%m/%Y %H:%M:%S' %}selected{% endif %}>15/01/2024 14:30:45</option>
-                <option value="%Y-%m-%d %I:%M %p" {% if date_format == '%Y-%m-%d %I:%M %p' %}selected{% endif %}>2024-01-15 02:30 PM</option>
-            </select>
+<form method="post" action="/user_settings/change_date_format">
+    <!-- Date Format Card -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fas fa-calendar"></i>
+                <span>Date Format</span>
+            </div>
         </div>
-        <div class="form-actions">
-            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save"></i> Update Format</button>
+        <div class="card-body">
+            <p class="section-description">Select how dates should be displayed throughout the application</p>
+            
+            <div class="form-group">
+                <label for="date_format" class="form-label">Date Format</label>
+                <select id="date_format" class="form-select" name="date_format">
+                    <option value="%d/%m/%Y %H:%M" {% if date_format == '%d/%m/%Y %H:%M' %}selected{% endif %}>15/01/2024 14:30</option>
+                    <option value="%Y-%m-%d %H:%M:%S" {% if date_format == '%Y-%m-%d %H:%M:%S' %}selected{% endif %}>2024-01-15 14:30:45</option>
+                    <option value="%m/%d/%Y %I:%M %p" {% if date_format == '%m/%d/%Y %I:%M %p' %}selected{% endif %}>01/15/2024 02:30 PM</option>
+                    <option value="%d/%m/%Y %H:%M:%S" {% if date_format == '%d/%m/%Y %H:%M:%S' %}selected{% endif %}>15/01/2024 14:30:45</option>
+                    <option value="%Y-%m-%d %I:%M %p" {% if date_format == '%Y-%m-%d %I:%M %p' %}selected{% endif %}>2024-01-15 02:30 PM</option>
+                </select>
+                <small class="form-text">Date and time display format throughout the application</small>
+            </div>
         </div>
-    </form>
-</div>
-
+        <div class="card-footer">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i>
+                <span>Save Settings</span>
+            </button>
+        </div>
+    </div>
+</form>
 {% endblock %}
