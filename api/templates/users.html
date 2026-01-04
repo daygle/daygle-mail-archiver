@@ -3,20 +3,100 @@
 {% block page_title %}User Management{% endblock %}
 
 {% block content %}
-<div style="display: grid; grid-template-columns: 1fr; gap: 20px; transition: grid-template-columns 0.3s ease;" id="usersContainer">
-    <!-- Users Table Card -->
-    <div class="card" id="usersListCard" style="min-width: 0;">
-        <div class="card-header" style="display: flex; align-items: center; justify-content: space-between;">
-            <div class="card-title">
-                <i class="fas fa-users"></i>
-                <span>User Accounts</span>
-            </div>
-            <button type="button" class="btn btn-primary" onclick="showCreateUserForm()">
-                <i class="fas fa-user-plus"></i>
-                <span>Create New User</span>
-            </button>
+<!-- Create/Edit User Form Card (Initially Hidden) -->
+<div class="card" id="userFormCard" style="display: none; margin-bottom: 20px;">
+    <div class="card-header" style="display: flex; align-items: center; justify-content: space-between;">
+        <div class="card-title">
+            <i class="fas fa-user-plus" id="formIcon"></i>
+            <span id="formTitle">Create New User</span>
         </div>
-        <div class="card-body" style="padding: 0;">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="hideUserForm()" title="Cancel">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="card-body">
+        <form method="post" id="userForm" action="/users/create">
+            <input type="hidden" id="user_id" name="user_id">
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label for="username">Username <span style="color: var(--danger);">*</span></label>
+                    <input id="username" class="form-control" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password <span id="passwordLabel"><span style="color: var(--danger);">*</span></span></label>
+                    <input id="password" class="form-control" name="password" type="password" required>
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label for="first_name">First Name</label>
+                    <input id="first_name" class="form-control" name="first_name">
+                </div>
+                <div class="form-group">
+                    <label for="last_name">Last Name</label>
+                    <input id="last_name" class="form-control" name="last_name">
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input id="email" class="form-control" name="email" type="email">
+                </div>
+                <div class="form-group">
+                    <label for="role">Role <span style="color: var(--danger);">*</span></label>
+                    <select id="role" class="form-control" name="role" required>
+                        <option value="administrator">Administrator (Full Access)</option>
+                        <option value="read_only">Read Only (View Emails Only)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="enabled">Account Status</label>
+                <select id="enabled" class="form-control" name="enabled">
+                    <option value="true" selected>Enabled</option>
+                    <option value="false">Disabled</option>
+                </select>
+            </div>
+            
+            <div class="alert alert-info" id="userInfoAlert" style="display: none;">
+                <strong>Account Information:</strong><br>
+                <small>
+                    <strong>Last Login:</strong> <span id="last_login">-</span><br>
+                    <strong>Created:</strong> <span id="created_at">-</span>
+                </small>
+            </div>
+            
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save" id="submitIcon"></i>
+                    <span id="submitText">Create User</span>
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="hideUserForm()">
+                    <i class="fas fa-times"></i>
+                    <span>Cancel</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Users Table Card -->
+<div class="card" id="usersListCard">
+    <div class="card-header" style="display: flex; align-items: center; justify-content: space-between;">
+        <div class="card-title">
+            <i class="fas fa-users"></i>
+            <span>User Accounts</span>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="showCreateUserForm()">
+            <i class="fas fa-user-plus"></i>
+            <span>Create New User</span>
+        </button>
+    </div>
+    <div class="card-body" style="padding: 0;">
             <div class="table-container">
                 <table class="table">
                     <thead>
@@ -99,93 +179,9 @@
             </div>
         </div>
     </div>
-    
-    <!-- Create/Edit User Form Card (Initially Hidden) -->
-    <div class="card" id="userFormCard" style="display: none; min-width: 0;">
-        <div class="card-header" style="display: flex; align-items: center; justify-content: space-between;">
-            <div class="card-title">
-                <i class="fas fa-user-plus" id="formIcon"></i>
-                <span id="formTitle">Create New User</span>
-            </div>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="hideUserForm()" title="Cancel">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="card-body">
-            <form method="post" id="userForm" action="/users/create">
-                <input type="hidden" id="user_id" name="user_id">
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                    <div class="form-group">
-                        <label for="username">Username <span style="color: var(--danger);">*</span></label>
-                        <input id="username" class="form-control" name="username" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="password">Password <span id="passwordLabel"><span style="color: var(--danger);">*</span></span></label>
-                        <input id="password" class="form-control" name="password" type="password" required>
-                    </div>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                    <div class="form-group">
-                        <label for="first_name">First Name</label>
-                        <input id="first_name" class="form-control" name="first_name">
-                    </div>
-                    <div class="form-group">
-                        <label for="last_name">Last Name</label>
-                        <input id="last_name" class="form-control" name="last_name">
-                    </div>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                    <div class="form-group">
-                        <label for="email">Email</label>
-                        <input id="email" class="form-control" name="email" type="email">
-                    </div>
-                    <div class="form-group">
-                        <label for="role">Role <span style="color: var(--danger);">*</span></label>
-                        <select id="role" class="form-control" name="role" required>
-                            <option value="administrator">Administrator (Full Access)</option>
-                            <option value="read_only">Read Only (View Emails Only)</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="enabled">Account Status</label>
-                    <select id="enabled" class="form-control" name="enabled">
-                        <option value="true" selected>Enabled</option>
-                        <option value="false">Disabled</option>
-                    </select>
-                </div>
-                
-                <div class="alert alert-info" id="userInfoAlert" style="display: none;">
-                    <strong>Account Information:</strong><br>
-                    <small>
-                        <strong>Last Login:</strong> <span id="last_login">-</span><br>
-                        <strong>Created:</strong> <span id="created_at">-</span>
-                    </small>
-                </div>
-                
-                <div style="display: flex; gap: 12px; margin-top: 24px;">
-                    <button type="submit" class="btn btn-primary" style="flex: 1;">
-                        <i class="fas fa-save" id="submitIcon"></i>
-                        <span id="submitText">Create User</span>
-                    </button>
-                    <button type="button" class="btn btn-secondary" onclick="hideUserForm()">
-                        <i class="fas fa-times"></i>
-                        <span>Cancel</span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
 <script>
 function showCreateUserForm() {
-    const container = document.getElementById('usersContainer');
-    const listCard = document.getElementById('usersListCard');
     const formCard = document.getElementById('userFormCard');
     const form = document.getElementById('userForm');
     
@@ -203,8 +199,7 @@ function showCreateUserForm() {
     document.getElementById('submitText').textContent = 'Create User';
     document.getElementById('passwordLabel').innerHTML = '<span style="color: var(--danger);">*</span>';
     
-    // Show split view
-    container.style.gridTemplateColumns = '1fr 1fr';
+    // Show form
     formCard.style.display = 'block';
     
     // Scroll to top
@@ -212,12 +207,10 @@ function showCreateUserForm() {
 }
 
 function hideUserForm() {
-    const container = document.getElementById('usersContainer');
     const formCard = document.getElementById('userFormCard');
     
-    // Hide form and restore full width
+    // Hide form
     formCard.style.display = 'none';
-    container.style.gridTemplateColumns = '1fr';
 }
 
 async function editUser(userId) {
@@ -230,7 +223,6 @@ async function editUser(userId) {
             return;
         }
         
-        const container = document.getElementById('usersContainer');
         const formCard = document.getElementById('userFormCard');
         const form = document.getElementById('userForm');
         
@@ -260,8 +252,7 @@ async function editUser(userId) {
         // Set form action
         form.action = `/users/${userId}/update`;
         
-        // Show split view
-        container.style.gridTemplateColumns = '1fr 1fr';
+        // Show form
         formCard.style.display = 'block';
         
         // Scroll to top
