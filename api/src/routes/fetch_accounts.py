@@ -8,6 +8,7 @@ from fastapi.templating import Jinja2Templates
 
 from utils.db import query
 from utils.security import encrypt_password
+from utils.logger import log
 from imaplib import IMAP4, IMAP4_SSL
 
 router = APIRouter()
