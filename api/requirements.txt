@@ -8,3 +8,4 @@ cryptography
 email-validator
 itsdangerous
 bcrypt
+requests
