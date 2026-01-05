@@ -135,17 +135,17 @@
     <div class="toolbar-left">
     </div>
     <div class="toolbar-right">
-        <button id="btn-customize" class="btn btn-secondary">
-            <i class="fas fa-cog"></i> Customize
+        <button id="btn-customize" class="btn btn-secondary" title="Customize Dashboard">
+            <i class="fas fa-cog"></i>
         </button>
-        <button id="btn-add-widget" class="btn btn-info" style="display: none;">
-            <i class="fas fa-plus"></i> Add Widget
+        <button id="btn-add-widget" class="btn btn-info" style="display: none;" title="Add Widget">
+            <i class="fas fa-plus"></i>
         </button>
-        <button id="btn-save-layout" class="btn btn-primary" style="display: none;">
-            <i class="fas fa-save"></i> Save Layout
+        <button id="btn-save-layout" class="btn btn-primary" style="display: none;" title="Save Layout">
+            <i class="fas fa-save"></i>
         </button>
-        <button id="btn-reset-layout" class="btn btn-warning" style="display: none;">
-            <i class="fas fa-undo"></i> Reset
+        <button id="btn-reset-layout" class="btn btn-warning" style="display: none;" title="Reset Layout">
+            <i class="fas fa-undo"></i>
         </button>
     </div>
 </div>
@@ -452,16 +452,16 @@ const DashboardManager = {
     
     // Default widget layout
     defaultWidgets: [
-        { id: 'overview', x: 0, y: 0, w: 12, h: 2, visible: true },
-        { id: 'emails-per-day', x: 0, y: 2, w: 6, h: 3, visible: true },
-        { id: 'deletion-stats', x: 6, y: 2, w: 6, h: 3, visible: true },
-        { id: 'top-senders', x: 0, y: 5, w: 6, h: 4, visible: true },
-        { id: 'top-receivers', x: 6, y: 5, w: 6, h: 4, visible: true },
-        { id: 'recent-activity', x: 0, y: 9, w: 4, h: 4, visible: true },
-        { id: 'storage-trends', x: 4, y: 9, w: 4, h: 4, visible: true },
-        { id: 'account-health', x: 8, y: 9, w: 4, h: 4, visible: true },
-        { id: 'system-status', x: 0, y: 13, w: 4, h: 3, visible: true },
-        { id: 'quick-actions', x: 4, y: 13, w: 8, h: 3, visible: true }
+        { id: 'overview', x: 0, y: 0, w: 12, h: 3, visible: true },
+        { id: 'emails-per-day', x: 0, y: 3, w: 6, h: 3, visible: true },
+        { id: 'deletion-stats', x: 6, y: 3, w: 6, h: 3, visible: true },
+        { id: 'top-senders', x: 0, y: 6, w: 6, h: 4, visible: true },
+        { id: 'top-receivers', x: 6, y: 6, w: 6, h: 4, visible: true },
+        { id: 'recent-activity', x: 0, y: 10, w: 4, h: 4, visible: true },
+        { id: 'storage-trends', x: 4, y: 10, w: 4, h: 4, visible: true },
+        { id: 'account-health', x: 8, y: 10, w: 4, h: 4, visible: true },
+        { id: 'system-status', x: 0, y: 14, w: 4, h: 3, visible: true },
+        { id: 'quick-actions', x: 4, y: 14, w: 8, h: 3, visible: true }
     ],
 
     init() {
