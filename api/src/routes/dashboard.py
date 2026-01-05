@@ -468,12 +468,12 @@ def account_health(request: Request):
     try:
         results = query("""
             SELECT 
-                email,
+                name,
                 enabled,
-                last_fetch_at,
+                last_success,
                 last_error
             FROM fetch_accounts
-            ORDER BY last_fetch_at DESC NULLS LAST
+            ORDER BY last_success DESC NULLS LAST
         """).mappings().all()
 
         accounts = []
@@ -483,13 +483,13 @@ def account_health(request: Request):
                 status = "disabled"
             elif row["last_error"]:
                 status = "error"
-            elif not row["last_fetch_at"]:
+            elif not row["last_success"]:
                 status = "never_fetched"
             
             accounts.append({
-                "email": row["email"],
+                "email": row["name"],
                 "status": status,
-                "last_fetch": row["last_fetch_at"].strftime("%Y-%m-%d %H:%M") if row["last_fetch_at"] else "Never",
+                "last_fetch": row["last_success"].strftime("%Y-%m-%d %H:%M") if row["last_success"] else "Never",
                 "error": row["last_error"] or ""
             })
 
