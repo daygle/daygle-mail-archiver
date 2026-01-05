@@ -1,9 +1,8 @@
 import os
 from cryptography.fernet import Fernet
+from config import require_config
 
-IMAP_PASSWORD_KEY = os.getenv("IMAP_PASSWORD_KEY")
-if not IMAP_PASSWORD_KEY:
-    raise RuntimeError("IMAP_PASSWORD_KEY is not set")
+IMAP_PASSWORD_KEY = require_config("IMAP_PASSWORD_KEY")
 
 fernet = Fernet(IMAP_PASSWORD_KEY.encode())
 

@@ -1,5 +1,5 @@
-# Environment variables (contains sensitive data)
-.env
+# Configuration file (contains sensitive data)
+daygle_mail_archiver.conf
 
 # Python
 __pycache__/
@@ -34,4 +34,4 @@ Thumbs.db
 # Backups (contains sensitive data)
 backups/
 *.backup_*
-.env.backup_*
+daygle_mail_archiver.conf.backup_*

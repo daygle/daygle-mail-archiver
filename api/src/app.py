@@ -9,9 +9,10 @@ import logging
 
 from routes import emails, fetch_accounts, global_settings, auth, users, profile, logs, dashboard, worker_status, oauth, donate, help
 from utils.logger import log
+from utils.config import get_config
 
 # Configuration
-SESSION_SECRET = os.getenv("SESSION_SECRET", "change-me")
+SESSION_SECRET = get_config("SESSION_SECRET", "change-me")
 if SESSION_SECRET == "change-me":
     logging.warning("⚠️  SESSION_SECRET is set to default value. Please set a secure secret in production!")
 

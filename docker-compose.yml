@@ -3,14 +3,14 @@ services:
     image: postgres:17
     container_name: daygle-mail-archiver-database
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-daygle_mail_archiver}
+      POSTGRES_USER: ${POSTGRES_USER:-daygle_mail_archiver}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-daygle_mail_archiver} -d ${POSTGRES_DB:-daygle_mail_archiver}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -23,6 +23,9 @@ services:
       DB_DSN: ${DB_DSN}
       SESSION_SECRET: ${SESSION_SECRET}
       IMAP_PASSWORD_KEY: ${IMAP_PASSWORD_KEY}
+    volumes:
+      # Mount daygle_mail_archiver.conf file if it exists
+      - ./daygle_mail_archiver.conf:/app/daygle_mail_archiver.conf:ro
     depends_on:
       db:
         condition: service_healthy
@@ -37,6 +40,9 @@ services:
     environment:
       DB_DSN: ${DB_DSN}
       IMAP_PASSWORD_KEY: ${IMAP_PASSWORD_KEY}
+    volumes:
+      # Mount daygle_mail_archiver.conf file if it exists
+      - ./daygle_mail_archiver.conf:/app/daygle_mail_archiver.conf:ro
     depends_on:
       db:
         condition: service_healthy

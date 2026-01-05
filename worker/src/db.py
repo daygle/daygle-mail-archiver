@@ -1,9 +1,8 @@
 import os
 from sqlalchemy import create_engine, text
+from config import require_config
 
-DB_DSN = os.getenv("DB_DSN")
-if not DB_DSN:
-    raise RuntimeError("DB_DSN is not set")
+DB_DSN = require_config("DB_DSN")
 
 engine = create_engine(DB_DSN, future=True)
 

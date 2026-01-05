@@ -70,18 +70,38 @@ check_containers() {
     fi
 }
 
-# Function to load .env file
-load_env() {
-    if [ ! -f "$ROOT_DIR/.env" ]; then
-        log_error ".env file not found at $ROOT_DIR/.env"
-        log_info "Please create .env file from .env.example"
+# Function to load configuration file
+load_config() {
+    # Load from daygle_mail_archiver.conf file
+    if [ -f "$ROOT_DIR/daygle_mail_archiver.conf" ]; then
+        log_info "Loading configuration from daygle_mail_archiver.conf file..."
+        # Parse daygle_mail_archiver.conf file (INI format) to extract database credentials
+        if grep -q "^\[database\]" "$ROOT_DIR/daygle_mail_archiver.conf"; then
+            # Parse database section values (handles section at any position in file)
+            DB_NAME=$(awk -F '=' '/^\[database\]/,0 {if ($1 ~ /^[ \t]*name[ \t]*$/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2; exit}}' "$ROOT_DIR/daygle_mail_archiver.conf")
+            DB_USER=$(awk -F '=' '/^\[database\]/,0 {if ($1 ~ /^[ \t]*user[ \t]*$/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2; exit}}' "$ROOT_DIR/daygle_mail_archiver.conf")
+            DB_PASS=$(awk -F '=' '/^\[database\]/,0 {if ($1 ~ /^[ \t]*password[ \t]*$/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2; exit}}' "$ROOT_DIR/daygle_mail_archiver.conf")
+            
+            # Export for docker-compose
+            export POSTGRES_DB="$DB_NAME"
+            export POSTGRES_USER="$DB_USER"
+            export POSTGRES_PASSWORD="$DB_PASS"
+        else
+            log_error "daygle_mail_archiver.conf file exists but [database] section not found"
+            exit 1
+        fi
+    else
+        log_error "No configuration file found (daygle_mail_archiver.conf)"
+        log_info "Please create daygle_mail_archiver.conf file from daygle_mail_archiver.conf.example"
         exit 1
     fi
     
-    # Load environment variables
-    set -a
-    source "$ROOT_DIR/.env"
-    set +a
+    # Validate that required variables are set
+    if [ -z "$DB_NAME" ] || [ -z "$DB_USER" ] || [ -z "$DB_PASS" ]; then
+        log_error "Required database configuration not found"
+        log_info "Please ensure your daygle_mail_archiver.conf file contains: name, user, password in [database] section"
+        exit 1
+    fi
 }
 
 # Function to create backup
@@ -120,13 +140,13 @@ backup() {
     
     log_success "Database backup created"
     
-    # Copy .env file
-    log_info "Backing up environment configuration..."
-    if [ -f "$ROOT_DIR/.env" ]; then
-        cp "$ROOT_DIR/.env" "$TEMP_BACKUP_DIR/.env"
-        log_success "Environment configuration backed up"
+    # Copy daygle_mail_archiver.conf file
+    log_info "Backing up configuration file..."
+    if [ -f "$ROOT_DIR/daygle_mail_archiver.conf" ]; then
+        cp "$ROOT_DIR/daygle_mail_archiver.conf" "$TEMP_BACKUP_DIR/daygle_mail_archiver.conf"
+        log_success "Configuration file (daygle_mail_archiver.conf) backed up"
     else
-        log_warning ".env file not found, skipping"
+        log_warning "daygle_mail_archiver.conf file not found, skipping"
     fi
     
     # Create metadata file
@@ -140,7 +160,7 @@ Database User: $DB_USER
 
 Contents:
 - database.sql: Full PostgreSQL database dump
-- .env: Environment configuration with encryption keys
+- daygle_mail_archiver.conf: Configuration file with encryption keys
 
 IMPORTANT: Keep this backup secure as it contains:
 - IMAP_PASSWORD_KEY: Required to decrypt IMAP account passwords
@@ -167,6 +187,7 @@ EOF
         echo "  - Complete database with all emails"
         echo "  - Encryption keys (IMAP_PASSWORD_KEY, SESSION_SECRET)"
         echo "  - Database credentials"
+        echo "  - Configuration file (daygle_mail_archiver.conf)"
     else
         log_error "Failed to create backup archive"
         exit 1
@@ -220,23 +241,23 @@ restore() {
         exit 1
     fi
     
-    # Restore .env file
-    if [ -f "$TEMP_RESTORE_DIR/.env" ]; then
-        log_info "Restoring environment configuration..."
+    # Restore configuration file
+    if [ -f "$TEMP_RESTORE_DIR/daygle_mail_archiver.conf" ]; then
+        log_info "Restoring configuration file (daygle_mail_archiver.conf)..."
         
-        # Backup current .env
-        if [ -f "$ROOT_DIR/.env" ]; then
-            cp "$ROOT_DIR/.env" "$ROOT_DIR/.env.backup_$(date +%Y%m%d_%H%M%S)"
-            log_info "Current .env backed up to .env.backup_*"
+        # Backup current daygle_mail_archiver.conf if it exists
+        if [ -f "$ROOT_DIR/daygle_mail_archiver.conf" ]; then
+            cp "$ROOT_DIR/daygle_mail_archiver.conf" "$ROOT_DIR/daygle_mail_archiver.conf.backup_$(date +%Y%m%d_%H%M%S)"
+            log_info "Current daygle_mail_archiver.conf backed up to daygle_mail_archiver.conf.backup_*"
         fi
         
-        cp "$TEMP_RESTORE_DIR/.env" "$ROOT_DIR/.env"
-        log_success "Environment configuration restored"
+        cp "$TEMP_RESTORE_DIR/daygle_mail_archiver.conf" "$ROOT_DIR/daygle_mail_archiver.conf"
+        log_success "Configuration file restored"
         
-        # Reload environment variables
-        load_env
+        # Reload configuration
+        load_config
     else
-        log_warning ".env file not found in backup"
+        log_warning "No configuration file (daygle_mail_archiver.conf) found in backup"
     fi
     
     # Restore database
@@ -374,7 +395,7 @@ Usage:
   $(basename "$0") <command> [options]
 
 Commands:
-  backup                    Create a new backup of database and .env file
+  backup                    Create a new backup of database and configuration file
   restore <backup_file>     Restore from a backup file
   list                      List all available backups
   delete <backup_file>      Delete a specific backup file
@@ -395,7 +416,8 @@ Examples:
 
 Notes:
   - Backups are stored in ./backups/ directory
-  - Backups include both database dump and .env file with encryption keys
+  - Backups include database dump and daygle_mail_archiver.conf configuration file
+  - Configuration file contains encryption keys and database credentials
   - Always test restores on a non-production system first
   - Keep backups secure - they contain sensitive encryption keys
 
@@ -415,7 +437,7 @@ main() {
         backup)
             check_docker_compose
             check_containers
-            load_env
+            load_config
             backup
             ;;
         restore)
@@ -426,7 +448,7 @@ main() {
             fi
             check_docker_compose
             check_containers
-            load_env
+            load_config
             restore "$2"
             ;;
         list)

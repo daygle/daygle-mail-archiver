@@ -1,0 +1,32 @@
+# ============================================
+# Daygle Mail Archiver - Configuration File
+# ============================================
+# This configuration file uses INI format for better organization
+# and readability. Copy this file to daygle_mail_archiver.conf and update the values.
+#
+# Usage:
+#   cp daygle_mail_archiver.conf.example daygle_mail_archiver.conf
+#   # Edit daygle_mail_archiver.conf with your settings
+#   docker compose up -d --build
+# ============================================
+
+[database]
+# PostgreSQL Database Configuration
+# These settings configure both the database container and application connections
+name = daygle_mail_archiver
+user = daygle_mail_archiver
+password = change_me
+host = db
+port = 5432
+
+[security]
+# Security and Encryption Settings
+# IMPORTANT: Change these values in production!
+
+# Session secret for API session cookies
+# Generate with: python3 -c "import secrets; print(secrets.token_hex(32))"
+session_secret = 8f4c2b9e3d7a4f1c9e8b2d3f7c6a1e4b5d8f0c2a7b9d3e6f1a4c7b8d9e2f3a1
+
+# Fernet key for IMAP password encryption (used by both API and Worker)
+# Generate with: python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+imap_password_key = 8t2y0x8qZp8G7QfVYp4p0Q2u7v8Yx1m4l8e0q2c3s0A=
