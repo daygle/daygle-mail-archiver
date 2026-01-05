@@ -96,12 +96,16 @@ class Config:
                     key = key.strip()
                     value = value.strip()
                     # Handle variable substitution like ${DB_NAME}
-                    while '${' in value and '}' in value:
+                    # Add max iterations to prevent infinite loops
+                    max_iterations = 10
+                    iteration = 0
+                    while '${' in value and '}' in value and iteration < max_iterations:
                         var_start = value.index('${')
                         var_end = value.index('}', var_start)
                         var_name = value[var_start+2:var_end]
                         var_value = self._config.get(var_name, os.getenv(var_name, ''))
                         value = value[:var_start] + var_value + value[var_end+1:]
+                        iteration += 1
                     self._config[key] = value
     
     def _load_from_environment(self):

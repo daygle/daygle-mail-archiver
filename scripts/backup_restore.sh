@@ -78,9 +78,21 @@ load_config() {
         # Parse .conf file (INI format) to extract database credentials
         # This is a simple parser - assumes [database] section exists
         if grep -q "^\[database\]" "$ROOT_DIR/.conf"; then
-            DB_NAME=$(awk -F '=' '/^\[database\]/,/^\[/ {if ($1 ~ /^name/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2}}' "$ROOT_DIR/.conf")
-            DB_USER=$(awk -F '=' '/^\[database\]/,/^\[/ {if ($1 ~ /^user/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2}}' "$ROOT_DIR/.conf")
-            DB_PASS=$(awk -F '=' '/^\[database\]/,/^\[/ {if ($1 ~ /^password/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2}}' "$ROOT_DIR/.conf")
+            # Updated AWK pattern to handle [database] being the last section or not
+            DB_NAME=$(awk -F '=' '/^\[database\]/,(/^\[/ && !/^\[database\]/) {if ($1 ~ /^name/ && !/^\[/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2}}' "$ROOT_DIR/.conf")
+            DB_USER=$(awk -F '=' '/^\[database\]/,(/^\[/ && !/^\[database\]/) {if ($1 ~ /^user/ && !/^\[/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2}}' "$ROOT_DIR/.conf")
+            DB_PASS=$(awk -F '=' '/^\[database\]/,(/^\[/ && !/^\[database\]/) {if ($1 ~ /^password/ && !/^\[/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2}}' "$ROOT_DIR/.conf")
+            
+            # If values are empty, try simpler parsing that goes to EOF
+            if [ -z "$DB_NAME" ]; then
+                DB_NAME=$(awk -F '=' '/^\[database\]/,0 {if ($1 ~ /^name/ && !/^\[/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2; exit}}' "$ROOT_DIR/.conf")
+            fi
+            if [ -z "$DB_USER" ]; then
+                DB_USER=$(awk -F '=' '/^\[database\]/,0 {if ($1 ~ /^user/ && !/^\[/ && $1 !~ /^username/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2; exit}}' "$ROOT_DIR/.conf")
+            fi
+            if [ -z "$DB_PASS" ]; then
+                DB_PASS=$(awk -F '=' '/^\[database\]/,0 {if ($1 ~ /^password/ && !/^\[/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2; exit}}' "$ROOT_DIR/.conf")
+            fi
             
             # Export for docker-compose
             export POSTGRES_DB="$DB_NAME"

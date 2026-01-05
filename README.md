@@ -146,8 +146,6 @@ The system loads configuration in the following priority order:
 
 ### Important Security Notes
 
-### Important Security Notes
-
 **Important:** Change the default values for `password`, `session_secret`, and `imap_password_key` in production!
 
 To generate a new Fernet key for `imap_password_key`:
