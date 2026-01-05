@@ -20,7 +20,7 @@ def login_form(request: Request):
 def login_submit(request: Request, username: str = Form(...), password: str = Form(...)):
     try:
         user = query(
-            "SELECT id, username, password_hash, date_format, timezone, role, enabled FROM users WHERE username = :u",
+            "SELECT id, username, password_hash, date_format, time_format, timezone, role, enabled FROM users WHERE username = :u",
             {"u": username}
         ).mappings().first()
     except Exception as e:
