@@ -598,6 +598,13 @@ const DashboardManager = {
                 widgets = this.defaultWidgets;
             }
 
+            // If only a single widget is visible (likely from a broken prior save), reset to defaults
+            const visibleCount = widgets.filter(w => w.visible).length;
+            if (visibleCount <= 1) {
+                console.warn('Only one widget visible from preferences; reverting to defaults');
+                widgets = this.defaultWidgets;
+            }
+
             console.log('Using widgets:', widgets);
             this.renderWidgets(widgets);
         } catch (error) {
