@@ -303,13 +303,14 @@ const DashboardManager = {
     init() {
         // Check if GridStack is loaded
         if (typeof GridStack === 'undefined') {
-            console.error('GridStack library not loaded');
-            alert('Dashboard failed to load. Please refresh the page.');
+            console.error('GridStack library not loaded - CDN might be blocked or unavailable');
+            alert('Dashboard failed to load: GridStack library not available. Please check your internet connection and refresh the page.');
             return;
         }
 
         // Initialize GridStack
         try {
+            console.log('Initializing GridStack...');
             this.grid = GridStack.init({
                 column: 12,
                 cellHeight: 80,
@@ -320,6 +321,8 @@ const DashboardManager = {
                 draggable: { handle: '.widget-header' }
             });
 
+            console.log('GridStack initialized successfully');
+
             // Disable editing by default
             this.grid.disable();
 
@@ -328,9 +331,12 @@ const DashboardManager = {
 
             // Setup event listeners
             this.setupEventListeners();
+            
+            console.log('Dashboard initialization complete');
         } catch (error) {
             console.error('Error initializing dashboard:', error);
-            alert('Dashboard failed to initialize: ' + error.message);
+            console.error('Error stack:', error.stack);
+            alert('Dashboard failed to initialize: ' + error.message + '\n\nCheck the browser console for more details.');
         }
     },
 
