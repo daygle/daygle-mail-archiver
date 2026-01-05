@@ -645,7 +645,13 @@ const DashboardManager = {
         });
 
         // Add widget button
-        document.getElementById('btn-add-widget').addEventListener('click', () => {
+        const addWidgetBtn = document.getElementById('btn-add-widget');
+        if (!addWidgetBtn) {
+            console.error('Add widget button not found!');
+            return;
+        }
+        addWidgetBtn.addEventListener('click', () => {
+            console.log('Add widget button clicked');
             this.showWidgetSelector();
         });
 
@@ -714,8 +720,16 @@ const DashboardManager = {
     },
 
     showWidgetSelector() {
+        console.log('showWidgetSelector called');
         const modal = document.getElementById('widget-selector-modal');
         const container = document.getElementById('widget-selector-list');
+        
+        if (!modal || !container) {
+            console.error('Modal or container not found', { modal, container });
+            return;
+        }
+        
+        console.log('Modal and container found');
         container.innerHTML = '';
 
         // Get currently visible widgets
@@ -726,6 +740,8 @@ const DashboardManager = {
                 visibleWidgets.add(item.gridstackNode.id);
             }
         });
+        
+        console.log('Visible widgets:', Array.from(visibleWidgets));
 
         // Show all available widgets
         this.defaultWidgets.forEach(widget => {
@@ -743,6 +759,7 @@ const DashboardManager = {
             
             if (!isVisible) {
                 item.addEventListener('click', () => {
+                    console.log('Adding widget:', widget.id);
                     this.addWidget(widget);
                     this.loadWidgetData(widget.id);
                     modal.style.display = 'none';
@@ -752,6 +769,7 @@ const DashboardManager = {
             container.appendChild(item);
         });
 
+        console.log('Showing modal');
         modal.style.display = 'flex';
     },
 
