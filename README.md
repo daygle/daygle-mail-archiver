@@ -400,14 +400,9 @@ The **Dashboard** displays deletion analytics:
 
 # Database Backup & Restore
 
-Protect your email archive with built-in backup and restore functionality. The system provides two methods:
+Protect your email archive with the built-in command-line backup and restore script that includes both the database AND encryption keys.
 
-1. **Command-Line Script** (Recommended): Complete backup including database and encryption keys
-2. **Web UI**: Database-only backup through the web interface
-
----
-
-## Command-Line Backup & Restore (Recommended)
+## Command-Line Backup & Restore
 
 The `scripts/backup_restore.sh` script provides a complete backup solution that includes both the database AND the `.env` file with encryption keys in a single process.
 
@@ -456,54 +451,13 @@ docker compose restart
 ./scripts/backup_restore.sh delete daygle_backup_20240105_120000.tar.gz
 ```
 
-### Command-Line Script Features
+### Script Features
 
 - **Complete Backup**: Includes database AND encryption keys in one file
 - **Atomic Operations**: Ensures backup consistency
 - **Safety Checks**: Confirms destructive operations before proceeding
 - **Progress Logging**: Clear status messages during backup/restore
 - **Metadata Tracking**: Each backup includes creation timestamp and contents
-
----
-
-## Web UI Backup & Restore
-
-For quick database-only backups, you can use the web interface.
-
-### Creating a Backup
-
-1. Navigate to **Settings → Backup/Restore** (from the sidebar menu)
-2. Click **Download Backup**
-3. The system will create a complete PostgreSQL dump and download it as `daygle_backup.sql`
-4. Store this file securely for disaster recovery
-
-**Notes:**
-- Backup includes all emails, accounts, users, settings, and logs
-- Maximum backup time: 60 seconds (for large databases, consider manual pg_dump)
-- Backup files are plain-text SQL format
-
-**⚠️ Important: Backup Your Encryption Keys**
-
-The web UI backup does NOT include the encryption keys from your `.env` file. You must also manually backup:
-- `IMAP_PASSWORD_KEY` - Required to decrypt IMAP account passwords
-- `SESSION_SECRET` - Required for session cookies
-
-Without these keys, you won't be able to decrypt passwords in a restored database. For a complete backup solution, use the command-line script instead.
-
-### Restoring from Backup
-
-1. Navigate to **Settings → Backup/Restore**
-2. Click **Choose File** and select your backup `.sql` file
-3. Click **Restore Database**
-4. The system will restore all data from the backup
-
-**Important Warnings:**
-- Restore will overwrite all existing data in the database
-- **You must use the same `.env` keys** (`IMAP_PASSWORD_KEY` and `SESSION_SECRET`) as when the backup was created, otherwise encrypted passwords cannot be decrypted
-- Maximum file size: 10MB (for larger restores, use manual psql)
-- Maximum restore time: 120 seconds
-- Always test restores on a non-production system first
-- You may need to log in again after a restore
 
 ---
 
