@@ -3,9 +3,9 @@
 {% block page_title %}Dashboard{% endblock %}
 
 {% block extra_css %}
-<!-- GridStack CSS -->
-<link rel="stylesheet" href="https://unpkg.com/gridstack@9.3.1/dist/gridstack.min.css" />
-<link rel="stylesheet" href="https://unpkg.com/gridstack@9.3.1/dist/gridstack-extra.min.css" />
+<!-- GridStack CSS (Local) -->
+<link rel="stylesheet" href="/static/vendor/gridstack.min.css" />
+<link rel="stylesheet" href="/static/vendor/gridstack-extra.min.css" />
 {% endblock %}
 
 {% block content %}
@@ -277,36 +277,16 @@
     </div>
 </div>
 
-<!-- GridStack JS -->
+<!-- GridStack JS (Local) -->
 <script>
-console.log('Loading GridStack from CDN...');
-function loadGridStackFallback() {
-    console.warn('Primary GridStack CDN failed, trying cdnjs fallback...');
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/gridstack.js/9.3.1/gridstack-all.js';
-    script.onload = () => console.log('GridStack loaded from fallback CDN');
-    script.onerror = function() {
-        console.error('GridStack fallback CDN also failed');
-        alert('Unable to load GridStack library. Please check your internet connection.');
-    };
-    document.head.appendChild(script);
-}
+console.log('Loading GridStack from local files...');
 </script>
-<script src="https://unpkg.com/gridstack@9.3.1/dist/gridstack-all.js" 
+<script src="/static/vendor/gridstack-all.js" 
         onload="console.log('GridStack loaded successfully');" 
-        onerror="loadGridStackFallback()"></script>
+        onerror="console.error('Failed to load local GridStack library')"></script>
 
-<!-- Chart.js -->
-<script>
-function loadChartFallback() {
-    console.warn('Primary Chart.js CDN failed, trying fallback...');
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';
-    script.onerror = () => console.error('Chart.js fallback CDN also failed');
-    document.head.appendChild(script);
-}
-</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" onerror="loadChartFallback()"></script>
+<!-- Chart.js (Local) -->
+<script src="/static/vendor/chart.min.js"></script>
 
 <script>
 // Dashboard Widget Manager
