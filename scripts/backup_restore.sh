@@ -148,13 +148,13 @@ IMPORTANT: Keep this backup secure as it contains:
 - Database credentials
 
 To restore this backup:
-  ./scripts/backup_restore.sh restore daygle_backup_${TIMESTAMP}.tar.gz
+  ./scripts/backup_restore.sh restore daygle_mail_archiver_backup_${TIMESTAMP}.tar.gz
 EOF
     
     log_info "Creating compressed backup archive..."
     
     # Create tar.gz archive
-    BACKUP_FILE="$BACKUP_DIR/daygle_backup_${TIMESTAMP}.tar.gz"
+    BACKUP_FILE="$BACKUP_DIR/daygle_mail_archiver_backup_${TIMESTAMP}.tar.gz"
     tar -czf "$BACKUP_FILE" -C "$TEMP_BACKUP_DIR" .
     
     if [ $? -eq 0 ]; then
@@ -309,7 +309,7 @@ list_backups() {
     fi
     
     # List backup files with details
-    for backup in "$BACKUP_DIR"/daygle_backup_*.tar.gz; do
+    for backup in "$BACKUP_DIR"/daygle_mail_archiver_backup_*.tar.gz; do
         if [ -f "$backup" ]; then
             size=$(du -h "$backup" | cut -f1)
             # Use ls for cross-platform date formatting
@@ -387,11 +387,11 @@ Examples:
   ./scripts/backup_restore.sh list
 
   # Restore from a backup
-  ./scripts/backup_restore.sh restore daygle_backup_20240105_120000.tar.gz
-  ./scripts/backup_restore.sh restore backups/daygle_backup_20240105_120000.tar.gz
+  ./scripts/backup_restore.sh restore daygle_mail_archiver_backup_20240105_120000.tar.gz
+  ./scripts/backup_restore.sh restore backups/daygle_mail_archiver_backup_20240105_120000.tar.gz
 
   # Delete a backup
-  ./scripts/backup_restore.sh delete daygle_backup_20240105_120000.tar.gz
+  ./scripts/backup_restore.sh delete daygle_mail_archiver_backup_20240105_120000.tar.gz
 
 Notes:
   - Backups are stored in ./backups/ directory

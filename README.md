@@ -174,7 +174,7 @@ After setting your password, you'll be redirected to the Dashboard.
 ./scripts/backup_restore.sh list
 
 # Restore from backup
-./scripts/backup_restore.sh restore daygle_backup_20240105_120000.tar.gz
+./scripts/backup_restore.sh restore daygle_mail_archiver_backup_20240105_120000.tar.gz
 ```
 
 ### Container Management
@@ -413,7 +413,7 @@ cd /opt/daygle-mail-archiver
 ./scripts/backup_restore.sh backup
 ```
 
-This creates a timestamped backup file in `./backups/` directory (e.g., `daygle_backup_20240105_120000.tar.gz`) containing:
+This creates a timestamped backup file in `./backups/` directory (e.g., `daygle_mail_archiver_backup_20240105_120000.tar.gz`) containing:
 - Complete PostgreSQL database dump
 - `.env` file with all encryption keys
 - Backup metadata
@@ -431,7 +431,7 @@ Shows all available backups with size and creation date.
 ### Restoring from Backup
 
 ```bash
-./scripts/backup_restore.sh restore daygle_backup_20240105_120000.tar.gz
+./scripts/backup_restore.sh restore daygle_mail_archiver_backup_20240105_120000.tar.gz
 ```
 
 This will:
@@ -448,7 +448,7 @@ docker compose restart
 ### Deleting Old Backups
 
 ```bash
-./scripts/backup_restore.sh delete daygle_backup_20240105_120000.tar.gz
+./scripts/backup_restore.sh delete daygle_mail_archiver_backup_20240105_120000.tar.gz
 ```
 
 ### Script Features
