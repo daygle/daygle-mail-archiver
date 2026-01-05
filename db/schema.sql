@@ -40,6 +40,11 @@ USING GIN (
     )
 );
 
+-- Index for date range queries and filtering
+CREATE INDEX IF NOT EXISTS emails_created_at_idx ON emails(created_at DESC);
+CREATE INDEX IF NOT EXISTS emails_source_idx ON emails(source);
+CREATE INDEX IF NOT EXISTS emails_sender_idx ON emails(sender);
+
 -- ----------------------------
 -- fetch_accounts
 -- Supports multiple email fetch methods: IMAP, Gmail API, O365 API
@@ -73,8 +78,13 @@ CREATE TABLE IF NOT EXISTS fetch_accounts (
 
     last_heartbeat TIMESTAMPTZ,
     last_success TIMESTAMPTZ,
-    last_error TEXT
+    last_error TEXT,
+    
+    CHECK (account_type IN ('imap', 'gmail', 'o365'))
 );
+
+-- Index on enabled accounts for worker queries
+CREATE INDEX IF NOT EXISTS fetch_accounts_enabled_idx ON fetch_accounts(enabled) WHERE enabled = TRUE;
 
 -- ----------------------------
 -- fetch_state
@@ -95,7 +105,7 @@ CREATE TABLE IF NOT EXISTS fetch_state (
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     username TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
+    password_hash TEXT NOT NULL DEFAULT '',  -- Empty string for unset passwords
     first_name TEXT,
     last_name TEXT,
     email TEXT,
@@ -144,6 +154,10 @@ CREATE TABLE IF NOT EXISTS logs (
     message TEXT NOT NULL,
     details TEXT
 );
+
+-- Indexes for logs queries (filtering by level and ordering by timestamp)
+CREATE INDEX IF NOT EXISTS logs_timestamp_idx ON logs(timestamp DESC);
+CREACREATE INDEX IF NOT EXISTS logs_level_timestamp_idx ON logs(level, timestamp DESC);
 
 -- ----------------------------
 -- deletion_stats
