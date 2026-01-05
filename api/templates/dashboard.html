@@ -85,6 +85,105 @@
         grid-template-columns: repeat(2, 1fr) !important;
     }
 }
+/* Modal styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+}
+.modal-content {
+    position: relative;
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-height: 80vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    z-index: 1;
+}
+.modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.modal-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+}
+/* Widget action buttons in edit mode */
+.widget-actions {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: none;
+    gap: 4px;
+    z-index: 100;
+}
+.grid-stack.edit-mode .widget-actions {
+    display: flex;
+}
+.widget-action-btn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+.widget-action-btn:hover {
+    background: var(--accent-primary);
+    color: white;
+    border-color: var(--accent-primary);
+}
+.widget-action-btn.danger:hover {
+    background: #ef4444;
+    border-color: #ef4444;
+}
+.widget-selector-item {
+    padding: 0.75rem 1rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.widget-selector-item:hover {
+    background: var(--accent-primary);
+    color: white;
+}
+.widget-selector-item.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.widget-selector-item.disabled:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
 </style>
 {% endblock %}
 
@@ -98,6 +197,9 @@
         <button id="btn-customize" class="btn btn-secondary">
             <i class="fas fa-cog"></i> Customize
         </button>
+        <button id="btn-add-widget" class="btn btn-info" style="display: none;">
+            <i class="fas fa-plus"></i> Add Widget
+        </button>
         <button id="btn-save-layout" class="btn btn-primary" style="display: none;">
             <i class="fas fa-save"></i> Save Layout
         </button>
@@ -107,17 +209,20 @@
     </div>
 </div>
 
-<!-- Widget Customization Panel (Hidden by default) -->
-<div id="customization-panel" class="customization-panel" style="display: none;">
-    <div class="panel-header">
-        <h3><i class="fas fa-sliders-h"></i> Widget Settings</h3>
-        <button id="btn-close-panel" class="btn-icon">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-    <div class="panel-body">
-        <p class="text-muted">Toggle widgets on/off:</p>
-        <div id="widget-toggles"></div>
+<!-- Widget Selector Modal (Hidden by default) -->
+<div id="widget-selector-modal" class="modal" style="display: none;">
+    <div class="modal-overlay" id="modal-overlay"></div>
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h3><i class="fas fa-plus-circle"></i> Add Widgets</h3>
+            <button class="btn-icon" id="btn-close-modal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <p class="text-muted" style="margin-bottom: 1rem;">Select widgets to add to your dashboard:</p>
+            <div id="widget-selector-list" style="display: grid; gap: 0.5rem;"></div>
+        </div>
     </div>
 </div>
 
@@ -130,14 +235,16 @@
 <div style="display: none;">
     <!-- Stats Widget Template -->
     <div id="template-stats" class="grid-stack-item-content widget-card">
+        <div class="widget-actions">
+            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
         <div class="widget-header">
             <div class="widget-title">
                 <i class="fas fa-chart-bar"></i>
                 <span>Statistics</span>
             </div>
-            <button class="widget-menu-btn" data-widget="stats">
-                <i class="fas fa-ellipsis-v"></i>
-            </button>
         </div>
         <div class="widget-body">
             <div class="stats-grid-mini">
@@ -182,15 +289,18 @@
     </div>
 
     <!-- Emails Per Day Chart Template -->
-    <div id="template-emails-per-day" class="grid-stack-item-content widget-card">
+    <div id="template-emails-per-day class="grid-stack-item-content widget-card">
+        <div class="widget-actions">
+            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
         <div class="widget-header">
             <div class="widget-title">
                 <i class="fas fa-chart-line"></i>
                 <span>Emails Per Day (30d)</span>
             </div>
-            <button class="widget-menu-btn" data-widget="emails-per-day">
-                <i class="fas fa-ellipsis-v"></i>
-            </button>
+            
         </div>
         <div class="widget-body">
             <canvas id="emailsPerDayChart"></canvas>
@@ -198,15 +308,18 @@
     </div>
 
     <!-- Top Senders Chart Template -->
-    <div id="template-top-senders" class="grid-stack-item-content widget-card">
+    <div id="template-top-senders class="grid-stack-item-content widget-card">
+        <div class="widget-actions">
+            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
         <div class="widget-header">
             <div class="widget-title">
                 <i class="fas fa-paper-plane"></i>
                 <span>Top 10 Senders</span>
             </div>
-            <button class="widget-menu-btn" data-widget="top-senders">
-                <i class="fas fa-ellipsis-v"></i>
-            </button>
+            
         </div>
         <div class="widget-body">
             <canvas id="topSendersChart"></canvas>
@@ -214,15 +327,18 @@
     </div>
 
     <!-- Top Receivers Chart Template -->
-    <div id="template-top-receivers" class="grid-stack-item-content widget-card">
+    <div id="template-top-receivers class="grid-stack-item-content widget-card">
+        <div class="widget-actions">
+            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
         <div class="widget-header">
             <div class="widget-title">
                 <i class="fas fa-inbox"></i>
                 <span>Top 10 Receivers</span>
             </div>
-            <button class="widget-menu-btn" data-widget="top-receivers">
-                <i class="fas fa-ellipsis-v"></i>
-            </button>
+            
         </div>
         <div class="widget-body">
             <canvas id="topReceiversChart"></canvas>
@@ -230,15 +346,18 @@
     </div>
 
     <!-- Deletion Stats Chart Template -->
-    <div id="template-deletion-stats" class="grid-stack-item-content widget-card">
+    <div id="template-deletion-stats class="grid-stack-item-content widget-card">
+        <div class="widget-actions">
+            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
         <div class="widget-header">
             <div class="widget-title">
                 <i class="fas fa-trash-alt"></i>
                 <span>Email Deletions (30d)</span>
             </div>
-            <button class="widget-menu-btn" data-widget="deletion-stats">
-                <i class="fas fa-ellipsis-v"></i>
-            </button>
+            
         </div>
         <div class="widget-body">
             <canvas id="deletionStatsChart"></canvas>
@@ -246,15 +365,18 @@
     </div>
 
     <!-- Recent Activity Template -->
-    <div id="template-recent-activity" class="grid-stack-item-content widget-card">
+    <div id="template-recent-activity class="grid-stack-item-content widget-card">
+        <div class="widget-actions">
+            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
         <div class="widget-header">
             <div class="widget-title">
                 <i class="fas fa-history"></i>
                 <span>Recent Activity</span>
             </div>
-            <button class="widget-menu-btn" data-widget="recent-activity">
-                <i class="fas fa-ellipsis-v"></i>
-            </button>
+            
         </div>
         <div class="widget-body">
             <div id="recent-activity-list" class="activity-list">
@@ -264,15 +386,18 @@
     </div>
 
     <!-- Storage Trends Template -->
-    <div id="template-storage-trends" class="grid-stack-item-content widget-card">
+    <div id="template-storage-trends class="grid-stack-item-content widget-card">
+        <div class="widget-actions">
+            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
         <div class="widget-header">
             <div class="widget-title">
                 <i class="fas fa-chart-area"></i>
                 <span>Storage Trends (7d)</span>
             </div>
-            <button class="widget-menu-btn" data-widget="storage-trends">
-                <i class="fas fa-ellipsis-v"></i>
-            </button>
+            
         </div>
         <div class="widget-body">
             <canvas id="storageTrendsChart"></canvas>
@@ -280,15 +405,18 @@
     </div>
 
     <!-- Account Health Template -->
-    <div id="template-account-health" class="grid-stack-item-content widget-card">
+    <div id="template-account-health class="grid-stack-item-content widget-card">
+        <div class="widget-actions">
+            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
         <div class="widget-header">
             <div class="widget-title">
                 <i class="fas fa-heartbeat"></i>
                 <span>Account Health</span>
             </div>
-            <button class="widget-menu-btn" data-widget="account-health">
-                <i class="fas fa-ellipsis-v"></i>
-            </button>
+            
         </div>
         <div class="widget-body">
             <div id="account-health-list" class="health-list">
@@ -298,15 +426,18 @@
     </div>
 
     <!-- System Status Template -->
-    <div id="template-system-status" class="grid-stack-item-content widget-card">
+    <div id="template-system-status class="grid-stack-item-content widget-card">
+        <div class="widget-actions">
+            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
         <div class="widget-header">
             <div class="widget-title">
                 <i class="fas fa-server"></i>
                 <span>System Status</span>
             </div>
-            <button class="widget-menu-btn" data-widget="system-status">
-                <i class="fas fa-ellipsis-v"></i>
-            </button>
+            
         </div>
         <div class="widget-body">
             <div id="system-status-content" class="status-content">
@@ -316,15 +447,18 @@
     </div>
 
     <!-- Quick Actions Template -->
-    <div id="template-quick-actions" class="grid-stack-item-content widget-card">
+    <div id="template-quick-actions class="grid-stack-item-content widget-card">
+        <div class="widget-actions">
+            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
         <div class="widget-header">
             <div class="widget-title">
                 <i class="fas fa-bolt"></i>
                 <span>Quick Actions</span>
             </div>
-            <button class="widget-menu-btn" data-widget="quick-actions">
-                <i class="fas fa-ellipsis-v"></i>
-            </button>
+            
         </div>
         <div class="widget-body">
             <div class="quick-actions-grid">
@@ -477,9 +611,6 @@ const DashboardManager = {
 
         // Load data for all widgets
         this.loadAllData();
-
-        // Update toggle panel
-        this.updateWidgetToggles(widgets);
     },
 
     addWidget(config) {
@@ -513,6 +644,11 @@ const DashboardManager = {
             this.toggleEditMode();
         });
 
+        // Add widget button
+        document.getElementById('btn-add-widget').addEventListener('click', () => {
+            this.showWidgetSelector();
+        });
+
         // Save layout button
         document.getElementById('btn-save-layout').addEventListener('click', () => {
             this.saveLayout();
@@ -526,9 +662,27 @@ const DashboardManager = {
             }
         });
 
-        // Close panel button
-        document.getElementById('btn-close-panel').addEventListener('click', () => {
-            document.getElementById('customization-panel').style.display = 'none';
+        // Close modal button
+        document.getElementById('btn-close-modal').addEventListener('click', () => {
+            document.getElementById('widget-selector-modal').style.display = 'none';
+        });
+
+        // Modal overlay click
+        document.getElementById('modal-overlay').addEventListener('click', () => {
+            document.getElementById('widget-selector-modal').style.display = 'none';
+        });
+
+        // Widget action buttons (delegated event handling)
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.widget-action-btn');
+            if (!btn || !this.editMode) return;
+
+            const action = btn.getAttribute('data-action');
+            const widgetElement = btn.closest('.grid-stack-item');
+            
+            if (action === 'remove' && widgetElement) {
+                this.grid.removeWidget(widgetElement);
+            }
         });
 
         // Grid change event
@@ -545,18 +699,60 @@ const DashboardManager = {
         if (this.editMode) {
             this.grid.enable();
             document.getElementById('btn-customize').style.display = 'none';
+            document.getElementById('btn-add-widget').style.display = 'inline-block';
             document.getElementById('btn-save-layout').style.display = 'inline-block';
             document.getElementById('btn-reset-layout').style.display = 'inline-block';
-            document.getElementById('customization-panel').style.display = 'block';
             document.querySelector('.grid-stack').classList.add('edit-mode');
         } else {
             this.grid.disable();
             document.getElementById('btn-customize').style.display = 'inline-block';
+            document.getElementById('btn-add-widget').style.display = 'none';
             document.getElementById('btn-save-layout').style.display = 'none';
             document.getElementById('btn-reset-layout').style.display = 'none';
-            document.getElementById('customization-panel').style.display = 'none';
             document.querySelector('.grid-stack').classList.remove('edit-mode');
         }
+    },
+
+    showWidgetSelector() {
+        const modal = document.getElementById('widget-selector-modal');
+        const container = document.getElementById('widget-selector-list');
+        container.innerHTML = '';
+
+        // Get currently visible widgets
+        const visibleWidgets = new Set();
+        const items = this.grid.getGridItems();
+        items.forEach(item => {
+            if (item.gridstackNode) {
+                visibleWidgets.add(item.gridstackNode.id);
+            }
+        });
+
+        // Show all available widgets
+        this.defaultWidgets.forEach(widget => {
+            const isVisible = visibleWidgets.has(widget.id);
+            const item = document.createElement('div');
+            item.className = 'widget-selector-item' + (isVisible ? ' disabled' : '');
+            item.innerHTML = `
+                <div>
+                    <strong>${this.getWidgetTitle(widget.id)}</strong>
+                </div>
+                <div>
+                    ${isVisible ? '<i class="fas fa-check"></i> Added' : '<i class="fas fa-plus"></i> Add'}
+                </div>
+            `;
+            
+            if (!isVisible) {
+                item.addEventListener('click', () => {
+                    this.addWidget(widget);
+                    this.loadWidgetData(widget.id);
+                    modal.style.display = 'none';
+                });
+            }
+            
+            container.appendChild(item);
+        });
+
+        modal.style.display = 'flex';
     },
 
     async saveLayout() {
@@ -630,49 +826,6 @@ const DashboardManager = {
             flash.style.animation = 'slideOut 0.3s ease';
             setTimeout(() => flash.remove(), 300);
         }, 3000);
-    },
-
-    updateWidgetToggles(widgets) {
-        const container = document.getElementById('widget-toggles');
-        container.innerHTML = '';
-
-        this.defaultWidgets.forEach(widget => {
-            const isVisible = widgets.find(w => w.id === widget.id)?.visible ?? true;
-            
-            const toggle = document.createElement('div');
-            toggle.className = 'widget-toggle';
-            toggle.innerHTML = `
-                <label class="toggle-label">
-                    <input type="checkbox" 
-                           data-widget-id="${widget.id}" 
-                           ${isVisible ? 'checked' : ''}>
-                    <span>${this.getWidgetTitle(widget.id)}</span>
-                </label>
-            `;
-
-            toggle.querySelector('input').addEventListener('change', (e) => {
-                this.toggleWidget(widget.id, e.target.checked);
-            });
-
-            container.appendChild(toggle);
-        });
-    },
-
-    toggleWidget(widgetId, visible) {
-        if (visible) {
-            const widget = this.defaultWidgets.find(w => w.id === widgetId);
-            if (widget) {
-                this.addWidget(widget);
-                this.loadWidgetData(widgetId);
-            }
-        } else {
-            const items = this.grid.getGridItems();
-            items.forEach(item => {
-                if (item.gridstackNode.id === widgetId) {
-                    this.grid.removeWidget(item);
-                }
-            });
-        }
     },
 
     getWidgetTitle(id) {
@@ -1068,3 +1221,5 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 {% endblock %}
+
+
