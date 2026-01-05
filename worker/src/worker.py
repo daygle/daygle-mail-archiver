@@ -197,7 +197,7 @@ def process_imap_account(account):
 
             last_uid = get_last_uid(account_id, folder)
 
-            # UID search: all messages with UID greater than last_uid
+            # UID search: all emails with UID greater than last_uid
             if last_uid > 0:
                 criteria = f"(UID {last_uid+1}:*)"
             else:
@@ -217,19 +217,19 @@ def process_imap_account(account):
                 if uid <= last_uid:
                     continue
 
-                status, msg_data = conn.uid("FETCH", str(uid), "(RFC822)")
-                if status != "OK" or not msg_data or not msg_data[0]:
+                status, email_data = conn.uid("FETCH", str(uid), "(RFC822)")
+                if status != "OK" or not email_data or not email_data[0]:
                     continue
 
-                raw = msg_data[0][1]
+                raw = email_data[0][1]
                 store_email(source, folder, uid, raw)
                 
                 # Delete from server if configured
                 if delete_after_processing:
                     try:
-                        # Mark message as deleted (IMAP standard)
-                        # If expunge is disabled, message stays flagged but visible in mail clients
-                        # If expunge is enabled, message is permanently removed
+                        # Mark email as deleted (IMAP standard)
+                        # If expunge is disabled, email stays flagged but visible in mail clients
+                        # If expunge is enabled, email is permanently removed
                         conn.uid("STORE", str(uid), "+FLAGS", "(\\Deleted)")
                     except Exception as e:
                         log_error(source, f"Failed to mark UID {uid} as deleted in folder {folder}: {e}")
@@ -237,7 +237,7 @@ def process_imap_account(account):
                 if uid > max_uid:
                     max_uid = uid
             
-            # Expunge deleted messages only if expunge flag is enabled
+            # Expunge deleted emails only if expunge flag is enabled
             if delete_after_processing and expunge_deleted:
                 try:
                     conn.expunge()
@@ -267,24 +267,24 @@ def process_gmail_account(account):
     last_sync_token = get_last_sync_token(account_id, folder)
 
     # Fetch new email IDs
-    email_ids = client.fetch_new_messages(last_sync_token)
+    email_ids = client.fetch_new_emails(last_sync_token)
 
     # Process each email
-    for msg_id in email_ids:
+    for email_id in email_ids:
         try:
             # Get email in raw RFC822 format
-            raw_email = client.get_message_raw(msg_id)
+            raw_email = client.get_message_raw(email_id)
             if raw_email:
                 # Use email_id hash as UID equivalent
-                uid = abs(hash(msg_id)) % (10**9)
+                uid = abs(hash(email_id)) % (10**9)
                 store_email(source, folder, uid, raw_email)
                 
                 # Delete from Gmail (move to trash) if configured
                 if delete_after_processing:
-                    if not client.delete_message(msg_id):
-                        log_error(source, f"Failed to delete Gmail message {msg_id}")
+                    if not client.delete_message(email_id):
+                        log_error(source, f"Failed to delete Gmail email {email_id}")
         except Exception as e:
-            log_error(source, f"Failed to fetch Gmail email {msg_id}: {e}")
+            log_error(source, f"Failed to fetch Gmail email {email_id}: {e}")
 
     # Update sync token for next run
     new_sync_token = client.get_sync_token()
@@ -311,24 +311,24 @@ def process_o365_account(account):
     last_delta_link = get_last_sync_token(account_id, folder)
 
     # Fetch new email IDs
-    email_ids = client.fetch_new_messages(last_delta_link)
+    email_ids = client.fetch_new_emails(last_delta_link)
 
     # Process each email
-    for msg_id in email_ids:
+    for email_id in email_ids:
         try:
             # Get email in MIME format
-            raw_email = client.get_message_mime(msg_id)
+            raw_email = client.get_message_mime(email_id)
             if raw_email:
                 # Use email_id hash as UID equivalent
-                uid = abs(hash(msg_id)) % (10**9)
+                uid = abs(hash(email_id)) % (10**9)
                 store_email(source, folder, uid, raw_email)
                 
                 # Delete from Office 365 if configured
                 if delete_after_processing:
-                    if not client.delete_message(msg_id):
-                        log_error(source, f"Failed to delete Office 365 message {msg_id}")
+                    if not client.delete_message(email_id):
+                        log_error(source, f"Failed to delete Office 365 email {email_id}")
         except Exception as e:
-            log_error(source, f"Failed to fetch O365 email {msg_id}: {e}")
+            log_error(source, f"Failed to fetch O365 email {email_id}: {e}")
 
     # Update delta link for next run
     new_delta_link = client.get_delta_link()
@@ -458,7 +458,7 @@ def get_settings():
     rows = query("SELECT key, value FROM settings").mappings().all()
     return {r["key"]: r["value"] for r in rows}
 
-def purge_old_messages():
+def purge_old_emails():
     settings = get_settings()
     enable_purge = settings.get("enable_purge", "false").lower() == "true"
     if not enable_purge:

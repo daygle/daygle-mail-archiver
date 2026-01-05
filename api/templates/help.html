@@ -17,7 +17,7 @@
             <li style="margin-bottom: 12px;"><strong>Set up a Fetch Account:</strong> Go to Settings → Fetch Accounts and add a new email account (IMAP, Gmail, or Office 365)</li>
             <li style="margin-bottom: 12px;"><strong>Enable the account:</strong> Make sure the "Enabled" checkbox is checked</li>
             <li style="margin-bottom: 12px;"><strong>Start the worker:</strong> The worker will automatically fetch emails based on the poll interval</li>
-            <li style="margin-bottom: 0;"><strong>View your emails:</strong> Navigate to the Emails page to browse and search archived messages</li>
+            <li style="margin-bottom: 0;"><strong>View your emails:</strong> Navigate to the Emails page to browse and search archived emails</li>
         </ol>
     </div>
 </div>
@@ -91,7 +91,7 @@
         </div>
     </div>
     <div class="card-body">
-        <p style="margin-bottom: 16px;"><strong>Viewing Emails:</strong> Navigate to the Emails page to see all archived messages. You can search, filter by folder, view full content, and download raw .eml files.</p>
+        <p style="margin-bottom: 16px;"><strong>Viewing Emails:</strong> Navigate to the Emails page to see all archived emails. You can search, filter by folder, view full content, and download raw .eml files.</p>
         <p style="margin-bottom: 16px;"><strong>Deleting Emails:</strong> Click the delete button next to an email for individual deletion, or use "Delete All" with filters for bulk operations.</p>
         <div class="alert alert-warning" style="margin-bottom: 0;">
             <i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> Deletions are permanent and cannot be undone!
@@ -155,7 +155,7 @@
     <div class="card-body">
         <p style="margin-bottom: 16px;"><strong>Connection Issues:</strong> Use the Test button on fetch accounts, check firewall settings, verify SSL/TLS settings, and use app-specific passwords for Gmail with 2FA.</p>
         <p style="margin-bottom: 16px;"><strong>OAuth Authorization Failed:</strong> Verify Client ID and Secret, ensure redirect URI is properly configured, check API permissions, and try re-authorizing.</p>
-        <p style="margin-bottom: 16px;"><strong>No Emails Being Fetched:</strong> Check that the account is Enabled, verify the worker is running, and review error messages in the logs.</p>
+        <p style="margin-bottom: 16px;"><strong>No Emails Being Fetched:</strong> Check that the account is Enabled, verify the worker is running, and review error emails in the logs.</p>
         <p style="margin-bottom: 0;"><strong>Performance Issues:</strong> Reduce poll interval, enable "Delete after processing" option, or implement retention policies to limit database size.</p>
     </div>
 </div>
@@ -176,7 +176,7 @@
             <li style="margin-bottom: 8px;"><strong>Office 365:</strong> Moves to Deleted Items (recoverable until emptied)</li>
         </ul>
         <div class="alert alert-danger" style="margin-bottom: 0;">
-            <i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> The "Permanently Expunge Deleted" option for IMAP accounts irreversibly removes messages from the server. Use with extreme caution!
+            <i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> The "Permanently Expunge Deleted" option for IMAP accounts irreversibly removes emails from the server. Use with extreme caution!
         </div>
     </div>
 </div>

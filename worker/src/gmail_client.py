@@ -34,10 +34,10 @@ class GmailClient:
         response.raise_for_status()
         return response.json()
     
-    def get_message(self, message_id: str) -> Dict:
+    def get_message(self, email_id: str) -> Dict:
         """Get full message details including raw content"""
         response = requests.get(
-            f"{self.base_url}/messages/{message_id}",
+            f"{self.base_url}/messages/{email_id}",
             headers=self.headers,
             params={"format": "raw"},
             timeout=30
@@ -45,14 +45,14 @@ class GmailClient:
         response.raise_for_status()
         return response.json()
     
-    def get_message_raw(self, message_id: str) -> bytes:
+    def get_message_raw(self, email_id: str) -> bytes:
         """Get message in RFC822 format"""
-        message_data = self.get_message(message_id)
+        email_data = self.get_message(email_id)
         
         # Gmail returns base64url encoded raw message
-        if "raw" in message_data:
+        if "raw" in email_data:
             # Decode base64url to bytes
-            raw_data = message_data["raw"]
+            raw_data = email_data["raw"]
             # Add padding if needed
             padding = 4 - len(raw_data) % 4
             if padding != 4:
@@ -92,12 +92,12 @@ class GmailClient:
         except:
             return []
     
-    def fetch_new_messages(self, last_sync_token: Optional[str] = None) -> List[str]:
+    def fetch_new_emails(self, last_sync_token: Optional[str] = None) -> List[str]:
         """
-        Fetch new message IDs since last sync.
-        Returns list of message IDs to process.
+        Fetch new email IDs since last sync.
+        Returns list of email IDs to process.
         """
-        message_ids = []
+        email_ids = []
         
         if last_sync_token:
             # Use history API for incremental sync
@@ -105,27 +105,27 @@ class GmailClient:
             for h in history:
                 if "messagesAdded" in h:
                     for msg in h["messagesAdded"]:
-                        message_ids.append(msg["message"]["id"])
+                        email_ids.append(msg["message"]["id"])
         else:
-            # Full sync - get all messages
+            # Full sync - get all emails
             page_token = None
             while True:
                 result = self.list_messages(page_token=page_token)
                 if "messages" in result:
                     for msg in result["messages"]:
-                        message_ids.append(msg["id"])
+                        email_ids.append(msg["id"])
                 
                 page_token = result.get("nextPageToken")
                 if not page_token:
                     break
         
-        return message_ids
+        return email_ids
     
-    def delete_message(self, message_id: str) -> bool:
+    def delete_message(self, email_id: str) -> bool:
         """Delete a message by moving it to trash"""
         try:
             response = requests.post(
-                f"{self.base_url}/messages/{message_id}/trash",
+                f"{self.base_url}/messages/{email_id}/trash",
                 headers=self.headers,
                 timeout=30
             )

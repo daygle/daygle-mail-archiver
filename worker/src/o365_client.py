@@ -38,10 +38,10 @@ class O365Client:
         response.raise_for_status()
         return response.json()
     
-    def get_message_mime(self, message_id: str) -> bytes:
+    def get_message_mime(self, email_id: str) -> bytes:
         """Get message in MIME/RFC822 format"""
         response = requests.get(
-            f"{self.base_url}/messages/{message_id}/$value",
+            f"{self.base_url}/messages/{email_id}/$value",
             headers=self.headers,
             timeout=30
         )
@@ -77,12 +77,12 @@ class O365Client:
         except:
             return []
     
-    def fetch_new_messages(self, last_delta_link: Optional[str] = None) -> List[str]:
+    def fetch_new_emails(self, last_delta_link: Optional[str] = None) -> List[str]:
         """
-        Fetch new message IDs since last sync.
-        Returns list of message IDs to process.
+        Fetch new email IDs using delta query.
+        Returns list of email IDs to process.
         """
-        message_ids = []
+        email_ids = []
         
         if last_delta_link:
             # Use delta sync for incremental fetch
@@ -90,16 +90,16 @@ class O365Client:
             for msg in messages:
                 # Delta may include deletions, check if message exists
                 if "id" in msg and "@removed" not in msg:
-                    message_ids.append(msg["id"])
+                    email_ids.append(msg["id"])
         else:
-            # Full sync - get all messages
+            # Full sync - get all emails
             skip = 0
             top = 100
             while True:
                 result = self.list_messages(skip=skip, top=top)
                 if "value" in result:
                     for msg in result["value"]:
-                        message_ids.append(msg["id"])
+                        email_ids.append(msg["id"])
                     
                     # Check if there are more messages
                     if len(result["value"]) < top:
@@ -108,7 +108,7 @@ class O365Client:
                 else:
                     break
         
-        return message_ids
+        return email_ids
     
     def get_user_email(self) -> Optional[str]:
         """Get the user's email address"""
@@ -125,11 +125,11 @@ class O365Client:
         except:
             return None
     
-    def delete_message(self, message_id: str) -> bool:
+    def delete_message(self, email_id: str) -> bool:
         """Delete a message"""
         try:
             response = requests.delete(
-                f"{self.base_url}/messages/{message_id}",
+                f"{self.base_url}/messages/{email_id}",
                 headers=self.headers,
                 timeout=30
             )
