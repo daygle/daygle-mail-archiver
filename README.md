@@ -378,6 +378,14 @@ Protect your email archive with built-in database backup and restore functionali
 - Maximum backup time: 60 seconds (for large databases, consider manual pg_dump)
 - Backup files are plain-text SQL format
 
+**⚠️ Important: Backup Your Encryption Keys**
+
+The database backup does NOT include the encryption keys from your `.env` file. You must also backup:
+- `IMAP_PASSWORD_KEY` - Required to decrypt IMAP account passwords
+- `SESSION_SECRET` - Required for session cookies
+
+Without these keys, you won't be able to decrypt passwords in a restored database. Store these keys securely alongside your database backup.
+
 ## Restoring from Backup
 
 1. Navigate to **Settings → Backup/Restore**
@@ -387,6 +395,7 @@ Protect your email archive with built-in database backup and restore functionali
 
 **Important Warnings:**
 - Restore will overwrite all existing data in the database
+- **You must use the same `.env` keys** (`IMAP_PASSWORD_KEY` and `SESSION_SECRET`) as when the backup was created, otherwise encrypted passwords cannot be decrypted
 - Maximum file size: 10MB (for larger restores, use manual psql)
 - Maximum restore time: 120 seconds
 - Always test restores on a non-production system first
