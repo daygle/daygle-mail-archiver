@@ -609,8 +609,10 @@ const DashboardManager = {
             }
         });
 
-        // Load data for all widgets
-        this.loadAllData();
+        // Wait for widgets to be added to DOM before loading data
+        setTimeout(() => {
+            this.loadAllData();
+        }, 100);
     },
 
     addWidget(config) {
@@ -907,10 +909,15 @@ const DashboardManager = {
             const response = await fetch('/api/dashboard/stats');
             const data = await response.json();
             
-            document.getElementById('mini-stat-total-emails').textContent = data.total_emails.toLocaleString();
-            document.getElementById('mini-stat-emails-today').textContent = data.emails_today.toLocaleString();
-            document.getElementById('mini-stat-total-accounts').textContent = data.total_accounts.toLocaleString();
-            document.getElementById('mini-stat-database-size').textContent = data.database_size;
+            const totalEmailsEl = document.getElementById('mini-stat-total-emails');
+            const emailsTodayEl = document.getElementById('mini-stat-emails-today');
+            const totalAccountsEl = document.getElementById('mini-stat-total-accounts');
+            const databaseSizeEl = document.getElementById('mini-stat-database-size');
+            
+            if (totalEmailsEl) totalEmailsEl.textContent = data.total_emails.toLocaleString();
+            if (emailsTodayEl) emailsTodayEl.textContent = data.emails_today.toLocaleString();
+            if (totalAccountsEl) totalAccountsEl.textContent = data.total_accounts.toLocaleString();
+            if (databaseSizeEl) databaseSizeEl.textContent = data.database_size;
         } catch (error) {
             console.error('Error loading stats:', error);
         }
