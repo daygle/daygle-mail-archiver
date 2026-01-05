@@ -99,14 +99,16 @@ backup() {
     
     # Dump PostgreSQL database
     cd "$ROOT_DIR"
-    $DOCKER_COMPOSE exec -T db pg_dump -U "$DB_USER" -d "$DB_NAME" > "$TEMP_BACKUP_DIR/database.sql"
-    
-    if [ $? -eq 0 ]; then
-        log_success "Database backup created"
-    else
-        log_error "Database backup failed"
+    if ! $DOCKER_COMPOSE exec -T db pg_dump -U "$DB_USER" -d "$DB_NAME" > "$TEMP_BACKUP_DIR/database.sql" 2>&1; then
+        log_error "Database backup failed. Common issues:"
+        log_error "  - Incorrect database credentials in .env file"
+        log_error "  - Database container not running or not healthy"
+        log_error "  - Insufficient database permissions for user '$DB_USER'"
+        log_error "  - Database '$DB_NAME' does not exist"
         exit 1
     fi
+    
+    log_success "Database backup created"
     
     # Copy .env file
     log_info "Backing up environment configuration..."
@@ -234,33 +236,39 @@ restore() {
     cd "$ROOT_DIR"
     
     # Drop existing database connections and recreate
-    # Use printf to properly escape the database name and avoid SQL injection
-    $DOCKER_COMPOSE exec -T db psql -U "$DB_USER" -d postgres -v db_name="$DB_NAME" <<'EOF'
+    # Use psql with properly quoted identifiers to prevent SQL injection
+    log_info "Terminating existing database connections..."
+    if ! $DOCKER_COMPOSE exec -T db psql -U "$DB_USER" -d postgres -v db_name="$DB_NAME" <<'EOF'
 SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = :'db_name' AND pid <> pg_backend_pid();
 EOF
+    then
+        log_warning "Could not terminate all database connections (this may be normal)"
+    fi
     
-    # Drop and recreate database using psql commands with proper escaping
-    $DOCKER_COMPOSE exec -T db psql -U "$DB_USER" -d postgres -c "DROP DATABASE IF EXISTS \"$DB_NAME\""
-    
-    if [ $? -ne 0 ]; then
-        log_error "Failed to drop existing database"
+    # Drop and recreate database using identifier quoting
+    log_info "Dropping existing database..."
+    if ! $DOCKER_COMPOSE exec -T db psql -U "$DB_USER" -d postgres -c "DROP DATABASE IF EXISTS \"$DB_NAME\""; then
+        log_error "Failed to drop existing database. Check database permissions."
         exit 1
     fi
     
-    $DOCKER_COMPOSE exec -T db psql -U "$DB_USER" -d postgres -c "CREATE DATABASE \"$DB_NAME\" OWNER \"$DB_USER\""
-    
-    if [ $? -ne 0 ]; then
-        log_error "Failed to create database"
+    log_info "Creating new database..."
+    if ! $DOCKER_COMPOSE exec -T db psql -U "$DB_USER" -d postgres -c "CREATE DATABASE \"$DB_NAME\" OWNER \"$DB_USER\""; then
+        log_error "Failed to create database. Check database permissions and that the user exists."
         exit 1
     fi
     
     # Restore database dump
-    $DOCKER_COMPOSE exec -T db psql -U "$DB_USER" -d "$DB_NAME" < "$TEMP_RESTORE_DIR/database.sql"
-    
-    if [ $? -eq 0 ]; then
+    log_info "Restoring database from backup file..."
+    if $DOCKER_COMPOSE exec -T db psql -U "$DB_USER" -d "$DB_NAME" < "$TEMP_RESTORE_DIR/database.sql" 2>&1 | tee /tmp/restore_output.log; then
         log_success "Database restored successfully"
+        rm -f /tmp/restore_output.log
     else
-        log_error "Database restore failed"
+        log_error "Database restore failed. Common issues:"
+        log_error "  - Incompatible schema versions between backup and current version"
+        log_error "  - Constraint violations or data integrity issues"
+        log_error "  - Insufficient database permissions"
+        log_error "Check the output above for specific error messages"
         exit 1
     fi
     
@@ -286,7 +294,14 @@ list_backups() {
     for backup in "$BACKUP_DIR"/daygle_backup_*.tar.gz; do
         if [ -f "$backup" ]; then
             size=$(du -h "$backup" | cut -f1)
-            date=$(stat -c %y "$backup" 2>/dev/null || stat -f %Sm "$backup" 2>/dev/null)
+            # Use ls for cross-platform date formatting
+            if command -v stat &> /dev/null; then
+                # Try Linux format first, then macOS format
+                date=$(stat -c %y "$backup" 2>/dev/null || stat -f "%Sm" -t "%Y-%m-%d %H:%M:%S" "$backup" 2>/dev/null || ls -l "$backup" | awk '{print $6, $7, $8}')
+            else
+                # Fallback to ls if stat is not available
+                date=$(ls -l "$backup" | awk '{print $6, $7, $8}')
+            fi
             echo -e "${GREEN}$(basename "$backup")${NC}"
             echo "  Size: $size"
             echo "  Created: $date"
