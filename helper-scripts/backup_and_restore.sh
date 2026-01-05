@@ -99,12 +99,22 @@ backup() {
     
     # Dump PostgreSQL database
     cd "$ROOT_DIR"
-    if ! $DOCKER_COMPOSE exec -T db pg_dump -U "$DB_USER" -d "$DB_NAME" > "$TEMP_BACKUP_DIR/database.sql" 2>&1; then
-        log_error "Database backup failed. Common issues:"
+    # Capture stderr separately to allow both proper error handling and error messages
+    if ! backup_output=$($DOCKER_COMPOSE exec -T db pg_dump -U "$DB_USER" -d "$DB_NAME" 2>&1 > "$TEMP_BACKUP_DIR/database.sql"); then
+        log_error "Database backup failed. Error output:"
+        echo "$backup_output" >&2
+        log_error ""
+        log_error "Common issues:"
         log_error "  - Incorrect database credentials in .env file"
         log_error "  - Database container not running or not healthy"
         log_error "  - Insufficient database permissions for user '$DB_USER'"
         log_error "  - Database '$DB_NAME' does not exist"
+        exit 1
+    fi
+    
+    # Check if backup file was created and has content
+    if [ ! -s "$TEMP_BACKUP_DIR/database.sql" ]; then
+        log_error "Database backup file is empty or was not created"
         exit 1
     fi
     
@@ -260,15 +270,23 @@ EOF
     
     # Restore database dump
     log_info "Restoring database from backup file..."
-    if $DOCKER_COMPOSE exec -T db psql -U "$DB_USER" -d "$DB_NAME" < "$TEMP_RESTORE_DIR/database.sql" 2>&1 | tee /tmp/restore_output.log; then
+    # Use PIPESTATUS to check the exit code of psql, not tee
+    set +e  # Temporarily disable exit on error to handle pipefail properly
+    restore_output=$(mktemp)
+    $DOCKER_COMPOSE exec -T db psql -U "$DB_USER" -d "$DB_NAME" < "$TEMP_RESTORE_DIR/database.sql" 2>&1 | tee "$restore_output"
+    restore_exit_code=${PIPESTATUS[0]}
+    set -e  # Re-enable exit on error
+    
+    if [ $restore_exit_code -eq 0 ]; then
         log_success "Database restored successfully"
-        rm -f /tmp/restore_output.log
+        rm -f "$restore_output"
     else
         log_error "Database restore failed. Common issues:"
         log_error "  - Incompatible schema versions between backup and current version"
         log_error "  - Constraint violations or data integrity issues"
         log_error "  - Insufficient database permissions"
         log_error "Check the output above for specific error messages"
+        rm -f "$restore_output"
         exit 1
     fi
     
