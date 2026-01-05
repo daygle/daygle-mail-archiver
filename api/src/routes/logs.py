@@ -12,13 +12,27 @@ def require_login(request: Request):
     return "user_id" in request.session
 
 @router.get("/logs")
-def logs(request: Request, level: str = "all", page: int = 1, page_size: int = 100):
+def logs(request: Request, level: str = "all", page: int = 1):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
     
     # Validate log level
     if level not in ALLOWED_LOG_LEVELS:
         level = "all"
+    
+    # Get page_size from user settings, fallback to global settings
+    user_id = request.session.get("user_id")
+    page_size = 50  # Default
+    
+    if user_id:
+        user_result = query("SELECT page_size FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+        if user_result and user_result["page_size"]:
+            page_size = user_result["page_size"]
+    
+    if not user_id or not page_size:
+        global_result = query("SELECT value FROM settings WHERE key = 'page_size'").mappings().first()
+        if global_result:
+            page_size = int(global_result["value"])
     
     # Validate pagination parameters
     page = max(1, page)

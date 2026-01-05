@@ -101,5 +101,32 @@
             </table>
         </div>
     </div>
+    
+    <!-- Pagination -->
+    {% if page > 1 or page < total_pages %}
+    <div class="card-footer">
+        <div class="flex items-center justify-between">
+            <div>
+                {% if page > 1 %}
+                <a href="/fetch_accounts?page={{ page - 1 }}" class="btn btn-secondary">
+                    <i class="fas fa-chevron-left"></i>
+                    <span>Previous</span>
+                </a>
+                {% endif %}
+            </div>
+            
+            <span class="text-secondary">Page {{ page }} of {{ total_pages }}</span>
+            
+            <div>
+                {% if page < total_pages %}
+                <a href="/fetch_accounts?page={{ page + 1 }}" class="btn btn-secondary">
+                    <span>Next</span>
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

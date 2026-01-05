@@ -110,6 +110,7 @@ CREATE TABLE IF NOT EXISTS users (
     last_name TEXT,
     email TEXT,
     role TEXT NOT NULL DEFAULT 'administrator',
+    page_size INTEGER NOT NULL DEFAULT 50,
     date_format TEXT NOT NULL DEFAULT '%d/%m/%Y',
     time_format TEXT NOT NULL DEFAULT '%H:%M',
     timezone TEXT NOT NULL DEFAULT 'Australia/Melbourne',

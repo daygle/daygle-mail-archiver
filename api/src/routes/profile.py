@@ -136,7 +136,8 @@ def user_settings_form(request: Request):
         return RedirectResponse("/login", status_code=303)
 
     user_id = request.session["user_id"]
-    user = query("SELECT date_format, time_format, timezone FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+    user = query("SELECT page_size, date_format, time_format, timezone FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+    current_page_size = user["page_size"] if user else 50
     current_date_format = user["date_format"] if user else "%d/%m/%Y"
     current_time_format = user["time_format"] if user else "%H:%M"
     current_timezone = user["timezone"] if user and user["timezone"] else "Australia/Melbourne"
@@ -144,30 +145,37 @@ def user_settings_form(request: Request):
     msg = request.session.pop("flash", None)
     return templates.TemplateResponse("user_settings.html", {
         "request": request, 
-        "flash": msg, 
+        "flash": msg,
+        "page_size": current_page_size,
         "date_format": current_date_format,
         "time_format": current_time_format,
         "timezone": current_timezone
     })
 
 @router.post("/user_settings/update")
-def update_user_settings(request: Request, date_format: str = Form(...), time_format: str = Form(...), timezone: str = Form("Australia/Melbourne")):
+def update_user_settings(request: Request, page_size: int = Form(...), date_format: str = Form(...), time_format: str = Form(...), timezone: str = Form("Australia/Melbourne")):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
     user_id = request.session["user_id"]
     username = request.session.get("username", "unknown")
     
+    # Validate page_size
+    if page_size < 10 or page_size > 500:
+        flash(request, "Items per page must be between 10 and 500.")
+        return RedirectResponse("/user_settings", status_code=303)
+    
     try:
-        execute("UPDATE users SET date_format = :df, time_format = :tf, timezone = :tz WHERE id = :id", 
-                {"df": date_format, "tf": time_format, "tz": timezone, "id": user_id})
+        execute("UPDATE users SET page_size = :ps, date_format = :df, time_format = :tf, timezone = :tz WHERE id = :id", 
+                {"ps": page_size, "df": date_format, "tf": time_format, "tz": timezone, "id": user_id})
         
         # Update session variables
+        request.session["page_size"] = page_size
         request.session["date_format"] = date_format
         request.session["time_format"] = time_format
         request.session["timezone"] = timezone
         
-        log("info", "Settings", f"User '{username}' updated their settings (date_format={date_format}, time_format={time_format}, timezone={timezone})", "")
+        log("info", "Settings", f"User '{username}' updated their settings (page_size={page_size}, date_format={date_format}, time_format={time_format}, timezone={timezone})", "")
         flash(request, "User settings updated successfully.")
         return RedirectResponse("/user_settings", status_code=303)
     except Exception as e:

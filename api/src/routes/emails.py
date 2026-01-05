@@ -25,7 +25,6 @@ def flash(request: Request, message: str):
 def list_emails(
     request: Request,
     page: int = 1,
-    page_size: int = 50,
     q: str | None = None,
     account: str | None = None,
     folder: str | None = None,
@@ -33,6 +32,21 @@ def list_emails(
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
+    # Get page_size from user settings, fallback to global settings
+    user_id = request.session.get("user_id")
+    page_size = 50  # Default
+    
+    if user_id:
+        user_result = query("SELECT page_size FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+        if user_result and user_result["page_size"]:
+            page_size = user_result["page_size"]
+    
+    if not user_id or not page_size:
+        global_result = query("SELECT value FROM settings WHERE key = 'page_size'").mappings().first()
+        if global_result:
+            page_size = int(global_result["value"])
+
+    page_size = min(max(10, page_size), 500)  # Ensure between 10-500
     offset = (page - 1) * page_size
 
     where = []

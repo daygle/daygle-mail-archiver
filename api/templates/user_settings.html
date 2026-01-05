@@ -4,18 +4,24 @@
 
 {% block content %}
 <form method="post" action="/user_settings/update">
-    <!-- Date & Time Settings Card -->
+    <!-- Display & Formatting Card -->
     <div class="card">
         <div class="card-header">
             <div class="card-title">
-                <i class="fas fa-calendar"></i>
-                <span>Date & Time Settings</span>
+                <i class="fas fa-cog"></i>
+                <span>Display & Formatting Settings</span>
             </div>
         </div>
         <div class="card-body">
-            <p class="section-description">Configure how dates and times are displayed throughout the application</p>
+            <p class="section-description">Configure how content is displayed throughout the application</p>
             
             <div class="form-group">
+                <label for="page_size" class="form-label">Items Per Page</label>
+                <input id="page_size" class="form-control" name="page_size" type="number" value="{{ page_size or '50' }}" min="10" max="500">
+                <small class="form-text">Number of emails to display per page in lists</small>
+            </div>
+
+            <div class="form-group mt-3">
                 <label for="date_format" class="form-label">Date Format</label>
                 <select id="date_format" class="form-select" name="date_format">
                     <option value="%d/%m/%Y" {% if date_format == '%d/%m/%Y' or not date_format %}selected{% endif %}>15/01/2024</option>

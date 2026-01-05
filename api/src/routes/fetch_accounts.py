@@ -22,10 +22,34 @@ def flash(request: Request, message: str):
 
 
 @router.get("/fetch_accounts")
-def list_accounts(request: Request):
+def list_accounts(request: Request, page: int = 1):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
+    # Get page_size from user settings, fallback to global settings
+    user_id = request.session.get("user_id")
+    page_size = 50  # Default
+    
+    if user_id:
+        user_result = query("SELECT page_size FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+        if user_result and user_result["page_size"]:
+            page_size = user_result["page_size"]
+    
+    if not user_id or not page_size:
+        global_result = query("SELECT value FROM settings WHERE key = 'page_size'").mappings().first()
+        if global_result:
+            page_size = int(global_result["value"])
+    
+    page_size = min(max(10, page_size), 500)  # Ensure between 10-500
+    page = max(1, page)
+    offset = (page - 1) * page_size
+
+    # Get total count
+    total_result = query("SELECT COUNT(*) as total FROM fetch_accounts").mappings().first()
+    total = total_result["total"] if total_result else 0
+    total_pages = (total + page_size - 1) // page_size
+
+    # Get paginated accounts
     accounts = query(
         """
         SELECT id, name, account_type, host, port, username, use_ssl, require_starttls,
@@ -33,7 +57,9 @@ def list_accounts(request: Request):
                last_heartbeat, last_success, last_error
         FROM fetch_accounts
         ORDER BY id
-        """
+        LIMIT :limit OFFSET :offset
+        """,
+        {"limit": page_size, "offset": offset}
     ).mappings().all()
 
     msg = request.session.pop("flash", None)
@@ -43,6 +69,10 @@ def list_accounts(request: Request):
         {
             "request": request,
             "accounts": accounts,
+            "page": page,
+            "page_size": page_size,
+            "total": total,
+            "total_pages": total_pages,
             "flash": msg,
         },
     )
