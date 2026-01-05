@@ -27,42 +27,38 @@
         opacity: 0;
     }
 }
-/* Make statistics boxes compact and responsive */
+/* Make statistics boxes compact and properly responsive */
 .stats-grid-mini {
     display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
-    gap: 8px !important;
-    width: 100% !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.5rem !important;
 }
 .stat-mini {
-    padding: 10px 12px !important;
-    min-height: unset !important;
     display: flex !important;
     align-items: center !important;
-    gap: 10px !important;
+    gap: 0.75rem !important;
+    padding: 0.75rem !important;
 }
-.stat-icon {
-    font-size: 1.25rem !important;
-    width: 36px !important;
-    height: 36px !important;
-    min-width: 36px !important;
+.stat-mini .stat-icon {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    flex-shrink: 0 !important;
+    font-size: 1rem !important;
 }
-.stat-content {
+.stat-mini .stat-content {
     flex: 1 !important;
     min-width: 0 !important;
 }
-.stat-label {
-    font-size: 0.7rem !important;
-    margin-bottom: 2px !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+.stat-mini .stat-label {
+    font-size: 0.65rem !important;
+    margin-bottom: 0.125rem !important;
 }
-.stat-value {
-    font-size: 1.1rem !important;
+.stat-mini .stat-value {
+    font-size: 1rem !important;
     font-weight: 600 !important;
     line-height: 1.2 !important;
 }
@@ -384,7 +380,7 @@ const DashboardManager = {
             this.grid = GridStack.init({
                 column: 12,
                 cellHeight: 80,
-                margin: 25,
+                margin: 30,
                 float: false,
                 disableOneColumnMode: true,
                 animate: true,
