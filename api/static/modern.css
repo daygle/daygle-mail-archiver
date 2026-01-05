@@ -1555,8 +1555,8 @@ a:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 0;
-    margin-bottom: 1.5rem;
+    padding: 0;
+    margin-bottom: 1rem;
 }
 
 .toolbar-left h2 {
