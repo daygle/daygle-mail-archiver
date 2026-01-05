@@ -27,6 +27,26 @@
         opacity: 0;
     }
 }
+/* Make statistics boxes more compact */
+.stats-grid-mini {
+    gap: 10px !important;
+}
+.stat-mini {
+    padding: 12px !important;
+    min-height: unset !important;
+}
+.stat-icon {
+    font-size: 1.5rem !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+}
+.stat-label {
+    font-size: 0.75rem !important;
+}
+.stat-value {
+    font-size: 1.25rem !important;
+}
 </style>
 {% endblock %}
 
@@ -345,7 +365,7 @@ const DashboardManager = {
             this.grid = GridStack.init({
                 column: 12,
                 cellHeight: 80,
-                margin: 15,
+                margin: 20,
                 float: false,
                 disableOneColumnMode: true,
                 animate: true,
