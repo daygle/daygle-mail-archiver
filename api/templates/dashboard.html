@@ -4,8 +4,8 @@
 
 {% block extra_css %}
 <!-- GridStack CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@9.3.1/dist/gridstack.min.css" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@9.3.1/dist/gridstack-extra.min.css" />
+<link rel="stylesheet" href="https://unpkg.com/gridstack@9.3.1/dist/gridstack.min.css" />
+<link rel="stylesheet" href="https://unpkg.com/gridstack@9.3.1/dist/gridstack-extra.min.css" />
 {% endblock %}
 
 {% block content %}
@@ -278,33 +278,35 @@
 </div>
 
 <!-- GridStack JS -->
-<script src="https://cdn.jsdelivr.net/npm/gridstack@9.3.1/dist/gridstack-all.js" onerror="loadGridStackFallback()"></script>
 <script>
+console.log('Loading GridStack from CDN...');
 function loadGridStackFallback() {
-    console.warn('Primary GridStack CDN failed, trying fallback...');
+    console.warn('Primary GridStack CDN failed, trying cdnjs fallback...');
     const script = document.createElement('script');
-    script.src = 'https://unpkg.com/gridstack@9.3.1/dist/gridstack-all.js';
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/gridstack.js/9.3.1/gridstack-all.js';
+    script.onload = () => console.log('GridStack loaded from fallback CDN');
     script.onerror = function() {
         console.error('GridStack fallback CDN also failed');
-        alert('Unable to load GridStack library from CDN. Please check your internet connection or firewall settings.');
+        alert('Unable to load GridStack library. Please check your internet connection.');
     };
     document.head.appendChild(script);
 }
 </script>
+<script src="https://unpkg.com/gridstack@9.3.1/dist/gridstack-all.js" 
+        onload="console.log('GridStack loaded successfully');" 
+        onerror="loadGridStackFallback()"></script>
 
 <!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" onerror="loadChartFallback()"></script>
 <script>
 function loadChartFallback() {
     console.warn('Primary Chart.js CDN failed, trying fallback...');
     const script = document.createElement('script');
-    script.src = 'https://unpkg.com/chart.js@4.4.1/dist/chart.umd.min.js';
-    script.onerror = function() {
-        console.error('Chart.js fallback CDN also failed');
-    };
+    script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';
+    script.onerror = () => console.error('Chart.js fallback CDN also failed');
     document.head.appendChild(script);
 }
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" onerror="loadChartFallback()"></script>
 
 <script>
 // Dashboard Widget Manager
@@ -950,16 +952,27 @@ const DashboardManager = {
 };
 
 // Initialize dashboard when DOM is ready
+let initAttempts = 0;
+const maxAttempts = 50; // 5 seconds max
+
 function initDashboard() {
+    initAttempts++;
     if (typeof GridStack === 'undefined') {
-        console.log('GridStack not loaded yet, waiting...');
+        console.log(`GridStack not loaded yet, waiting... (attempt ${initAttempts}/${maxAttempts})`);
+        if (initAttempts >= maxAttempts) {
+            console.error('GridStack failed to load after 5 seconds');
+            alert('Dashboard initialization timeout. GridStack library did not load. Please check:\n\n1. Network tab in Developer Tools (F12)\n2. Your internet connection\n3. Firewall/antivirus blocking CDNs');
+            return;
+        }
         setTimeout(initDashboard, 100);
         return;
     }
+    console.log('GridStack detected, initializing dashboard...');
     DashboardManager.init();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded, checking for GridStack...');
     initDashboard();
 });
 </script>
