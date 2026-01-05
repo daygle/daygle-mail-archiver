@@ -30,14 +30,16 @@
 /* Make statistics boxes compact and properly responsive */
 .stats-grid-mini {
     display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: repeat(4, 1fr) !important;
     gap: 0.5rem !important;
 }
 .stat-mini {
     display: flex !important;
+    flex-direction: column !important;
     align-items: center !important;
-    gap: 0.75rem !important;
-    padding: 0.75rem !important;
+    text-align: center !important;
+    gap: 0.5rem !important;
+    padding: 0.75rem 0.5rem !important;
 }
 .stat-mini .stat-icon {
     display: flex !important;
@@ -50,17 +52,22 @@
     font-size: 1rem !important;
 }
 .stat-mini .stat-content {
-    flex: 1 !important;
-    min-width: 0 !important;
+    width: 100% !important;
 }
 .stat-mini .stat-label {
     font-size: 0.65rem !important;
     margin-bottom: 0.125rem !important;
+    white-space: nowrap !important;
 }
 .stat-mini .stat-value {
-    font-size: 1rem !important;
+    font-size: 1.1rem !important;
     font-weight: 600 !important;
     line-height: 1.2 !important;
+}
+@media (max-width: 1200px) {
+    .stats-grid-mini {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
 }
 </style>
 {% endblock %}
