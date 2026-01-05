@@ -1,6 +1,6 @@
 # Daygle Mail Archiver
 
-Daygle Mail Archiver is a deterministic, scenario‑proof email ingestion and archiving system designed for long‑term retention, auditability, and operational reliability. It ingests emails from multiple sources (IMAP, Gmail API, Office 365 Graph API), decrypts OpenPGP‑protected content when keys are available, stores messages in a structured database, and exposes a clean UI for browsing, retention policy management, and administrative control.
+Daygle Mail Archiver is a deterministic email ingestion and archiving system designed for long‑term retention, auditability, and operational reliability. It ingests emails from multiple sources (IMAP, Gmail API, Office 365 Graph API), stores messages in a structured database, and exposes a clean UI for browsing, retention policy management, and administrative control.
 
 This project is built with explicit, maintainable configuration, modular backend logic, and a modernized UI — ensuring predictable behaviour across all environments.
 
@@ -23,10 +23,37 @@ This project is built with explicit, maintainable configuration, modular backend
 - **OAuth2 Integration**: Secure authentication for Gmail and Office 365
 - **Worker Status Monitoring**: Real-time health monitoring of fetch workers
 - **Dashboard Analytics**: Visual charts showing email statistics and trends
+- **Customizable Dashboard**: Drag-and-drop widget layout with user preferences
 - **Test Connection**: Test IMAP, Gmail, and Office 365 connections directly from the UI
+- **Database Backup & Restore**: Built-in database backup and restore functionality
 - **Help Documentation**: Built-in help page with comprehensive usage instructions
 - **Donation Support**: Integrated PayPal donation page to support development
 - **Audit Logging**: Complete audit trail of all system actions
+
+---
+
+## 🏗️ Architecture
+
+The Daygle Mail Archiver consists of three main components:
+
+1. **PostgreSQL Database** (`db`): Stores all emails, accounts, users, settings, and logs
+   - Emails stored as compressed RFC822 format in BYTEA columns
+   - Full-text search indexing for fast queries
+   - Automatic schema initialization on first run
+
+2. **FastAPI Web Application** (`api`): Web UI and REST API
+   - FastAPI + Jinja2 templates for the web interface
+   - Session-based authentication with bcrypt password hashing
+   - OAuth2 integration for Gmail and Office 365
+   - Serves on port 8000
+
+3. **Background Worker** (`worker`): Email fetching service
+   - Continuously polls enabled fetch accounts
+   - Supports IMAP, Gmail API, and Office 365 Graph API
+   - Handles retention policy cleanup
+   - Updates heartbeat and health status
+
+All components run in Docker containers orchestrated by Docker Compose.
 
 ---
 
@@ -75,6 +102,18 @@ SESSION_SECRET=8f4c2b9e3d7a4f1c9e8b2d3f7c6a1e4b5d8f0c2a7b9d3e6f1a4c7b8d9e2f3a1
 IMAP_PASSWORD_KEY=8t2y0x8qZp8G7QfVYp4p0Q2u7v8Yx1m4l8e0q2c3s0A=
 ```
 
+**Important:** Change the default values for `DB_PASS`, `SESSION_SECRET`, and `IMAP_PASSWORD_KEY` in production!
+
+To generate a new Fernet key for `IMAP_PASSWORD_KEY`:
+```bash
+python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+```
+
+To generate a new session secret:
+```bash
+python3 -c "import secrets; print(secrets.token_hex(32))"
+```
+
 ---
 
 ## 3. Build and start the system
@@ -85,10 +124,11 @@ docker compose up -d --build
 
 This will:
 
-- Start PostgreSQL  
-- Apply `db/schema.sql`  
-- Start the API on port 8000  
-- Start the worker  
+- Start PostgreSQL container (`daygle-mail-archiver-database`)
+- Apply database schema from `db/schema.sql` automatically
+- Create default administrator user (username: `administrator`, no password set)
+- Start the API container on port 8000 (`daygle-mail-archiver-api`)
+- Start the worker container (`daygle-mail-archiver-worker`)  
 
 ---
 
@@ -322,6 +362,72 @@ The **Dashboard** displays deletion analytics:
 
 ---
 
+# Database Backup & Restore
+
+Protect your email archive with built-in database backup and restore functionality.
+
+## Creating a Backup
+
+1. Navigate to **Settings → Backup/Restore** (from the sidebar menu)
+2. Click **Download Backup**
+3. The system will create a complete PostgreSQL dump and download it as `daygle_backup.sql`
+4. Store this file securely for disaster recovery
+
+**Notes:**
+- Backup includes all emails, accounts, users, settings, and logs
+- Maximum backup time: 60 seconds (for large databases, consider manual pg_dump)
+- Backup files are plain-text SQL format
+
+**⚠️ Important: Backup Your Encryption Keys**
+
+The database backup does NOT include the encryption keys from your `.env` file. You must also backup:
+- `IMAP_PASSWORD_KEY` - Required to decrypt IMAP account passwords
+- `SESSION_SECRET` - Required for session cookies
+
+Without these keys, you won't be able to decrypt passwords in a restored database. Store these keys securely alongside your database backup.
+
+## Restoring from Backup
+
+1. Navigate to **Settings → Backup/Restore**
+2. Click **Choose File** and select your backup `.sql` file
+3. Click **Restore Database**
+4. The system will restore all data from the backup
+
+**Important Warnings:**
+- Restore will overwrite all existing data in the database
+- **You must use the same `.env` keys** (`IMAP_PASSWORD_KEY` and `SESSION_SECRET`) as when the backup was created, otherwise encrypted passwords cannot be decrypted
+- Maximum file size: 10MB (for larger restores, use manual psql)
+- Maximum restore time: 120 seconds
+- Always test restores on a non-production system first
+- You may need to log in again after a restore
+
+---
+
+# Customizing Your Dashboard
+
+The dashboard supports drag-and-drop widget customization to suit your workflow.
+
+## Rearranging Widgets
+
+1. Navigate to **Dashboard** (default page after login)
+2. **Drag** any widget by its title bar to reposition it
+3. **Resize** widgets by dragging the bottom-right corner
+4. Changes are automatically saved to your user preferences
+
+## Available Widgets
+
+- **Email Statistics**: Total emails, database size
+- **Storage Trends**: Email growth over time
+- **Top Senders/Recipients**: Most frequent correspondents
+- **Recent Activity**: Latest system events
+- **Deletion Analytics**: Manual vs retention deletions
+- **Account Health**: Fetch account status
+- **System Status**: Overall system health
+
+Your layout preferences are saved per-user, so each administrator can customize their own view.
+
+---
+
 # Additional Features
 
 - **Dashboard**: View email statistics, charts, and account status (default page after login)
@@ -368,10 +474,66 @@ docker compose exec db psql -U "$DB_USER" -d "$DB_NAME"
 
 # Security Notes
 
-- IMAP passwords encrypted with Fernet  
-- Raw emails stored compressed in PostgreSQL  
-- No filesystem mail storage  
-- Admin login controlled via `.env`  
+The system implements several security measures:
+
+- **Password Encryption**: IMAP account passwords are encrypted using Fernet (symmetric encryption) with a key stored in `IMAP_PASSWORD_KEY`
+- **User Authentication**: User passwords are hashed with bcrypt before storage
+- **Session Security**: Session cookies use a secret key (`SESSION_SECRET`) with 24-hour expiration
+- **OAuth2 Tokens**: Gmail and Office 365 refresh tokens are stored encrypted in the database
+- **Compressed Storage**: Raw emails are stored compressed in PostgreSQL BYTEA columns
+- **No Filesystem Storage**: All email data is stored in the database only, not on the filesystem
+- **Security Headers**: API includes security headers (X-Content-Type-Options, X-Frame-Options, X-XSS-Protection)
+- **Audit Logging**: All system actions are logged with timestamps and user information
+
+**Important Security Recommendations:**
+- Change default `SESSION_SECRET` and `IMAP_PASSWORD_KEY` values in production
+- Use HTTPS in production (set `https_only=True` in session middleware)
+- Regularly backup your database (encrypted backups recommended)
+- Keep PostgreSQL access restricted to Docker network only
+- Review audit logs regularly for suspicious activity  
+
+---
+
+# Troubleshooting
+
+## Worker Not Fetching Emails
+
+1. Check worker logs: `docker compose logs -f worker`
+2. Verify fetch account is enabled in the UI
+3. Check Worker Status page for error messages
+4. For OAuth accounts (Gmail/O365), verify tokens are valid and re-authorize if needed
+5. For IMAP accounts, test connection using the "Test Connection" button
+
+## Cannot Login
+
+1. For first login with `administrator` user, use empty password and set a new one
+2. If you forgot your password, reset it directly in the database:
+   ```bash
+   docker compose exec db psql -U daygle_mail_archiver -d daygle_mail_archiver
+   UPDATE users SET password_hash = '' WHERE username = 'administrator';
+   ```
+3. Then log in with empty password and set a new one
+
+## Database Connection Issues
+
+1. Ensure PostgreSQL container is healthy: `docker compose ps`
+2. Check database logs: `docker compose logs -f db`
+3. Verify `DB_DSN` in `.env` matches your database credentials
+
+## OAuth Authorization Fails
+
+1. Verify redirect URIs in Google Cloud Console or Azure Portal match exactly:
+   - Gmail: `http://your-domain/oauth/gmail/callback/{account_id}`
+   - O365: `http://your-domain/oauth/o365/callback/{account_id}`
+2. Ensure client ID and client secret are correct
+3. Check API logs for detailed error messages: `docker compose logs -f api`
+
+## Emails Not Being Deleted from Mail Server
+
+1. Verify "Delete Email After Processed" is enabled for the fetch account
+2. For IMAP accounts, enable "Expunge Deleted" to permanently remove messages
+3. Check worker logs for deletion errors
+4. Note: OAuth accounts (Gmail/O365) move emails to Trash/Deleted Items, not permanent deletion
 
 ---
 
@@ -385,4 +547,3 @@ MIT (or your preferred license)
 
 Contributions are welcome.  
 Please open issues or merge requests in the GitLab project.
-```

@@ -22,6 +22,17 @@
             </small>
         </div>
         
+        <div class="alert alert-warning">
+            <strong><i class="fas fa-exclamation-triangle"></i> Important: Encryption Keys Not Included</strong><br>
+            <small>
+                The database backup does NOT include encryption keys from your <code>.env</code> file.<br>
+                You must also separately backup these keys:<br>
+                • <code>IMAP_PASSWORD_KEY</code> - Required to decrypt IMAP account passwords<br>
+                • <code>SESSION_SECRET</code> - Required for session cookies<br>
+                Without these keys, encrypted passwords in a restored database cannot be decrypted.
+            </small>
+        </div>
+        
         <div class="form-actions">
             <a href="/global-settings/backup" class="btn btn-primary btn-lg">
                 <i class="fas fa-download"></i> Download Database Backup
@@ -45,6 +56,7 @@
             <strong><i class="fas fa-exclamation-triangle"></i> Warning:</strong><br>
             <small>
                 Restoring from a backup will overwrite all existing data in the database.<br>
+                <strong>You must use the same <code>.env</code> encryption keys</strong> (<code>IMAP_PASSWORD_KEY</code> and <code>SESSION_SECRET</code>) as when the backup was created, otherwise encrypted passwords cannot be decrypted.<br>
                 Make sure you have a current backup before proceeding.<br>
                 This operation cannot be undone.
             </small>
