@@ -1,14 +1,12 @@
 """
 Configuration loader for Daygle Mail Archiver.
 
-This module handles loading configuration from either .conf files (preferred)
-or .env files (for backward compatibility). It uses a centralized approach
-to make configuration management more maintainable.
+This module handles loading configuration from .conf files (INI format).
+Configuration can be overridden by environment variables.
 
-Priority order:
-1. .conf file (INI format) - preferred
-2. .env file (legacy) - for backward compatibility
-3. Environment variables - highest priority override
+Priority order (highest to lowest):
+1. Environment variables - highest priority override
+2. .conf file (INI format) - primary configuration file
 """
 import os
 import configparser
@@ -17,14 +15,14 @@ from typing import Optional
 
 
 class Config:
-    """Configuration manager that supports both .conf and .env formats."""
+    """Configuration manager that loads from .conf file."""
     
     def __init__(self):
         self._config = {}
         self._load_config()
     
     def _load_config(self):
-        """Load configuration from .conf file, .env file, or environment variables."""
+        """Load configuration from .conf file or environment variables."""
         # Check multiple possible locations for config files
         # 1. In /app (when running in Docker)
         # 2. In project root (when running locally for development)
@@ -34,24 +32,16 @@ class Config:
         ]
         
         conf_file = None
-        env_file = None
         
         for root_dir in possible_roots:
             conf_candidate = root_dir / ".conf"
-            env_candidate = root_dir / ".env"
-            
             if conf_candidate.exists():
                 conf_file = conf_candidate
                 break
-            elif env_candidate.exists():
-                env_file = env_candidate
         
-        # Try loading from .conf file first (preferred)
+        # Load from .conf file
         if conf_file and conf_file.exists():
             self._load_from_conf(conf_file)
-        # Fall back to .env file for backward compatibility
-        elif env_file and env_file.exists():
-            self._load_from_env(env_file)
         
         # Environment variables always take precedence
         self._load_from_environment()
@@ -87,32 +77,6 @@ class Config:
         if parser.has_section('security'):
             self._config['SESSION_SECRET'] = parser.get('security', 'session_secret', fallback=None)
             self._config['IMAP_PASSWORD_KEY'] = parser.get('security', 'imap_password_key', fallback=None)
-    
-    def _load_from_env(self, env_file: Path):
-        """Load configuration from .env file for backward compatibility."""
-        with open(env_file, 'r') as f:
-            for line in f:
-                line = line.strip()
-                # Skip comments and empty lines
-                if not line or line.startswith('#'):
-                    continue
-                # Parse KEY=VALUE format
-                if '=' in line:
-                    key, value = line.split('=', 1)
-                    key = key.strip()
-                    value = value.strip()
-                    # Handle variable substitution like ${DB_NAME}
-                    # Add max iterations to prevent infinite loops
-                    max_iterations = 10
-                    iteration = 0
-                    while '${' in value and '}' in value and iteration < max_iterations:
-                        var_start = value.index('${')
-                        var_end = value.index('}', var_start)
-                        var_name = value[var_start+2:var_end]
-                        var_value = self._config.get(var_name, os.getenv(var_name, ''))
-                        value = value[:var_start] + var_value + value[var_end+1:]
-                        iteration += 1
-                    self._config[key] = value
     
     def _load_from_environment(self):
         """Load configuration from environment variables (highest priority)."""

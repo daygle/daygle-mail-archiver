@@ -1,5 +1,4 @@
-# Environment variables and configuration (contains sensitive data)
-.env
+# Configuration file (contains sensitive data)
 .conf
 
 # Python
@@ -35,5 +34,4 @@ Thumbs.db
 # Backups (contains sensitive data)
 backups/
 *.backup_*
-.env.backup_*
 .conf.backup_*

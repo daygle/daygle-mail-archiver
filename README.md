@@ -80,11 +80,7 @@ cd daygle-mail-archiver
 
 ## ⚙️ Configuration
 
-The system supports two configuration formats:
-
-### Option 1: .conf File (Recommended)
-
-The `.conf` file uses INI format for better organization and readability:
+Create your configuration file from the example:
 
 ```bash
 cp .conf.example .conf
@@ -110,39 +106,13 @@ imap_password_key = 8t2y0x8qZp8G7QfVYp4p0Q2u7v8Yx1m4l8e0q2c3s0A=
 - More maintainable and readable
 - Easier to understand configuration structure
 - Standard INI format supported by many tools
-
-### Option 2: .env File (Legacy)
-
-For backward compatibility, `.env` files are still supported:
-
-```bash
-cp .env.example .env
-```
-
-Your `.env` should look like this:
-
-```
-DB_NAME=daygle_mail_archiver
-DB_USER=daygle_mail_archiver
-DB_PASS=change_me
-
-POSTGRES_DB=${DB_NAME}
-POSTGRES_USER=${DB_USER}
-POSTGRES_PASSWORD=${DB_PASS}
-
-DB_DSN=postgresql+psycopg2://${DB_USER}:${DB_PASS}@db:5432/${DB_NAME}
-
-SESSION_SECRET=8f4c2b9e3d7a4f1c9e8b2d3f7c6a1e4b5d8f0c2a7b9d3e6f1a4c7b8d9e2f3a1
-
-IMAP_PASSWORD_KEY=8t2y0x8qZp8G7QfVYp4p0Q2u7v8Yx1m4l8e0q2c3s0A=
-```
+- No variable substitution complexity
 
 ### Configuration Priority
 
 The system loads configuration in the following priority order:
 1. Environment variables (highest priority)
-2. `.conf` file (preferred)
-3. `.env` file (legacy support)
+2. `.conf` file
 
 ### Important Security Notes
 
@@ -153,7 +123,7 @@ To generate a new Fernet key for `imap_password_key`:
 python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 ```
 
-To generate a new session secret (`session_secret` in .conf or `SESSION_SECRET` in .env):
+To generate a new session secret (`session_secret` in .conf):
 ```bash
 python3 -c "import secrets; print(secrets.token_hex(32))"
 ```
@@ -444,11 +414,11 @@ The **Dashboard** displays deletion analytics:
 
 # Database Backup & Restore
 
-Protect your email archive with the built-in command-line backup and restore script that includes both the database AND configuration files (encryption keys).
+Protect your email archive with the built-in command-line backup and restore script that includes both the database AND configuration file (encryption keys).
 
 ## Command-Line Backup & Restore
 
-The `scripts/backup_restore.sh` script provides a complete backup solution that includes both the database AND the configuration files (.conf or .env) with encryption keys in a single process.
+The `scripts/backup_restore.sh` script provides a complete backup solution that includes both the database AND the `.conf` file with encryption keys in a single process.
 
 ### Creating a Backup
 
@@ -459,7 +429,7 @@ cd /opt/daygle-mail-archiver
 
 This creates a timestamped backup file in `./backups/` directory (e.g., `daygle_mail_archiver_backup_20240105_120000.tar.gz`) containing:
 - Complete PostgreSQL database dump
-- Configuration files (.conf and/or .env) with all encryption keys
+- `.conf` file with all encryption keys
 - Backup metadata
 
 **Important:** Store backups securely - they contain sensitive encryption keys and all email data.
@@ -480,7 +450,7 @@ Shows all available backups with size and creation date.
 
 This will:
 1. Extract the backup archive
-2. Restore the configuration file(s) (.conf and/or .env, backing up the current ones)
+2. Restore the `.conf` file (backing up the current one)
 3. Drop and recreate the database
 4. Restore all data from the backup
 
@@ -497,8 +467,8 @@ docker compose restart
 
 ### Script Features
 
-- **Complete Backup**: Includes database AND configuration files in one file
-- **Flexible Configuration**: Supports both .conf (preferred) and .env (legacy) formats
+- **Complete Backup**: Includes database AND configuration file in one archive
+- **Standard INI Format**: Uses .conf for better readability
 - **Atomic Operations**: Ensures backup consistency
 - **Safety Checks**: Confirms destructive operations before proceeding
 - **Progress Logging**: Clear status messages during backup/restore

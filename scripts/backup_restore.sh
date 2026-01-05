@@ -72,27 +72,15 @@ check_containers() {
 
 # Function to load configuration file
 load_config() {
-    # Try .conf first (preferred), then fall back to .env (legacy)
+    # Load from .conf file
     if [ -f "$ROOT_DIR/.conf" ]; then
         log_info "Loading configuration from .conf file..."
         # Parse .conf file (INI format) to extract database credentials
-        # This is a simple parser - assumes [database] section exists
         if grep -q "^\[database\]" "$ROOT_DIR/.conf"; then
-            # Updated AWK pattern to handle [database] being the last section or not
-            DB_NAME=$(awk -F '=' '/^\[database\]/,(/^\[/ && !/^\[database\]/) {if ($1 ~ /^name/ && !/^\[/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2}}' "$ROOT_DIR/.conf")
-            DB_USER=$(awk -F '=' '/^\[database\]/,(/^\[/ && !/^\[database\]/) {if ($1 ~ /^user/ && !/^\[/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2}}' "$ROOT_DIR/.conf")
-            DB_PASS=$(awk -F '=' '/^\[database\]/,(/^\[/ && !/^\[database\]/) {if ($1 ~ /^password/ && !/^\[/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2}}' "$ROOT_DIR/.conf")
-            
-            # If values are empty, try simpler parsing that goes to EOF
-            if [ -z "$DB_NAME" ]; then
-                DB_NAME=$(awk -F '=' '/^\[database\]/,0 {if ($1 ~ /^name/ && !/^\[/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2; exit}}' "$ROOT_DIR/.conf")
-            fi
-            if [ -z "$DB_USER" ]; then
-                DB_USER=$(awk -F '=' '/^\[database\]/,0 {if ($1 ~ /^user/ && !/^\[/ && $1 !~ /^username/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2; exit}}' "$ROOT_DIR/.conf")
-            fi
-            if [ -z "$DB_PASS" ]; then
-                DB_PASS=$(awk -F '=' '/^\[database\]/,0 {if ($1 ~ /^password/ && !/^\[/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2; exit}}' "$ROOT_DIR/.conf")
-            fi
+            # Parse database section values (handles section at any position in file)
+            DB_NAME=$(awk -F '=' '/^\[database\]/,0 {if ($1 ~ /^[ \t]*name[ \t]*$/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2; exit}}' "$ROOT_DIR/.conf")
+            DB_USER=$(awk -F '=' '/^\[database\]/,0 {if ($1 ~ /^[ \t]*user[ \t]*$/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2; exit}}' "$ROOT_DIR/.conf")
+            DB_PASS=$(awk -F '=' '/^\[database\]/,0 {if ($1 ~ /^[ \t]*password[ \t]*$/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2; exit}}' "$ROOT_DIR/.conf")
             
             # Export for docker-compose
             export POSTGRES_DB="$DB_NAME"
@@ -102,22 +90,16 @@ load_config() {
             log_error ".conf file exists but [database] section not found"
             exit 1
         fi
-    elif [ -f "$ROOT_DIR/.env" ]; then
-        log_info "Loading configuration from .env file (legacy mode)..."
-        # Load environment variables from .env
-        set -a
-        source "$ROOT_DIR/.env"
-        set +a
     else
-        log_error "No configuration file found (.conf or .env)"
-        log_info "Please create .conf file from .conf.example or .env file from .env.example"
+        log_error "No configuration file found (.conf)"
+        log_info "Please create .conf file from .conf.example"
         exit 1
     fi
     
     # Validate that required variables are set
     if [ -z "$DB_NAME" ] || [ -z "$DB_USER" ] || [ -z "$DB_PASS" ]; then
         log_error "Required database configuration not found"
-        log_info "Please ensure your configuration file contains: DB_NAME, DB_USER, DB_PASS"
+        log_info "Please ensure your .conf file contains: name, user, password in [database] section"
         exit 1
     fi
 }
@@ -158,20 +140,13 @@ backup() {
     
     log_success "Database backup created"
     
-    # Copy configuration files (both .conf and .env if they exist)
-    log_info "Backing up configuration files..."
+    # Copy .conf file
+    log_info "Backing up configuration file..."
     if [ -f "$ROOT_DIR/.conf" ]; then
         cp "$ROOT_DIR/.conf" "$TEMP_BACKUP_DIR/.conf"
         log_success "Configuration file (.conf) backed up"
-    fi
-    
-    if [ -f "$ROOT_DIR/.env" ]; then
-        cp "$ROOT_DIR/.env" "$TEMP_BACKUP_DIR/.env"
-        log_success "Environment file (.env) backed up"
-    fi
-    
-    if [ ! -f "$ROOT_DIR/.conf" ] && [ ! -f "$ROOT_DIR/.env" ]; then
-        log_warning "No configuration files (.conf or .env) found, skipping"
+    else
+        log_warning ".conf file not found, skipping"
     fi
     
     # Create metadata file
@@ -185,7 +160,7 @@ Database User: $DB_USER
 
 Contents:
 - database.sql: Full PostgreSQL database dump
-- .conf and/or .env: Configuration files with encryption keys
+- .conf: Configuration file with encryption keys
 
 IMPORTANT: Keep this backup secure as it contains:
 - IMAP_PASSWORD_KEY: Required to decrypt IMAP account passwords
@@ -212,7 +187,7 @@ EOF
         echo "  - Complete database with all emails"
         echo "  - Encryption keys (IMAP_PASSWORD_KEY, SESSION_SECRET)"
         echo "  - Database credentials"
-        echo "  - Configuration files (.conf and/or .env)"
+        echo "  - Configuration file (.conf)"
     else
         log_error "Failed to create backup archive"
         exit 1
@@ -266,7 +241,7 @@ restore() {
         exit 1
     fi
     
-    # Restore configuration files
+    # Restore configuration file
     if [ -f "$TEMP_RESTORE_DIR/.conf" ]; then
         log_info "Restoring configuration file (.conf)..."
         
@@ -281,22 +256,8 @@ restore() {
         
         # Reload configuration
         load_config
-    elif [ -f "$TEMP_RESTORE_DIR/.env" ]; then
-        log_info "Restoring environment configuration (.env)..."
-        
-        # Backup current .env if it exists
-        if [ -f "$ROOT_DIR/.env" ]; then
-            cp "$ROOT_DIR/.env" "$ROOT_DIR/.env.backup_$(date +%Y%m%d_%H%M%S)"
-            log_info "Current .env backed up to .env.backup_*"
-        fi
-        
-        cp "$TEMP_RESTORE_DIR/.env" "$ROOT_DIR/.env"
-        log_success "Environment configuration restored"
-        
-        # Reload configuration
-        load_config
     else
-        log_warning "No configuration files (.conf or .env) found in backup"
+        log_warning "No configuration file (.conf) found in backup"
     fi
     
     # Restore database
@@ -434,7 +395,7 @@ Usage:
   $(basename "$0") <command> [options]
 
 Commands:
-  backup                    Create a new backup of database and configuration files
+  backup                    Create a new backup of database and configuration file
   restore <backup_file>     Restore from a backup file
   list                      List all available backups
   delete <backup_file>      Delete a specific backup file
@@ -455,8 +416,8 @@ Examples:
 
 Notes:
   - Backups are stored in ./backups/ directory
-  - Backups include database dump and configuration files (.conf and/or .env)
-  - Configuration files contain encryption keys and database credentials
+  - Backups include database dump and .conf configuration file
+  - Configuration file contains encryption keys and database credentials
   - Always test restores on a non-production system first
   - Keep backups secure - they contain sensitive encryption keys
 
