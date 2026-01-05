@@ -364,9 +364,77 @@ The **Dashboard** displays deletion analytics:
 
 # Database Backup & Restore
 
-Protect your email archive with built-in database backup and restore functionality.
+Protect your email archive with built-in backup and restore functionality. The system provides two methods:
 
-## Creating a Backup
+1. **Command-Line Script** (Recommended): Complete backup including database and encryption keys
+2. **Web UI**: Database-only backup through the web interface
+
+---
+
+## Command-Line Backup & Restore (Recommended)
+
+The `helper-scripts/backup_and_restore.sh` script provides a complete backup solution that includes both the database AND the `.env` file with encryption keys in a single process.
+
+### Creating a Backup
+
+```bash
+cd /opt/daygle-mail-archiver
+./helper-scripts/backup_and_restore.sh backup
+```
+
+This creates a timestamped backup file in `./backups/` directory (e.g., `daygle_backup_20240105_120000.tar.gz`) containing:
+- Complete PostgreSQL database dump
+- `.env` file with all encryption keys
+- Backup metadata
+
+**Important:** Store backups securely - they contain sensitive encryption keys and all email data.
+
+### Listing Available Backups
+
+```bash
+./helper-scripts/backup_and_restore.sh list
+```
+
+Shows all available backups with size and creation date.
+
+### Restoring from Backup
+
+```bash
+./helper-scripts/backup_and_restore.sh restore daygle_backup_20240105_120000.tar.gz
+```
+
+This will:
+1. Extract the backup archive
+2. Restore the `.env` file (backing up the current one)
+3. Drop and recreate the database
+4. Restore all data from the backup
+
+**Important:** After restore, restart the services:
+```bash
+docker compose restart
+```
+
+### Deleting Old Backups
+
+```bash
+./helper-scripts/backup_and_restore.sh delete daygle_backup_20240105_120000.tar.gz
+```
+
+### Command-Line Script Features
+
+- **Complete Backup**: Includes database AND encryption keys in one file
+- **Atomic Operations**: Ensures backup consistency
+- **Safety Checks**: Confirms destructive operations before proceeding
+- **Progress Logging**: Clear status messages during backup/restore
+- **Metadata Tracking**: Each backup includes creation timestamp and contents
+
+---
+
+## Web UI Backup & Restore
+
+For quick database-only backups, you can use the web interface.
+
+### Creating a Backup
 
 1. Navigate to **Settings → Backup/Restore** (from the sidebar menu)
 2. Click **Download Backup**
@@ -380,13 +448,13 @@ Protect your email archive with built-in database backup and restore functionali
 
 **⚠️ Important: Backup Your Encryption Keys**
 
-The database backup does NOT include the encryption keys from your `.env` file. You must also backup:
+The web UI backup does NOT include the encryption keys from your `.env` file. You must also manually backup:
 - `IMAP_PASSWORD_KEY` - Required to decrypt IMAP account passwords
 - `SESSION_SECRET` - Required for session cookies
 
-Without these keys, you won't be able to decrypt passwords in a restored database. Store these keys securely alongside your database backup.
+Without these keys, you won't be able to decrypt passwords in a restored database. For a complete backup solution, use the command-line script instead.
 
-## Restoring from Backup
+### Restoring from Backup
 
 1. Navigate to **Settings → Backup/Restore**
 2. Click **Choose File** and select your backup `.sql` file
