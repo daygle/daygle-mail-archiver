@@ -30,8 +30,8 @@
 /* Make statistics boxes compact and properly responsive */
 #dashboard-grid .stats-grid-mini {
     display: grid !important;
-    grid-template-columns: repeat(4, 1fr) !important;
-    gap: 0.5rem !important;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
+    gap: 0.75rem !important;
 }
 #dashboard-grid .stat-mini {
     display: flex !important;
@@ -42,6 +42,7 @@
     padding: 0.75rem 0.5rem !important;
     background: var(--bg-secondary) !important;
     border-radius: var(--radius-md) !important;
+    min-width: 0 !important;
 }
 #dashboard-grid .stat-mini .stat-icon {
     display: flex !important;
@@ -707,13 +708,13 @@ const DashboardManager = {
         // Close modal button
         console.log('Setting up close modal button listener');
         document.getElementById('btn-close-modal').addEventListener('click', () => {
-            document.getElementById('widget-selector-modal').style.display = 'none';
+            this.hideModal(document.getElementById('widget-selector-modal'));
         });
 
         // Modal overlay click
         console.log('Setting up modal overlay listener');
         document.getElementById('modal-overlay').addEventListener('click', () => {
-            document.getElementById('widget-selector-modal').style.display = 'none';
+            this.hideModal(document.getElementById('widget-selector-modal'));
         });
 
         // Widget action buttons (delegated event handling)
@@ -800,7 +801,7 @@ const DashboardManager = {
                     console.log('Adding widget:', widget.id);
                     this.addWidget(widget);
                     this.loadWidgetData(widget.id);
-                    modal.style.display = 'none';
+                    this.hideModal(modal);
                 });
             }
             
@@ -808,7 +809,19 @@ const DashboardManager = {
         });
 
         console.log('Showing modal');
+        this.showModal(modal);
+    },
+
+    showModal(modal) {
         modal.style.display = 'flex';
+        modal.classList.add('show');
+    },
+
+    hideModal(modal) {
+        modal.classList.remove('show');
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 150);
     },
 
     async saveLayout() {
