@@ -80,7 +80,42 @@ cd daygle-mail-archiver
 
 ## ⚙️ Configuration
 
+The system supports two configuration formats:
+
+### Option 1: .conf File (Recommended)
+
+The `.conf` file uses INI format for better organization and readability:
+
+```bash
+cp .conf.example .conf
 ```
+
+Edit `.conf` with your settings:
+
+```ini
+[database]
+name = daygle_mail_archiver
+user = daygle_mail_archiver
+password = change_me
+host = db
+port = 5432
+
+[security]
+session_secret = 8f4c2b9e3d7a4f1c9e8b2d3f7c6a1e4b5d8f0c2a7b9d3e6f1a4c7b8d9e2f3a1
+imap_password_key = 8t2y0x8qZp8G7QfVYp4p0Q2u7v8Yx1m4l8e0q2c3s0A=
+```
+
+**Benefits of .conf format:**
+- Better organization with sections
+- More maintainable and readable
+- Easier to understand configuration structure
+- Standard INI format supported by many tools
+
+### Option 2: .env File (Legacy)
+
+For backward compatibility, `.env` files are still supported:
+
+```bash
 cp .env.example .env
 ```
 
@@ -102,14 +137,25 @@ SESSION_SECRET=8f4c2b9e3d7a4f1c9e8b2d3f7c6a1e4b5d8f0c2a7b9d3e6f1a4c7b8d9e2f3a1
 IMAP_PASSWORD_KEY=8t2y0x8qZp8G7QfVYp4p0Q2u7v8Yx1m4l8e0q2c3s0A=
 ```
 
-**Important:** Change the default values for `DB_PASS`, `SESSION_SECRET`, and `IMAP_PASSWORD_KEY` in production!
+### Configuration Priority
 
-To generate a new Fernet key for `IMAP_PASSWORD_KEY`:
+The system loads configuration in the following priority order:
+1. Environment variables (highest priority)
+2. `.conf` file (preferred)
+3. `.env` file (legacy support)
+
+### Important Security Notes
+
+### Important Security Notes
+
+**Important:** Change the default values for `password`, `session_secret`, and `imap_password_key` in production!
+
+To generate a new Fernet key for `imap_password_key`:
 ```bash
 python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 ```
 
-To generate a new session secret:
+To generate a new session secret (`session_secret` in .conf or `SESSION_SECRET` in .env):
 ```bash
 python3 -c "import secrets; print(secrets.token_hex(32))"
 ```
@@ -400,11 +446,11 @@ The **Dashboard** displays deletion analytics:
 
 # Database Backup & Restore
 
-Protect your email archive with the built-in command-line backup and restore script that includes both the database AND encryption keys.
+Protect your email archive with the built-in command-line backup and restore script that includes both the database AND configuration files (encryption keys).
 
 ## Command-Line Backup & Restore
 
-The `scripts/backup_restore.sh` script provides a complete backup solution that includes both the database AND the `.env` file with encryption keys in a single process.
+The `scripts/backup_restore.sh` script provides a complete backup solution that includes both the database AND the configuration files (.conf or .env) with encryption keys in a single process.
 
 ### Creating a Backup
 
@@ -415,7 +461,7 @@ cd /opt/daygle-mail-archiver
 
 This creates a timestamped backup file in `./backups/` directory (e.g., `daygle_mail_archiver_backup_20240105_120000.tar.gz`) containing:
 - Complete PostgreSQL database dump
-- `.env` file with all encryption keys
+- Configuration files (.conf and/or .env) with all encryption keys
 - Backup metadata
 
 **Important:** Store backups securely - they contain sensitive encryption keys and all email data.
@@ -436,7 +482,7 @@ Shows all available backups with size and creation date.
 
 This will:
 1. Extract the backup archive
-2. Restore the `.env` file (backing up the current one)
+2. Restore the configuration file(s) (.conf and/or .env, backing up the current ones)
 3. Drop and recreate the database
 4. Restore all data from the backup
 
@@ -453,7 +499,8 @@ docker compose restart
 
 ### Script Features
 
-- **Complete Backup**: Includes database AND encryption keys in one file
+- **Complete Backup**: Includes database AND configuration files in one file
+- **Flexible Configuration**: Supports both .conf (preferred) and .env (legacy) formats
 - **Atomic Operations**: Ensures backup consistency
 - **Safety Checks**: Confirms destructive operations before proceeding
 - **Progress Logging**: Clear status messages during backup/restore

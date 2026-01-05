@@ -70,18 +70,44 @@ check_containers() {
     fi
 }
 
-# Function to load .env file
-load_env() {
-    if [ ! -f "$ROOT_DIR/.env" ]; then
-        log_error ".env file not found at $ROOT_DIR/.env"
-        log_info "Please create .env file from .env.example"
+# Function to load configuration file
+load_config() {
+    # Try .conf first (preferred), then fall back to .env (legacy)
+    if [ -f "$ROOT_DIR/.conf" ]; then
+        log_info "Loading configuration from .conf file..."
+        # Parse .conf file (INI format) to extract database credentials
+        # This is a simple parser - assumes [database] section exists
+        if grep -q "^\[database\]" "$ROOT_DIR/.conf"; then
+            DB_NAME=$(awk -F '=' '/^\[database\]/,/^\[/ {if ($1 ~ /^name/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2}}' "$ROOT_DIR/.conf")
+            DB_USER=$(awk -F '=' '/^\[database\]/,/^\[/ {if ($1 ~ /^user/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2}}' "$ROOT_DIR/.conf")
+            DB_PASS=$(awk -F '=' '/^\[database\]/,/^\[/ {if ($1 ~ /^password/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2}}' "$ROOT_DIR/.conf")
+            
+            # Export for docker-compose
+            export POSTGRES_DB="$DB_NAME"
+            export POSTGRES_USER="$DB_USER"
+            export POSTGRES_PASSWORD="$DB_PASS"
+        else
+            log_error ".conf file exists but [database] section not found"
+            exit 1
+        fi
+    elif [ -f "$ROOT_DIR/.env" ]; then
+        log_info "Loading configuration from .env file (legacy mode)..."
+        # Load environment variables from .env
+        set -a
+        source "$ROOT_DIR/.env"
+        set +a
+    else
+        log_error "No configuration file found (.conf or .env)"
+        log_info "Please create .conf file from .conf.example or .env file from .env.example"
         exit 1
     fi
     
-    # Load environment variables
-    set -a
-    source "$ROOT_DIR/.env"
-    set +a
+    # Validate that required variables are set
+    if [ -z "$DB_NAME" ] || [ -z "$DB_USER" ] || [ -z "$DB_PASS" ]; then
+        log_error "Required database configuration not found"
+        log_info "Please ensure your configuration file contains: DB_NAME, DB_USER, DB_PASS"
+        exit 1
+    fi
 }
 
 # Function to create backup
@@ -120,13 +146,20 @@ backup() {
     
     log_success "Database backup created"
     
-    # Copy .env file
-    log_info "Backing up environment configuration..."
+    # Copy configuration files (both .conf and .env if they exist)
+    log_info "Backing up configuration files..."
+    if [ -f "$ROOT_DIR/.conf" ]; then
+        cp "$ROOT_DIR/.conf" "$TEMP_BACKUP_DIR/.conf"
+        log_success "Configuration file (.conf) backed up"
+    fi
+    
     if [ -f "$ROOT_DIR/.env" ]; then
         cp "$ROOT_DIR/.env" "$TEMP_BACKUP_DIR/.env"
-        log_success "Environment configuration backed up"
-    else
-        log_warning ".env file not found, skipping"
+        log_success "Environment file (.env) backed up"
+    fi
+    
+    if [ ! -f "$ROOT_DIR/.conf" ] && [ ! -f "$ROOT_DIR/.env" ]; then
+        log_warning "No configuration files (.conf or .env) found, skipping"
     fi
     
     # Create metadata file
@@ -140,7 +173,7 @@ Database User: $DB_USER
 
 Contents:
 - database.sql: Full PostgreSQL database dump
-- .env: Environment configuration with encryption keys
+- .conf and/or .env: Configuration files with encryption keys
 
 IMPORTANT: Keep this backup secure as it contains:
 - IMAP_PASSWORD_KEY: Required to decrypt IMAP account passwords
@@ -167,6 +200,7 @@ EOF
         echo "  - Complete database with all emails"
         echo "  - Encryption keys (IMAP_PASSWORD_KEY, SESSION_SECRET)"
         echo "  - Database credentials"
+        echo "  - Configuration files (.conf and/or .env)"
     else
         log_error "Failed to create backup archive"
         exit 1
@@ -220,11 +254,25 @@ restore() {
         exit 1
     fi
     
-    # Restore .env file
-    if [ -f "$TEMP_RESTORE_DIR/.env" ]; then
-        log_info "Restoring environment configuration..."
+    # Restore configuration files
+    if [ -f "$TEMP_RESTORE_DIR/.conf" ]; then
+        log_info "Restoring configuration file (.conf)..."
         
-        # Backup current .env
+        # Backup current .conf if it exists
+        if [ -f "$ROOT_DIR/.conf" ]; then
+            cp "$ROOT_DIR/.conf" "$ROOT_DIR/.conf.backup_$(date +%Y%m%d_%H%M%S)"
+            log_info "Current .conf backed up to .conf.backup_*"
+        fi
+        
+        cp "$TEMP_RESTORE_DIR/.conf" "$ROOT_DIR/.conf"
+        log_success "Configuration file restored"
+        
+        # Reload configuration
+        load_config
+    elif [ -f "$TEMP_RESTORE_DIR/.env" ]; then
+        log_info "Restoring environment configuration (.env)..."
+        
+        # Backup current .env if it exists
         if [ -f "$ROOT_DIR/.env" ]; then
             cp "$ROOT_DIR/.env" "$ROOT_DIR/.env.backup_$(date +%Y%m%d_%H%M%S)"
             log_info "Current .env backed up to .env.backup_*"
@@ -233,10 +281,10 @@ restore() {
         cp "$TEMP_RESTORE_DIR/.env" "$ROOT_DIR/.env"
         log_success "Environment configuration restored"
         
-        # Reload environment variables
-        load_env
+        # Reload configuration
+        load_config
     else
-        log_warning ".env file not found in backup"
+        log_warning "No configuration files (.conf or .env) found in backup"
     fi
     
     # Restore database
@@ -374,7 +422,7 @@ Usage:
   $(basename "$0") <command> [options]
 
 Commands:
-  backup                    Create a new backup of database and .env file
+  backup                    Create a new backup of database and configuration files
   restore <backup_file>     Restore from a backup file
   list                      List all available backups
   delete <backup_file>      Delete a specific backup file
@@ -395,7 +443,8 @@ Examples:
 
 Notes:
   - Backups are stored in ./backups/ directory
-  - Backups include both database dump and .env file with encryption keys
+  - Backups include database dump and configuration files (.conf and/or .env)
+  - Configuration files contain encryption keys and database credentials
   - Always test restores on a non-production system first
   - Keep backups secure - they contain sensitive encryption keys
 
@@ -415,7 +464,7 @@ main() {
         backup)
             check_docker_compose
             check_containers
-            load_env
+            load_config
             backup
             ;;
         restore)
@@ -426,7 +475,7 @@ main() {
             fi
             check_docker_compose
             check_containers
-            load_env
+            load_config
             restore "$2"
             ;;
         list)

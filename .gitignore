@@ -1,5 +1,6 @@
-# Environment variables (contains sensitive data)
+# Environment variables and configuration (contains sensitive data)
 .env
+.conf
 
 # Python
 __pycache__/
@@ -35,3 +36,4 @@ Thumbs.db
 backups/
 *.backup_*
 .env.backup_*
+.conf.backup_*
