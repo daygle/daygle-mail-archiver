@@ -632,8 +632,11 @@ const DashboardManager = {
     },
 
     setupEventListeners() {
+        console.log('setupEventListeners called');
+        
         // Customize button
         const customizeBtn = document.getElementById('btn-customize');
+        console.log('Customize button:', customizeBtn);
         if (!customizeBtn) {
             console.error('Customize button not found!');
             return;
@@ -646,21 +649,25 @@ const DashboardManager = {
 
         // Add widget button
         const addWidgetBtn = document.getElementById('btn-add-widget');
+        console.log('Add widget button:', addWidgetBtn);
         if (!addWidgetBtn) {
             console.error('Add widget button not found!');
             return;
         }
+        console.log('Setting up add widget button listener');
         addWidgetBtn.addEventListener('click', () => {
             console.log('Add widget button clicked');
             this.showWidgetSelector();
         });
 
         // Save layout button
+        console.log('Setting up save layout button listener');
         document.getElementById('btn-save-layout').addEventListener('click', () => {
             this.saveLayout();
         });
 
         // Reset layout button
+        console.log('Setting up reset layout button listener');
         document.getElementById('btn-reset-layout').addEventListener('click', () => {
             if (confirm('Reset dashboard to default layout?')) {
                 this.renderWidgets(this.defaultWidgets);
@@ -669,11 +676,13 @@ const DashboardManager = {
         });
 
         // Close modal button
+        console.log('Setting up close modal button listener');
         document.getElementById('btn-close-modal').addEventListener('click', () => {
             document.getElementById('widget-selector-modal').style.display = 'none';
         });
 
         // Modal overlay click
+        console.log('Setting up modal overlay listener');
         document.getElementById('modal-overlay').addEventListener('click', () => {
             document.getElementById('widget-selector-modal').style.display = 'none';
         });
