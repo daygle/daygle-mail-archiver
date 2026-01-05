@@ -228,6 +228,24 @@
                         <div style="font-size: 1.5rem; font-weight: 600; color: var(--text-primary);" id="overview-accounts">-</div>
                     </div>
                 </div>
+                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md);">
+                    <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: rgba(34, 197, 94, 0.1); border-radius: var(--radius-md); color: #22c55e; font-size: 1.5rem;">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Workers Online</div>
+                        <div style="font-size: 1.5rem; font-weight: 600; color: var(--text-primary);" id="overview-workers">-</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md);">
+                    <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: rgba(234, 88, 12, 0.1); border-radius: var(--radius-md); color: #ea580c; font-size: 1.5rem;">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Pending Jobs</div>
+                        <div style="font-size: 1.5rem; font-weight: 600; color: var(--text-primary);" id="overview-pending">-</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -368,71 +386,6 @@
             </div>
         </div>
     </div>
-
-    <!-- System Status Template -->
-    <div id="template-system-status" class="grid-stack-item-content widget-card">
-        <div class="widget-actions">
-            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="widget-header">
-            <div class="widget-title">
-                <i class="fas fa-server"></i>
-                <span>System Status</span>
-            </div>
-            
-        </div>
-        <div class="widget-body">
-            <div id="system-status-content" class="status-content">
-                <div class="spinner-center"><span class="spinner"></span></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Actions Template -->
-    <div id="template-quick-actions" class="grid-stack-item-content widget-card">
-        <div class="widget-actions">
-            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="widget-header">
-            <div class="widget-title">
-                <i class="fas fa-bolt"></i>
-                <span>Quick Actions</span>
-            </div>
-            
-        </div>
-        <div class="widget-body">
-            <div class="quick-actions-grid">
-                <a href="/emails" class="quick-action-btn">
-                    <i class="fas fa-envelope"></i>
-                    <span>View Emails</span>
-                </a>
-                <a href="/fetch-accounts" class="quick-action-btn">
-                    <i class="fas fa-server"></i>
-                    <span>Accounts</span>
-                </a>
-                <a href="/global-settings" class="quick-action-btn">
-                    <i class="fas fa-cog"></i>
-                    <span>Settings</span>
-                </a>
-                <a href="/logs" class="quick-action-btn">
-                    <i class="fas fa-file-alt"></i>
-                    <span>Logs</span>
-                </a>
-                <a href="/worker-status" class="quick-action-btn">
-                    <i class="fas fa-tasks"></i>
-                    <span>Workers</span>
-                </a>
-                <a href="/users" class="quick-action-btn">
-                    <i class="fas fa-users"></i>
-                    <span>Users</span>
-                </a>
-            </div>
-        </div>
-    </div>
 </div>
 
 <!-- GridStack JS (Local) -->
@@ -462,9 +415,7 @@ const DashboardManager = {
         { id: 'top-receivers', x: 6, y: 6, w: 6, h: 4, visible: true },
         { id: 'recent-activity', x: 0, y: 10, w: 4, h: 4, visible: true },
         { id: 'storage-trends', x: 4, y: 10, w: 4, h: 4, visible: true },
-        { id: 'account-health', x: 8, y: 10, w: 4, h: 4, visible: true },
-        { id: 'system-status', x: 0, y: 14, w: 4, h: 3, visible: true },
-        { id: 'quick-actions', x: 4, y: 14, w: 8, h: 3, visible: true }
+        { id: 'account-health', x: 8, y: 10, w: 4, h: 4, visible: true }
     ],
 
     init() {
@@ -866,9 +817,7 @@ const DashboardManager = {
             'deletion-stats': 'Deletion Stats',
             'recent-activity': 'Recent Activity',
             'storage-trends': 'Storage Trends',
-            'account-health': 'Account Health',
-            'system-status': 'System Status',
-            'quick-actions': 'Quick Actions'
+            'account-health': 'Account Health'
         };
         return titles[id] || id;
     },
@@ -883,7 +832,6 @@ const DashboardManager = {
         this.loadRecentActivity();
         this.loadStorageTrends();
         this.loadAccountHealth();
-        this.loadSystemStatus();
     },
 
     loadWidgetData(widgetId) {
@@ -895,8 +843,7 @@ const DashboardManager = {
             'deletion-stats': () => this.loadDeletionStats(),
             'recent-activity': () => this.loadRecentActivity(),
             'storage-trends': () => this.loadStorageTrends(),
-            'account-health': () => this.loadAccountHealth(),
-            'system-status': () => this.loadSystemStatus()
+            'account-health': () => this.loadAccountHealth()
         };
 
         if (loaders[widgetId]) {
@@ -918,6 +865,16 @@ const DashboardManager = {
             if (emailsTodayEl) emailsTodayEl.textContent = data.emails_today.toLocaleString();
             if (totalAccountsEl) totalAccountsEl.textContent = data.total_accounts.toLocaleString();
             if (databaseSizeEl) databaseSizeEl.textContent = data.database_size;
+
+            // Load system status data
+            const statusResponse = await fetch('/api/dashboard/system-status');
+            const statusData = await statusResponse.json();
+            
+            const workersEl = document.getElementById('overview-workers');
+            const pendingEl = document.getElementById('overview-pending');
+            
+            if (workersEl) workersEl.textContent = statusData.workers_online;
+            if (pendingEl) pendingEl.textContent = statusData.pending_jobs;
         } catch (error) {
             console.error('Error loading overview:', error);
         }
@@ -1186,44 +1143,6 @@ const DashboardManager = {
             if (container) {
                 container.innerHTML = '<p class="text-muted text-center">Error loading account health</p>';
             }
-        }
-    },
-
-    async loadSystemStatus() {
-        try {
-            const response = await fetch('/api/dashboard/system-status');
-            const data = await response.json();
-            
-            const container = document.getElementById('system-status-content');
-            if (!container) return;
-
-            container.innerHTML = `
-                <div class="status-grid">
-                    <div class="status-item">
-                        <div class="status-icon ${data.database === 'healthy' ? 'status-success' : 'status-danger'}">
-                            <i class="fas fa-database"></i>
-                        </div>
-                        <div class="status-label">Database</div>
-                        <div class="status-value">${data.database === 'healthy' ? 'Healthy' : 'Error'}</div>
-                    </div>
-                    <div class="status-item">
-                        <div class="status-icon status-info">
-                            <i class="fas fa-tasks"></i>
-                        </div>
-                        <div class="status-label">Workers Online</div>
-                        <div class="status-value">${data.workers_online}</div>
-                    </div>
-                    <div class="status-item">
-                        <div class="status-icon status-warning">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="status-label">Pending Jobs</div>
-                        <div class="status-value">${data.pending_jobs}</div>
-                    </div>
-                </div>
-            `;
-        } catch (error) {
-            console.error('Error loading system status:', error);
         }
     }
 };
