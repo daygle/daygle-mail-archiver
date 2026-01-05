@@ -8,10 +8,10 @@
 # and environment configuration (.env file with encryption keys).
 #
 # Usage:
-#   ./helper-scripts/backup_and_restore.sh backup
-#   ./helper-scripts/backup_and_restore.sh restore <backup_file.tar.gz>
-#   ./helper-scripts/backup_and_restore.sh list
-#   ./helper-scripts/backup_and_restore.sh delete <backup_file.tar.gz>
+#   ./scripts/backup_restore.sh backup
+#   ./scripts/backup_restore.sh restore <backup_file.tar.gz>
+#   ./scripts/backup_restore.sh list
+#   ./scripts/backup_restore.sh delete <backup_file.tar.gz>
 #
 # Backups are stored in ./backups/ directory by default.
 # ============================================
@@ -148,7 +148,7 @@ IMPORTANT: Keep this backup secure as it contains:
 - Database credentials
 
 To restore this backup:
-  ./helper-scripts/backup_and_restore.sh restore daygle_backup_${TIMESTAMP}.tar.gz
+  ./scripts/backup_restore.sh restore daygle_backup_${TIMESTAMP}.tar.gz
 EOF
     
     log_info "Creating compressed backup archive..."
@@ -381,17 +381,17 @@ Commands:
 
 Examples:
   # Create a new backup
-  ./helper-scripts/backup_and_restore.sh backup
+  ./scripts/backup_restore.sh backup
 
   # List available backups
-  ./helper-scripts/backup_and_restore.sh list
+  ./scripts/backup_restore.sh list
 
   # Restore from a backup
-  ./helper-scripts/backup_and_restore.sh restore daygle_backup_20240105_120000.tar.gz
-  ./helper-scripts/backup_and_restore.sh restore backups/daygle_backup_20240105_120000.tar.gz
+  ./scripts/backup_restore.sh restore daygle_backup_20240105_120000.tar.gz
+  ./scripts/backup_restore.sh restore backups/daygle_backup_20240105_120000.tar.gz
 
   # Delete a backup
-  ./helper-scripts/backup_and_restore.sh delete daygle_backup_20240105_120000.tar.gz
+  ./scripts/backup_restore.sh delete daygle_backup_20240105_120000.tar.gz
 
 Notes:
   - Backups are stored in ./backups/ directory

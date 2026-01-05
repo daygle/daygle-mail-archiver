@@ -168,13 +168,13 @@ After setting your password, you'll be redirected to the Dashboard.
 ### Backup and Restore
 ```bash
 # Create a complete backup (database + .env keys)
-./helper-scripts/backup_and_restore.sh backup
+./scripts/backup_restore.sh backup
 
 # List available backups
-./helper-scripts/backup_and_restore.sh list
+./scripts/backup_restore.sh list
 
 # Restore from backup
-./helper-scripts/backup_and_restore.sh restore daygle_backup_20240105_120000.tar.gz
+./scripts/backup_restore.sh restore daygle_backup_20240105_120000.tar.gz
 ```
 
 ### Container Management
@@ -409,13 +409,13 @@ Protect your email archive with built-in backup and restore functionality. The s
 
 ## Command-Line Backup & Restore (Recommended)
 
-The `helper-scripts/backup_and_restore.sh` script provides a complete backup solution that includes both the database AND the `.env` file with encryption keys in a single process.
+The `scripts/backup_restore.sh` script provides a complete backup solution that includes both the database AND the `.env` file with encryption keys in a single process.
 
 ### Creating a Backup
 
 ```bash
 cd /opt/daygle-mail-archiver
-./helper-scripts/backup_and_restore.sh backup
+./scripts/backup_restore.sh backup
 ```
 
 This creates a timestamped backup file in `./backups/` directory (e.g., `daygle_backup_20240105_120000.tar.gz`) containing:
@@ -428,7 +428,7 @@ This creates a timestamped backup file in `./backups/` directory (e.g., `daygle_
 ### Listing Available Backups
 
 ```bash
-./helper-scripts/backup_and_restore.sh list
+./scripts/backup_restore.sh list
 ```
 
 Shows all available backups with size and creation date.
@@ -436,7 +436,7 @@ Shows all available backups with size and creation date.
 ### Restoring from Backup
 
 ```bash
-./helper-scripts/backup_and_restore.sh restore daygle_backup_20240105_120000.tar.gz
+./scripts/backup_restore.sh restore daygle_backup_20240105_120000.tar.gz
 ```
 
 This will:
@@ -453,7 +453,7 @@ docker compose restart
 ### Deleting Old Backups
 
 ```bash
-./helper-scripts/backup_and_restore.sh delete daygle_backup_20240105_120000.tar.gz
+./scripts/backup_restore.sh delete daygle_backup_20240105_120000.tar.gz
 ```
 
 ### Command-Line Script Features
