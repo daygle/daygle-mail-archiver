@@ -30,3 +30,8 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Backups (contains sensitive data)
+backups/
+*.backup_*
+.env.backup_*

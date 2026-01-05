@@ -59,7 +59,7 @@ All components run in Docker containers orchestrated by Docker Compose.
 
 # Setup & Installation
 
-Follow these steps to get a fully running Daygle instance.
+Follow these steps to get a fully running Daygle Mail Archiver instance.
 
 ---
 
@@ -160,6 +160,42 @@ Login:
 - Password: (empty - you'll be prompted to set a password on first login)
 
 After setting your password, you'll be redirected to the Dashboard.  
+
+---
+
+## 6. Quick Reference - Common Commands
+
+### Backup and Restore
+```bash
+# Create a complete backup (database + .env keys)
+./scripts/backup_restore.sh backup
+
+# List available backups
+./scripts/backup_restore.sh list
+
+# Restore from backup
+./scripts/backup_restore.sh restore daygle_mail_archiver_backup_20240105_120000.tar.gz
+```
+
+### Container Management
+```bash
+# View container status
+docker compose ps
+
+# View logs
+docker compose logs -f        # All services
+docker compose logs -f api    # API only
+docker compose logs -f worker # Worker only
+
+# Restart services
+docker compose restart
+
+# Stop and remove all containers
+docker compose down
+
+# Full reset (removes data)
+docker compose down --volumes
+```
 
 ---
 
@@ -364,42 +400,64 @@ The **Dashboard** displays deletion analytics:
 
 # Database Backup & Restore
 
-Protect your email archive with built-in database backup and restore functionality.
+Protect your email archive with the built-in command-line backup and restore script that includes both the database AND encryption keys.
 
-## Creating a Backup
+## Command-Line Backup & Restore
 
-1. Navigate to **Settings → Backup/Restore** (from the sidebar menu)
-2. Click **Download Backup**
-3. The system will create a complete PostgreSQL dump and download it as `daygle_backup.sql`
-4. Store this file securely for disaster recovery
+The `scripts/backup_restore.sh` script provides a complete backup solution that includes both the database AND the `.env` file with encryption keys in a single process.
 
-**Notes:**
-- Backup includes all emails, accounts, users, settings, and logs
-- Maximum backup time: 60 seconds (for large databases, consider manual pg_dump)
-- Backup files are plain-text SQL format
+### Creating a Backup
 
-**⚠️ Important: Backup Your Encryption Keys**
+```bash
+cd /opt/daygle-mail-archiver
+./scripts/backup_restore.sh backup
+```
 
-The database backup does NOT include the encryption keys from your `.env` file. You must also backup:
-- `IMAP_PASSWORD_KEY` - Required to decrypt IMAP account passwords
-- `SESSION_SECRET` - Required for session cookies
+This creates a timestamped backup file in `./backups/` directory (e.g., `daygle_mail_archiver_backup_20240105_120000.tar.gz`) containing:
+- Complete PostgreSQL database dump
+- `.env` file with all encryption keys
+- Backup metadata
 
-Without these keys, you won't be able to decrypt passwords in a restored database. Store these keys securely alongside your database backup.
+**Important:** Store backups securely - they contain sensitive encryption keys and all email data.
 
-## Restoring from Backup
+### Listing Available Backups
 
-1. Navigate to **Settings → Backup/Restore**
-2. Click **Choose File** and select your backup `.sql` file
-3. Click **Restore Database**
-4. The system will restore all data from the backup
+```bash
+./scripts/backup_restore.sh list
+```
 
-**Important Warnings:**
-- Restore will overwrite all existing data in the database
-- **You must use the same `.env` keys** (`IMAP_PASSWORD_KEY` and `SESSION_SECRET`) as when the backup was created, otherwise encrypted passwords cannot be decrypted
-- Maximum file size: 10MB (for larger restores, use manual psql)
-- Maximum restore time: 120 seconds
-- Always test restores on a non-production system first
-- You may need to log in again after a restore
+Shows all available backups with size and creation date.
+
+### Restoring from Backup
+
+```bash
+./scripts/backup_restore.sh restore daygle_mail_archiver_backup_20240105_120000.tar.gz
+```
+
+This will:
+1. Extract the backup archive
+2. Restore the `.env` file (backing up the current one)
+3. Drop and recreate the database
+4. Restore all data from the backup
+
+**Important:** After restore, restart the services:
+```bash
+docker compose restart
+```
+
+### Deleting Old Backups
+
+```bash
+./scripts/backup_restore.sh delete daygle_mail_archiver_backup_20240105_120000.tar.gz
+```
+
+### Script Features
+
+- **Complete Backup**: Includes database AND encryption keys in one file
+- **Atomic Operations**: Ensures backup consistency
+- **Safety Checks**: Confirms destructive operations before proceeding
+- **Progress Logging**: Clear status messages during backup/restore
+- **Metadata Tracking**: Each backup includes creation timestamp and contents
 
 ---
 
