@@ -59,7 +59,7 @@ All components run in Docker containers orchestrated by Docker Compose.
 
 # Setup & Installation
 
-Follow these steps to get a fully running Daygle instance.
+Follow these steps to get a fully running Daygle Mail Archiver instance.
 
 ---
 
