@@ -1546,3 +1546,527 @@ a:hover {
     border-top-color: currentColor;
 }
 
+/* ========================================
+   Enhanced Dashboard Styles
+   ======================================== */
+
+/* Dashboard Toolbar */
+.dashboard-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    margin-bottom: 1.5rem;
+}
+
+.toolbar-left h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.toolbar-right {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Customization Panel */
+.customization-panel {
+    position: fixed;
+    top: var(--topbar-height);
+    right: 0;
+    width: 320px;
+    height: calc(100vh - var(--topbar-height));
+    background: var(--bg-primary);
+    border-left: 1px solid var(--border-color);
+    box-shadow: var(--shadow-xl);
+    z-index: 1000;
+    overflow-y: auto;
+    transition: transform var(--transition-base);
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.panel-header h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: color var(--transition-fast);
+}
+
+.btn-icon:hover {
+    color: var(--text-primary);
+}
+
+.panel-body {
+    padding: 1.5rem;
+}
+
+/* Widget Toggles */
+.widget-toggle {
+    margin-bottom: 0.75rem;
+}
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    padding: 0.75rem;
+    border-radius: var(--radius-md);
+    transition: background var(--transition-fast);
+}
+
+.toggle-label:hover {
+    background: var(--bg-hover);
+}
+
+.toggle-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.toggle-label span {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+}
+
+/* GridStack Dashboard */
+.grid-stack {
+    background: transparent;
+}
+
+.grid-stack.edit-mode .grid-stack-item {
+    cursor: move;
+}
+
+.grid-stack-item {
+    overflow: visible !important;
+}
+
+.grid-stack-item-content {
+    overflow: visible !important;
+    inset: 0 !important;
+}
+
+/* Widget Cards */
+.widget-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    transition: box-shadow var(--transition-fast);
+}
+
+.widget-card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.grid-stack.edit-mode .widget-card {
+    cursor: move;
+}
+
+.widget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.widget-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.widget-title i {
+    color: var(--accent-primary);
+}
+
+.widget-menu-btn {
+    background: none;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    cursor: pointer;
+    color: var(--text-tertiary);
+    opacity: 0;
+    transition: all var(--transition-fast);
+}
+
+.widget-card:hover .widget-menu-btn {
+    opacity: 1;
+}
+
+.widget-menu-btn:hover {
+    color: var(--text-primary);
+}
+
+.widget-body {
+    flex: 1;
+    padding: 1.25rem;
+    overflow: auto;
+    position: relative;
+}
+
+/* Mini Stats Grid */
+.stats-grid-mini {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.stat-mini {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    border-left: 3px solid var(--accent-primary);
+}
+
+.stat-mini.stat-primary {
+    border-left-color: #3b82f6;
+}
+
+.stat-mini.stat-success {
+    border-left-color: #10b981;
+}
+
+.stat-mini.stat-info {
+    border-left-color: #06b6d4;
+}
+
+.stat-mini.stat-warning {
+    border-left-color: #f59e0b;
+}
+
+.stat-mini .stat-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    background: var(--bg-primary);
+    color: var(--accent-primary);
+    font-size: 1.25rem;
+}
+
+.stat-mini .stat-content {
+    flex: 1;
+}
+
+.stat-mini .stat-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+}
+
+.stat-mini .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* Activity List */
+.activity-list {
+    max-height: 100%;
+    overflow-y: auto;
+}
+
+.activity-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    transition: background var(--transition-fast);
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-item:hover {
+    background: var(--bg-hover);
+}
+
+.activity-icon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-light);
+    color: var(--accent-primary);
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.activity-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.activity-title {
+    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.activity-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.activity-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* Health List */
+.health-list {
+    max-height: 100%;
+    overflow-y: auto;
+}
+
+.health-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.health-item:last-child {
+    border-bottom: none;
+}
+
+.health-icon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.health-icon.health-success {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+}
+
+.health-icon.health-danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+}
+
+.health-icon.health-warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--warning);
+}
+
+.health-icon.health-secondary {
+    background: var(--bg-secondary);
+    color: var(--text-tertiary);
+}
+
+.health-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.health-email {
+    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+
+.health-meta {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.health-error {
+    font-size: 0.75rem;
+    color: var(--danger);
+    margin-top: 0.25rem;
+}
+
+/* Status Grid */
+.status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+}
+
+.status-item {
+    text-align: center;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+}
+
+.status-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 0.75rem;
+    border-radius: 50%;
+    font-size: 1.5rem;
+}
+
+.status-icon.status-success {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+}
+
+.status-icon.status-danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+}
+
+.status-icon.status-info {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--info);
+}
+
+.status-icon.status-warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--warning);
+}
+
+.status-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+}
+
+.status-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* Quick Actions Grid */
+.quick-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+}
+
+.quick-action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1.5rem 1rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: all var(--transition-fast);
+}
+
+.quick-action-btn:hover {
+    background: var(--accent-light);
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.quick-action-btn i {
+    font-size: 1.5rem;
+}
+
+.quick-action-btn span {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* Spinner Center */
+.spinner-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100px;
+}
+
+/* Chart Containers */
+.widget-body canvas {
+    max-height: 100%;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .customization-panel {
+        width: 100%;
+    }
+    
+    .stats-grid-mini {
+        grid-template-columns: 1fr;
+    }
+    
+    .quick-actions-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* GridStack Resize Handle Styling */
+.grid-stack-item > .ui-resizable-handle {
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.grid-stack.edit-mode .grid-stack-item > .ui-resizable-handle {
+    opacity: 1;
+}
+
+.grid-stack-item:hover > .ui-resizable-handle {
+    opacity: 1;
+}

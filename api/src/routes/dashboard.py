@@ -1,12 +1,27 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from collections import defaultdict
+from typing import List, Dict, Any
+from pydantic import BaseModel
 
 from utils.db import query
 from utils.logger import log
 from utils.templates import templates
 
 router = APIRouter()
+
+
+class WidgetPreference(BaseModel):
+    widget_id: str
+    x: int
+    y: int
+    w: int
+    h: int
+    visible: bool = True
+
+
+class DashboardLayout(BaseModel):
+    widgets: List[WidgetPreference]
 
 
 def require_login(request: Request):
@@ -299,3 +314,233 @@ def deletion_stats(request: Request):
         username = request.session.get("username", "unknown")
         log("error", "Dashboard", f"Failed to fetch deletion stats for user '{username}': {str(e)}", "")
         return JSONResponse({"error": "Failed to load data"}, status_code=500)
+
+
+@router.get("/api/dashboard/preferences")
+def get_dashboard_preferences(request: Request):
+    """Get user's dashboard widget preferences"""
+    if not require_login(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    user_id = request.session.get("user_id")
+    
+    try:
+        results = query("""
+            SELECT widget_id, x_position, y_position, width, height, is_visible
+            FROM dashboard_preferences
+            WHERE user_id = :user_id
+        """, {"user_id": user_id}).mappings().all()
+
+        widgets = [
+            {
+                "widget_id": row["widget_id"],
+                "x": row["x_position"],
+                "y": row["y_position"],
+                "w": row["width"],
+                "h": row["height"],
+                "visible": row["is_visible"]
+            }
+            for row in results
+        ]
+
+        return {"widgets": widgets}
+    except Exception as e:
+        username = request.session.get("username", "unknown")
+        log("error", "Dashboard", f"Failed to fetch dashboard preferences for user '{username}': {str(e)}", "")
+        return JSONResponse({"error": "Failed to load preferences"}, status_code=500)
+
+
+@router.post("/api/dashboard/preferences")
+async def save_dashboard_preferences(request: Request, layout: DashboardLayout):
+    """Save user's dashboard widget preferences"""
+    if not require_login(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    user_id = request.session.get("user_id")
+    
+    try:
+        # Delete existing preferences
+        query("""
+            DELETE FROM dashboard_preferences 
+            WHERE user_id = :user_id
+        """, {"user_id": user_id})
+
+        # Insert new preferences
+        for widget in layout.widgets:
+            query("""
+                INSERT INTO dashboard_preferences 
+                (user_id, widget_id, x_position, y_position, width, height, is_visible)
+                VALUES (:user_id, :widget_id, :x, :y, :w, :h, :visible)
+            """, {
+                "user_id": user_id,
+                "widget_id": widget.widget_id,
+                "x": widget.x,
+                "y": widget.y,
+                "w": widget.w,
+                "h": widget.h,
+                "visible": widget.visible
+            })
+
+        username = request.session.get("username", "unknown")
+        log("info", "Dashboard", f"User '{username}' saved dashboard preferences", "")
+        
+        return {"success": True, "message": "Dashboard layout saved"}
+    except Exception as e:
+        username = request.session.get("username", "unknown")
+        log("error", "Dashboard", f"Failed to save dashboard preferences for user '{username}': {str(e)}", "")
+        return JSONResponse({"error": "Failed to save preferences"}, status_code=500)
+
+
+@router.get("/api/dashboard/recent-activity")
+def recent_activity(request: Request):
+    """Get recent email activity"""
+    if not require_login(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    try:
+        date_format = get_user_date_format(request)
+        
+        results = query("""
+            SELECT 
+                subject,
+                sender,
+                recipients,
+                created_at
+            FROM emails
+            ORDER BY created_at DESC
+            LIMIT 10
+        """).mappings().all()
+
+        activities = [
+            {
+                "subject": row["subject"] or "(No Subject)",
+                "sender": row["sender"] or "Unknown",
+                "recipients": row["recipients"] or "",
+                "date": row["created_at"].strftime(date_format) if row["created_at"] else ""
+            }
+            for row in results
+        ]
+
+        return {"activities": activities}
+    except Exception as e:
+        username = request.session.get("username", "unknown")
+        log("error", "Dashboard", f"Failed to fetch recent activity for user '{username}': {str(e)}", "")
+        return JSONResponse({"error": "Failed to load data"}, status_code=500)
+
+
+@router.get("/api/dashboard/storage-trends")
+def storage_trends(request: Request):
+    """Get storage growth over the last 7 days"""
+    if not require_login(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    try:
+        date_format = get_user_date_format(request, date_only=True)
+        
+        results = query("""
+            SELECT 
+                DATE(created_at) as date,
+                COUNT(*) as count,
+                SUM(COALESCE(size, 0)) as total_size
+            FROM emails
+            WHERE created_at >= NOW() - INTERVAL '7 days'
+            GROUP BY DATE(created_at)
+            ORDER BY date
+        """).mappings().all()
+
+        return {
+            "labels": [row["date"].strftime(date_format) for row in results],
+            "counts": [row["count"] for row in results],
+            "sizes": [row["total_size"] / (1024 * 1024) for row in results]  # Convert to MB
+        }
+    except Exception as e:
+        username = request.session.get("username", "unknown")
+        log("error", "Dashboard", f"Failed to fetch storage trends for user '{username}': {str(e)}", "")
+        return JSONResponse({"error": "Failed to load data"}, status_code=500)
+
+
+@router.get("/api/dashboard/account-health")
+def account_health(request: Request):
+    """Get health status of fetch accounts"""
+    if not require_login(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    try:
+        results = query("""
+            SELECT 
+                email,
+                enabled,
+                last_fetch_at,
+                last_error
+            FROM fetch_accounts
+            ORDER BY last_fetch_at DESC NULLS LAST
+        """).mappings().all()
+
+        accounts = []
+        for row in results:
+            status = "healthy"
+            if not row["enabled"]:
+                status = "disabled"
+            elif row["last_error"]:
+                status = "error"
+            elif not row["last_fetch_at"]:
+                status = "never_fetched"
+            
+            accounts.append({
+                "email": row["email"],
+                "status": status,
+                "last_fetch": row["last_fetch_at"].strftime("%Y-%m-%d %H:%M") if row["last_fetch_at"] else "Never",
+                "error": row["last_error"] or ""
+            })
+
+        return {"accounts": accounts}
+    except Exception as e:
+        username = request.session.get("username", "unknown")
+        log("error", "Dashboard", f"Failed to fetch account health for user '{username}': {str(e)}", "")
+        return JSONResponse({"error": "Failed to load data"}, status_code=500)
+
+
+@router.get("/api/dashboard/system-status")
+def system_status(request: Request):
+    """Get system status information"""
+    if not require_login(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    try:
+        # Get database connection status
+        db_status = "healthy"
+        try:
+            query("SELECT 1")
+        except:
+            db_status = "error"
+
+        # Get worker status from last heartbeat
+        worker_results = query("""
+            SELECT 
+                worker_id,
+                status,
+                last_heartbeat
+            FROM worker_status
+            WHERE last_heartbeat >= NOW() - INTERVAL '5 minutes'
+        """).mappings().all()
+
+        workers_online = len(worker_results)
+        
+        # Get pending fetch jobs
+        pending_results = query("""
+            SELECT COUNT(*) as count 
+            FROM fetch_accounts 
+            WHERE enabled = TRUE
+        """).mappings().first()
+        pending_jobs = pending_results["count"] if pending_results else 0
+
+        return {
+            "database": db_status,
+            "workers_online": workers_online,
+            "pending_jobs": pending_jobs
+        }
+    except Exception as e:
+        username = request.session.get("username", "unknown")
+        log("error", "Dashboard", f"Failed to fetch system status for user '{username}': {str(e)}", "")
+        return JSONResponse({"error": "Failed to load data"}, status_code=500)
+
