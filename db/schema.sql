@@ -175,3 +175,23 @@ CREATE TABLE IF NOT EXISTS deletion_stats (
     
     UNIQUE (deletion_date, deletion_type, deleted_from_mail_server)
 );
+
+-- ----------------------------
+-- dashboard_preferences
+-- Stores user dashboard widget layout preferences
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS dashboard_preferences (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    widget_id TEXT NOT NULL,
+    x_position INTEGER NOT NULL,
+    y_position INTEGER NOT NULL,
+    width INTEGER NOT NULL,
+    height INTEGER NOT NULL,
+    is_visible BOOLEAN NOT NULL DEFAULT TRUE,
+    
+    UNIQUE (user_id, widget_id)
+);
+
+-- Index for quick lookups by user
+CREATE INDEX IF NOT EXISTS dashboard_preferences_user_idx ON dashboard_preferences(user_id);

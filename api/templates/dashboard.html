@@ -301,25 +301,37 @@ const DashboardManager = {
     ],
 
     init() {
+        // Check if GridStack is loaded
+        if (typeof GridStack === 'undefined') {
+            console.error('GridStack library not loaded');
+            alert('Dashboard failed to load. Please refresh the page.');
+            return;
+        }
+
         // Initialize GridStack
-        this.grid = GridStack.init({
-            column: 12,
-            cellHeight: 80,
-            margin: 10,
-            float: false,
-            disableOneColumnMode: true,
-            animate: true,
-            draggable: { handle: '.widget-header' }
-        });
+        try {
+            this.grid = GridStack.init({
+                column: 12,
+                cellHeight: 80,
+                margin: 10,
+                float: false,
+                disableOneColumnMode: true,
+                animate: true,
+                draggable: { handle: '.widget-header' }
+            });
 
-        // Disable editing by default
-        this.grid.disable();
+            // Disable editing by default
+            this.grid.disable();
 
-        // Load user preferences or use defaults
-        this.loadLayout();
+            // Load user preferences or use defaults
+            this.loadLayout();
 
-        // Setup event listeners
-        this.setupEventListeners();
+            // Setup event listeners
+            this.setupEventListeners();
+        } catch (error) {
+            console.error('Error initializing dashboard:', error);
+            alert('Dashboard failed to initialize: ' + error.message);
+        }
     },
 
     async loadLayout() {
@@ -383,7 +395,14 @@ const DashboardManager = {
 
     setupEventListeners() {
         // Customize button
-        document.getElementById('btn-customize').addEventListener('click', () => {
+        const customizeBtn = document.getElementById('btn-customize');
+        if (!customizeBtn) {
+            console.error('Customize button not found!');
+            return;
+        }
+        console.log('Setting up customize button listener');
+        customizeBtn.addEventListener('click', () => {
+            console.log('Customize button clicked');
             this.toggleEditMode();
         });
 
