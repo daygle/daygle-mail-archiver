@@ -28,44 +28,60 @@
     }
 }
 /* Make statistics boxes compact and properly responsive */
-.stats-grid-mini {
+#dashboard-grid .stats-grid-mini {
     display: grid !important;
     grid-template-columns: repeat(4, 1fr) !important;
     gap: 0.5rem !important;
 }
-.stat-mini {
+#dashboard-grid .stat-mini {
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
     text-align: center !important;
     gap: 0.5rem !important;
     padding: 0.75rem 0.5rem !important;
+    background: var(--bg-secondary) !important;
+    border-radius: var(--radius-md) !important;
 }
-.stat-mini .stat-icon {
+#dashboard-grid .stat-mini .stat-icon {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    width: 32px !important;
-    height: 32px !important;
-    min-width: 32px !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    max-width: 36px !important;
     flex-shrink: 0 !important;
-    font-size: 1rem !important;
+    font-size: 1.25rem !important;
+    border-radius: var(--radius-md) !important;
+    background: var(--bg-primary) !important;
+    color: var(--accent-primary) !important;
+    position: relative !important;
 }
-.stat-mini .stat-content {
+#dashboard-grid .stat-mini .stat-icon i {
+    position: relative !important;
+    z-index: 1 !important;
+}
+#dashboard-grid .stat-mini .stat-content {
     width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.25rem !important;
 }
-.stat-mini .stat-label {
-    font-size: 0.65rem !important;
-    margin-bottom: 0.125rem !important;
+#dashboard-grid .stat-mini .stat-label {
+    font-size: 0.7rem !important;
+    margin-bottom: 0 !important;
     white-space: nowrap !important;
+    color: var(--text-secondary) !important;
 }
-.stat-mini .stat-value {
-    font-size: 1.1rem !important;
+#dashboard-grid .stat-mini .stat-value {
+    font-size: 1.25rem !important;
     font-weight: 600 !important;
     line-height: 1.2 !important;
+    color: var(--text-primary) !important;
 }
 @media (max-width: 1200px) {
-    .stats-grid-mini {
+    #dashboard-grid .stats-grid-mini {
         grid-template-columns: repeat(2, 1fr) !important;
     }
 }
