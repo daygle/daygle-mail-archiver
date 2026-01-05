@@ -514,19 +514,17 @@ def system_status(request: Request):
         except:
             db_status = "error"
 
-        # Get worker status from last heartbeat
+        # Get worker status from last heartbeat in fetch_accounts
         worker_results = query("""
-            SELECT 
-                worker_id,
-                status,
-                last_heartbeat
-            FROM worker_status
-            WHERE last_heartbeat >= NOW() - INTERVAL '5 minutes'
-        """).mappings().all()
+            SELECT COUNT(*) as count
+            FROM fetch_accounts 
+            WHERE enabled = TRUE 
+            AND last_heartbeat >= NOW() - INTERVAL '5 minutes'
+        """).mappings().first()
 
-        workers_online = len(worker_results)
+        workers_online = worker_results["count"] if worker_results else 0
         
-        # Get pending fetch jobs
+        # Get pending fetch jobs (enabled accounts)
         pending_results = query("""
             SELECT COUNT(*) as count 
             FROM fetch_accounts 

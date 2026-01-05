@@ -6,6 +6,28 @@
 <!-- GridStack CSS (Local) -->
 <link rel="stylesheet" href="/static/vendor/gridstack.min.css" />
 <link rel="stylesheet" href="/static/vendor/gridstack-extra.min.css" />
+<style>
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+</style>
 {% endblock %}
 
 {% block content %}
@@ -517,13 +539,39 @@ const DashboardManager = {
             });
 
             if (response.ok) {
-                alert('Dashboard layout saved!');
+                this.showFlashMessage('Dashboard layout saved successfully!', 'success');
                 this.toggleEditMode();
+            } else {
+                this.showFlashMessage('Failed to save dashboard layout', 'error');
             }
         } catch (error) {
             console.error('Error saving layout:', error);
-            alert('Failed to save layout');
+            this.showFlashMessage('Failed to save dashboard layout', 'error');
         }
+    },
+
+    showFlashMessage(message, type = 'success') {
+        // Create flash message element
+        const flash = document.createElement('div');
+        flash.className = `flash flash-${type}`;
+        flash.textContent = message;
+        flash.style.cssText = 'position: fixed; top: 80px; right: 20px; z-index: 10000; padding: 15px 20px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideIn 0.3s ease;';
+        
+        if (type === 'success') {
+            flash.style.backgroundColor = '#10b981';
+            flash.style.color = 'white';
+        } else {
+            flash.style.backgroundColor = '#ef4444';
+            flash.style.color = 'white';
+        }
+        
+        document.body.appendChild(flash);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            flash.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => flash.remove(), 300);
+        }, 3000);
     },
 
     updateWidgetToggles(widgets) {
