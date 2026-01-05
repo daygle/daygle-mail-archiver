@@ -110,7 +110,8 @@ CREATE TABLE IF NOT EXISTS users (
     last_name TEXT,
     email TEXT,
     role TEXT NOT NULL DEFAULT 'administrator',
-    date_format TEXT NOT NULL DEFAULT '%d/%m/%Y %H:%M',
+    date_format TEXT NOT NULL DEFAULT '%d/%m/%Y',
+    time_format TEXT NOT NULL DEFAULT '%H:%M',
     timezone TEXT NOT NULL DEFAULT 'Australia/Melbourne',
     enabled BOOLEAN NOT NULL DEFAULT TRUE,
     last_login TIMESTAMPTZ,
@@ -136,7 +137,8 @@ CREATE TABLE IF NOT EXISTS settings (
 
 -- Insert default settings
 INSERT INTO settings (key, value) VALUES ('page_size', '50') ON CONFLICT (key) DO NOTHING;
-INSERT INTO settings (key, value) VALUES ('date_format', '%d/%m/%Y %H:%M') ON CONFLICT (key) DO NOTHING;
+INSERT INTO settings (key, value) VALUES ('date_format', '%d/%m/%Y') ON CONFLICT (key) DO NOTHING;
+INSERT INTO settings (key, value) VALUES ('time_format', '%H:%M') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('timezone', 'Australia/Melbourne') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('enable_purge', 'false') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('retention_value', '1') ON CONFLICT (key) DO NOTHING;
@@ -157,7 +159,7 @@ CREATE TABLE IF NOT EXISTS logs (
 
 -- Indexes for logs queries (filtering by level and ordering by timestamp)
 CREATE INDEX IF NOT EXISTS logs_timestamp_idx ON logs(timestamp DESC);
-CREACREATE INDEX IF NOT EXISTS logs_level_timestamp_idx ON logs(level, timestamp DESC);
+CREATE INDEX IF NOT EXISTS logs_level_timestamp_idx ON logs(level, timestamp DESC);
 
 -- ----------------------------
 -- deletion_stats

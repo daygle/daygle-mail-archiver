@@ -85,7 +85,7 @@ def convert_utc_to_user_timezone(utc_datetime, user_id: int):
     return convert_utc_to_timezone(utc_datetime, user_tz)
 
 
-def format_datetime(utc_datetime, user_id: int, date_format: str = None):
+def format_datetime(utc_datetime, user_id: int, date_format: str = None, time_format: str = None):
     """
     Convert a UTC datetime to user's timezone and format it according to user's preference.
     
@@ -93,6 +93,7 @@ def format_datetime(utc_datetime, user_id: int, date_format: str = None):
         utc_datetime: A datetime object (can be timezone-aware or naive)
         user_id: The ID of the user
         date_format: Optional date format string. If not provided, uses user's preference.
+        time_format: Optional time format string. If not provided, uses user's preference.
         
     Returns:
         Formatted datetime string
@@ -107,12 +108,26 @@ def format_datetime(utc_datetime, user_id: int, date_format: str = None):
     if date_format is None:
         # First get global date format
         global_setting = query("SELECT value FROM settings WHERE key = 'date_format'").mappings().first()
-        date_format = global_setting["value"] if global_setting else "%d/%m/%Y %H:%M"
+        date_format = global_setting["value"] if global_setting else "%d/%m/%Y"
         
         # Override with user's date format if set
         user = query("SELECT date_format FROM users WHERE id = :id", {"id": user_id}).mappings().first()
         if user and user["date_format"]:
             date_format = user["date_format"]
     
+    # Get time format preference if not provided
+    if time_format is None:
+        # First get global time format
+        global_setting = query("SELECT value FROM settings WHERE key = 'time_format'").mappings().first()
+        time_format = global_setting["value"] if global_setting else "%H:%M"
+        
+        # Override with user's time format if set
+        user = query("SELECT time_format FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+        if user and user["time_format"]:
+            time_format = user["time_format"]
+    
+    # Combine date and time format
+    full_format = f"{date_format} {time_format}"
+    
     # Format the datetime
-    return local_datetime.strftime(date_format)
+    return local_datetime.strftime(full_format)

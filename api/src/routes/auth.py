@@ -48,7 +48,8 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
         # First login, set password
         request.session["user_id"] = user["id"]
         request.session["username"] = user["username"]
-        request.session["date_format"] = user["date_format"] or "%d/%m/%Y %H:%M"
+        request.session["date_format"] = user["date_format"] or "%d/%m/%Y"
+        request.session["time_format"] = user["time_format"] or "%H:%M"
         request.session["timezone"] = user["timezone"] or "Australia/Melbourne"
         request.session["role"] = user["role"] or "administrator"
         request.session["needs_password"] = True
@@ -59,7 +60,8 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
         if bcrypt.checkpw(password.encode('utf-8'), user["password_hash"].encode('utf-8')):
             request.session["user_id"] = user["id"]
             request.session["username"] = user["username"]
-            request.session["date_format"] = user["date_format"] or "%d/%m/%Y %H:%M"
+            request.session["date_format"] = user["date_format"] or "%d/%m/%Y"
+            request.session["time_format"] = user["time_format"] or "%H:%M"
             request.session["timezone"] = user["timezone"] or "Australia/Melbourne"
             request.session["role"] = user["role"] or "administrator"
             

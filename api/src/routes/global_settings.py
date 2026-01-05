@@ -36,7 +36,8 @@ def settings_form(request: Request):
 def save_settings(
     request: Request,
     page_size: int = Form(...),
-    date_format: str = Form("%d/%m/%Y %H:%M"),
+    date_format: str = Form("%d/%m/%Y"),
+    time_format: str = Form("%H:%M"),
     timezone: str = Form("Australia/Melbourne"),
     enable_purge: bool = Form(False),
     retention_value: int = Form(1),
@@ -51,6 +52,7 @@ def save_settings(
         settings_data = [
             ('page_size', str(page_size)),
             ('date_format', date_format),
+            ('time_format', time_format),
             ('timezone', timezone),
             ('enable_purge', str(enable_purge).lower()),
             ('retention_value', str(retention_value)),
@@ -70,6 +72,7 @@ def save_settings(
         
         # Update session variables
         request.session["date_format"] = date_format
+        request.session["time_format"] = time_format
         request.session["timezone"] = timezone
     except Exception as e:
         log("error", "Settings", f"Failed to save settings: {str(e)}", "")
@@ -77,7 +80,7 @@ def save_settings(
         return RedirectResponse("/global-settings", status_code=303)
 
     username = request.session.get("username", "unknown")
-    log("info", "Settings", f"User '{username}' updated global settings (page_size={page_size}, date_format={date_format}, timezone={timezone}, enable_purge={enable_purge}, retention={retention_value} {retention_unit}, delete_from_mail_server={retention_delete_from_mail_server})", "")
+    log("info", "Settings", f"User '{username}' updated global settings (page_size={page_size}, date_format={date_format}, time_format={time_format}, timezone={timezone}, enable_purge={enable_purge}, retention={retention_value} {retention_unit}, delete_from_mail_server={retention_delete_from_mail_server})", "")
 
     flash(request, "Settings updated successfully.")
     return RedirectResponse("/global-settings", status_code=303)

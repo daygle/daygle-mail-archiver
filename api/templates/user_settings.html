@@ -18,13 +18,24 @@
             <div class="form-group">
                 <label for="date_format" class="form-label">Date Format</label>
                 <select id="date_format" class="form-select" name="date_format">
-                    <option value="%d/%m/%Y %H:%M" {% if date_format == '%d/%m/%Y %H:%M' %}selected{% endif %}>15/01/2024 14:30</option>
-                    <option value="%Y-%m-%d %H:%M:%S" {% if date_format == '%Y-%m-%d %H:%M:%S' %}selected{% endif %}>2024-01-15 14:30:45</option>
-                    <option value="%m/%d/%Y %I:%M %p" {% if date_format == '%m/%d/%Y %I:%M %p' %}selected{% endif %}>01/15/2024 02:30 PM</option>
-                    <option value="%d/%m/%Y %H:%M:%S" {% if date_format == '%d/%m/%Y %H:%M:%S' %}selected{% endif %}>15/01/2024 14:30:45</option>
-                    <option value="%Y-%m-%d %I:%M %p" {% if date_format == '%Y-%m-%d %I:%M %p' %}selected{% endif %}>2024-01-15 02:30 PM</option>
+                    <option value="%d/%m/%Y" {% if date_format == '%d/%m/%Y' or not date_format %}selected{% endif %}>15/01/2024</option>
+                    <option value="%Y-%m-%d" {% if date_format == '%Y-%m-%d' %}selected{% endif %}>2024-01-15</option>
+                    <option value="%m/%d/%Y" {% if date_format == '%m/%d/%Y' %}selected{% endif %}>01/15/2024</option>
+                    <option value="%d %b %Y" {% if date_format == '%d %b %Y' %}selected{% endif %}>15 Jan 2024</option>
+                    <option value="%B %d, %Y" {% if date_format == '%B %d, %Y' %}selected{% endif %}>January 15, 2024</option>
                 </select>
-                <small class="form-text">Date and time display format</small>
+                <small class="form-text">Date display format</small>
+            </div>
+
+            <div class="form-group mt-3">
+                <label for="time_format" class="form-label">Time Format</label>
+                <select id="time_format" class="form-select" name="time_format">
+                    <option value="%H:%M" {% if time_format == '%H:%M' or not time_format %}selected{% endif %}>14:30 (24-hour)</option>
+                    <option value="%H:%M:%S" {% if time_format == '%H:%M:%S' %}selected{% endif %}>14:30:45 (24-hour with seconds)</option>
+                    <option value="%I:%M %p" {% if time_format == '%I:%M %p' %}selected{% endif %}>02:30 PM (12-hour)</option>
+                    <option value="%I:%M:%S %p" {% if time_format == '%I:%M:%S %p' %}selected{% endif %}>02:30:45 PM (12-hour with seconds)</option>
+                </select>
+                <small class="form-text">Time display format</small>
             </div>
 
             <div class="form-group mt-3">

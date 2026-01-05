@@ -136,20 +136,22 @@ def user_settings_form(request: Request):
         return RedirectResponse("/login", status_code=303)
 
     user_id = request.session["user_id"]
-    user = query("SELECT date_format, timezone FROM users WHERE id = :id", {"id": user_id}).mappings().first()
-    current_format = user["date_format"] if user else "%d/%m/%Y %H:%M"
+    user = query("SELECT date_format, time_format, timezone FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+    current_date_format = user["date_format"] if user else "%d/%m/%Y"
+    current_time_format = user["time_format"] if user else "%H:%M"
     current_timezone = user["timezone"] if user and user["timezone"] else "Australia/Melbourne"
 
     msg = request.session.pop("flash", None)
     return templates.TemplateResponse("user_settings.html", {
         "request": request, 
         "flash": msg, 
-        "date_format": current_format,
+        "date_format": current_date_format,
+        "time_format": current_time_format,
         "timezone": current_timezone
     })
 
 @router.post("/user_settings/update")
-def update_user_settings(request: Request, date_format: str = Form(...), timezone: str = Form("Australia/Melbourne")):
+def update_user_settings(request: Request, date_format: str = Form(...), time_format: str = Form(...), timezone: str = Form("Australia/Melbourne")):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
@@ -157,14 +159,15 @@ def update_user_settings(request: Request, date_format: str = Form(...), timezon
     username = request.session.get("username", "unknown")
     
     try:
-        execute("UPDATE users SET date_format = :f, timezone = :tz WHERE id = :id", 
-                {"f": date_format, "tz": timezone, "id": user_id})
+        execute("UPDATE users SET date_format = :df, time_format = :tf, timezone = :tz WHERE id = :id", 
+                {"df": date_format, "tf": time_format, "tz": timezone, "id": user_id})
         
         # Update session variables
         request.session["date_format"] = date_format
+        request.session["time_format"] = time_format
         request.session["timezone"] = timezone
         
-        log("info", "Settings", f"User '{username}' updated their settings (date_format={date_format}, timezone={timezone})", "")
+        log("info", "Settings", f"User '{username}' updated their settings (date_format={date_format}, time_format={time_format}, timezone={timezone})", "")
         flash(request, "User settings updated successfully.")
         return RedirectResponse("/user_settings", status_code=303)
     except Exception as e:

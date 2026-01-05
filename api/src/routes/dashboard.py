@@ -18,9 +18,9 @@ def get_user_date_format(request: Request, date_only: bool = False) -> str:
     # Get global date format
     try:
         global_setting = query("SELECT value FROM settings WHERE key = 'date_format'").mappings().first()
-        date_format = global_setting["value"] if global_setting else "%d/%m/%Y %H:%M"
+        date_format = global_setting["value"] if global_setting else "%d/%m/%Y"
     except Exception:
-        date_format = "%d/%m/%Y %H:%M"
+        date_format = "%d/%m/%Y"
     
     # Override with user's date format if set
     user_id = request.session.get("user_id")
@@ -32,11 +32,26 @@ def get_user_date_format(request: Request, date_only: bool = False) -> str:
         except Exception:
             pass
     
-    # Extract just date portion if requested
-    if date_only and (" %H" in date_format or " %I" in date_format):
-        date_format = date_format.split()[0]
+    # If we only need the date part, return just date_format
+    if date_only:
+        return date_format
     
-    return date_format
+    # Get time format
+    try:
+        time_setting = query("SELECT value FROM settings WHERE key = 'time_format'").mappings().first()
+        time_format = time_setting["value"] if time_setting else "%H:%M"
+    except Exception:
+        time_format = "%H:%M"
+    
+    if user_id:
+        try:
+            user = query("SELECT time_format FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+            if user and user["time_format"]:
+                time_format = user["time_format"]
+        except Exception:
+            pass
+    
+    return f"{date_format} {time_format}"
 
 
 @router.get("/dashboard", response_class=HTMLResponse)
