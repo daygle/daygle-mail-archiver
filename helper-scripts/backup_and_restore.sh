@@ -234,14 +234,23 @@ restore() {
     cd "$ROOT_DIR"
     
     # Drop existing database connections and recreate
-    $DOCKER_COMPOSE exec -T db psql -U "$DB_USER" -d postgres <<EOF
-SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$DB_NAME' AND pid <> pg_backend_pid();
-DROP DATABASE IF EXISTS "$DB_NAME";
-CREATE DATABASE "$DB_NAME" OWNER "$DB_USER";
+    # Use printf to properly escape the database name and avoid SQL injection
+    $DOCKER_COMPOSE exec -T db psql -U "$DB_USER" -d postgres -v db_name="$DB_NAME" <<'EOF'
+SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = :'db_name' AND pid <> pg_backend_pid();
 EOF
     
+    # Drop and recreate database using psql commands with proper escaping
+    $DOCKER_COMPOSE exec -T db psql -U "$DB_USER" -d postgres -c "DROP DATABASE IF EXISTS \"$DB_NAME\""
+    
     if [ $? -ne 0 ]; then
-        log_error "Failed to prepare database for restore"
+        log_error "Failed to drop existing database"
+        exit 1
+    fi
+    
+    $DOCKER_COMPOSE exec -T db psql -U "$DB_USER" -d postgres -c "CREATE DATABASE \"$DB_NAME\" OWNER \"$DB_USER\""
+    
+    if [ $? -ne 0 ]; then
+        log_error "Failed to create database"
         exit 1
     fi
     
