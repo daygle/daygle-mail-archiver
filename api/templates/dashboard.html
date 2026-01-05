@@ -2,6 +2,12 @@
 
 {% block page_title %}Dashboard{% endblock %}
 
+{% block extra_css %}
+<!-- GridStack CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@9.3.1/dist/gridstack.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@9.3.1/dist/gridstack-extra.min.css" />
+{% endblock %}
+
 {% block content %}
 <!-- Customization Toolbar -->
 <div class="dashboard-toolbar">
@@ -271,13 +277,34 @@
     </div>
 </div>
 
-<!-- GridStack CSS & JS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@9.3.1/dist/gridstack.min.css" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@9.3.1/dist/gridstack-extra.min.css" />
-<script src="https://cdn.jsdelivr.net/npm/gridstack@9.3.1/dist/gridstack-all.js"></script>
+<!-- GridStack JS -->
+<script src="https://cdn.jsdelivr.net/npm/gridstack@9.3.1/dist/gridstack-all.js" onerror="loadGridStackFallback()"></script>
+<script>
+function loadGridStackFallback() {
+    console.warn('Primary GridStack CDN failed, trying fallback...');
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/gridstack@9.3.1/dist/gridstack-all.js';
+    script.onerror = function() {
+        console.error('GridStack fallback CDN also failed');
+        alert('Unable to load GridStack library from CDN. Please check your internet connection or firewall settings.');
+    };
+    document.head.appendChild(script);
+}
+</script>
 
 <!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" onerror="loadChartFallback()"></script>
+<script>
+function loadChartFallback() {
+    console.warn('Primary Chart.js CDN failed, trying fallback...');
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/chart.js@4.4.1/dist/chart.umd.min.js';
+    script.onerror = function() {
+        console.error('Chart.js fallback CDN also failed');
+    };
+    document.head.appendChild(script);
+}
+</script>
 
 <script>
 // Dashboard Widget Manager
@@ -911,8 +938,17 @@ const DashboardManager = {
 };
 
 // Initialize dashboard when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+function initDashboard() {
+    if (typeof GridStack === 'undefined') {
+        console.log('GridStack not loaded yet, waiting...');
+        setTimeout(initDashboard, 100);
+        return;
+    }
     DashboardManager.init();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initDashboard();
 });
 </script>
 
