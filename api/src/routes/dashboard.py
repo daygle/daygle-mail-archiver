@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from utils.db import query
 from utils.logger import log
 from utils.templates import templates
+from utils.timezone import convert_utc_to_user_timezone, get_user_timezone
 
 router = APIRouter()
 
@@ -69,6 +70,25 @@ def get_user_date_format(request: Request, date_only: bool = False) -> str:
     return f"{date_format} {time_format}"
 
 
+def format_user_datetime(request: Request, dt, date_only: bool = False):
+    """Format a datetime in user's timezone and preferred format"""
+    if dt is None:
+        return None
+    
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return dt
+    
+    # Convert to user's timezone
+    local_dt = convert_utc_to_user_timezone(dt, user_id)
+    
+    # Get format string
+    format_str = get_user_date_format(request, date_only)
+    
+    # Return formatted datetime
+    return local_dt.strftime(format_str)
+
+
 @router.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request):
     """Dashboard page with charts"""
@@ -91,6 +111,7 @@ def emails_per_day(request: Request):
     try:
         date_format = get_user_date_format(request, date_only=True)
 
+        user_id = request.session.get("user_id")
         results = query("""
             SELECT 
                 DATE(created_at) as date,
@@ -101,8 +122,17 @@ def emails_per_day(request: Request):
             ORDER BY date
         """).mappings().all()
 
+        labels = []
+        for row in results:
+            # Convert date to user's timezone before formatting
+            if row["date"]:
+                local_dt = convert_utc_to_user_timezone(row["date"], user_id)
+                labels.append(local_dt.strftime(date_format))
+            else:
+                labels.append("")
+
         return {
-            "labels": [row["date"].strftime(date_format) for row in results],
+            "labels": labels,
             "data": [row["count"] for row in results]
         }
     except Exception as e:
@@ -266,6 +296,7 @@ def deletion_stats(request: Request):
 
     try:
         date_format = get_user_date_format(request, date_only=True)
+        user_id = request.session.get("user_id")
 
         # Get deletion stats grouped by type
         results = query("""
@@ -292,7 +323,12 @@ def deletion_stats(request: Request):
         by_date = defaultdict(lambda: {"manual": 0, "retention": 0, "from_server": 0})
         
         for row in results:
-            date_str = row["deletion_date"].strftime(date_format)
+            if row["deletion_date"]:
+                local_dt = convert_utc_to_user_timezone(row["deletion_date"], user_id)
+                date_str = local_dt.strftime(date_format)
+            else:
+                date_str = ""
+                
             if row["deletion_type"] == "manual":
                 by_date[date_str]["manual"] += row["total_count"]
             elif row["deletion_type"] == "retention":
@@ -411,15 +447,20 @@ def recent_activity(request: Request):
             LIMIT 10
         """).mappings().all()
 
-        activities = [
-            {
+        user_id = request.session.get("user_id")
+        activities = []
+        for row in results:
+            date_str = ""
+            if row["created_at"]:
+                local_dt = convert_utc_to_user_timezone(row["created_at"], user_id)
+                date_str = local_dt.strftime(date_format)
+            
+            activities.append({
                 "subject": row["subject"] or "(No Subject)",
                 "sender": row["sender"] or "Unknown",
                 "recipients": row["recipients"] or "",
-                "date": row["created_at"].strftime(date_format) if row["created_at"] else ""
-            }
-            for row in results
-        ]
+                "date": date_str
+            })
 
         return {"activities": activities}
     except Exception as e:
@@ -436,6 +477,7 @@ def storage_trends(request: Request):
 
     try:
         date_format = get_user_date_format(request, date_only=True)
+        user_id = request.session.get("user_id")
         
         results = query("""
             SELECT 
@@ -448,8 +490,16 @@ def storage_trends(request: Request):
             ORDER BY date
         """).mappings().all()
 
+        labels = []
+        for row in results:
+            if row["date"]:
+                local_dt = convert_utc_to_user_timezone(row["date"], user_id)
+                labels.append(local_dt.strftime(date_format))
+            else:
+                labels.append("")
+
         return {
-            "labels": [row["date"].strftime(date_format) for row in results],
+            "labels": labels,
             "counts": [row["count"] for row in results],
             "sizes": [(row["total_size"] or 0) / (1024 * 1024) for row in results]  # Convert to MB
         }
@@ -467,6 +517,7 @@ def account_health(request: Request):
 
     try:
         date_format = get_user_date_format(request)
+        user_id = request.session.get("user_id")
         
         results = query("""
             SELECT 
@@ -488,10 +539,15 @@ def account_health(request: Request):
             elif not row["last_success"]:
                 status = "never_fetched"
             
+            last_fetch_str = "Never"
+            if row["last_success"]:
+                local_dt = convert_utc_to_user_timezone(row["last_success"], user_id)
+                last_fetch_str = local_dt.strftime(date_format)
+            
             accounts.append({
                 "email": row["name"],
                 "status": status,
-                "last_fetch": row["last_success"].strftime(date_format) if row["last_success"] else "Never",
+                "last_fetch": last_fetch_str,
                 "error": row["last_error"] or ""
             })
 
