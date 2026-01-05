@@ -2,11 +2,11 @@
 # Daygle Mail Archiver - Configuration File
 # ============================================
 # This configuration file uses INI format for better organization
-# and readability. Copy this file to .conf and update the values.
+# and readability. Copy this file to daygle_mail_archiver.conf and update the values.
 #
 # Usage:
-#   cp .conf.example .conf
-#   # Edit .conf with your settings
+#   cp daygle_mail_archiver.conf.example daygle_mail_archiver.conf
+#   # Edit daygle_mail_archiver.conf with your settings
 #   docker compose up -d --build
 # ============================================
 

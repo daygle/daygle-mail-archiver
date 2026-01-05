@@ -1,12 +1,12 @@
 """
 Configuration loader for Daygle Mail Archiver.
 
-This module handles loading configuration from .conf files (INI format).
+This module handles loading configuration from daygle_mail_archiver.conf file (INI format).
 Configuration can be overridden by environment variables.
 
 Priority order (highest to lowest):
 1. Environment variables - highest priority override
-2. .conf file (INI format) - primary configuration file
+2. daygle_mail_archiver.conf file (INI format) - primary configuration file
 """
 import os
 import configparser
@@ -15,14 +15,14 @@ from typing import Optional
 
 
 class Config:
-    """Configuration manager that loads from .conf file."""
+    """Configuration manager that loads from daygle_mail_archiver.conf file."""
     
     def __init__(self):
         self._config = {}
         self._load_config()
     
     def _load_config(self):
-        """Load configuration from .conf file or environment variables."""
+        """Load configuration from daygle_mail_archiver.conf file or environment variables."""
         # Check multiple possible locations for config files
         # 1. In /app (when running in Docker)
         # 2. In project root (when running locally for development)
@@ -34,12 +34,12 @@ class Config:
         conf_file = None
         
         for root_dir in possible_roots:
-            conf_candidate = root_dir / ".conf"
+            conf_candidate = root_dir / "daygle_mail_archiver.conf"
             if conf_candidate.exists():
                 conf_file = conf_candidate
                 break
         
-        # Load from .conf file
+        # Load from daygle_mail_archiver.conf file
         if conf_file and conf_file.exists():
             self._load_from_conf(conf_file)
         
@@ -47,7 +47,7 @@ class Config:
         self._load_from_environment()
     
     def _load_from_conf(self, conf_file: Path):
-        """Load configuration from INI-style .conf file."""
+        """Load configuration from INI-style daygle_mail_archiver.conf file."""
         parser = configparser.ConfigParser()
         parser.read(conf_file)
         

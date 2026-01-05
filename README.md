@@ -83,10 +83,10 @@ cd daygle-mail-archiver
 Create your configuration file from the example:
 
 ```bash
-cp .conf.example .conf
+cp daygle_mail_archiver.conf.example daygle_mail_archiver.conf
 ```
 
-Edit `.conf` with your settings:
+Edit `daygle_mail_archiver.conf` with your settings:
 
 ```ini
 [database]
@@ -101,7 +101,7 @@ session_secret = 8f4c2b9e3d7a4f1c9e8b2d3f7c6a1e4b5d8f0c2a7b9d3e6f1a4c7b8d9e2f3a1
 imap_password_key = 8t2y0x8qZp8G7QfVYp4p0Q2u7v8Yx1m4l8e0q2c3s0A=
 ```
 
-**Benefits of .conf format:**
+**Benefits of daygle_mail_archiver.conf format:**
 - Better organization with sections
 - More maintainable and readable
 - Easier to understand configuration structure
@@ -112,7 +112,7 @@ imap_password_key = 8t2y0x8qZp8G7QfVYp4p0Q2u7v8Yx1m4l8e0q2c3s0A=
 
 The system loads configuration in the following priority order:
 1. Environment variables (highest priority)
-2. `.conf` file
+2. `daygle_mail_archiver.conf` file
 
 ### Important Security Notes
 
@@ -123,7 +123,7 @@ To generate a new Fernet key for `imap_password_key`:
 python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 ```
 
-To generate a new session secret (`session_secret` in .conf):
+To generate a new session secret (`session_secret` in daygle_mail_archiver.conf):
 ```bash
 python3 -c "import secrets; print(secrets.token_hex(32))"
 ```
@@ -418,7 +418,7 @@ Protect your email archive with the built-in command-line backup and restore scr
 
 ## Command-Line Backup & Restore
 
-The `scripts/backup_restore.sh` script provides a complete backup solution that includes both the database AND the `.conf` file with encryption keys in a single process.
+The `scripts/backup_restore.sh` script provides a complete backup solution that includes both the database AND the `daygle_mail_archiver.conf` file with encryption keys in a single process.
 
 ### Creating a Backup
 
@@ -429,7 +429,7 @@ cd /opt/daygle-mail-archiver
 
 This creates a timestamped backup file in `./backups/` directory (e.g., `daygle_mail_archiver_backup_20240105_120000.tar.gz`) containing:
 - Complete PostgreSQL database dump
-- `.conf` file with all encryption keys
+- `daygle_mail_archiver.conf` file with all encryption keys
 - Backup metadata
 
 **Important:** Store backups securely - they contain sensitive encryption keys and all email data.
@@ -450,7 +450,7 @@ Shows all available backups with size and creation date.
 
 This will:
 1. Extract the backup archive
-2. Restore the `.conf` file (backing up the current one)
+2. Restore the `daygle_mail_archiver.conf` file (backing up the current one)
 3. Drop and recreate the database
 4. Restore all data from the backup
 
@@ -468,7 +468,7 @@ docker compose restart
 ### Script Features
 
 - **Complete Backup**: Includes database AND configuration file in one archive
-- **Standard INI Format**: Uses .conf for better readability
+- **Standard INI Format**: Uses daygle_mail_archiver.conf for better readability
 - **Atomic Operations**: Ensures backup consistency
 - **Safety Checks**: Confirms destructive operations before proceeding
 - **Progress Logging**: Clear status messages during backup/restore

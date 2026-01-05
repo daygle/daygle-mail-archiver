@@ -72,34 +72,34 @@ check_containers() {
 
 # Function to load configuration file
 load_config() {
-    # Load from .conf file
-    if [ -f "$ROOT_DIR/.conf" ]; then
-        log_info "Loading configuration from .conf file..."
-        # Parse .conf file (INI format) to extract database credentials
-        if grep -q "^\[database\]" "$ROOT_DIR/.conf"; then
+    # Load from daygle_mail_archiver.conf file
+    if [ -f "$ROOT_DIR/daygle_mail_archiver.conf" ]; then
+        log_info "Loading configuration from daygle_mail_archiver.conf file..."
+        # Parse daygle_mail_archiver.conf file (INI format) to extract database credentials
+        if grep -q "^\[database\]" "$ROOT_DIR/daygle_mail_archiver.conf"; then
             # Parse database section values (handles section at any position in file)
-            DB_NAME=$(awk -F '=' '/^\[database\]/,0 {if ($1 ~ /^[ \t]*name[ \t]*$/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2; exit}}' "$ROOT_DIR/.conf")
-            DB_USER=$(awk -F '=' '/^\[database\]/,0 {if ($1 ~ /^[ \t]*user[ \t]*$/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2; exit}}' "$ROOT_DIR/.conf")
-            DB_PASS=$(awk -F '=' '/^\[database\]/,0 {if ($1 ~ /^[ \t]*password[ \t]*$/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2; exit}}' "$ROOT_DIR/.conf")
+            DB_NAME=$(awk -F '=' '/^\[database\]/,0 {if ($1 ~ /^[ \t]*name[ \t]*$/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2; exit}}' "$ROOT_DIR/daygle_mail_archiver.conf")
+            DB_USER=$(awk -F '=' '/^\[database\]/,0 {if ($1 ~ /^[ \t]*user[ \t]*$/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2; exit}}' "$ROOT_DIR/daygle_mail_archiver.conf")
+            DB_PASS=$(awk -F '=' '/^\[database\]/,0 {if ($1 ~ /^[ \t]*password[ \t]*$/) {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2; exit}}' "$ROOT_DIR/daygle_mail_archiver.conf")
             
             # Export for docker-compose
             export POSTGRES_DB="$DB_NAME"
             export POSTGRES_USER="$DB_USER"
             export POSTGRES_PASSWORD="$DB_PASS"
         else
-            log_error ".conf file exists but [database] section not found"
+            log_error "daygle_mail_archiver.conf file exists but [database] section not found"
             exit 1
         fi
     else
-        log_error "No configuration file found (.conf)"
-        log_info "Please create .conf file from .conf.example"
+        log_error "No configuration file found (daygle_mail_archiver.conf)"
+        log_info "Please create daygle_mail_archiver.conf file from daygle_mail_archiver.conf.example"
         exit 1
     fi
     
     # Validate that required variables are set
     if [ -z "$DB_NAME" ] || [ -z "$DB_USER" ] || [ -z "$DB_PASS" ]; then
         log_error "Required database configuration not found"
-        log_info "Please ensure your .conf file contains: name, user, password in [database] section"
+        log_info "Please ensure your daygle_mail_archiver.conf file contains: name, user, password in [database] section"
         exit 1
     fi
 }
@@ -140,13 +140,13 @@ backup() {
     
     log_success "Database backup created"
     
-    # Copy .conf file
+    # Copy daygle_mail_archiver.conf file
     log_info "Backing up configuration file..."
-    if [ -f "$ROOT_DIR/.conf" ]; then
-        cp "$ROOT_DIR/.conf" "$TEMP_BACKUP_DIR/.conf"
-        log_success "Configuration file (.conf) backed up"
+    if [ -f "$ROOT_DIR/daygle_mail_archiver.conf" ]; then
+        cp "$ROOT_DIR/daygle_mail_archiver.conf" "$TEMP_BACKUP_DIR/daygle_mail_archiver.conf"
+        log_success "Configuration file (daygle_mail_archiver.conf) backed up"
     else
-        log_warning ".conf file not found, skipping"
+        log_warning "daygle_mail_archiver.conf file not found, skipping"
     fi
     
     # Create metadata file
@@ -160,7 +160,7 @@ Database User: $DB_USER
 
 Contents:
 - database.sql: Full PostgreSQL database dump
-- .conf: Configuration file with encryption keys
+- daygle_mail_archiver.conf: Configuration file with encryption keys
 
 IMPORTANT: Keep this backup secure as it contains:
 - IMAP_PASSWORD_KEY: Required to decrypt IMAP account passwords
@@ -187,7 +187,7 @@ EOF
         echo "  - Complete database with all emails"
         echo "  - Encryption keys (IMAP_PASSWORD_KEY, SESSION_SECRET)"
         echo "  - Database credentials"
-        echo "  - Configuration file (.conf)"
+        echo "  - Configuration file (daygle_mail_archiver.conf)"
     else
         log_error "Failed to create backup archive"
         exit 1
@@ -242,22 +242,22 @@ restore() {
     fi
     
     # Restore configuration file
-    if [ -f "$TEMP_RESTORE_DIR/.conf" ]; then
-        log_info "Restoring configuration file (.conf)..."
+    if [ -f "$TEMP_RESTORE_DIR/daygle_mail_archiver.conf" ]; then
+        log_info "Restoring configuration file (daygle_mail_archiver.conf)..."
         
-        # Backup current .conf if it exists
-        if [ -f "$ROOT_DIR/.conf" ]; then
-            cp "$ROOT_DIR/.conf" "$ROOT_DIR/.conf.backup_$(date +%Y%m%d_%H%M%S)"
-            log_info "Current .conf backed up to .conf.backup_*"
+        # Backup current daygle_mail_archiver.conf if it exists
+        if [ -f "$ROOT_DIR/daygle_mail_archiver.conf" ]; then
+            cp "$ROOT_DIR/daygle_mail_archiver.conf" "$ROOT_DIR/daygle_mail_archiver.conf.backup_$(date +%Y%m%d_%H%M%S)"
+            log_info "Current daygle_mail_archiver.conf backed up to daygle_mail_archiver.conf.backup_*"
         fi
         
-        cp "$TEMP_RESTORE_DIR/.conf" "$ROOT_DIR/.conf"
+        cp "$TEMP_RESTORE_DIR/daygle_mail_archiver.conf" "$ROOT_DIR/daygle_mail_archiver.conf"
         log_success "Configuration file restored"
         
         # Reload configuration
         load_config
     else
-        log_warning "No configuration file (.conf) found in backup"
+        log_warning "No configuration file (daygle_mail_archiver.conf) found in backup"
     fi
     
     # Restore database
@@ -416,7 +416,7 @@ Examples:
 
 Notes:
   - Backups are stored in ./backups/ directory
-  - Backups include database dump and .conf configuration file
+  - Backups include database dump and daygle_mail_archiver.conf configuration file
   - Configuration file contains encryption keys and database credentials
   - Always test restores on a non-production system first
   - Keep backups secure - they contain sensitive encryption keys
