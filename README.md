@@ -163,6 +163,42 @@ After setting your password, you'll be redirected to the Dashboard.
 
 ---
 
+## 6. Quick Reference - Common Commands
+
+### Backup and Restore
+```bash
+# Create a complete backup (database + .env keys)
+./helper-scripts/backup_and_restore.sh backup
+
+# List available backups
+./helper-scripts/backup_and_restore.sh list
+
+# Restore from backup
+./helper-scripts/backup_and_restore.sh restore daygle_backup_20240105_120000.tar.gz
+```
+
+### Container Management
+```bash
+# View container status
+docker compose ps
+
+# View logs
+docker compose logs -f        # All services
+docker compose logs -f api    # API only
+docker compose logs -f worker # Worker only
+
+# Restart services
+docker compose restart
+
+# Stop and remove all containers
+docker compose down
+
+# Full reset (removes data)
+docker compose down --volumes
+```
+
+---
+
 # Setting Up Email Fetch Accounts
 
 The system supports three types of email fetch accounts:
