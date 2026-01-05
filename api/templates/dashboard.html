@@ -147,6 +147,9 @@
         <button id="btn-reset-layout" class="btn btn-warning" style="display: none;" title="Reset Layout">
             <i class="fas fa-undo"></i>
         </button>
+        <button id="btn-cancel" class="btn btn-secondary" style="display: none;" title="Cancel">
+            <i class="fas fa-times"></i>
+        </button>
     </div>
 </div>
 
@@ -645,6 +648,12 @@ const DashboardManager = {
             }
         });
 
+        // Cancel button
+        console.log('Setting up cancel button listener');
+        document.getElementById('btn-cancel').addEventListener('click', () => {
+            this.cancelEdit();
+        });
+
         // Close modal button
         console.log('Setting up close modal button listener');
         document.getElementById('btn-close-modal').addEventListener('click', () => {
@@ -687,6 +696,7 @@ const DashboardManager = {
             document.getElementById('btn-add-widget').style.display = 'inline-block';
             document.getElementById('btn-save-layout').style.display = 'inline-block';
             document.getElementById('btn-reset-layout').style.display = 'inline-block';
+            document.getElementById('btn-cancel').style.display = 'inline-block';
             document.querySelector('.grid-stack').classList.add('edit-mode');
         } else {
             this.grid.disable();
@@ -694,8 +704,18 @@ const DashboardManager = {
             document.getElementById('btn-add-widget').style.display = 'none';
             document.getElementById('btn-save-layout').style.display = 'none';
             document.getElementById('btn-reset-layout').style.display = 'none';
+            document.getElementById('btn-cancel').style.display = 'none';
             document.querySelector('.grid-stack').classList.remove('edit-mode');
         }
+    },
+
+    cancelEdit() {
+        // Exit edit mode
+        this.editMode = true; // Set to true so toggleEditMode will set it to false
+        this.toggleEditMode();
+        
+        // Reload saved layout to discard changes
+        this.loadLayout();
     },
 
     showWidgetSelector() {
