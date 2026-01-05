@@ -441,7 +441,7 @@ def storage_trends(request: Request):
             SELECT 
                 DATE(created_at) as date,
                 COUNT(*) as count,
-                SUM(COALESCE(size, 0)) as total_size
+                SUM(LENGTH(raw_email)) as total_size
             FROM emails
             WHERE created_at >= NOW() - INTERVAL '7 days'
             GROUP BY DATE(created_at)
@@ -451,7 +451,7 @@ def storage_trends(request: Request):
         return {
             "labels": [row["date"].strftime(date_format) for row in results],
             "counts": [row["count"] for row in results],
-            "sizes": [row["total_size"] / (1024 * 1024) for row in results]  # Convert to MB
+            "sizes": [(row["total_size"] or 0) / (1024 * 1024) for row in results]  # Convert to MB
         }
     except Exception as e:
         username = request.session.get("username", "unknown")
