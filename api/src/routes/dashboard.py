@@ -466,6 +466,8 @@ def account_health(request: Request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
     try:
+        date_format = get_user_date_format(request)
+        
         results = query("""
             SELECT 
                 name,
@@ -489,7 +491,7 @@ def account_health(request: Request):
             accounts.append({
                 "email": row["name"],
                 "status": status,
-                "last_fetch": row["last_success"].strftime("%Y-%m-%d %H:%M") if row["last_success"] else "Never",
+                "last_fetch": row["last_success"].strftime(date_format) if row["last_success"] else "Never",
                 "error": row["last_error"] or ""
             })
 
