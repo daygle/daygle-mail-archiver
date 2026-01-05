@@ -369,8 +369,18 @@ const DashboardManager = {
 
     async loadLayout() {
         try {
+            console.log('Loading dashboard layout...');
             const response = await fetch('/api/dashboard/preferences');
+            console.log('Preferences response status:', response.status);
+            
+            if (!response.ok) {
+                console.warn('Preferences API returned error, using defaults');
+                this.renderWidgets(this.defaultWidgets);
+                return;
+            }
+            
             const data = await response.json();
+            console.log('Preferences data:', data);
             
             let widgets = data.widgets && data.widgets.length > 0 
                 ? data.widgets.map(w => ({
@@ -383,9 +393,11 @@ const DashboardManager = {
                   }))
                 : this.defaultWidgets;
 
+            console.log('Using widgets:', widgets);
             this.renderWidgets(widgets);
         } catch (error) {
             console.error('Error loading layout:', error);
+            console.log('Falling back to default widgets');
             this.renderWidgets(this.defaultWidgets);
         }
     },
