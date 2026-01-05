@@ -589,6 +589,15 @@ const DashboardManager = {
                   }))
                 : this.defaultWidgets;
 
+            // Drop any widgets that do not have a matching template (avoids corrupted saved layouts)
+            widgets = widgets.filter(w => this.templateExists(w.id));
+
+            // If everything was filtered out, fall back to defaults
+            if (widgets.length === 0) {
+                console.warn('No valid widgets found in preferences, using defaults');
+                widgets = this.defaultWidgets;
+            }
+
             console.log('Using widgets:', widgets);
             this.renderWidgets(widgets);
         } catch (error) {
@@ -602,8 +611,12 @@ const DashboardManager = {
         // Clear existing widgets
         this.grid.removeAll();
 
+        // Ensure we have something visible; if not, revert to defaults
+        const hasVisible = widgets.some(w => w.visible);
+        const listToRender = hasVisible ? widgets : this.defaultWidgets;
+
         // Add each visible widget
-        widgets.forEach(widget => {
+        listToRender.forEach(widget => {
             if (widget.visible) {
                 this.addWidget(widget);
             }
@@ -617,7 +630,10 @@ const DashboardManager = {
 
     addWidget(config) {
         const template = document.getElementById(`template-${config.id}`);
-        if (!template) return;
+        if (!template) {
+            console.warn(`Template for widget '${config.id}' not found; skipping`);
+            return;
+        }
 
         const content = template.cloneNode(true);
         content.id = `widget-${config.id}`;
@@ -631,6 +647,10 @@ const DashboardManager = {
             content: content.outerHTML,
             id: config.id
         });
+    },
+
+    templateExists(id) {
+        return Boolean(document.getElementById(`template-${id}`));
     },
 
     setupEventListeners() {
