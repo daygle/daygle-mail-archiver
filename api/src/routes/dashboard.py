@@ -604,9 +604,13 @@ def system_status(request: Request):
 
 @router.get("/api/dashboard/check-updates")
 def check_updates(request: Request):
-    """Check for available system updates from git repository"""
+    """Check for available system updates from git repository (administrators only)"""
     if not require_login(request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
+    
+    # Only administrators can check for updates
+    if request.session.get("role") != "administrator":
+        return JSONResponse({"error": "Forbidden - Administrator access required"}, status_code=403)
     
     try:
         update_info = check_for_updates()

@@ -3,7 +3,6 @@ Update checker utility for Daygle Mail Archiver
 Checks for available updates from the git repository
 """
 import subprocess
-import os
 from pathlib import Path
 from typing import Dict, Optional
 
@@ -52,15 +51,13 @@ def check_for_updates() -> Dict[str, any]:
             result["error"] = "Not in a git repository"
             return result
         
-        # Change to repo directory
-        os.chdir(repo_root)
-        
         # Get current branch
         branch_result = subprocess.run(
             ["git", "rev-parse", "--abbrev-ref", "HEAD"],
             capture_output=True,
             text=True,
-            timeout=10
+            timeout=10,
+            cwd=repo_root
         )
         
         if branch_result.returncode != 0:
@@ -74,7 +71,8 @@ def check_for_updates() -> Dict[str, any]:
             ["git", "fetch", "origin", branch],
             capture_output=True,
             text=True,
-            timeout=30
+            timeout=30,
+            cwd=repo_root
         )
         
         if fetch_result.returncode != 0:
@@ -86,7 +84,8 @@ def check_for_updates() -> Dict[str, any]:
             ["git", "rev-parse", "HEAD"],
             capture_output=True,
             text=True,
-            timeout=10
+            timeout=10,
+            cwd=repo_root
         )
         
         if current_commit_result.returncode != 0:
@@ -101,7 +100,8 @@ def check_for_updates() -> Dict[str, any]:
             ["git", "log", "-1", "--pretty=format:%s", "HEAD"],
             capture_output=True,
             text=True,
-            timeout=10
+            timeout=10,
+            cwd=repo_root
         )
         if current_msg_result.returncode == 0:
             result["current_message"] = current_msg_result.stdout.strip()
@@ -111,7 +111,8 @@ def check_for_updates() -> Dict[str, any]:
             ["git", "rev-parse", f"origin/{branch}"],
             capture_output=True,
             text=True,
-            timeout=10
+            timeout=10,
+            cwd=repo_root
         )
         
         if latest_commit_result.returncode != 0:
@@ -126,7 +127,8 @@ def check_for_updates() -> Dict[str, any]:
             ["git", "log", "-1", "--pretty=format:%s", f"origin/{branch}"],
             capture_output=True,
             text=True,
-            timeout=10
+            timeout=10,
+            cwd=repo_root
         )
         if latest_msg_result.returncode == 0:
             result["latest_message"] = latest_msg_result.stdout.strip()
@@ -140,7 +142,8 @@ def check_for_updates() -> Dict[str, any]:
                 ["git", "rev-list", "--count", f"HEAD..origin/{branch}"],
                 capture_output=True,
                 text=True,
-                timeout=10
+                timeout=10,
+                cwd=repo_root
             )
             
             if count_result.returncode == 0:
