@@ -12,6 +12,14 @@ from imaplib import IMAP4, IMAP4_SSL
 
 router = APIRouter()
 
+# Fields that are safe to expose to JavaScript (exclude datetime and sensitive data)
+JSON_SAFE_FIELDS = [
+    'id', 'name', 'account_type', 'host', 'port', 'username',
+    'use_ssl', 'require_starttls', 'poll_interval_seconds',
+    'delete_after_processing', 'expunge_deleted', 'enabled',
+    'oauth_client_id'  # Client ID is public, but NOT client_secret
+]
+
 
 def require_login(request: Request):
     return "user_id" in request.session
@@ -71,18 +79,12 @@ def list_accounts(request: Request, page: int = 1):
     
     # Convert RowMapping objects to dictionaries and create JSON-safe versions
     accounts = []
-    # Define fields that are safe to expose to JavaScript (exclude sensitive data)
-    json_safe_fields = [
-        'id', 'name', 'account_type', 'host', 'port', 'username',
-        'use_ssl', 'require_starttls', 'poll_interval_seconds',
-        'delete_after_processing', 'expunge_deleted', 'enabled',
-        'oauth_client_id'  # Client ID is public, but NOT client_secret
-    ]
-    
     for acc in accounts_raw:
         acc_dict = dict(acc)
         # Create a JSON-safe version without datetime fields or sensitive data for JavaScript
-        acc_dict['json_safe'] = {field: acc_dict.get(field) for field in json_safe_fields}
+        acc_dict['json_safe'] = {
+            field: acc_dict[field] for field in JSON_SAFE_FIELDS if field in acc_dict
+        }
         accounts.append(acc_dict)
 
     msg = request.session.pop("flash", None)
