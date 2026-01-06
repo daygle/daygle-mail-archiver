@@ -67,7 +67,7 @@
     </div>
 
     <!-- Email Retention Policy Card -->
-    <div class="card">
+    <div class="card mb-4">
         <div class="card-header">
             <div class="card-title">
                 <i class="fas fa-clock"></i>
@@ -102,6 +102,51 @@
                     </select>
                 </div>
                 <small class="form-text">Emails older than this period will be automatically deleted</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- ClamAV Virus Scanning Card -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fas fa-shield-virus"></i>
+                <span>Virus Scanning (ClamAV)</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="clamav_enabled" name="clamav_enabled" {% if settings.clamav_enabled == 'true' %}checked{% endif %}>
+                <label class="form-check-label" for="clamav_enabled">
+                    <strong>Enable Virus Scanning</strong>
+                    <small class="d-block text-secondary">Scan incoming emails for viruses using ClamAV</small>
+                </label>
+            </div>
+
+            <div class="form-group mt-3">
+                <label for="clamav_host" class="form-label">ClamAV Host</label>
+                <input id="clamav_host" class="form-control" name="clamav_host" type="text" value="{{ settings.clamav_host or 'clamav' }}">
+                <small class="form-text">Hostname or IP address of the ClamAV daemon (default: clamav for Docker)</small>
+            </div>
+
+            <div class="form-group mt-3">
+                <label for="clamav_port" class="form-label">ClamAV Port</label>
+                <input id="clamav_port" class="form-control" name="clamav_port" type="number" value="{{ settings.clamav_port or '3310' }}" min="1" max="65535">
+                <small class="form-text">Port number for the ClamAV daemon (default: 3310)</small>
+            </div>
+
+            <div class="form-group mt-3">
+                <label for="clamav_action" class="form-label">Action When Virus Detected</label>
+                <select id="clamav_action" class="form-select" name="clamav_action">
+                    <option value="quarantine" {% if settings.clamav_action == 'quarantine' or not settings.clamav_action %}selected{% endif %}>Quarantine (Store with virus flag)</option>
+                    <option value="reject" {% if settings.clamav_action == 'reject' %}selected{% endif %}>Reject (Do not store infected emails)</option>
+                    <option value="log_only" {% if settings.clamav_action == 'log_only' %}selected{% endif %}>Log Only (Store all emails, log detections)</option>
+                </select>
+                <small class="form-text">
+                    <strong>Quarantine:</strong> Emails with viruses are stored but marked as infected for review<br>
+                    <strong>Reject:</strong> Emails with viruses are not stored in the database<br>
+                    <strong>Log Only:</strong> All emails are stored, virus detections are logged for monitoring
+                </small>
             </div>
         </div>
         <div class="card-footer" style="display: flex; justify-content: flex-end;">

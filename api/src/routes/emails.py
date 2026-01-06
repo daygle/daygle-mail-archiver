@@ -70,7 +70,8 @@ def list_emails(
 
     rows = query(
         f"""
-        SELECT id, source, folder, uid, subject, sender, recipients, date, created_at
+        SELECT id, source, folder, uid, subject, sender, recipients, date, created_at,
+               virus_scanned, virus_detected, virus_name
         FROM emails
         {where_sql}
         ORDER BY date DESC
@@ -110,7 +111,7 @@ def view_email(request: Request, email_id: int):
     row = query(
         """
         SELECT id, source, folder, uid, subject, sender, recipients, date,
-               raw_email, compressed, created_at
+               raw_email, compressed, created_at, virus_scanned, virus_detected, virus_name, scan_timestamp
         FROM emails
         WHERE id = :id
         """,

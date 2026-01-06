@@ -75,6 +75,9 @@
                             <th>From</th>
                             <th>To</th>
                             <th>Subject</th>
+                            <th style="width: 60px; text-align: center;">
+                                <i class="fas fa-shield-virus" title="Virus Scan"></i>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -99,11 +102,26 @@
                                     {{ email.subject or "(no subject)" }}
                                 </a>
                             </td>
+                            <td style="text-align: center;">
+                                {% if email.virus_detected %}
+                                <span class="badge badge-danger" title="Virus detected: {{ email.virus_name }}">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </span>
+                                {% elif email.virus_scanned %}
+                                <span class="badge badge-success" title="Clean">
+                                    <i class="fas fa-check"></i>
+                                </span>
+                                {% else %}
+                                <span class="badge badge-secondary" title="Not scanned">
+                                    <i class="fas fa-minus"></i>
+                                </span>
+                                {% endif %}
+                            </td>
                         </tr>
                         {% endfor %}
                         {% if emails|length == 0 %}
                         <tr>
-                            <td colspan="{% if request.session.role == 'administrator' %}7{% else %}6{% endif %}" class="text-center" style="padding: 48px 0;">
+                            <td colspan="{% if request.session.role == 'administrator' %}8{% else %}7{% endif %}" class="text-center" style="padding: 48px 0;">
                                 <div style="color: var(--text-secondary);">
                                     <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
                                     <p>No emails found.</p>
