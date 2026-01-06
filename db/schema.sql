@@ -205,3 +205,16 @@ CREATE TABLE IF NOT EXISTS dashboard_preferences (
 
 -- Index for quick lookups by user
 CREATE INDEX IF NOT EXISTS dashboard_preferences_user_idx ON dashboard_preferences(user_id);
+
+-- ----------------------------
+-- user_widget_settings
+-- Stores user widget configuration settings (e.g., days range for charts)
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS user_widget_settings (
+    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    settings JSONB NOT NULL DEFAULT '{}',
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Index for quick lookups by user
+CREATE INDEX IF NOT EXISTS user_widget_settings_user_idx ON user_widget_settings(user_id);

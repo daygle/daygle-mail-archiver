@@ -27,6 +27,20 @@
         opacity: 0;
     }
 }
+/* Responsive stat boxes for Overview and ClamAV widgets */
+.stats-grid-container {
+    align-content: start;
+}
+.stat-box {
+    transition: all 0.2s ease;
+}
+.stat-box .stat-icon {
+    flex-shrink: 0;
+}
+/* Ensure widget body doesn't show scrollbars for stat grids */
+.widget-body:has(.stats-grid-container) {
+    overflow: visible !important;
+}
 /* Modal styles */
 .modal {
     position: fixed;
@@ -104,6 +118,10 @@
     background: #ef4444;
     border-color: #ef4444;
 }
+.widget-settings-btn:hover {
+    background: #f59e0b;
+    border-color: #f59e0b;
+}
 .widget-selector-item {
     padding: 0.75rem 1rem;
     background: var(--bg-secondary);
@@ -170,6 +188,38 @@
     </div>
 </div>
 
+<!-- Widget Settings Modal (Hidden by default) -->
+<div id="widget-settings-modal" class="modal" style="display: none;">
+    <div class="modal-overlay" id="settings-modal-overlay"></div>
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h3><i class="fas fa-cog"></i> Widget Settings</h3>
+            <button class="btn-icon" id="btn-close-settings-modal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div id="widget-settings-content">
+                <div class="form-group">
+                    <label for="widget-days-range" class="form-label">Days to Display</label>
+                    <select id="widget-days-range" class="form-select">
+                        <option value="7">7 days</option>
+                        <option value="14">14 days</option>
+                        <option value="30" selected>30 days</option>
+                        <option value="60">60 days</option>
+                        <option value="90">90 days</option>
+                    </select>
+                    <small class="form-text">Select the number of days to display in the chart</small>
+                </div>
+            </div>
+            <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.5rem;">
+                <button id="btn-cancel-settings" class="btn btn-secondary">Cancel</button>
+                <button id="btn-save-settings" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- GridStack Dashboard -->
 <div class="grid-stack" id="dashboard-grid">
     <!-- Widgets will be dynamically added here -->
@@ -191,50 +241,50 @@
             </div>
         </div>
         <div class="widget-body">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md);">
-                    <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: rgba(59, 130, 246, 0.1); border-radius: var(--radius-md); color: #3b82f6; font-size: 1.5rem;">
+            <div class="stats-grid-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; height: 100%;">
+                <div class="stat-box" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md); min-width: 0;">
+                    <div class="stat-icon" style="width: 40px; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; background: rgba(59, 130, 246, 0.1); border-radius: var(--radius-md); color: #3b82f6; font-size: 1.25rem;">
                         <i class="fas fa-envelope"></i>
                     </div>
-                    <div style="flex: 1; min-width: 0;">
-                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Total Emails</div>
-                        <div style="font-size: 1.5rem; font-weight: 600; color: var(--text-primary);" id="overview-total-emails">-</div>
+                    <div style="flex: 1; min-width: 0; overflow: hidden;">
+                        <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Total Emails</div>
+                        <div style="font-size: 1.25rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="overview-total-emails">-</div>
                     </div>
                 </div>
-                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md);">
-                    <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-md); color: #10b981; font-size: 1.5rem;">
+                <div class="stat-box" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md); min-width: 0;">
+                    <div class="stat-icon" style="width: 40px; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-md); color: #10b981; font-size: 1.25rem;">
                         <i class="fas fa-calendar-day"></i>
                     </div>
-                    <div style="flex: 1; min-width: 0;">
-                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Emails Today</div>
-                        <div style="font-size: 1.5rem; font-weight: 600; color: var(--text-primary);" id="overview-emails-today">-</div>
+                    <div style="flex: 1; min-width: 0; overflow: hidden;">
+                        <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Emails Today</div>
+                        <div style="font-size: 1.25rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="overview-emails-today">-</div>
                     </div>
                 </div>
-                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md);">
-                    <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: rgba(245, 158, 11, 0.1); border-radius: var(--radius-md); color: #f59e0b; font-size: 1.5rem;">
+                <div class="stat-box" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md); min-width: 0;">
+                    <div class="stat-icon" style="width: 40px; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; background: rgba(245, 158, 11, 0.1); border-radius: var(--radius-md); color: #f59e0b; font-size: 1.25rem;">
                         <i class="fas fa-database"></i>
                     </div>
-                    <div style="flex: 1; min-width: 0;">
-                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Database Size</div>
-                        <div style="font-size: 1.5rem; font-weight: 600; color: var(--text-primary);" id="overview-db-size">-</div>
+                    <div style="flex: 1; min-width: 0; overflow: hidden;">
+                        <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Database Size</div>
+                        <div style="font-size: 1.25rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="overview-db-size">-</div>
                     </div>
                 </div>
-                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md);">
-                    <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: rgba(139, 92, 246, 0.1); border-radius: var(--radius-md); color: #8b5cf6; font-size: 1.5rem;">
+                <div class="stat-box" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md); min-width: 0;">
+                    <div class="stat-icon" style="width: 40px; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; background: rgba(139, 92, 246, 0.1); border-radius: var(--radius-md); color: #8b5cf6; font-size: 1.25rem;">
                         <i class="fas fa-server"></i>
                     </div>
-                    <div style="flex: 1; min-width: 0;">
-                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Active Accounts</div>
-                        <div style="font-size: 1.5rem; font-weight: 600; color: var(--text-primary);" id="overview-accounts">-</div>
+                    <div style="flex: 1; min-width: 0; overflow: hidden;">
+                        <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Active Accounts</div>
+                        <div style="font-size: 1.25rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="overview-accounts">-</div>
                     </div>
                 </div>
-                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md);">
-                    <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: rgba(34, 197, 94, 0.1); border-radius: var(--radius-md); color: #22c55e; font-size: 1.5rem;">
+                <div class="stat-box" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md); min-width: 0;">
+                    <div class="stat-icon" style="width: 40px; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; background: rgba(34, 197, 94, 0.1); border-radius: var(--radius-md); color: #22c55e; font-size: 1.25rem;">
                         <i class="fas fa-heartbeat"></i>
                     </div>
-                    <div style="flex: 1; min-width: 0;">
-                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Workers Online</div>
-                        <div style="font-size: 1.5rem; font-weight: 600; color: var(--text-primary);" id="overview-workers">-</div>
+                    <div style="flex: 1; min-width: 0; overflow: hidden;">
+                        <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Workers Online</div>
+                        <div style="font-size: 1.25rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="overview-workers">-</div>
                     </div>
                 </div>
             </div>
@@ -270,6 +320,9 @@
     <!-- Emails Per Day Chart Template -->
     <div id="template-emails-per-day" class="grid-stack-item-content widget-card">
         <div class="widget-actions">
+            <button class="widget-action-btn widget-settings-btn" data-action="settings" data-widget="emails-per-day" title="Widget settings">
+                <i class="fas fa-cog"></i>
+            </button>
             <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
                 <i class="fas fa-times"></i>
             </button>
@@ -277,7 +330,7 @@
         <div class="widget-header">
             <div class="widget-title">
                 <i class="fas fa-chart-line"></i>
-                <span>Emails Per Day (30d)</span>
+                <span id="emails-per-day-title">Emails Per Day (30d)</span>
             </div>
             
         </div>
@@ -327,6 +380,9 @@
     <!-- Deletion Stats Chart Template -->
     <div id="template-deletion-stats" class="grid-stack-item-content widget-card">
         <div class="widget-actions">
+            <button class="widget-action-btn widget-settings-btn" data-action="settings" data-widget="deletion-stats" title="Widget settings">
+                <i class="fas fa-cog"></i>
+            </button>
             <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
                 <i class="fas fa-times"></i>
             </button>
@@ -334,7 +390,7 @@
         <div class="widget-header">
             <div class="widget-title">
                 <i class="fas fa-trash-alt"></i>
-                <span>Email Deletions (30d)</span>
+                <span id="deletion-stats-title">Email Deletions (30d)</span>
             </div>
             
         </div>
@@ -367,6 +423,9 @@
     <!-- Storage Trends Template -->
     <div id="template-storage-trends" class="grid-stack-item-content widget-card">
         <div class="widget-actions">
+            <button class="widget-action-btn widget-settings-btn" data-action="settings" data-widget="storage-trends" title="Widget settings">
+                <i class="fas fa-cog"></i>
+            </button>
             <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
                 <i class="fas fa-times"></i>
             </button>
@@ -374,7 +433,7 @@
         <div class="widget-header">
             <div class="widget-title">
                 <i class="fas fa-chart-area"></i>
-                <span>Storage Trends (7d)</span>
+                <span id="storage-trends-title">Storage Trends (7d)</span>
             </div>
             
         </div>
@@ -419,41 +478,41 @@
             
         </div>
         <div class="widget-body">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
-                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md);">
-                    <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.1); border-radius: var(--radius-md); color: #ef4444; font-size: 1.5rem;">
+            <div class="stats-grid-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; height: 100%;">
+                <div class="stat-box" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md); min-width: 0;">
+                    <div class="stat-icon" style="width: 40px; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.1); border-radius: var(--radius-md); color: #ef4444; font-size: 1.25rem;">
                         <i class="fas fa-exclamation-triangle"></i>
                     </div>
-                    <div style="flex: 1; min-width: 0;">
-                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Quarantined</div>
-                        <div style="font-size: 1.5rem; font-weight: 600; color: var(--text-primary);" id="clamav-quarantine">-</div>
+                    <div style="flex: 1; min-width: 0; overflow: hidden;">
+                        <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Quarantined</div>
+                        <div style="font-size: 1.25rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="clamav-quarantine">-</div>
                     </div>
                 </div>
-                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md);">
-                    <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: rgba(245, 158, 11, 0.1); border-radius: var(--radius-md); color: #f59e0b; font-size: 1.5rem;">
+                <div class="stat-box" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md); min-width: 0;">
+                    <div class="stat-icon" style="width: 40px; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; background: rgba(245, 158, 11, 0.1); border-radius: var(--radius-md); color: #f59e0b; font-size: 1.25rem;">
                         <i class="fas fa-ban"></i>
                     </div>
-                    <div style="flex: 1; min-width: 0;">
-                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Rejected</div>
-                        <div style="font-size: 1.5rem; font-weight: 600; color: var(--text-primary);" id="clamav-reject">-</div>
+                    <div style="flex: 1; min-width: 0; overflow: hidden;">
+                        <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Rejected</div>
+                        <div style="font-size: 1.25rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="clamav-reject">-</div>
                     </div>
                 </div>
-                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md);">
-                    <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: rgba(59, 130, 246, 0.1); border-radius: var(--radius-md); color: #3b82f6; font-size: 1.5rem;">
+                <div class="stat-box" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md); min-width: 0;">
+                    <div class="stat-icon" style="width: 40px; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; background: rgba(59, 130, 246, 0.1); border-radius: var(--radius-md); color: #3b82f6; font-size: 1.25rem;">
                         <i class="fas fa-clipboard-list"></i>
                     </div>
-                    <div style="flex: 1; min-width: 0;">
-                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Logged Only</div>
-                        <div style="font-size: 1.5rem; font-weight: 600; color: var(--text-primary);" id="clamav-log">-</div>
+                    <div style="flex: 1; min-width: 0; overflow: hidden;">
+                        <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Logged Only</div>
+                        <div style="font-size: 1.25rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="clamav-log">-</div>
                     </div>
                 </div>
-                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md);">
-                    <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-md); color: #10b981; font-size: 1.5rem;">
+                <div class="stat-box" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md); min-width: 0;">
+                    <div class="stat-icon" style="width: 40px; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-md); color: #10b981; font-size: 1.25rem;">
                         <i class="fas fa-check-circle"></i>
                     </div>
-                    <div style="flex: 1; min-width: 0;">
-                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Clean</div>
-                        <div style="font-size: 1.5rem; font-weight: 600; color: var(--text-primary);" id="clamav-clean">-</div>
+                    <div style="flex: 1; min-width: 0; overflow: hidden;">
+                        <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Clean</div>
+                        <div style="font-size: 1.25rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="clamav-clean">-</div>
                     </div>
                 </div>
             </div>
@@ -478,6 +537,12 @@ const DashboardManager = {
     grid: null,
     charts: {},
     editMode: false,
+    widgetSettings: {
+        'emails-per-day': { days: 30 },
+        'deletion-stats': { days: 30 },
+        'storage-trends': { days: 7 }
+    },
+    currentSettingsWidget: null,
     
     // Default widget layout
     defaultWidgets: [
@@ -540,6 +605,7 @@ const DashboardManager = {
             
             if (!response.ok) {
                 console.warn('Preferences API returned error, using defaults');
+                await this.loadWidgetSettingsFromPreferences();
                 this.renderWidgets(this.defaultWidgets);
                 return;
             }
@@ -575,10 +641,15 @@ const DashboardManager = {
             }
 
             console.log('Using widgets:', widgets);
+            
+            // Load widget settings before rendering
+            await this.loadWidgetSettingsFromPreferences();
+            
             this.renderWidgets(widgets);
         } catch (error) {
             console.error('Error loading layout:', error);
             console.log('Falling back to default widgets');
+            await this.loadWidgetSettingsFromPreferences();
             this.renderWidgets(this.defaultWidgets);
         }
     },
@@ -691,6 +762,23 @@ const DashboardManager = {
             this.hideModal(document.getElementById('widget-selector-modal'));
         });
 
+        // Widget settings modal listeners
+        document.getElementById('btn-close-settings-modal').addEventListener('click', () => {
+            this.hideModal(document.getElementById('widget-settings-modal'));
+        });
+        
+        document.getElementById('settings-modal-overlay').addEventListener('click', () => {
+            this.hideModal(document.getElementById('widget-settings-modal'));
+        });
+        
+        document.getElementById('btn-cancel-settings').addEventListener('click', () => {
+            this.hideModal(document.getElementById('widget-settings-modal'));
+        });
+        
+        document.getElementById('btn-save-settings').addEventListener('click', () => {
+            this.saveWidgetSettings();
+        });
+
         // Widget action buttons (delegated event handling)
         document.addEventListener('click', (e) => {
             const btn = e.target.closest('.widget-action-btn');
@@ -701,6 +789,9 @@ const DashboardManager = {
             
             if (action === 'remove' && widgetElement) {
                 this.grid.removeWidget(widgetElement);
+            } else if (action === 'settings') {
+                const widgetId = btn.getAttribute('data-widget');
+                this.showWidgetSettings(widgetId);
             }
         });
 
@@ -809,6 +900,90 @@ const DashboardManager = {
         }, 150);
     },
 
+    showWidgetSettings(widgetId) {
+        this.currentSettingsWidget = widgetId;
+        const modal = document.getElementById('widget-settings-modal');
+        const daysSelect = document.getElementById('widget-days-range');
+        
+        // Load current settings
+        const settings = this.widgetSettings[widgetId] || { days: 30 };
+        daysSelect.value = settings.days;
+        
+        this.showModal(modal);
+    },
+
+    saveWidgetSettings() {
+        if (!this.currentSettingsWidget) return;
+        
+        const daysSelect = document.getElementById('widget-days-range');
+        const days = parseInt(daysSelect.value);
+        
+        // Update settings
+        this.widgetSettings[this.currentSettingsWidget] = { days };
+        
+        // Save to preferences
+        this.saveWidgetSettingsToPreferences();
+        
+        // Update widget title
+        this.updateWidgetTitle(this.currentSettingsWidget, days);
+        
+        // Reload widget data with new settings
+        this.loadWidgetData(this.currentSettingsWidget);
+        
+        // Hide modal
+        this.hideModal(document.getElementById('widget-settings-modal'));
+        
+        this.showFlashMessage('Widget settings saved successfully!', 'success');
+    },
+
+    async saveWidgetSettingsToPreferences() {
+        try {
+            const response = await fetch('/api/dashboard/widget-settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ settings: this.widgetSettings })
+            });
+            
+            if (!response.ok) {
+                console.warn('Failed to save widget settings to server');
+            }
+        } catch (error) {
+            console.error('Error saving widget settings:', error);
+        }
+    },
+
+    async loadWidgetSettingsFromPreferences() {
+        try {
+            const response = await fetch('/api/dashboard/widget-settings');
+            if (response.ok) {
+                const data = await response.json();
+                if (data.settings) {
+                    this.widgetSettings = { ...this.widgetSettings, ...data.settings };
+                    
+                    // Update titles for all widgets with custom settings
+                    Object.keys(this.widgetSettings).forEach(widgetId => {
+                        this.updateWidgetTitle(widgetId, this.widgetSettings[widgetId].days);
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Error loading widget settings:', error);
+        }
+    },
+
+    updateWidgetTitle(widgetId, days) {
+        const titleElement = document.getElementById(`${widgetId}-title`);
+        if (titleElement) {
+            const widgetNames = {
+                'emails-per-day': 'Emails Per Day',
+                'deletion-stats': 'Email Deletions',
+                'storage-trends': 'Storage Trends'
+            };
+            const name = widgetNames[widgetId] || widgetId;
+            titleElement.textContent = `${name} (${days}d)`;
+        }
+    },
+
     async saveLayout() {
         const widgets = [];
         const items = this.grid.getGridItems();
@@ -859,26 +1034,40 @@ const DashboardManager = {
     },
 
     showFlashMessage(message, type = 'success') {
-        // Create flash message element
-        const flash = document.createElement('div');
-        flash.className = `flash flash-${type}`;
-        flash.textContent = message;
-        flash.style.cssText = 'position: fixed; top: 80px; right: 20px; z-index: 10000; padding: 15px 20px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideIn 0.3s ease;';
+        // Map type to alert class names
+        const typeMap = {
+            'success': 'alert-success',
+            'error': 'alert-danger',
+            'warning': 'alert-warning',
+            'info': 'alert-info'
+        };
         
-        if (type === 'success') {
-            flash.style.backgroundColor = '#10b981';
-            flash.style.color = 'white';
-        } else {
-            flash.style.backgroundColor = '#ef4444';
-            flash.style.color = 'white';
-        }
+        const iconMap = {
+            'success': 'check-circle',
+            'error': 'exclamation-circle',
+            'warning': 'exclamation-triangle',
+            'info': 'info-circle'
+        };
         
-        document.body.appendChild(flash);
+        const alertClass = typeMap[type] || 'alert-info';
+        const iconClass = iconMap[type] || 'info-circle';
+        
+        // Create alert element matching the standard alert style
+        const alert = document.createElement('div');
+        alert.className = `alert ${alertClass}`;
+        alert.style.cssText = 'position: fixed; top: 80px; right: 20px; z-index: 10000; margin: 0; max-width: 400px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideIn 0.3s ease;';
+        
+        alert.innerHTML = `
+            <i class="fas fa-${iconClass}"></i>
+            <span>${message}</span>
+        `;
+        
+        document.body.appendChild(alert);
         
         // Remove after 3 seconds
         setTimeout(() => {
-            flash.style.animation = 'slideOut 0.3s ease';
-            setTimeout(() => flash.remove(), 300);
+            alert.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => alert.remove(), 300);
         }, 3000);
     },
 
@@ -1050,7 +1239,8 @@ For more options, run: ./update.sh --help`;
 
     async loadEmailsPerDay() {
         try {
-            const response = await fetch('/api/dashboard/emails-per-day');
+            const days = this.widgetSettings['emails-per-day']?.days || 30;
+            const response = await fetch(`/api/dashboard/emails-per-day?days=${days}`);
             const data = await response.json();
             
             const ctx = document.getElementById('emailsPerDayChart');
@@ -1156,7 +1346,8 @@ For more options, run: ./update.sh --help`;
 
     async loadDeletionStats() {
         try {
-            const response = await fetch('/api/dashboard/deletion-stats');
+            const days = this.widgetSettings['deletion-stats']?.days || 30;
+            const response = await fetch(`/api/dashboard/deletion-stats?days=${days}`);
             const data = await response.json();
             
             const ctx = document.getElementById('deletionStatsChart');
@@ -1232,7 +1423,8 @@ For more options, run: ./update.sh --help`;
 
     async loadStorageTrends() {
         try {
-            const response = await fetch('/api/dashboard/storage-trends');
+            const days = this.widgetSettings['storage-trends']?.days || 7;
+            const response = await fetch(`/api/dashboard/storage-trends?days=${days}`);
             const data = await response.json();
             
             const ctx = document.getElementById('storageTrendsChart');
