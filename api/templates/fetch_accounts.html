@@ -260,7 +260,7 @@
                             </td>
                             <td>
                                 <div class="flex gap-2">
-                                    <button class="btn btn-secondary btn-sm" title="Edit" onclick='showEditForm({{ acc.id | tojson }}, {{ acc | tojson }})'>
+                                    <button class="btn btn-secondary btn-sm" title="Edit" onclick='showEditForm({{ acc.id | tojson }}, {{ acc.json_safe | tojson }})'>
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     <a href="/fetch_accounts/{{ acc.id }}/test" class="btn btn-info btn-sm" title="Test Connection">
