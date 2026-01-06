@@ -12,7 +12,15 @@ def require_login(request: Request):
     return "user_id" in request.session
 
 @router.get("/logs")
-def logs(request: Request, level: str = "all", page: int = 1):
+def logs(
+    request: Request, 
+    level: str = "all", 
+    page: int = 1,
+    search: str = "",
+    source: str = "",
+    date_from: str = "",
+    date_to: str = ""
+):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
     
@@ -39,13 +47,41 @@ def logs(request: Request, level: str = "all", page: int = 1):
     page_size = min(max(10, page_size), 500)  # Between 10 and 500
     offset = (page - 1) * page_size
     
-    # Build WHERE clause
-    where_clause = ""
+    # Build WHERE clause with filters
+    where_conditions = []
     params = {"limit": page_size, "offset": offset}
     
     if level != "all":
-        where_clause = "WHERE level = :level"
+        where_conditions.append("level = :level")
         params["level"] = level
+    
+    if search:
+        where_conditions.append("(message ILIKE :search OR source ILIKE :search)")
+        params["search"] = f"%{search}%"
+    
+    if source:
+        where_conditions.append("source = :source")
+        params["source"] = source
+    
+    if date_from:
+        try:
+            # Parse date and add to conditions
+            where_conditions.append("timestamp >= :date_from")
+            params["date_from"] = date_from
+        except ValueError:
+            pass  # Invalid date format, skip filter
+    
+    if date_to:
+        try:
+            # Parse date and add to conditions (include full day)
+            where_conditions.append("timestamp < :date_to::date + interval '1 day'")
+            params["date_to"] = date_to
+        except ValueError:
+            pass  # Invalid date format, skip filter
+    
+    where_clause = ""
+    if where_conditions:
+        where_clause = "WHERE " + " AND ".join(where_conditions)
     
     # Get total count for pagination
     count_query = f"SELECT COUNT(*) as total FROM logs {where_clause}"
@@ -63,6 +99,13 @@ def logs(request: Request, level: str = "all", page: int = 1):
     """
     
     rows = query(logs_query, params).mappings().all()
+    
+    # Get distinct sources for filter dropdown
+    sources_query = "SELECT DISTINCT source FROM logs ORDER BY source"
+    sources = [row["source"] for row in query(sources_query).mappings().all()]
+    
+    # Check if any filters are active
+    has_active_filters = bool(search or source or (level != "all") or date_from or date_to)
 
     return templates.TemplateResponse(
         "logs.html",
@@ -70,10 +113,16 @@ def logs(request: Request, level: str = "all", page: int = 1):
             "request": request,
             "logs": rows,
             "current_level": level,
+            "current_search": search,
+            "current_source": source,
+            "current_date_from": date_from,
+            "current_date_to": date_to,
             "page": page,
             "page_size": page_size,
             "total_logs": total_logs,
             "total_pages": total_pages,
-            "allowed_levels": ALLOWED_LOG_LEVELS
+            "allowed_levels": ALLOWED_LOG_LEVELS,
+            "sources": sources,
+            "has_active_filters": has_active_filters
         },
     )

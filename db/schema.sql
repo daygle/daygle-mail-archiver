@@ -123,10 +123,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE INDEX IF NOT EXISTS users_email_idx ON users(email);
 CREATE INDEX IF NOT EXISTS users_role_idx ON users(role);
 
--- Insert default admin user with no password (set on first login)
-INSERT INTO users (username, password_hash, role)
-VALUES ('administrator', '', 'administrator')
-ON CONFLICT (username) DO NOTHING;
+-- Default administrator user will be created during initial setup wizard
 
 -- ----------------------------
 -- settings
@@ -145,6 +142,7 @@ INSERT INTO settings (key, value) VALUES ('enable_purge', 'false') ON CONFLICT (
 INSERT INTO settings (key, value) VALUES ('retention_value', '1') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('retention_unit', 'years') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('retention_delete_from_mail_server', 'false') ON CONFLICT (key) DO NOTHING;
+INSERT INTO settings (key, value) VALUES ('setup_complete', 'false') ON CONFLICT (key) DO NOTHING;
 
 -- ----------------------------
 -- logs

@@ -207,15 +207,15 @@
     </div>
 
     <!-- Action Buttons -->
-    <div class="flex gap-3">
-        <button type="submit" class="btn btn-primary">
-            <i class="fas fa-save"></i>
-            <span>{{ "Update Account" if account else "Create Account" }}</span>
-        </button>
+    <div class="flex gap-3" style="justify-content: flex-end;">
         <a href="/fetch_accounts" class="btn btn-secondary">
             <i class="fas fa-times"></i>
             <span>Cancel</span>
         </a>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i>
+            <span>{{ "Update Account" if account else "Create Account" }}</span>
+        </button>
     </div>
 </form>
 

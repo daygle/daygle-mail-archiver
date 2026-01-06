@@ -9,15 +9,77 @@
             <i class="fas fa-file-alt"></i>
             <span>System Logs</span>
         </div>
-        <form method="get" style="margin: 0;">
-            <select id="log_level" class="form-select" name="level" onchange="this.form.submit()" style="width: auto; min-width: 150px;">
-                <option value="all" {% if current_level == 'all' %}selected{% endif %}>All Levels</option>
-                <option value="error" {% if current_level == 'error' %}selected{% endif %}>Error Only</option>
-                <option value="warning" {% if current_level == 'warning' %}selected{% endif %}>Warning Only</option>
-                <option value="info" {% if current_level == 'info' %}selected{% endif %}>Info Only</option>
-            </select>
+        <button id="toggleFilterBtn" class="btn btn-secondary" onclick="toggleFilters()">
+            <i class="fas fa-filter"></i>
+            <span>Search & Filter</span>
+        </button>
+    </div>
+    
+    <!-- Search and Filter Card (Initially Hidden) -->
+    <div id="filterCard" class="card-body" style="display: none; border-bottom: 1px solid var(--border-color); background: var(--bg-secondary);">
+        <form method="get" id="filterForm">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <!-- Search Field -->
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" id="search" name="search" class="form-control" 
+                           placeholder="Search message or source..." 
+                           value="{{ current_search }}">
+                </div>
+                
+                <!-- Source Filter -->
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="source" class="form-label">Source</label>
+                    <select id="source" name="source" class="form-select">
+                        <option value="">All Sources</option>
+                        {% for s in sources %}
+                        <option value="{{ s }}" {% if current_source == s %}selected{% endif %}>{{ s }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <!-- Log Level Filter -->
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="level" class="form-label">Level</label>
+                    <select id="level" name="level" class="form-select">
+                        <option value="all" {% if current_level == 'all' %}selected{% endif %}>All Levels</option>
+                        <option value="error" {% if current_level == 'error' %}selected{% endif %}>Error Only</option>
+                        <option value="warning" {% if current_level == 'warning' %}selected{% endif %}>Warning Only</option>
+                        <option value="info" {% if current_level == 'info' %}selected{% endif %}>Info Only</option>
+                    </select>
+                </div>
+                
+                <!-- Date From -->
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="date_from" class="form-label">Date From</label>
+                    <input type="date" id="date_from" name="date_from" class="form-control" 
+                           value="{{ current_date_from }}">
+                </div>
+                
+                <!-- Date To -->
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="date_to" class="form-label">Date To</label>
+                    <input type="date" id="date_to" name="date_to" class="form-control" 
+                           value="{{ current_date_to }}">
+                </div>
+            </div>
+            
+            <!-- Filter Action Buttons -->
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" onclick="clearFilters()">
+                    <i class="fas fa-times"></i>
+                    <span>Clear</span>
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i>
+                    <span>Apply Filters</span>
+                </button>
+            </div>
         </form>
     </div>
+    
     <div class="card-body" style="padding: 0;">
 
         <div class="table-container">
@@ -53,8 +115,8 @@
                 <tr>
                     <td colspan="4" class="text-center" style="padding: 48px 0;">
                         <div style="color: var(--text-secondary);">
-                            <i class="fas fa-check-circle" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
-                            <p>No log entries found.</p>
+                            <i class="fas fa-search" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                            <p>No log entries found{% if current_search or current_source or current_date_from or current_date_to %} matching your filters{% endif %}.</p>
                         </div>
                     </td>
                 </tr>
@@ -70,7 +132,7 @@
         <div class="flex items-center justify-between">
             <div>
                 {% if page > 1 %}
-                <a href="/logs?level={{ current_level }}&page={{ page - 1 }}" class="btn btn-secondary">
+                <a href="/logs?level={{ current_level }}&search={{ current_search }}&source={{ current_source }}&date_from={{ current_date_from }}&date_to={{ current_date_to }}&page={{ page - 1 }}" class="btn btn-secondary">
                     <i class="fas fa-chevron-left"></i>
                     <span>Previous</span>
                 </a>
@@ -81,7 +143,7 @@
             
             <div>
                 {% if page < total_pages %}
-                <a href="/logs?level={{ current_level }}&page={{ page + 1 }}" class="btn btn-secondary">
+                <a href="/logs?level={{ current_level }}&search={{ current_search }}&source={{ current_source }}&date_from={{ current_date_from }}&date_to={{ current_date_to }}&page={{ page + 1 }}" class="btn btn-secondary">
                     <span>Next</span>
                     <i class="fas fa-chevron-right"></i>
                 </a>
@@ -91,4 +153,39 @@
     </div>
     {% endif %}
 </div>
+
+<script>
+    function toggleFilters() {
+        const filterCard = document.getElementById('filterCard');
+        const toggleBtn = document.getElementById('toggleFilterBtn');
+        
+        if (filterCard.style.display === 'none') {
+            filterCard.style.display = 'block';
+            toggleBtn.innerHTML = '<i class="fas fa-times"></i><span>Hide Filters</span>';
+        } else {
+            filterCard.style.display = 'none';
+            toggleBtn.innerHTML = '<i class="fas fa-filter"></i><span>Search & Filter</span>';
+        }
+    }
+    
+    function clearFilters() {
+        // Clear all form fields
+        document.getElementById('search').value = '';
+        document.getElementById('source').value = '';
+        document.getElementById('level').value = 'all';
+        document.getElementById('date_from').value = '';
+        document.getElementById('date_to').value = '';
+        
+        // Submit the form to reload with cleared filters
+        document.getElementById('filterForm').submit();
+    }
+    
+    // Show filter card if any filters are active
+    document.addEventListener('DOMContentLoaded', function() {
+        const hasFilters = {{ 'true' if has_active_filters else 'false' }};
+        if (hasFilters) {
+            toggleFilters();
+        }
+    });
+</script>
 {% endblock %}

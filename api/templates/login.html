@@ -7,105 +7,32 @@
     <link rel="icon" type="image/png" href="/static/daygle.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/static/modern.css">
-    <style>
-        .login-container {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--bg-secondary);
-            padding: 20px;
-        }
-        
-        .login-card {
-            background: var(--bg-primary);
-            border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-lg);
-            padding: 48px;
-            width: 100%;
-            max-width: 420px;
-            animation: fadeIn 0.3s ease-out;
-        }
-        
-        .login-header {
-            text-align: center;
-            margin-bottom: 32px;
-        }
-        
-        .login-logo {
-            height: 48px;
-            width: auto;
-            margin-bottom: 16px;
-        }
-        
-        .login-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin: 0;
-        }
-        
-        .login-subtitle {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            margin-top: 8px;
-        }
-        
-        .login-form .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .login-form .form-label {
-            display: block;
-            font-weight: 500;
-            color: var(--text-primary);
-            margin-bottom: 8px;
-            font-size: 0.9375rem;
-        }
-        
-        .login-form .form-control {
-            width: 100%;
-        }
-        
-        .login-form .btn {
-            width: 100%;
-            padding: 12px;
-            font-size: 1rem;
-            font-weight: 500;
-        }
-        
-        .login-error {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            color: var(--danger);
-            padding: 12px;
-            border-radius: var(--radius-md);
-            margin-bottom: 20px;
-            font-size: 0.9375rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-    </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-card">
-            <div class="login-header">
-                <img src="/static/daygle.png" alt="Daygle" class="login-logo logo-dark">
-                <img src="/static/daygle-light.png" alt="Daygle" class="login-logo logo-light">
-                <h1 class="login-title">Daygle Mail Archiver</h1>
-                <p class="login-subtitle">Sign in to access your archived emails</p>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <img src="/static/daygle.png" alt="Daygle" class="auth-logo logo-dark">
+                <img src="/static/daygle-light.png" alt="Daygle" class="auth-logo logo-light">
+                <h1 class="auth-title">Daygle Mail Archiver</h1>
+                <p class="auth-subtitle">Sign in to access your archived emails</p>
             </div>
             
             {% if error %}
-            <div class="login-error">
+            <div class="auth-error">
                 <i class="fas fa-exclamation-circle"></i>
                 <span>{{ error }}</span>
             </div>
             {% endif %}
             
-            <form method="post" class="login-form">
+            {% if success %}
+            <div class="auth-success">
+                <i class="fas fa-check-circle"></i>
+                <span>{{ success }}</span>
+            </div>
+            {% endif %}
+            
+            <form method="post" class="auth-form">
                 <div class="form-group">
                     <label for="username" class="form-label">Username</label>
                     <input type="text" id="username" name="username" class="form-control" placeholder="Enter your username" autofocus required>
