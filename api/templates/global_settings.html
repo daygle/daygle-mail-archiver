@@ -132,7 +132,7 @@
             <div class="form-group mt-3">
                 <label for="clamav_port" class="form-label">ClamAV Port</label>
                 <input id="clamav_port" class="form-control" name="clamav_port" type="number" value="{{ settings.clamav_port or '3310' }}" min="1" max="65535">
-                <small class="form-text">Port number for the ClamAV daemon (default: 3310)</small>
+                <small class="form-text">Port number for the ClamAV daemon (default: 3310, typically 1-65535)</small>
             </div>
 
             <div class="form-group mt-3">

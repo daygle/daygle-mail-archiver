@@ -123,6 +123,10 @@ def store_email(
     Returns:
         True if email was stored, False if rejected due to virus
     """
+    # Parse email once for efficiency
+    msg = email.message_from_bytes(email_bytes)
+    subject = msg.get("Subject", "")
+    
     # Scan for viruses before storing
     scanner = get_clamav_scanner()
     virus_detected = False
@@ -140,8 +144,7 @@ def store_email(
             log_error(
                 source,
                 f"Virus detected in email: {virus_name}",
-                f"Subject: {email.message_from_bytes(email_bytes).get('Subject', 'N/A')}, "
-                f"UID: {uid}, Folder: {folder}, Action: {action}",
+                f"Subject: {subject or 'N/A'}, UID: {uid}, Folder: {folder}, Action: {action}",
                 level="warning"
             )
             
@@ -158,8 +161,6 @@ def store_email(
     # Compress email for storage
     compressed_bytes = gzip.compress(email_bytes)
 
-    msg = email.message_from_bytes(email_bytes)
-    subject = msg.get("Subject", "")
     sender = msg.get("From", "")
     recipients = ", ".join(
         filter(None, [msg.get("To"), msg.get("Cc"), msg.get("Bcc")])

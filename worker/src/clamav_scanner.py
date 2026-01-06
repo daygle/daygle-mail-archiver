@@ -31,6 +31,9 @@ def log_warning(message: str, details: str = ""):
 class ClamAVScanner:
     """ClamAV virus scanner for email content."""
     
+    # Maximum email size to scan (100MB) - very large emails are skipped
+    MAX_SCAN_SIZE = 100 * 1024 * 1024
+    
     def __init__(self, host: str = 'clamav', port: int = 3310):
         """
         Initialize ClamAV scanner.
@@ -116,6 +119,15 @@ class ClamAVScanner:
         scan_timestamp = datetime.now(timezone.utc)
         
         if not self._enabled:
+            return False, None, scan_timestamp
+        
+        # Check email size - skip scanning very large emails
+        email_size = len(email_bytes)
+        if email_size > self.MAX_SCAN_SIZE:
+            log_warning(
+                f"Email too large to scan ({email_size} bytes, max {self.MAX_SCAN_SIZE})",
+                "Skipping virus scan for oversized email"
+            )
             return False, None, scan_timestamp
         
         scanner = self._connect()
