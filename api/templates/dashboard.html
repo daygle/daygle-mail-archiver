@@ -237,15 +237,6 @@
                         <div style="font-size: 1.5rem; font-weight: 600; color: var(--text-primary);" id="overview-workers">-</div>
                     </div>
                 </div>
-                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md);">
-                    <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: rgba(234, 88, 12, 0.1); border-radius: var(--radius-md); color: #ea580c; font-size: 1.5rem;">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <div style="flex: 1; min-width: 0;">
-                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Pending Jobs</div>
-                        <div style="font-size: 1.5rem; font-weight: 600; color: var(--text-primary);" id="overview-pending">-</div>
-                    </div>
-                </div>
             </div>
             
             <!-- System Update Notification -->
@@ -412,6 +403,62 @@
             </div>
         </div>
     </div>
+
+    <!-- ClamAV Virus Scanning Stats Template -->
+    <div id="template-clamav-stats" class="grid-stack-item-content widget-card">
+        <div class="widget-actions">
+            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="widget-header">
+            <div class="widget-title">
+                <i class="fas fa-shield-virus"></i>
+                <span>ClamAV Virus Scanning</span>
+            </div>
+            
+        </div>
+        <div class="widget-body">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md);">
+                    <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.1); border-radius: var(--radius-md); color: #ef4444; font-size: 1.5rem;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Quarantined</div>
+                        <div style="font-size: 1.5rem; font-weight: 600; color: var(--text-primary);" id="clamav-quarantine">-</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md);">
+                    <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: rgba(245, 158, 11, 0.1); border-radius: var(--radius-md); color: #f59e0b; font-size: 1.5rem;">
+                        <i class="fas fa-ban"></i>
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Rejected</div>
+                        <div style="font-size: 1.5rem; font-weight: 600; color: var(--text-primary);" id="clamav-reject">-</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md);">
+                    <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: rgba(59, 130, 246, 0.1); border-radius: var(--radius-md); color: #3b82f6; font-size: 1.5rem;">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Logged Only</div>
+                        <div style="font-size: 1.5rem; font-weight: 600; color: var(--text-primary);" id="clamav-log">-</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md);">
+                    <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-md); color: #10b981; font-size: 1.5rem;">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Clean</div>
+                        <div style="font-size: 1.5rem; font-weight: 600; color: var(--text-primary);" id="clamav-clean">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- GridStack JS (Local) -->
@@ -439,9 +486,10 @@ const DashboardManager = {
         { id: 'deletion-stats', x: 6, y: 3, w: 6, h: 3, visible: true },
         { id: 'top-senders', x: 0, y: 6, w: 6, h: 4, visible: true },
         { id: 'top-receivers', x: 6, y: 6, w: 6, h: 4, visible: true },
-        { id: 'recent-activity', x: 0, y: 10, w: 4, h: 4, visible: true },
-        { id: 'storage-trends', x: 4, y: 10, w: 4, h: 4, visible: true },
-        { id: 'account-health', x: 8, y: 10, w: 4, h: 4, visible: true }
+        { id: 'clamav-stats', x: 0, y: 10, w: 6, h: 3, visible: true },
+        { id: 'recent-activity', x: 6, y: 10, w: 6, h: 4, visible: true },
+        { id: 'storage-trends', x: 0, y: 13, w: 6, h: 4, visible: true },
+        { id: 'account-health', x: 6, y: 13, w: 6, h: 4, visible: true }
     ],
 
     init() {
@@ -841,6 +889,7 @@ const DashboardManager = {
             'top-senders': 'Top Senders',
             'top-receivers': 'Top Receivers',
             'deletion-stats': 'Deletion Stats',
+            'clamav-stats': 'ClamAV Virus Scanning',
             'recent-activity': 'Recent Activity',
             'storage-trends': 'Storage Trends',
             'account-health': 'Account Health'
@@ -855,6 +904,7 @@ const DashboardManager = {
         this.loadTopSenders();
         this.loadTopReceivers();
         this.loadDeletionStats();
+        this.loadClamAVStats();
         this.loadRecentActivity();
         this.loadStorageTrends();
         this.loadAccountHealth();
@@ -867,6 +917,7 @@ const DashboardManager = {
             'top-senders': () => this.loadTopSenders(),
             'top-receivers': () => this.loadTopReceivers(),
             'deletion-stats': () => this.loadDeletionStats(),
+            'clamav-stats': () => this.loadClamAVStats(),
             'recent-activity': () => this.loadRecentActivity(),
             'storage-trends': () => this.loadStorageTrends(),
             'account-health': () => this.loadAccountHealth()
@@ -897,10 +948,8 @@ const DashboardManager = {
             const statusData = await statusResponse.json();
             
             const workersEl = document.getElementById('overview-workers');
-            const pendingEl = document.getElementById('overview-pending');
             
             if (workersEl) workersEl.textContent = statusData.workers_online;
-            if (pendingEl) pendingEl.textContent = statusData.pending_jobs;
             
             // Check for system updates
             this.checkForUpdates();
@@ -1262,6 +1311,25 @@ For more options, run: ./update.sh --help`;
             if (container) {
                 container.innerHTML = '<p class="text-muted text-center">Error loading account health</p>';
             }
+        }
+    },
+
+    async loadClamAVStats() {
+        try {
+            const response = await fetch('/api/dashboard/clamav-stats');
+            const data = await response.json();
+            
+            const quarantineEl = document.getElementById('clamav-quarantine');
+            const rejectEl = document.getElementById('clamav-reject');
+            const logEl = document.getElementById('clamav-log');
+            const cleanEl = document.getElementById('clamav-clean');
+            
+            if (quarantineEl) quarantineEl.textContent = data.quarantined.toLocaleString();
+            if (rejectEl) rejectEl.textContent = data.rejected.toLocaleString();
+            if (logEl) logEl.textContent = data.logged.toLocaleString();
+            if (cleanEl) cleanEl.textContent = data.clean.toLocaleString();
+        } catch (error) {
+            console.error('Error loading ClamAV stats:', error);
         }
     }
 };

@@ -40,6 +40,20 @@
                 </div>
                 
                 <div class="form-group">
+                    <label for="first_name" class="form-label">First Name</label>
+                    <input type="text" id="first_name" name="first_name" class="form-control" 
+                           placeholder="John" value="{{ first_name }}">
+                    <small class="form-text">Optional - your first name</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="last_name" class="form-label">Last Name</label>
+                    <input type="text" id="last_name" name="last_name" class="form-control" 
+                           placeholder="Smith" value="{{ last_name }}">
+                    <small class="form-text">Optional - your last name</small>
+                </div>
+                
+                <div class="form-group">
                     <label for="email" class="form-label">Email Address</label>
                     <input type="email" id="email" name="email" class="form-control" 
                            placeholder="admin@example.com" value="{{ email }}">
