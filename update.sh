@@ -298,7 +298,7 @@ start_containers() {
     
     # First attempt: try building normally
     if ! $DOCKER_COMPOSE up -d --build --remove-orphans; then
-        log_warning "Build failed, attempting to rebuild without cache..."
+        log_warning "Build failed, possibly due to corrupted Docker cache. Attempting to rebuild without cache..."
         
         # Prune build cache to fix corrupted cache layers
         prune_build_cache
@@ -306,7 +306,9 @@ start_containers() {
         # Retry with --no-cache to avoid cache issues
         if ! $DOCKER_COMPOSE build --no-cache; then
             log_error "Failed to build containers even without cache"
-            log_info "Check the logs with: $DOCKER_COMPOSE logs -f"
+            log_error "This may indicate a configuration or dependency issue"
+            log_info "Check the build logs above and ensure all required files are present"
+            log_info "You can also check logs with: $DOCKER_COMPOSE logs -f"
             exit 1
         fi
         
