@@ -36,7 +36,7 @@
                 {% if request.session.role == 'administrator' %}
                 <div class="nav-section">
                     <div class="nav-section-title">Administration</div>
-                    <a href="/fetch_accounts" class="nav-link {% if '/fetch_account' in request.url.path %}active{% endif %}">
+                    <a href="/fetch-accounts" class="nav-link {% if '/fetch-account' in request.url.path %}active{% endif %}">
                         <i class="fas fa-server"></i>
                         <span>Fetch Accounts</span>
                     </a>
@@ -105,7 +105,7 @@
                                 <i class="fas fa-user"></i>
                                 <span>Profile</span>
                             </a>
-                            <a href="/user_settings" class="dropdown-item">
+                            <a href="/user-settings" class="dropdown-item">
                                 <i class="fas fa-cog"></i>
                                 <span>User Settings</span>
                             </a>
