@@ -111,8 +111,11 @@ def emails_per_day(request: Request, days: int = 30):
 
     try:
         # Validate days parameter
+        original_days = days
         if days not in [7, 14, 30, 60, 90]:
             days = 30
+            username = request.session.get("username", "unknown")
+            log("warning", "Dashboard", f"User '{username}' provided invalid days parameter for emails-per-day: {original_days}, defaulting to 30", "")
             
         date_format = get_user_date_format(request, date_only=True)
 
@@ -301,8 +304,11 @@ def deletion_stats(request: Request, days: int = 30):
 
     try:
         # Validate days parameter
+        original_days = days
         if days not in [7, 14, 30, 60, 90]:
             days = 30
+            username = request.session.get("username", "unknown")
+            log("warning", "Dashboard", f"User '{username}' provided invalid days parameter for deletion-stats: {original_days}, defaulting to 30", "")
             
         date_format = get_user_date_format(request, date_only=True)
         user_id = request.session.get("user_id")
@@ -486,8 +492,11 @@ def storage_trends(request: Request, days: int = 7):
 
     try:
         # Validate days parameter
+        original_days = days
         if days not in [7, 14, 30, 60, 90]:
             days = 7
+            username = request.session.get("username", "unknown")
+            log("warning", "Dashboard", f"User '{username}' provided invalid days parameter for storage-trends: {original_days}, defaulting to 7", "")
             
         date_format = get_user_date_format(request, date_only=True)
         user_id = request.session.get("user_id")
