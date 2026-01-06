@@ -32,7 +32,8 @@ def check_for_updates() -> Dict[str, Any]:
             "current_message": str,
             "latest_message": str,
             "commits_behind": int,
-            "error": str or None
+            "error": str or None,
+            "unavailable": bool  # True when git repo not available (not an error)
         }
     """
     result = {
@@ -42,13 +43,15 @@ def check_for_updates() -> Dict[str, Any]:
         "current_message": "",
         "latest_message": "",
         "commits_behind": 0,
-        "error": None
+        "error": None,
+        "unavailable": False
     }
     
     try:
         repo_root = get_repo_root()
         if not repo_root:
-            result["error"] = "Not in a git repository"
+            # Not an error - just means the app is deployed without git
+            result["unavailable"] = True
             return result
         
         # Get current branch
