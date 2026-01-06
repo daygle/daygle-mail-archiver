@@ -26,6 +26,8 @@ services:
     volumes:
       # Mount daygle_mail_archiver.conf file if it exists
       - ./daygle_mail_archiver.conf:/app/daygle_mail_archiver.conf:ro
+      # Mount .git folder for update checking (read-only)
+      - ./.git:/app/.git:ro
     depends_on:
       db:
         condition: service_healthy
