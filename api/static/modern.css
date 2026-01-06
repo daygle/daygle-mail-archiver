@@ -699,7 +699,7 @@ button:focus-visible,
 
 .form-select {
     width: 100%;
-    padding: 10px 14px;
+    padding: 10px 40px 10px 14px;
     font-size: 0.9375rem;
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
@@ -709,7 +709,6 @@ button:focus-visible,
     background-position: right 10px center;
     background-repeat: no-repeat;
     background-size: 20px;
-    padding-right: 40px;
     border-radius: var(--radius-md);
     transition: all var(--transition-fast);
     min-height: 38px;
