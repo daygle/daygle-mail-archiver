@@ -4,7 +4,7 @@ Checks for available updates from the git repository
 """
 import subprocess
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 
 def get_repo_root() -> Optional[Path]:
     """Get the repository root directory"""
@@ -20,7 +20,7 @@ def get_repo_root() -> Optional[Path]:
         return None
 
 
-def check_for_updates() -> Dict[str, any]:
+def check_for_updates() -> Dict[str, Any]:
     """
     Check if updates are available from the git repository
     

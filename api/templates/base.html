@@ -270,7 +270,12 @@
                 
                 // Remember dismissal for this specific update
                 fetch('/api/dashboard/check-updates')
-                    .then(r => r.json())
+                    .then(r => {
+                        if (!r.ok) {
+                            throw new Error(`HTTP ${r.status}`);
+                        }
+                        return r.json();
+                    })
                     .then(data => {
                         if (data.latest_commit) {
                             localStorage.setItem('dismissedUpdate', data.latest_commit);
@@ -288,6 +293,13 @@
             
             try {
                 const response = await fetch('/api/dashboard/check-updates');
+                
+                // Check response status
+                if (!response.ok) {
+                    console.warn(`Update check failed with status: ${response.status}`);
+                    return;
+                }
+                
                 const data = await response.json();
                 
                 const banner = document.getElementById('global-update-banner');
