@@ -631,3 +631,63 @@ def check_updates(request: Request):
             "unavailable": False
         }
 
+
+@router.get("/api/dashboard/clamav-stats")
+def clamav_stats(request: Request):
+    """Get ClamAV virus scanning statistics"""
+    if not require_login(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+    
+    try:
+        # Get counts of emails by virus scan status
+        # Quarantined: virus_detected = TRUE
+        quarantined_results = query("""
+            SELECT COUNT(*) as count 
+            FROM emails 
+            WHERE virus_detected = TRUE
+        """).mappings().first()
+        quarantined = quarantined_results["count"] if quarantined_results else 0
+        
+        # Rejected: Check logs for rejected emails (emails that were not stored due to virus detection)
+        # Note: Rejected emails won't be in the emails table, so we check the logs
+        rejected_results = query("""
+            SELECT COUNT(*) as count 
+            FROM logs 
+            WHERE source = 'Worker' 
+            AND level = 'warning'
+            AND message LIKE '%virus detected%rejected%'
+            AND timestamp >= NOW() - INTERVAL '30 days'
+        """).mappings().first()
+        rejected = rejected_results["count"] if rejected_results else 0
+        
+        # Logged only: virus_scanned = TRUE and virus_detected = TRUE 
+        # (same as quarantined in current implementation, but keeping separate for clarity)
+        logged_results = query("""
+            SELECT COUNT(*) as count 
+            FROM emails 
+            WHERE virus_scanned = TRUE 
+            AND virus_detected = TRUE
+        """).mappings().first()
+        logged = logged_results["count"] if logged_results else 0
+        
+        # Clean: virus_scanned = TRUE and virus_detected = FALSE
+        clean_results = query("""
+            SELECT COUNT(*) as count 
+            FROM emails 
+            WHERE virus_scanned = TRUE 
+            AND virus_detected = FALSE
+        """).mappings().first()
+        clean = clean_results["count"] if clean_results else 0
+        
+        return {
+            "quarantined": quarantined,
+            "rejected": rejected,
+            "logged": logged,
+            "clean": clean
+        }
+    except Exception as e:
+        username = request.session.get("username", "unknown")
+        log("error", "Dashboard", f"Failed to fetch ClamAV stats for user '{username}': {str(e)}", "")
+        return JSONResponse({"error": "Failed to load data"}, status_code=500)
+
+
