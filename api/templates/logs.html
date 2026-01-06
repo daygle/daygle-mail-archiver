@@ -3,8 +3,8 @@
 {% block page_title %}System Logs{% endblock %}
 
 {% block content %}
-<!-- Filters Card -->
-<div class="card mb-4">
+<!-- Filters Card (Initially Hidden) -->
+<div id="filterCard" class="card mb-4" style="display: none;">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-filter"></i>
@@ -64,11 +64,15 @@
 
 <!-- System Logs Card -->
 <div class="card">
-    <div class="card-header">
+    <div class="card-header" style="display: flex; align-items: center; justify-content: space-between;">
         <div class="card-title">
             <i class="fas fa-file-alt"></i>
             <span>System Logs</span>
         </div>
+        <button id="toggleFilterBtn" class="btn btn-secondary btn-sm" onclick="toggleFilters()">
+            <i class="fas fa-filter"></i>
+            <span>Search & Filter</span>
+        </button>
     </div>
     
     <div class="card-body" style="padding: 0;">
@@ -144,4 +148,27 @@
     </div>
     {% endif %}
 </div>
+
+<script>
+    function toggleFilters() {
+        const filterCard = document.getElementById('filterCard');
+        const toggleBtn = document.getElementById('toggleFilterBtn');
+        
+        if (filterCard.style.display === 'none') {
+            filterCard.style.display = 'block';
+            toggleBtn.innerHTML = '<i class="fas fa-times"></i><span>Hide Filters</span>';
+        } else {
+            filterCard.style.display = 'none';
+            toggleBtn.innerHTML = '<i class="fas fa-filter"></i><span>Search & Filter</span>';
+        }
+    }
+    
+    // Show filter card if any filters are active
+    document.addEventListener('DOMContentLoaded', function() {
+        const hasFilters = {{ 'true' if current_search or current_source or (current_level and current_level != 'all') or current_date_from or current_date_to else 'false' }};
+        if (hasFilters) {
+            toggleFilters();
+        }
+    });
+</script>
 {% endblock %}
