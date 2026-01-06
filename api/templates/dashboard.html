@@ -247,6 +247,32 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- System Update Notification -->
+            <div id="system-update-banner" style="display: none; margin-top: 1rem; padding: 1rem; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1)); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: var(--radius-md); position: relative;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: rgba(59, 130, 246, 0.2); border-radius: var(--radius-md); color: #3b82f6; font-size: 1.5rem;">
+                        <i class="fas fa-download"></i>
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">
+                            <i class="fas fa-info-circle" style="color: #3b82f6;"></i>
+                            System Update Available
+                        </div>
+                        <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem;" id="update-details">
+                            Loading update information...
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <a href="#" onclick="DashboardManager.showUpdateInstructions(); return false;" class="btn btn-sm btn-primary" style="text-decoration: none;">
+                                <i class="fas fa-book"></i> View Instructions
+                            </a>
+                            <button onclick="DashboardManager.dismissUpdateBanner()" class="btn btn-sm btn-ghost">
+                                <i class="fas fa-times"></i> Dismiss
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -875,9 +901,102 @@ const DashboardManager = {
             
             if (workersEl) workersEl.textContent = statusData.workers_online;
             if (pendingEl) pendingEl.textContent = statusData.pending_jobs;
+            
+            // Check for system updates
+            this.checkForUpdates();
         } catch (error) {
             console.error('Error loading overview:', error);
         }
+    },
+
+    async checkForUpdates() {
+        try {
+            const response = await fetch('/api/dashboard/check-updates');
+            
+            // Check response status
+            if (!response.ok) {
+                console.warn(`Update check failed with status: ${response.status}`);
+                return;
+            }
+            
+            const data = await response.json();
+            
+            const banner = document.getElementById('system-update-banner');
+            const detailsEl = document.getElementById('update-details');
+            
+            if (!banner || !detailsEl) return;
+            
+            // Check if user has dismissed this update
+            const dismissedUpdate = localStorage.getItem('dismissedUpdate');
+            if (dismissedUpdate === data.latest_commit) {
+                banner.style.display = 'none';
+                return;
+            }
+            
+            if (data.updates_available && !data.error) {
+                let detailsText = `Version ${data.latest_commit} is available`;
+                if (data.commits_behind > 0) {
+                    detailsText += ` (${data.commits_behind} commit${data.commits_behind > 1 ? 's' : ''} behind)`;
+                }
+                if (data.latest_message) {
+                    detailsText += `: ${data.latest_message}`;
+                }
+                
+                detailsEl.textContent = detailsText;
+                banner.style.display = 'block';
+            } else {
+                banner.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Error checking for updates:', error);
+            // Silently fail - don't show error to user
+        }
+    },
+
+    dismissUpdateBanner() {
+        const banner = document.getElementById('system-update-banner');
+        if (banner) {
+            banner.style.display = 'none';
+            
+            // Remember dismissal for this specific update
+            fetch('/api/dashboard/check-updates')
+                .then(r => {
+                    if (!r.ok) {
+                        throw new Error(`HTTP ${r.status}`);
+                    }
+                    return r.json();
+                })
+                .then(data => {
+                    if (data.latest_commit) {
+                        localStorage.setItem('dismissedUpdate', data.latest_commit);
+                    }
+                })
+                .catch(err => console.error('Error saving dismissal:', err));
+        }
+    },
+
+    showUpdateInstructions() {
+        const message = `To update Daygle Mail Archiver:
+
+1. Connect to your server via SSH
+2. Navigate to the installation directory:
+   cd /opt/daygle-mail-archiver
+
+3. Check what will be updated:
+   ./update.sh --check
+
+4. Run the update (with automatic backup):
+   ./update.sh
+
+The update script will:
+• Create an automatic backup
+• Pull the latest code
+• Update Docker images
+• Restart containers
+
+For more options, run: ./update.sh --help`;
+
+        alert(message);
     },
 
     async loadEmailsPerDay() {
