@@ -114,6 +114,17 @@ check_docker_compose() {
     log_success "Using: $DOCKER_COMPOSE"
 }
 
+# Function to prune Docker build cache safely
+prune_build_cache() {
+    # Check if docker builder command is available (requires BuildKit)
+    if docker builder version &> /dev/null; then
+        log_info "Pruning Docker build cache..."
+        docker builder prune -f 2>/dev/null || true
+    else
+        log_info "Docker BuildKit not available, skipping build cache pruning"
+    fi
+}
+
 # Function to check if git is available
 check_git() {
     if ! command -v git &> /dev/null; then
@@ -285,10 +296,28 @@ start_containers() {
     log_info "Starting Daygle Mail Archiver..."
     cd "$ROOT_DIR"
     
+    # First attempt: try building normally
     if ! $DOCKER_COMPOSE up -d --build --remove-orphans; then
-        log_error "Failed to start containers"
-        log_info "Check the logs with: $DOCKER_COMPOSE logs -f"
-        exit 1
+        log_warning "Build failed, possibly due to corrupted Docker cache. Attempting to rebuild without cache..."
+        
+        # Prune build cache to fix corrupted cache layers
+        prune_build_cache
+        
+        # Retry with --no-cache to avoid cache issues
+        if ! $DOCKER_COMPOSE build --no-cache; then
+            log_error "Failed to build containers even without cache"
+            log_error "This may indicate a configuration or dependency issue"
+            log_info "Check the build logs above and ensure all required files are present"
+            log_info "You can also check logs with: $DOCKER_COMPOSE logs -f"
+            exit 1
+        fi
+        
+        # Start the containers after successful build
+        if ! $DOCKER_COMPOSE up -d --remove-orphans; then
+            log_error "Failed to start containers"
+            log_info "Check the logs with: $DOCKER_COMPOSE logs -f"
+            exit 1
+        fi
     fi
     
     log_success "Containers started successfully"
@@ -303,6 +332,9 @@ cleanup_docker() {
     if [ -n "$dangling_images" ]; then
         echo "$dangling_images" | xargs docker rmi 2>/dev/null || true
     fi
+    
+    # Prune build cache to prevent cache corruption issues
+    prune_build_cache
     
     log_success "Cleanup completed"
 }
