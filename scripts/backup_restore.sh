@@ -118,16 +118,16 @@ backup() {
     echo ""
     
     if [ -n "$custom_location" ]; then
-        # Expand tilde and validate path
+        # Expand tilde at start of path (e.g., ~/backups -> /home/user/backups)
         custom_location="${custom_location/#\~/$HOME}"
         
         # Check if directory exists or can be created
         if [ ! -d "$custom_location" ]; then
             log_warning "Directory does not exist: $custom_location"
-            read -p "Create this directory? (yes/no): " -r
+            read -p "Create this directory? (yes/no): " -r confirm
             echo ""
             
-            if [[ ! $REPLY =~ ^[Yy][Ee][Ss]$ ]]; then
+            if [[ ! $confirm =~ ^[Yy][Ee][Ss]$ ]]; then
                 log_info "Backup cancelled"
                 exit 0
             fi
