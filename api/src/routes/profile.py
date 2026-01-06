@@ -33,7 +33,7 @@ def profile_form(request: Request):
         "user": user
     })
 
-@router.post("/profile/change_password")
+@router.post("/profile/change-password")
 def change_password(
     request: Request,
     current_password: str = Form(...),
@@ -97,7 +97,7 @@ def change_password(
         flash(request, "Failed to update password. Please try again.")
         return RedirectResponse("/profile", status_code=303)
 
-@router.post("/profile/update_info")
+@router.post("/profile/update-info")
 def update_info(
     request: Request,
     first_name: str = Form(""),
@@ -130,7 +130,7 @@ def update_info(
         flash(request, "Failed to update profile. Please try again.")
         return RedirectResponse("/profile", status_code=303)
 
-@router.get("/user_settings")
+@router.get("/user-settings")
 def user_settings_form(request: Request):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
@@ -152,7 +152,7 @@ def user_settings_form(request: Request):
         "timezone": current_timezone
     })
 
-@router.post("/user_settings/update")
+@router.post("/user-settings/update")
 def update_user_settings(request: Request, page_size: int = Form(...), date_format: str = Form(...), time_format: str = Form(...), timezone: str = Form("Australia/Melbourne")):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
@@ -163,7 +163,7 @@ def update_user_settings(request: Request, page_size: int = Form(...), date_form
     # Validate page_size
     if page_size < 10 or page_size > 500:
         flash(request, "Items per page must be between 10 and 500.")
-        return RedirectResponse("/user_settings", status_code=303)
+        return RedirectResponse("/user-settings", status_code=303)
     
     try:
         execute("UPDATE users SET page_size = :ps, date_format = :df, time_format = :tf, timezone = :tz WHERE id = :id", 
@@ -177,8 +177,8 @@ def update_user_settings(request: Request, page_size: int = Form(...), date_form
         
         log("info", "Settings", f"User '{username}' updated their settings (page_size={page_size}, date_format={date_format}, time_format={time_format}, timezone={timezone})", "")
         flash(request, "User settings updated successfully.")
-        return RedirectResponse("/user_settings", status_code=303)
+        return RedirectResponse("/user-settings", status_code=303)
     except Exception as e:
         log("error", "Settings", f"Failed to update settings for user '{username}': {str(e)}", "")
         flash(request, "Failed to update settings. Please try again.")
-        return RedirectResponse("/user_settings", status_code=303)
+        return RedirectResponse("/user-settings", status_code=303)

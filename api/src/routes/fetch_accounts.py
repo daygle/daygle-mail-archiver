@@ -29,7 +29,7 @@ def flash(request: Request, message: str):
     request.session["flash"] = message
 
 
-@router.get("/fetch_accounts")
+@router.get("/fetch-accounts")
 def list_accounts(request: Request, page: int = 1):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
@@ -103,16 +103,16 @@ def list_accounts(request: Request, page: int = 1):
     )
 
 
-@router.get("/fetch_accounts/new")
+@router.get("/fetch-accounts/new")
 def new_account(request: Request):
     """Redirect to main page - form is now integrated"""
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
     
-    return RedirectResponse("/fetch_accounts", status_code=303)
+    return RedirectResponse("/fetch-accounts", status_code=303)
 
 
-@router.post("/fetch_accounts/new")
+@router.post("/fetch-accounts/new")
 def create_account(
     request: Request,
     name: str = Form(...),
@@ -165,7 +165,7 @@ def create_account(
         log("info", "Fetch Accounts", f"User '{username_session}' created fetch account '{name}' (type: {account_type})", "")
 
         flash(request, f"{account_type.upper()} account created successfully")
-        return RedirectResponse("/fetch_accounts", status_code=303)
+        return RedirectResponse("/fetch-accounts", status_code=303)
     
     except Exception as e:
         # Handle duplicate name error
@@ -196,16 +196,16 @@ def create_account(
         )
 
 
-@router.get("/fetch_accounts/{id}/edit")
+@router.get("/fetch-accounts/{id}/edit")
 def edit_account(request: Request, id: int):
     """Redirect to main page - form is now integrated"""
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    return RedirectResponse("/fetch_accounts", status_code=303)
+    return RedirectResponse("/fetch-accounts", status_code=303)
 
 
-@router.post("/fetch_accounts/{id}/edit")
+@router.post("/fetch-accounts/{id}/edit")
 def update_account(
     request: Request,
     id: int,
@@ -271,7 +271,7 @@ def update_account(
         log("info", "Fetch Accounts", f"User '{username_session}' updated fetch account '{name}' (ID: {id})", "")
 
         flash(request, f"{account_type.upper()} account updated successfully")
-        return RedirectResponse("/fetch_accounts", status_code=303)
+        return RedirectResponse("/fetch-accounts", status_code=303)
     
     except Exception as e:
         # Handle duplicate name error
@@ -281,10 +281,10 @@ def update_account(
             flash(request, f"Failed to update account: {str(e)}")
         
         # Redirect back to edit form
-        return RedirectResponse(f"/fetch_accounts/{id}/edit", status_code=303)
+        return RedirectResponse(f"/fetch-accounts/{id}/edit", status_code=303)
 
 
-@router.post("/fetch_accounts/{id}/delete")
+@router.post("/fetch-accounts/{id}/delete")
 def delete_account(request: Request, id: int, mode: str = Form(...)):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
@@ -296,7 +296,7 @@ def delete_account(request: Request, id: int, mode: str = Form(...)):
 
     if not account:
         flash(request, "Account not found")
-        return RedirectResponse("/fetch_accounts", status_code=303)
+        return RedirectResponse("/fetch-accounts", status_code=303)
 
     if mode == "retain":
         # Delete account only
@@ -304,7 +304,7 @@ def delete_account(request: Request, id: int, mode: str = Form(...)):
         username = request.session.get("username", "unknown")
         log("info", "Fetch Accounts", f"User '{username}' deleted fetch account '{account['name']}' (ID: {id}), emails retained", "")
         flash(request, f"Fetch account '{account['name']}' deleted. Emails retained.")
-        return RedirectResponse("/fetch_accounts", status_code=303)
+        return RedirectResponse("/fetch-accounts", status_code=303)
 
     elif mode == "delete_messages":
         # Delete emails first
@@ -319,13 +319,13 @@ def delete_account(request: Request, id: int, mode: str = Form(...)):
         log("warning", "Fetch Accounts", f"User '{username}' deleted fetch account '{account['name']}' (ID: {id}) and all related emails", "")
 
         flash(request, f"Fetch account '{account['name']}' and all related emails deleted.")
-        return RedirectResponse("/fetch_accounts", status_code=303)
+        return RedirectResponse("/fetch-accounts", status_code=303)
 
     flash(request, "Invalid delete mode.")
-    return RedirectResponse("/fetch_accounts", status_code=303)
+    return RedirectResponse("/fetch-accounts", status_code=303)
 
 
-@router.get("/fetch_accounts/{id}/test")
+@router.get("/fetch-accounts/{id}/test")
 def test_account_connection(request: Request, id: int):
     """Test connection for an existing fetch account"""
     if not require_login(request):
@@ -344,7 +344,7 @@ def test_account_connection(request: Request, id: int):
 
     if not acc:
         flash(request, "Account not found")
-        return RedirectResponse("/fetch_accounts", status_code=303)
+        return RedirectResponse("/fetch-accounts", status_code=303)
 
     account_type = acc["account_type"]
     
@@ -422,10 +422,10 @@ def test_account_connection(request: Request, id: int):
     except Exception as e:
         flash(request, f"✗ Connection failed: {str(e)}")
 
-    return RedirectResponse("/fetch_accounts", status_code=303)
+    return RedirectResponse("/fetch-accounts", status_code=303)
 
 
-@router.post("/fetch_accounts/test")
+@router.post("/fetch-accounts/test")
 def test_connection(
     request: Request,
     name: str = Form(""),

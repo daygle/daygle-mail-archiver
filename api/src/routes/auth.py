@@ -168,7 +168,7 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
         request.session["role"] = user["role"] or "administrator"
         request.session["needs_password"] = True
         log("info", "auth", f"User {username} initiated first login")
-        return RedirectResponse("/set_password", status_code=303)
+        return RedirectResponse("/set-password", status_code=303)
 
     try:
         if bcrypt.checkpw(password.encode('utf-8'), user["password_hash"].encode('utf-8')):
@@ -200,14 +200,14 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
         {"request": request, "error": "Invalid credentials"},
     )
 
-@router.get("/set_password")
+@router.get("/set-password")
 def set_password_form(request: Request):
     if not request.session.get("needs_password"):
         return RedirectResponse("/login", status_code=303)
 
     return templates.TemplateResponse("set_password.html", {"request": request})
 
-@router.post("/set_password")
+@router.post("/set-password")
 def set_password(request: Request, password: str = Form(...), confirm_password: str = Form(...)):
     if not request.session.get("needs_password"):
         return RedirectResponse("/login", status_code=303)
