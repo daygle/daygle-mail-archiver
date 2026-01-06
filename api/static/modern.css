@@ -593,6 +593,7 @@ button:focus-visible,
     transition: all var(--transition-fast);
     text-decoration: none;
     white-space: nowrap;
+    min-height: 38px;
 }
 
 .btn:disabled {
@@ -652,6 +653,7 @@ button:focus-visible,
 .btn-sm {
     padding: 6px 12px;
     font-size: 0.875rem;
+    min-height: 38px;
 }
 
 .btn-lg {
@@ -681,6 +683,8 @@ button:focus-visible,
     border-radius: var(--radius-md);
     color: var(--text-primary);
     transition: all var(--transition-fast);
+    min-height: 38px;
+    box-sizing: border-box;
 }
 
 .form-control:focus {
@@ -703,6 +707,8 @@ button:focus-visible,
     padding-right: 40px;
     border-radius: var(--radius-lg);
     transition: all var(--transition-fast);
+    min-height: 38px;
+    box-sizing: border-box;
 }
 
 .form-select:hover {
