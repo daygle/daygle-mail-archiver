@@ -114,6 +114,17 @@ check_docker_compose() {
     log_success "Using: $DOCKER_COMPOSE"
 }
 
+# Function to prune Docker build cache safely
+prune_build_cache() {
+    # Check if docker builder command is available (requires BuildKit)
+    if docker builder version &> /dev/null; then
+        log_info "Pruning Docker build cache..."
+        docker builder prune -f 2>/dev/null || true
+    else
+        log_info "Docker BuildKit not available, skipping build cache pruning"
+    fi
+}
+
 # Function to check if git is available
 check_git() {
     if ! command -v git &> /dev/null; then
@@ -290,8 +301,7 @@ start_containers() {
         log_warning "Build failed, attempting to rebuild without cache..."
         
         # Prune build cache to fix corrupted cache layers
-        log_info "Pruning Docker build cache..."
-        docker builder prune -f 2>/dev/null || true
+        prune_build_cache
         
         # Retry with --no-cache to avoid cache issues
         if ! $DOCKER_COMPOSE build --no-cache; then
@@ -322,8 +332,7 @@ cleanup_docker() {
     fi
     
     # Prune build cache to prevent cache corruption issues
-    log_info "Pruning build cache..."
-    docker builder prune -f 2>/dev/null || true
+    prune_build_cache
     
     log_success "Cleanup completed"
 }
