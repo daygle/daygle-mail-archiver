@@ -42,13 +42,31 @@ services:
     environment:
       DB_DSN: ${DB_DSN:-}
       IMAP_PASSWORD_KEY: ${IMAP_PASSWORD_KEY:-}
+      CLAMAV_HOST: ${CLAMAV_HOST:-clamav}
+      CLAMAV_PORT: ${CLAMAV_PORT:-3310}
     volumes:
       # Mount daygle_mail_archiver.conf file if it exists
       - ./daygle_mail_archiver.conf:/app/daygle_mail_archiver.conf:ro
     depends_on:
       db:
         condition: service_healthy
+      clamav:
+        condition: service_healthy
+    restart: unless-stopped
+
+  clamav:
+    image: clamav/clamav:latest
+    container_name: daygle-mail-archiver-clamav
+    volumes:
+      - clamav_data:/var/lib/clamav
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/clamdcheck.sh"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 300s
     restart: unless-stopped
 
 volumes:
   db_data:
+  clamav_data:

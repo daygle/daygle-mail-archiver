@@ -30,3 +30,21 @@ session_secret = 8f4c2b9e3d7a4f1c9e8b2d3f7c6a1e4b5d8f0c2a7b9d3e6f1a4c7b8d9e2f3a1
 # Fernet key for IMAP password encryption (used by both API and Worker)
 # Generate with: python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 imap_password_key = 8t2y0x8qZp8G7QfVYp4p0Q2u7v8Yx1m4l8e0q2c3s0A=
+
+[clamav]
+# ClamAV Virus Scanning Configuration
+# Enable or disable virus scanning for incoming emails
+enabled = true
+
+# ClamAV daemon host (use 'clamav' for docker-compose service name)
+host = clamav
+
+# ClamAV daemon port
+port = 3310
+
+# Action to take when a virus is detected
+# Options: quarantine, reject, log_only
+# - quarantine: Store the email but mark it as infected
+# - reject: Do not store infected emails
+# - log_only: Store all emails but log virus detections
+action = quarantine
