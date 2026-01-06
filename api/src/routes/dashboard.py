@@ -615,8 +615,8 @@ def check_updates(request: Request):
     try:
         update_info = check_for_updates()
         
-        if update_info.get("error"):
-            # Log the error but don't fail the request
+        # Only log actual errors, not when update checking is unavailable due to deployment method
+        if update_info.get("error") and not update_info.get("unavailable"):
             username = request.session.get("username", "unknown")
             log("warning", "Dashboard", f"Update check failed for user '{username}': {update_info['error']}", "")
         
