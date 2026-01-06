@@ -174,7 +174,6 @@ After setting your password, you'll be redirected to the Dashboard.
 
 Daygle Mail Archiver includes an automatic update script similar to mailcow's `update.sh`. The script handles:
 - Checking for updates from the git repository
-- Creating automatic backups before updating
 - Pulling the latest code and Docker images
 - Restarting containers with minimal downtime
 
@@ -196,12 +195,11 @@ This will show you if updates are available without applying them.
 The interactive update process will:
 1. Check for available updates
 2. Ask for confirmation
-3. Create an automatic backup (includes database + configuration)
-4. Save any local changes to `update_diffs/` directory
-5. Pull the latest code from git
-6. Pull updated Docker images
-7. Restart all containers
-8. Clean up old Docker resources
+3. Save any local changes to `update_diffs/` directory
+4. Pull the latest code from git
+5. Pull updated Docker images
+6. Restart all containers
+7. Clean up old Docker resources
 
 ### Update Options
 
@@ -211,16 +209,12 @@ The interactive update process will:
 
 # Update but don't restart containers (for manual inspection)
 ./update.sh --skip-start
-
-# Update without creating a backup (not recommended)
-./update.sh --skip-backup
 ```
 
 **Important Notes:**
-- Always create a backup before updating (done automatically by default)
+- Create a manual backup before updating: `./scripts/backup_restore.sh backup`
 - Your `daygle_mail_archiver.conf` file is preserved during updates
 - Local customizations are saved to `update_diffs/` for your reference
-- If update fails, you can restore from the automatic backup
 
 ---
 
@@ -244,7 +238,7 @@ Daygle Mail Archiver includes an automatic update script that pulls the latest c
 ./update.sh --skip-start
 ```
 
-**Important:** The update script automatically creates a backup before updating. Your configuration file and local customizations are preserved.
+**Important:** Create a manual backup before updating: `./scripts/backup_restore.sh backup`. Your configuration file and local customizations are preserved during updates.
 
 ### Backup and Restore
 ```bash

@@ -108,6 +108,44 @@ load_config() {
 backup() {
     log_info "Starting backup process..."
     
+    # Ask user for backup location
+    echo ""
+    log_info "Where would you like to save the backup?"
+    log_info "Default location: $BACKUP_DIR"
+    echo ""
+    echo "Enter backup directory path (or press Enter for default):"
+    read -r custom_location
+    echo ""
+    
+    if [ -n "$custom_location" ]; then
+        # Expand tilde at start of path (e.g., ~/backups -> /home/user/backups)
+        custom_location="${custom_location/#\~/$HOME}"
+        
+        # Check if directory exists or can be created
+        if [ ! -d "$custom_location" ]; then
+            log_warning "Directory does not exist: $custom_location"
+            read -p "Create this directory? (yes/no): " -r confirm
+            echo ""
+            
+            if [[ ! $confirm =~ ^[Yy][Ee][Ss]$ ]]; then
+                log_info "Backup cancelled"
+                exit 0
+            fi
+            
+            if ! mkdir -p "$custom_location"; then
+                log_error "Failed to create directory: $custom_location"
+                exit 1
+            fi
+            log_success "Created directory: $custom_location"
+        fi
+        
+        # Use custom location
+        BACKUP_DIR="$custom_location"
+        log_success "Backup will be saved to: $BACKUP_DIR"
+    else
+        log_info "Using default backup location: $BACKUP_DIR"
+    fi
+    
     # Create backup directory if it doesn't exist
     mkdir -p "$BACKUP_DIR"
     
@@ -401,7 +439,7 @@ Commands:
   delete <backup_file>      Delete a specific backup file
 
 Examples:
-  # Create a new backup
+  # Create a new backup (will prompt for save location)
   ./scripts/backup_restore.sh backup
 
   # List available backups
@@ -415,7 +453,9 @@ Examples:
   ./scripts/backup_restore.sh delete daygle_mail_archiver_backup_20240105_120000.tar.gz
 
 Notes:
-  - Backups are stored in ./backups/ directory
+  - When creating a backup, you will be prompted to specify a save location
+  - Default location is ./backups/ directory (press Enter to use default)
+  - You can specify a custom path (e.g., /mnt/external/backups or ~/my-backups)
   - Backups include database dump and daygle_mail_archiver.conf configuration file
   - Configuration file contains encryption keys and database credentials
   - Always test restores on a non-production system first
