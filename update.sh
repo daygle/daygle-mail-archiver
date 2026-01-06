@@ -253,9 +253,9 @@ update_code() {
     # Get branch
     BRANCH=$(git rev-parse --abbrev-ref HEAD)
     
-    # Configure git if needed
-    [[ -z "$(git config user.name)" ]] && git config user.name "Daygle Mail Archiver"
-    [[ -z "$(git config user.email)" ]] && git config user.email "update@daygle-mail-archiver"
+    # Configure git if needed (local to this repo only)
+    [[ -z "$(git config user.name)" ]] && git config --local user.name "Daygle Mail Archiver"
+    [[ -z "$(git config user.email)" ]] && git config --local user.email "update@daygle-mail-archiver"
     
     # Commit current state
     log_info "Saving current state..."
@@ -267,7 +267,7 @@ update_code() {
     git fetch origin "$BRANCH"
     
     log_info "Merging changes..."
-    git config merge.defaultToUpstream true
+    git config --local merge.defaultToUpstream true
     
     # Try to merge with strategy favoring upstream changes
     if ! git merge -X theirs -X patience -m "After update on ${TIMESTAMP}" "origin/$BRANCH"; then
@@ -282,7 +282,10 @@ update_code() {
             log_warning "Merge had issues, attempting to fix..."
             
             # Remove deleted upstream files
-            git status --porcelain | grep -E "UD|DU" | awk '{print $2}' | xargs rm -v 2>/dev/null || true
+            deleted_files=$(git status --porcelain | grep -E "UD|DU" | awk '{print $2}')
+            if [ -n "$deleted_files" ]; then
+                echo "$deleted_files" | xargs rm -v 2>/dev/null || true
+            fi
             git add -A
             git commit -m "After update on ${TIMESTAMP}" > /dev/null 2>&1 || true
             git checkout . 2>/dev/null || true
@@ -336,8 +339,9 @@ cleanup_docker() {
     log_info "Cleaning up old Docker resources..."
     
     # Remove dangling images
-    if docker images -f "dangling=true" -q | grep -q .; then
-        docker images -f "dangling=true" -q | xargs docker rmi 2>/dev/null || true
+    dangling_images=$(docker images -f "dangling=true" -q)
+    if [ -n "$dangling_images" ]; then
+        echo "$dangling_images" | xargs docker rmi 2>/dev/null || true
     fi
     
     log_success "Cleanup completed"
