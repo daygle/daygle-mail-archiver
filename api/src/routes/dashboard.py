@@ -104,12 +104,19 @@ def dashboard(request: Request):
 
 
 @router.get("/api/dashboard/emails-per-day")
-def emails_per_day(request: Request):
-    """Get total emails per day for the last 30 days"""
+def emails_per_day(request: Request, days: int = 30):
+    """Get total emails per day for the specified number of days"""
     if not require_login(request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
     try:
+        # Validate days parameter
+        original_days = days
+        if days not in [7, 14, 30, 60, 90]:
+            days = 30
+            username = request.session.get("username", "unknown")
+            log("warning", "Dashboard", f"User '{username}' provided invalid days parameter for emails-per-day: {original_days}, defaulting to 30", "")
+            
         date_format = get_user_date_format(request, date_only=True)
 
         user_id = request.session.get("user_id")
@@ -118,10 +125,10 @@ def emails_per_day(request: Request):
                 DATE(created_at) as date,
                 COUNT(*) as count
             FROM emails
-            WHERE created_at >= NOW() - INTERVAL '30 days'
+            WHERE created_at >= NOW() - make_interval(days => :days)
             GROUP BY DATE(created_at)
             ORDER BY date
-        """).mappings().all()
+        """, {"days": days}).mappings().all()
 
         labels = []
         for row in results:
@@ -290,12 +297,19 @@ def dashboard_stats(request: Request):
 
 
 @router.get("/api/dashboard/deletion-stats")
-def deletion_stats(request: Request):
-    """Get deletion statistics for the last 30 days"""
+def deletion_stats(request: Request, days: int = 30):
+    """Get deletion statistics for the specified number of days"""
     if not require_login(request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
     try:
+        # Validate days parameter
+        original_days = days
+        if days not in [7, 14, 30, 60, 90]:
+            days = 30
+            username = request.session.get("username", "unknown")
+            log("warning", "Dashboard", f"User '{username}' provided invalid days parameter for deletion-stats: {original_days}, defaulting to 30", "")
+            
         date_format = get_user_date_format(request, date_only=True)
         user_id = request.session.get("user_id")
 
@@ -307,10 +321,10 @@ def deletion_stats(request: Request):
                 deleted_from_mail_server,
                 SUM(count) as total_count
             FROM deletion_stats
-            WHERE deletion_date >= CURRENT_DATE - INTERVAL '30 days'
+            WHERE deletion_date >= CURRENT_DATE - make_interval(days => :days)
             GROUP BY deletion_date, deletion_type, deleted_from_mail_server
             ORDER BY deletion_date
-        """).mappings().all()
+        """, {"days": days}).mappings().all()
 
         # Organize data for chart
         data = {
@@ -471,12 +485,19 @@ def recent_activity(request: Request):
 
 
 @router.get("/api/dashboard/storage-trends")
-def storage_trends(request: Request):
-    """Get storage growth over the last 7 days"""
+def storage_trends(request: Request, days: int = 7):
+    """Get storage growth over the specified number of days"""
     if not require_login(request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
     try:
+        # Validate days parameter
+        original_days = days
+        if days not in [7, 14, 30, 60, 90]:
+            days = 7
+            username = request.session.get("username", "unknown")
+            log("warning", "Dashboard", f"User '{username}' provided invalid days parameter for storage-trends: {original_days}, defaulting to 7", "")
+            
         date_format = get_user_date_format(request, date_only=True)
         user_id = request.session.get("user_id")
         
@@ -486,10 +507,10 @@ def storage_trends(request: Request):
                 COUNT(*) as count,
                 SUM(LENGTH(raw_email)) as total_size
             FROM emails
-            WHERE created_at >= NOW() - INTERVAL '7 days'
+            WHERE created_at >= NOW() - make_interval(days => :days)
             GROUP BY DATE(created_at)
             ORDER BY date
-        """).mappings().all()
+        """, {"days": days}).mappings().all()
 
         labels = []
         for row in results:
@@ -685,4 +706,69 @@ def clamav_stats(request: Request):
         log("error", "Dashboard", f"Failed to fetch ClamAV stats for user '{username}': {str(e)}", "")
         return JSONResponse({"error": "Failed to load data"}, status_code=500)
 
+
+@router.get("/api/dashboard/widget-settings")
+def get_widget_settings(request: Request):
+    """Get user's widget settings (e.g., days range for charts)"""
+    if not require_login(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    user_id = request.session.get("user_id")
+    
+    try:
+        result = query("""
+            SELECT settings
+            FROM user_widget_settings
+            WHERE user_id = :user_id
+        """, {"user_id": user_id}).mappings().first()
+
+        if result and result["settings"]:
+            return {"settings": result["settings"]}
+        else:
+            # Return default settings
+            return {
+                "settings": {
+                    "emails-per-day": {"days": 30},
+                    "deletion-stats": {"days": 30},
+                    "storage-trends": {"days": 7}
+                }
+            }
+    except Exception as e:
+        username = request.session.get("username", "unknown")
+        log("error", "Dashboard", f"Failed to fetch widget settings for user '{username}': {str(e)}", "")
+        return JSONResponse({"error": "Failed to load data"}, status_code=500)
+
+
+@router.post("/api/dashboard/widget-settings")
+async def save_widget_settings(request: Request):
+    """Save user's widget settings"""
+    if not require_login(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    user_id = request.session.get("user_id")
+    
+    try:
+        data = await request.json()
+        settings = data.get("settings", {})
+        
+        # Use PostgreSQL's JSON type to store settings
+        import json
+        settings_json = json.dumps(settings)
+        
+        # Upsert the settings
+        query("""
+            INSERT INTO user_widget_settings (user_id, settings, updated_at)
+            VALUES (:user_id, :settings::jsonb, NOW())
+            ON CONFLICT (user_id)
+            DO UPDATE SET settings = :settings::jsonb, updated_at = NOW()
+        """, {"user_id": user_id, "settings": settings_json})
+        
+        username = request.session.get("username", "unknown")
+        log("info", "Dashboard", f"User '{username}' saved widget settings", "")
+        
+        return {"success": True}
+    except Exception as e:
+        username = request.session.get("username", "unknown")
+        log("error", "Dashboard", f"Failed to save widget settings for user '{username}': {str(e)}", "")
+        return JSONResponse({"error": "Failed to save settings"}, status_code=500)
 
