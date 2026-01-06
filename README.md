@@ -174,7 +174,7 @@ After setting your password, you'll be redirected to the Dashboard.
 
 ### Backup and Restore
 ```bash
-# Create a complete backup (database + .env keys)
+# Create a complete backup (database + configuration file)
 ./scripts/backup_restore.sh backup
 
 # List available backups
@@ -584,7 +584,7 @@ The system implements several security measures:
 
 1. Ensure PostgreSQL container is healthy: `docker compose ps`
 2. Check database logs: `docker compose logs -f db`
-3. Verify `DB_DSN` in `.env` matches your database credentials
+3. Verify database credentials in `daygle_mail_archiver.conf` are correct
 
 ## OAuth Authorization Fails
 
