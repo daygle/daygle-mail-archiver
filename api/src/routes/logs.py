@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
-from datetime import datetime
 
 from utils.db import query
 from utils.templates import templates
@@ -104,6 +103,9 @@ def logs(
     # Get distinct sources for filter dropdown
     sources_query = "SELECT DISTINCT source FROM logs ORDER BY source"
     sources = [row["source"] for row in query(sources_query).mappings().all()]
+    
+    # Check if any filters are active
+    has_active_filters = bool(search or source or (level != "all") or date_from or date_to)
 
     return templates.TemplateResponse(
         "logs.html",
@@ -120,6 +122,7 @@ def logs(
             "total_logs": total_logs,
             "total_pages": total_pages,
             "allowed_levels": ALLOWED_LOG_LEVELS,
-            "sources": sources
+            "sources": sources,
+            "has_active_filters": has_active_filters
         },
     )

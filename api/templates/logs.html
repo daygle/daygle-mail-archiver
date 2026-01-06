@@ -182,7 +182,7 @@
     
     // Show filter card if any filters are active
     document.addEventListener('DOMContentLoaded', function() {
-        const hasFilters = {{ 'true' if current_search or current_source or (current_level != 'all') or current_date_from or current_date_to else 'false' }};
+        const hasFilters = {{ 'true' if has_active_filters else 'false' }};
         if (hasFilters) {
             toggleFilters();
         }

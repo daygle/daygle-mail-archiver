@@ -104,8 +104,7 @@ def setup_wizard_submit(
         
         # Mark setup as complete
         execute(
-            "UPDATE settings SET value = 'true' WHERE key = 'setup_complete'",
-            {}
+            "UPDATE settings SET value = 'true' WHERE key = 'setup_complete'"
         )
         
         log("info", "setup", f"Initial setup completed - Administrator account '{username}' created")
