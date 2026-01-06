@@ -627,6 +627,7 @@ def check_updates(request: Request):
         # Return a safe response even on error
         return {
             "updates_available": False,
-            "error": "Failed to check for updates"
+            "error": "Failed to check for updates",
+            "unavailable": False
         }
 
