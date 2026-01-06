@@ -29,12 +29,13 @@ This project is built with explicit, maintainable configuration, modular backend
 - **Help Documentation**: Built-in help page with comprehensive usage instructions
 - **Donation Support**: Integrated PayPal donation page to support development
 - **Audit Logging**: Complete audit trail of all system actions
+- **Virus Scanning**: Integrated ClamAV for scanning incoming emails with configurable actions
 
 ---
 
 ## 🏗️ Architecture
 
-The Daygle Mail Archiver consists of three main components:
+The Daygle Mail Archiver consists of four main components:
 
 1. **PostgreSQL Database** (`db`): Stores all emails, accounts, users, settings, and logs
    - Emails stored as compressed RFC822 format in BYTEA columns
@@ -51,7 +52,13 @@ The Daygle Mail Archiver consists of three main components:
    - Continuously polls enabled fetch accounts
    - Supports IMAP, Gmail API, and Office 365 Graph API
    - Handles retention policy cleanup
+   - Scans emails for viruses using ClamAV
    - Updates heartbeat and health status
+
+4. **ClamAV** (`clamav`): Virus scanning service
+   - Scans incoming emails for malware and viruses
+   - Automatic virus definition updates
+   - Configurable actions for infected emails
 
 All components run in Docker containers orchestrated by Docker Compose.
 
@@ -133,8 +140,11 @@ This will:
 
 - Start PostgreSQL container (`daygle-mail-archiver-database`)
 - Apply database schema from `db/schema.sql` automatically
+- Start ClamAV container (`daygle-mail-archiver-clamav`)
 - Start the API container on port 8000 (`daygle-mail-archiver-api`)
-- Start the worker container (`daygle-mail-archiver-worker`)  
+- Start the worker container (`daygle-mail-archiver-worker`)
+
+**Note:** The ClamAV container may take 5-10 minutes on first startup to download virus definitions. The worker will wait for ClamAV to be healthy before starting.
 
 ---
 
@@ -147,6 +157,7 @@ docker compose ps
 Expected:
 
 - `daygle-mail-archiver-database` → healthy  
+- `daygle-mail-archiver-clamav` → healthy (may take 5-10 minutes on first start)
 - `daygle-mail-archiver-api` → running  
 - `daygle-mail-archiver-worker` → running  
 
@@ -475,6 +486,121 @@ The **Dashboard** displays deletion analytics:
 
 ---
 
+# Virus Scanning with ClamAV
+
+The system includes integrated ClamAV virus scanning to protect against malware in incoming emails.
+
+## Configuring Virus Scanning
+
+Navigate to **Settings → Global Settings** to configure ClamAV:
+
+1. **Enable Virus Scanning**: Check this to activate virus scanning for all incoming emails
+2. **ClamAV Host**: Hostname of the ClamAV daemon (default: `clamav` for Docker)
+3. **ClamAV Port**: Port number for ClamAV daemon (default: `3310`)
+4. **Action When Virus Detected**: Choose how to handle infected emails:
+   - **Quarantine** (default): Store the email but mark it as infected for review
+   - **Reject**: Do not store infected emails in the database
+   - **Log Only**: Store all emails but log virus detections for monitoring
+
+## How Virus Scanning Works
+
+1. **Pre-Storage Scanning**: Emails are scanned **before** being saved to the database
+2. **Real-Time Detection**: ClamAV scans each incoming email as it's fetched from mail servers
+3. **Automatic Updates**: ClamAV automatically updates virus definitions
+4. **Visual Indicators**: Email list and detail views show virus scan status with color-coded badges
+
+## Viewing Virus Scan Results
+
+### In Email List
+
+Each email displays a virus scan indicator:
+- ✓ Green badge: Clean (no virus detected)
+- ⚠️ Red badge: Infected (virus detected - hover for virus name)
+- − Gray badge: Not scanned (scanning was disabled)
+
+### In Email Details
+
+When viewing an email, the virus scan section shows:
+- Scan status (Clean or Infected)
+- Virus name (if detected)
+- Scan timestamp
+
+## Handling Infected Emails
+
+### Quarantine Mode (Default)
+
+Infected emails are:
+- Stored in the database with a warning flag
+- Clearly marked in the UI with red warning badges
+- Logged in the system logs with virus name and details
+- Can be reviewed by administrators before deletion
+
+### Reject Mode
+
+Infected emails are:
+- **Not stored** in the database
+- Logged in system logs for audit trail
+- The worker continues processing other emails normally
+
+### Log Only Mode
+
+All emails are:
+- Stored regardless of virus detection
+- Virus detections logged for monitoring
+- Useful for testing or when using external virus protection
+
+## ClamAV Container Management
+
+The ClamAV container is automatically managed by Docker Compose:
+
+```bash
+# View ClamAV logs
+docker compose logs -f clamav
+
+# Restart ClamAV service
+docker compose restart clamav
+
+# Update virus definitions (happens automatically)
+docker compose exec clamav freshclam
+```
+
+**Note:** ClamAV requires approximately 2-3 GB of disk space for virus definitions. The container may take 5-10 minutes to start on first run while downloading definitions.
+
+## Troubleshooting Virus Scanning
+
+### ClamAV Not Starting
+
+Check ClamAV logs for errors:
+```bash
+docker compose logs clamav
+```
+
+Common issues:
+- Insufficient disk space for virus definitions
+- Network issues preventing definition downloads
+- Wait 5-10 minutes for initial setup to complete
+
+### Emails Not Being Scanned
+
+1. Verify ClamAV is running and healthy: `docker compose ps`
+2. Check that virus scanning is enabled in Global Settings
+3. Review worker logs for connection errors: `docker compose logs -f worker`
+4. If ClamAV is unavailable, emails are allowed through and logged
+
+### Disable Virus Scanning
+
+To disable virus scanning:
+1. Navigate to **Settings → Global Settings**
+2. Uncheck **Enable Virus Scanning**
+3. Click **Save Settings**
+
+Alternatively, stop the ClamAV container (not recommended):
+```bash
+docker compose stop clamav
+```
+
+---
+
 # Database Backup & Restore
 
 Protect your email archive with the built-in command-line backup and restore script that includes both the database AND configuration file (encryption keys).
@@ -685,6 +811,7 @@ The system implements several security measures:
 - **User Authentication**: User passwords are hashed with bcrypt before storage
 - **Session Security**: Session cookies use a secret key (`SESSION_SECRET`) with 24-hour expiration
 - **OAuth2 Tokens**: Gmail and Office 365 refresh tokens are stored encrypted in the database
+- **Virus Scanning**: Integrated ClamAV scans incoming emails for malware and viruses
 - **Compressed Storage**: Raw emails are stored compressed in PostgreSQL BYTEA columns
 - **No Filesystem Storage**: All email data is stored in the database only, not on the filesystem
 - **Security Headers**: API includes security headers (X-Content-Type-Options, X-Frame-Options, X-XSS-Protection)
@@ -692,6 +819,7 @@ The system implements several security measures:
 
 **Important Security Recommendations:**
 - Change default `SESSION_SECRET` and `IMAP_PASSWORD_KEY` values in production
+- Enable virus scanning to protect against malware in incoming emails
 - Use HTTPS in production (set `https_only=True` in session middleware)
 - Regularly backup your database (encrypted backups recommended)
 - Keep PostgreSQL access restricted to Docker network only
