@@ -122,10 +122,10 @@ def emails_per_day(request: Request, days: int = 30):
                 DATE(created_at) as date,
                 COUNT(*) as count
             FROM emails
-            WHERE created_at >= NOW() - INTERVAL ':days days'
+            WHERE created_at >= NOW() - INTERVAL '%s days'
             GROUP BY DATE(created_at)
             ORDER BY date
-        """.replace(':days', str(days))).mappings().all()
+        """ % days).mappings().all()
 
         labels = []
         for row in results:
@@ -315,10 +315,10 @@ def deletion_stats(request: Request, days: int = 30):
                 deleted_from_mail_server,
                 SUM(count) as total_count
             FROM deletion_stats
-            WHERE deletion_date >= CURRENT_DATE - INTERVAL ':days days'
+            WHERE deletion_date >= CURRENT_DATE - INTERVAL '%s days'
             GROUP BY deletion_date, deletion_type, deleted_from_mail_server
             ORDER BY deletion_date
-        """.replace(':days', str(days))).mappings().all()
+        """ % days).mappings().all()
 
         # Organize data for chart
         data = {
@@ -498,10 +498,10 @@ def storage_trends(request: Request, days: int = 7):
                 COUNT(*) as count,
                 SUM(LENGTH(raw_email)) as total_size
             FROM emails
-            WHERE created_at >= NOW() - INTERVAL ':days days'
+            WHERE created_at >= NOW() - INTERVAL '%s days'
             GROUP BY DATE(created_at)
             ORDER BY date
-        """.replace(':days', str(days))).mappings().all()
+        """ % days).mappings().all()
 
         labels = []
         for row in results:
