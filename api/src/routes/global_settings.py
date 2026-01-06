@@ -39,6 +39,10 @@ def save_settings(
     retention_value: int = Form(1),
     retention_unit: str = Form("years"),
     retention_delete_from_mail_server: bool = Form(False),
+    clamav_enabled: bool = Form(False),
+    clamav_host: str = Form("clamav"),
+    clamav_port: int = Form(3310),
+    clamav_action: str = Form("quarantine"),
 ):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
@@ -58,6 +62,10 @@ def save_settings(
             ('retention_value', str(retention_value)),
             ('retention_unit', retention_unit),
             ('retention_delete_from_mail_server', str(retention_delete_from_mail_server).lower()),
+            ('clamav_enabled', str(clamav_enabled).lower()),
+            ('clamav_host', clamav_host),
+            ('clamav_port', str(clamav_port)),
+            ('clamav_action', clamav_action),
         ]
         
         for key, value in settings_data:
@@ -92,6 +100,10 @@ def save_settings(
         'retention_value': str(retention_value),
         'retention_unit': retention_unit,
         'retention_delete_from_mail_server': str(retention_delete_from_mail_server).lower(),
+        'clamav_enabled': str(clamav_enabled).lower(),
+        'clamav_host': clamav_host,
+        'clamav_port': str(clamav_port),
+        'clamav_action': clamav_action,
     }
     
     for key, new_value in new_settings.items():

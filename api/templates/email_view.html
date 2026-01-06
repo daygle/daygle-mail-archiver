@@ -55,6 +55,27 @@
                         <td style="background: var(--bg-secondary); font-weight: 600;">Folder</td>
                         <td><span class="badge badge-secondary">{{ email.folder }}</span></td>
                     </tr>
+                    {% if email.virus_scanned %}
+                    <tr>
+                        <td style="background: var(--bg-secondary); font-weight: 600;">Virus Scan</td>
+                        <td>
+                            {% if email.virus_detected %}
+                            <span class="badge badge-danger">
+                                <i class="fas fa-exclamation-triangle"></i> INFECTED: {{ email.virus_name }}
+                            </span>
+                            {% else %}
+                            <span class="badge badge-success">
+                                <i class="fas fa-check"></i> Clean
+                            </span>
+                            {% endif %}
+                            {% if email.scan_timestamp %}
+                            <small class="text-secondary" style="margin-left: 8px;">
+                                (Scanned: {{ email.scan_timestamp.strftime('%Y-%m-%d %H:%M:%S UTC') if email.scan_timestamp else 'N/A' }})
+                            </small>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
                 </tbody>
             </table>
         </div>

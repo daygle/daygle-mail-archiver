@@ -9,8 +9,19 @@ from security import decrypt_password
 from imap_client import ImapConnection
 from gmail_client import GmailClient
 from o365_client import O365Client
+from clamav_scanner import ClamAVScanner
 
 POLL_INTERVAL_FALLBACK = 300  # seconds
+
+# Initialize ClamAV scanner (singleton)
+clamav_scanner = None
+
+def get_clamav_scanner():
+    """Get or initialize the ClamAV scanner."""
+    global clamav_scanner
+    if clamav_scanner is None:
+        clamav_scanner = ClamAVScanner()
+    return clamav_scanner
 
 def log_error(source: str, message: str, details: str = "", level: str = "error"):
     execute(
@@ -99,11 +110,57 @@ def store_email(
     folder: str,
     uid: int,
     email_bytes: bytes,
-):
-    compressed_bytes = gzip.compress(email_bytes)
-
+) -> bool:
+    """
+    Store email in the database with virus scanning.
+    
+    Args:
+        source: Email source/account name
+        folder: Email folder
+        uid: Email UID
+        email_bytes: Raw email content
+        
+    Returns:
+        True if email was stored, False if rejected due to virus
+    """
+    # Parse email once for efficiency
     msg = email.message_from_bytes(email_bytes)
     subject = msg.get("Subject", "")
+    
+    # Scan for viruses before storing
+    scanner = get_clamav_scanner()
+    virus_detected = False
+    virus_name = None
+    scan_timestamp = None
+    virus_scanned = False
+    
+    if scanner.is_enabled():
+        virus_detected, virus_name, scan_timestamp = scanner.scan(email_bytes)
+        virus_scanned = True
+        
+        # Handle virus detection based on configured action
+        if virus_detected:
+            action = scanner.get_action()
+            log_error(
+                source,
+                f"Virus detected in email: {virus_name}",
+                f"Subject: {subject or 'N/A'}, UID: {uid}, Folder: {folder}, Action: {action}",
+                level="warning"
+            )
+            
+            if action == 'reject':
+                # Don't store the email at all
+                log_error(
+                    source,
+                    f"Email rejected due to virus: {virus_name}",
+                    f"UID: {uid}, Folder: {folder}",
+                    level="info"
+                )
+                return False
+    
+    # Compress email for storage
+    compressed_bytes = gzip.compress(email_bytes)
+
     sender = msg.get("From", "")
     recipients = ", ".join(
         filter(None, [msg.get("To"), msg.get("Cc"), msg.get("Bcc")])
@@ -114,10 +171,10 @@ def store_email(
         """
         INSERT INTO emails
         (source, folder, uid, subject, sender, recipients, date,
-         raw_email, compressed)
+         raw_email, compressed, virus_scanned, virus_detected, virus_name, scan_timestamp)
         VALUES
         (:source, :folder, :uid, :subject, :sender, :recipients, :date,
-         :raw_email, TRUE)
+         :raw_email, TRUE, :virus_scanned, :virus_detected, :virus_name, :scan_timestamp)
         ON CONFLICT (source, folder, uid) DO NOTHING
         """,
         {
@@ -129,8 +186,14 @@ def store_email(
             "recipients": recipients,
             "date": date_header,
             "raw_email": compressed_bytes,
+            "virus_scanned": virus_scanned,
+            "virus_detected": virus_detected,
+            "virus_name": virus_name,
+            "scan_timestamp": scan_timestamp,
         },
     )
+    
+    return True
 
 def process_account(account):
     account_id = account["id"]

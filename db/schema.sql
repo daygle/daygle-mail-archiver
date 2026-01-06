@@ -23,6 +23,12 @@ CREATE TABLE IF NOT EXISTS emails (
     raw_email BYTEA NOT NULL,
     compressed BOOLEAN NOT NULL DEFAULT TRUE,
 
+    -- Virus scanning results
+    virus_scanned BOOLEAN NOT NULL DEFAULT FALSE,
+    virus_detected BOOLEAN NOT NULL DEFAULT FALSE,
+    virus_name TEXT,
+    scan_timestamp TIMESTAMPTZ,
+
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     UNIQUE (source, folder, uid)
@@ -44,6 +50,7 @@ USING GIN (
 CREATE INDEX IF NOT EXISTS emails_created_at_idx ON emails(created_at DESC);
 CREATE INDEX IF NOT EXISTS emails_source_idx ON emails(source);
 CREATE INDEX IF NOT EXISTS emails_sender_idx ON emails(sender);
+CREATE INDEX IF NOT EXISTS emails_virus_detected_idx ON emails(virus_detected) WHERE virus_detected = TRUE;
 
 -- ----------------------------
 -- fetch_accounts
@@ -143,6 +150,11 @@ INSERT INTO settings (key, value) VALUES ('retention_value', '1') ON CONFLICT (k
 INSERT INTO settings (key, value) VALUES ('retention_unit', 'years') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('retention_delete_from_mail_server', 'false') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('setup_complete', 'false') ON CONFLICT (key) DO NOTHING;
+-- ClamAV settings
+INSERT INTO settings (key, value) VALUES ('clamav_enabled', 'true') ON CONFLICT (key) DO NOTHING;
+INSERT INTO settings (key, value) VALUES ('clamav_host', 'clamav') ON CONFLICT (key) DO NOTHING;
+INSERT INTO settings (key, value) VALUES ('clamav_port', '3310') ON CONFLICT (key) DO NOTHING;
+INSERT INTO settings (key, value) VALUES ('clamav_action', 'quarantine') ON CONFLICT (key) DO NOTHING;
 
 -- ----------------------------
 -- logs
