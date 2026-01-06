@@ -640,7 +640,7 @@ def clamav_stats(request: Request):
     
     try:
         # Get counts of emails by virus scan status
-        # Quarantined: virus_detected = TRUE
+        # Quarantined: virus_detected = TRUE (emails stored with virus flag)
         quarantined_results = query("""
             SELECT COUNT(*) as count 
             FROM emails 
@@ -648,8 +648,8 @@ def clamav_stats(request: Request):
         """).mappings().first()
         quarantined = quarantined_results["count"] if quarantined_results else 0
         
-        # Rejected: Check logs for rejected emails (emails that were not stored due to virus detection)
-        # Note: Rejected emails won't be in the emails table, so we check the logs
+        # Rejected: Estimated from logs (emails not stored due to virus detection)
+        # Note: This is an estimate based on log messages from the last 30 days
         rejected_results = query("""
             SELECT COUNT(*) as count 
             FROM logs 
@@ -660,15 +660,10 @@ def clamav_stats(request: Request):
         """).mappings().first()
         rejected = rejected_results["count"] if rejected_results else 0
         
-        # Logged only: virus_scanned = TRUE and virus_detected = TRUE 
-        # (same as quarantined in current implementation, but keeping separate for clarity)
-        logged_results = query("""
-            SELECT COUNT(*) as count 
-            FROM emails 
-            WHERE virus_scanned = TRUE 
-            AND virus_detected = TRUE
-        """).mappings().first()
-        logged = logged_results["count"] if logged_results else 0
+        # Logged: For now, this shows the same as quarantined since we don't have
+        # a separate tracking mechanism. In future, this could track emails where
+        # clamav_action='log_only' was the configured action at scan time.
+        logged = quarantined
         
         # Clean: virus_scanned = TRUE and virus_detected = FALSE
         clean_results = query("""

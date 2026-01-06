@@ -181,5 +181,5 @@ After restore, verify:
 ## Next Steps
 
 - [Configure automated backups](#automated-backup-script)
-- [Test restore procedure](##restoring-from-backup)
+- [Test restore procedure](#restoring-from-backup)
 - [Set up cloud storage](#backup-to-cloud-storage)
