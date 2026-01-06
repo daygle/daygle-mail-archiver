@@ -133,7 +133,6 @@ This will:
 
 - Start PostgreSQL container (`daygle-mail-archiver-database`)
 - Apply database schema from `db/schema.sql` automatically
-- Create default administrator user (username: `administrator`, no password set)
 - Start the API container on port 8000 (`daygle-mail-archiver-api`)
 - Start the worker container (`daygle-mail-archiver-worker`)  
 
@@ -153,20 +152,23 @@ Expected:
 
 ---
 
-## 5. Access the web UI
+## 5. Complete initial setup
+
+On first access, you'll be prompted to create an administrator account.
 
 Open:
 
 ```
-http://localhost:8000/login
+http://localhost:8000
 ```
 
-Login:
+You will be automatically redirected to the **Setup Wizard** where you can:
 
-- Username: `administrator`
-- Password: (empty - you'll be prompted to set a password on first login)
+1. Choose your administrator username
+2. Set your email address (optional)
+3. Create a secure password
 
-After setting your password, you'll be redirected to the Dashboard.  
+After completing setup, you'll be redirected to the login page where you can sign in with your new administrator account.  
 
 ---
 
@@ -709,13 +711,14 @@ The system implements several security measures:
 
 ## Cannot Login
 
-1. For first login with `administrator` user, use empty password and set a new one
-2. If you forgot your password, reset it directly in the database:
+1. If this is your first time accessing the system, you'll be redirected to the setup wizard at `/setup`
+2. Complete the setup wizard to create your administrator account
+3. If you forgot your password after setup, reset it directly in the database:
    ```bash
    docker compose exec db psql -U daygle_mail_archiver -d daygle_mail_archiver
-   UPDATE users SET password_hash = '' WHERE username = 'administrator';
+   UPDATE users SET password_hash = '' WHERE username = 'your_username';
    ```
-3. Then log in with empty password and set a new one
+4. Then log in with empty password and set a new one via the "Set Password" page
 
 ## Database Connection Issues
 
