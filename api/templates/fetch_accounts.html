@@ -260,7 +260,7 @@
                             </td>
                             <td>
                                 <div class="flex gap-2">
-                                    <button class="btn btn-secondary btn-sm" title="Edit" onclick='showEditForm({{ acc.id | tojson }}, {{ acc | tojson }})'>
+                                    <button class="btn btn-secondary btn-sm" title="Edit" onclick='showEditForm({{ acc.id | tojson }}, {{ acc.json_safe | tojson }})'>
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     <a href="/fetch_accounts/{{ acc.id }}/test" class="btn btn-info btn-sm" title="Test Connection">
@@ -420,7 +420,7 @@
         document.getElementById('expunge_deleted').checked = account.expunge_deleted || false;
         document.getElementById('enabled').checked = account.enabled !== false;
         document.getElementById('oauth_client_id').value = account.oauth_client_id || '';
-        document.getElementById('oauth_client_secret').value = account.oauth_client_secret || '';
+        document.getElementById('oauth_client_secret').value = ''; // Don't expose secret
         
         // Show form, hide table
         document.getElementById('form-section').style.display = 'block';
@@ -502,16 +502,6 @@
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
         toggleAccountFields();
-        
-        // Check if we should show the form (e.g., after validation error)
-        const showForm = {{ 'true' if form_mode else 'false' }};
-        if (showForm) {
-            {% if account %}
-            showEditForm({{ account.id | tojson }}, {{ account | tojson }});
-            {% else %}
-            showCreateForm();
-            {% endif %}
-        }
     });
 </script>
 

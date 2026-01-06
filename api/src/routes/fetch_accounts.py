@@ -12,6 +12,14 @@ from imaplib import IMAP4, IMAP4_SSL
 
 router = APIRouter()
 
+# Fields that are safe to expose to JavaScript (exclude datetime and sensitive data)
+JSON_SAFE_FIELDS = [
+    'id', 'name', 'account_type', 'host', 'port', 'username',
+    'use_ssl', 'require_starttls', 'poll_interval_seconds',
+    'delete_after_processing', 'expunge_deleted', 'enabled',
+    'oauth_client_id'  # Client ID is public, but NOT client_secret
+]
+
 
 def require_login(request: Request):
     return "user_id" in request.session
@@ -50,22 +58,34 @@ def list_accounts(request: Request, page: int = 1):
     total_pages = (total + page_size - 1) // page_size
 
     # Get paginated accounts with email counts
-    accounts = query(
+    accounts_raw = query(
         """
         SELECT fa.id, fa.name, fa.account_type, fa.host, fa.port, fa.username, fa.use_ssl, fa.require_starttls,
-               fa.poll_interval_seconds, fa.delete_after_processing, fa.enabled,
+               fa.poll_interval_seconds, fa.delete_after_processing, fa.expunge_deleted, fa.enabled,
+               fa.oauth_client_id, fa.oauth_client_secret,
                fa.last_heartbeat, fa.last_success, fa.last_error,
                COUNT(e.id) as email_count
         FROM fetch_accounts fa
         LEFT JOIN emails e ON e.source = fa.name
         GROUP BY fa.id, fa.name, fa.account_type, fa.host, fa.port, fa.username, fa.use_ssl, fa.require_starttls,
-                 fa.poll_interval_seconds, fa.delete_after_processing, fa.enabled,
+                 fa.poll_interval_seconds, fa.delete_after_processing, fa.expunge_deleted, fa.enabled,
+                 fa.oauth_client_id, fa.oauth_client_secret,
                  fa.last_heartbeat, fa.last_success, fa.last_error
         ORDER BY fa.id
         LIMIT :limit OFFSET :offset
         """,
         {"limit": page_size, "offset": offset}
     ).mappings().all()
+    
+    # Convert RowMapping objects to dictionaries and create JSON-safe versions
+    accounts = []
+    for acc in accounts_raw:
+        acc_dict = dict(acc)
+        # Create a JSON-safe version without datetime fields or sensitive data for JavaScript
+        acc_dict['json_safe'] = {
+            field: acc_dict[field] for field in JSON_SAFE_FIELDS if field in acc_dict
+        }
+        accounts.append(acc_dict)
 
     msg = request.session.pop("flash", None)
 
