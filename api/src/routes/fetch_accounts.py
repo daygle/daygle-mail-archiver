@@ -49,14 +49,19 @@ def list_accounts(request: Request, page: int = 1):
     total = total_result["total"] if total_result else 0
     total_pages = (total + page_size - 1) // page_size
 
-    # Get paginated accounts
+    # Get paginated accounts with email counts
     accounts = query(
         """
-        SELECT id, name, account_type, host, port, username, use_ssl, require_starttls,
-               poll_interval_seconds, delete_after_processing, enabled,
-               last_heartbeat, last_success, last_error
-        FROM fetch_accounts
-        ORDER BY id
+        SELECT fa.id, fa.name, fa.account_type, fa.host, fa.port, fa.username, fa.use_ssl, fa.require_starttls,
+               fa.poll_interval_seconds, fa.delete_after_processing, fa.enabled,
+               fa.last_heartbeat, fa.last_success, fa.last_error,
+               COUNT(e.id) as email_count
+        FROM fetch_accounts fa
+        LEFT JOIN emails e ON e.source = fa.name
+        GROUP BY fa.id, fa.name, fa.account_type, fa.host, fa.port, fa.username, fa.use_ssl, fa.require_starttls,
+                 fa.poll_interval_seconds, fa.delete_after_processing, fa.enabled,
+                 fa.last_heartbeat, fa.last_success, fa.last_error
+        ORDER BY fa.id
         LIMIT :limit OFFSET :offset
         """,
         {"limit": page_size, "offset": offset}
@@ -80,19 +85,11 @@ def list_accounts(request: Request, page: int = 1):
 
 @router.get("/fetch_accounts/new")
 def new_account(request: Request):
+    """Redirect to main page - form is now integrated"""
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
-
-    msg = request.session.pop("flash", None)
-
-    return templates.TemplateResponse(
-        "fetch_account_form.html",
-        {
-            "request": request,
-            "account": None,
-            "flash": msg,
-        },
-    )
+    
+    return RedirectResponse("/fetch_accounts", status_code=303)
 
 
 @router.post("/fetch_accounts/new")
@@ -181,34 +178,11 @@ def create_account(
 
 @router.get("/fetch_accounts/{id}/edit")
 def edit_account(request: Request, id: int):
+    """Redirect to main page - form is now integrated"""
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    account = query(
-        """
-        SELECT id, name, account_type, host, port, username, password_encrypted,
-               use_ssl, require_starttls, poll_interval_seconds,
-               delete_after_processing, expunge_deleted, enabled
-        FROM fetch_accounts
-        WHERE id = :id
-        """,
-        {"id": id},
-    ).mappings().first()
-
-    if not account:
-        flash(request, "Account not found")
-        return RedirectResponse("/fetch_accounts", status_code=303)
-
-    msg = request.session.pop("flash", None)
-
-    return templates.TemplateResponse(
-        "fetch_account_form.html",
-        {
-            "request": request,
-            "account": account,
-            "flash": msg,
-        },
-    )
+    return RedirectResponse("/fetch_accounts", status_code=303)
 
 
 @router.post("/fetch_accounts/{id}/edit")
@@ -329,44 +303,6 @@ def delete_account(request: Request, id: int, mode: str = Form(...)):
 
     flash(request, "Invalid delete mode.")
     return RedirectResponse("/fetch_accounts", status_code=303)
-
-
-@router.get("/fetch_accounts/{id}/delete/confirm")
-def confirm_delete_account(request: Request, id: int):
-    if not require_login(request):
-        return RedirectResponse("/login", status_code=303)
-
-    account = query(
-        """
-        SELECT id, name
-        FROM fetch_accounts
-        WHERE id = :id
-        """,
-        {"id": id},
-    ).mappings().first()
-
-    if not account:
-        flash(request, "Account not found")
-        return RedirectResponse("/fetch_accounts", status_code=303)
-
-    # Count emails linked to this account
-    email_count = query(
-        """
-        SELECT COUNT(*) AS c
-        FROM emails
-        WHERE source = :name
-        """,
-        {"name": account["name"]},
-    ).mappings().first()["c"]
-
-    return templates.TemplateResponse(
-        "fetch_account_confirm_delete.html",
-        {
-            "request": request,
-            "account": account,
-            "email_count": email_count,
-        },
-    )
 
 
 @router.get("/fetch_accounts/{id}/test")

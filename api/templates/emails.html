@@ -3,8 +3,8 @@
 {% block page_title %}Emails{% endblock %}
 
 {% block content %}
-<!-- Filters Card -->
-<div class="card mb-4">
+<!-- Filters Card (Initially Hidden) -->
+<div id="filterCard" class="card mb-4" style="display: none;">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-filter"></i>
@@ -45,15 +45,21 @@
             <i class="fas fa-inbox"></i>
             <span>Archived Emails</span>
         </div>
-        {% if request.session.role == 'administrator' %}
-        <button type="button" class="btn btn-danger btn-sm" id="delete-selected-btn" disabled onclick="document.getElementById('emails-bulk-form').submit()">
-            <i class="fas fa-trash"></i>
-            <span>Delete Selected</span>
-        </button>
-        {% endif %}
+        <div class="flex gap-2">
+            <button id="toggleFilterBtn" class="btn btn-secondary btn-sm" onclick="toggleFilters()">
+                <i class="fas fa-filter"></i>
+                <span>Search & Filter</span>
+            </button>
+            {% if request.session.role == 'administrator' %}
+            <button type="button" class="btn btn-danger btn-sm" id="delete-selected-btn" disabled onclick="showDeleteModal()">
+                <i class="fas fa-trash"></i>
+                <span>Delete Selected</span>
+            </button>
+            {% endif %}
+        </div>
     </div>
     <div class="card-body" style="padding: 0;">
-        <form method="post" action="/emails/delete/confirm" id="emails-bulk-form">
+        <form method="post" action="/emails/delete" id="emails-bulk-form">
             <div class="table-container">
                 <table class="table">
                     <thead>
@@ -139,11 +145,48 @@
     {% endif %}
 </div>
 
+<!-- Delete Confirmation Section (Initially Hidden) -->
+<div id="delete-confirmation" class="card" style="display: none; margin-top: 24px;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i>
+            <span>Confirm Deletion</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-warning">
+            <i class="fas fa-info-circle"></i>
+            <span>You are about to delete <strong id="delete-count">0</strong> email<span id="delete-plural">s</span>.</span>
+        </div>
+
+        <p style="margin-top: 20px; margin-bottom: 20px;"><strong>Choose how you want to delete them:</strong></p>
+
+        <div style="display: grid; gap: 12px; margin-bottom: 20px;">
+            <button type="button" class="btn btn-danger w-100" onclick="performDelete('db')">
+                <i class="fas fa-database"></i>
+                <span>Delete from Database Only</span>
+            </button>
+            <button type="button" class="btn btn-warning w-100" onclick="performDelete('imap')">
+                <i class="fas fa-server"></i>
+                <span>Delete from Database and Mail Server</span>
+            </button>
+        </div>
+
+        <div class="text-center">
+            <button type="button" class="btn btn-secondary" onclick="hideDeleteConfirmation()">
+                <i class="fas fa-times"></i>
+                <span>Cancel</span>
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
   (function () {
     const selectAll = document.getElementById('select-all');
     const checkboxes = document.querySelectorAll('.email-checkbox');
     const deleteBtn = document.getElementById('delete-selected-btn');
+    const bulkForm = document.getElementById('emails-bulk-form');
 
     function updateDeleteButton() {
       const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
@@ -162,6 +205,66 @@
     });
 
     updateDeleteButton();
+
+    // Filter toggle function
+    window.toggleFilters = function() {
+      const filterCard = document.getElementById('filterCard');
+      const toggleBtn = document.getElementById('toggleFilterBtn');
+      
+      if (filterCard.style.display === 'none') {
+        filterCard.style.display = 'block';
+        toggleBtn.innerHTML = '<i class="fas fa-times"></i><span>Hide Filters</span>';
+      } else {
+        filterCard.style.display = 'none';
+        toggleBtn.innerHTML = '<i class="fas fa-filter"></i><span>Search & Filter</span>';
+      }
+    };
+
+    // Show filter card if any filters are active
+    const hasFilters = {{ 'true' if q or account or folder else 'false' }};
+    if (hasFilters) {
+      toggleFilters();
+    }
+
+    // Delete confirmation functions
+    window.showDeleteModal = function() {
+      const checkedBoxes = Array.from(checkboxes).filter(cb => cb.checked);
+      const count = checkedBoxes.length;
+      
+      if (count === 0) return;
+      
+      document.getElementById('delete-count').textContent = count;
+      document.getElementById('delete-plural').textContent = count === 1 ? '' : 's';
+      
+      // Hide table section and show delete confirmation
+      document.getElementById('filterCard').style.display = 'none';
+      document.querySelector('.card').style.display = 'none';
+      document.getElementById('delete-confirmation').style.display = 'block';
+      
+      // Scroll to top
+      window.scrollTo(0, 0);
+    };
+
+    window.hideDeleteConfirmation = function() {
+      // Show table section and hide delete confirmation
+      document.getElementById('delete-confirmation').style.display = 'none';
+      document.querySelector('.card').style.display = 'block';
+      
+      // Scroll to top
+      window.scrollTo(0, 0);
+    };
+
+    window.performDelete = function(mode) {
+      // Add hidden input for mode
+      const modeInput = document.createElement('input');
+      modeInput.type = 'hidden';
+      modeInput.name = 'mode';
+      modeInput.value = mode;
+      bulkForm.appendChild(modeInput);
+      
+      // Submit the form
+      bulkForm.submit();
+    };
   })();
 </script>
 {% endblock %}

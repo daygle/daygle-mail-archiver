@@ -20,12 +20,10 @@
                 <span>Download EML</span>
             </a>
             {% if request.session.role == 'administrator' %}
-            <form method="post" action="/emails/{{ email.id }}/delete/confirm" style="display:inline;">
-                <button type="submit" class="btn btn-danger btn-sm">
-                    <i class="fas fa-trash"></i>
-                    <span>Delete</span>
-                </button>
-            </form>
+            <button type="button" class="btn btn-danger btn-sm" onclick="showDeleteConfirmation()">
+                <i class="fas fa-trash"></i>
+                <span>Delete</span>
+            </button>
             {% endif %}
         </div>
     </div>
@@ -125,5 +123,73 @@
         {% endif %}
     </div>
 </div>
+
+<!-- Delete Confirmation Section (Initially Hidden) -->
+<div id="delete-confirmation" class="card" style="display: none;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i>
+            <span>Confirm Deletion</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-warning">
+            <i class="fas fa-info-circle"></i>
+            <span>You are about to delete <strong>1</strong> email.</span>
+        </div>
+
+        <p style="margin-top: 20px; margin-bottom: 20px;"><strong>Choose how you want to delete it:</strong></p>
+
+        <form id="delete-form" method="post" action="/emails/delete">
+            <input type="hidden" name="ids" value="{{ email.id }}">
+            
+            <div style="display: grid; gap: 12px; margin-bottom: 20px;">
+                <button type="submit" name="mode" value="db" class="btn btn-danger w-100">
+                    <i class="fas fa-database"></i>
+                    <span>Delete from Database Only</span>
+                </button>
+                <button type="submit" name="mode" value="imap" class="btn btn-warning w-100">
+                    <i class="fas fa-server"></i>
+                    <span>Delete from Database and Mail Server</span>
+                </button>
+            </div>
+
+            <div class="text-center">
+                <button type="button" class="btn btn-secondary" onclick="hideDeleteConfirmation()">
+                    <i class="fas fa-times"></i>
+                    <span>Cancel</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+  function showDeleteConfirmation() {
+    // Hide all cards and show delete confirmation
+    document.querySelectorAll('.card').forEach(function(card) {
+      if (card.id !== 'delete-confirmation') {
+        card.style.display = 'none';
+      }
+    });
+    document.getElementById('delete-confirmation').style.display = 'block';
+    
+    // Scroll to top
+    window.scrollTo(0, 0);
+  }
+
+  function hideDeleteConfirmation() {
+    // Show all cards and hide delete confirmation
+    document.querySelectorAll('.card').forEach(function(card) {
+      if (card.id !== 'delete-confirmation') {
+        card.style.display = 'block';
+      }
+    });
+    document.getElementById('delete-confirmation').style.display = 'none';
+    
+    // Scroll to top
+    window.scrollTo(0, 0);
+  }
+</script>
 
 {% endblock %}

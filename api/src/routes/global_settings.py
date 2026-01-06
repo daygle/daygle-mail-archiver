@@ -43,6 +43,10 @@ def save_settings(
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
+    # Fetch existing settings before updating
+    rows = query("SELECT key, value FROM settings").mappings().all()
+    old_settings = {r["key"]: r["value"] for r in rows}
+
     try:
         # Batch update all settings in a single query for better performance
         settings_data = [
@@ -75,8 +79,39 @@ def save_settings(
         flash(request, f"Failed to save settings: {str(e)}")
         return RedirectResponse("/global-settings", status_code=303)
 
+    # Log only changed fields
     username = request.session.get("username", "unknown")
-    log("info", "Settings", f"User '{username}' updated global settings (page_size={page_size}, date_format={date_format}, time_format={time_format}, timezone={timezone}, enable_purge={enable_purge}, retention={retention_value} {retention_unit}, delete_from_mail_server={retention_delete_from_mail_server})", "")
+    changed_fields = []
+    
+    new_settings = {
+        'page_size': str(page_size),
+        'date_format': date_format,
+        'time_format': time_format,
+        'timezone': timezone,
+        'enable_purge': str(enable_purge).lower(),
+        'retention_value': str(retention_value),
+        'retention_unit': retention_unit,
+        'retention_delete_from_mail_server': str(retention_delete_from_mail_server).lower(),
+    }
+    
+    for key, new_value in new_settings.items():
+        old_value = old_settings.get(key)
+        if old_value != new_value:
+            # Format retention as a combined field
+            if key == 'retention_value':
+                old_retention = f"{old_settings.get('retention_value', '1')} {old_settings.get('retention_unit', 'years')}"
+                new_retention = f"{retention_value} {retention_unit}"
+                if old_retention != new_retention:
+                    changed_fields.append(f"retention={new_retention}")
+            elif key == 'retention_unit':
+                continue  # Skip, already handled with retention_value
+            else:
+                changed_fields.append(f"{key}={new_value}")
+    
+    if changed_fields:
+        log("info", "Settings", f"User '{username}' updated global settings ({', '.join(changed_fields)})", "")
+    else:
+        log("info", "Settings", f"User '{username}' saved global settings (no changes)", "")
 
     flash(request, "Settings updated successfully.")
     return RedirectResponse("/global-settings", status_code=303)

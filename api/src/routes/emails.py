@@ -163,73 +163,57 @@ def download_email(request: Request, email_id: int):
     )
 
 
-@router.post("/emails/delete/confirm", response_class=HTMLResponse)
-def confirm_bulk_delete(
+@router.post("/emails/delete")
+def perform_delete(
     request: Request,
     ids: List[int] = Form(...),
-    return_url: str = Form("/emails"),
+    mode: str = Form(...),  # "db" or "imap"
 ):
     """
-    Bulk delete confirmation for multiple emails.
+    Perform the actual delete, either:
+    - Database Only
+    - Database and Mail Server (IMAP/Gmail/O365)
     """
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
     
     if not can_delete(request):
         flash(request, "You don't have permission to delete emails.")
-        return RedirectResponse(return_url or "/emails", status_code=303)
+        return RedirectResponse("/emails", status_code=303)
 
-    # Ensure ids is a list (FastAPI will usually do this for multiple checkboxes)
     if not isinstance(ids, list):
         ids = [ids]
 
-    count = len(ids)
+    if mode == "db":
+        deleted = _delete_emails_from_db(ids)
+        username = request.session.get("username", "unknown")
+        log("warning", "Emails", f"User '{username}' deleted {deleted} email(s) from database (IDs: {ids})", "")
+        flash(request, f"Deleted {deleted} email(s) from the database.")
+        return RedirectResponse("/emails", status_code=303)
 
-    return templates.TemplateResponse(
-        "emails_confirm_delete.html",
-        {
-            "request": request,
-            "ids": ids,
-            "count": count,
-            "return_url": return_url,
-        },
-    )
+    elif mode == "imap":
+        deleted, errors = _delete_emails_from_imap_and_db(ids)
 
+        username = request.session.get("username", "unknown")
+        if errors:
+            error_text = " | ".join(errors)
+            log("warning", "Emails", f"User '{username}' deleted {deleted} email(s) from IMAP and database with errors (IDs: {ids})", error_text)
+            flash(
+                request,
+                f"Deleted {deleted} email(s) from database and mail server. Some errors occurred: {error_text}",
+            )
+        else:
+            log("warning", "Emails", f"User '{username}' deleted {deleted} email(s) from IMAP and database (IDs: {ids})", "")
+            flash(
+                request,
+                f"Deleted {deleted} email(s) from database and mail server.",
+            )
 
-@router.post("/emails/{email_id}/delete/confirm", response_class=HTMLResponse)
-def confirm_single_delete(request: Request, email_id: int):
-    """
-    Single email delete confirmation.
-    Reuses the same confirmation template as bulk delete.
-    """
-    if not require_login(request):
-        return RedirectResponse("/login", status_code=303)
-    
-    if not can_delete(request):
-        flash(request, "You don't have permission to delete emails.")
-        return RedirectResponse(f"/emails/{email_id}", status_code=303)
+        return RedirectResponse("/emails", status_code=303)
 
-    # Verify the email exists
-    row = query(
-        "SELECT id FROM emails WHERE id = :id",
-        {"id": email_id},
-    ).mappings().first()
-
-    if not row:
-        return HTMLResponse("Email not found", status_code=404)
-
-    ids = [email_id]
-    count = 1
-
-    return templates.TemplateResponse(
-        "emails_confirm_delete.html",
-        {
-            "request": request,
-            "ids": ids,
-            "count": count,
-            "return_url": f"/emails/{email_id}",
-        },
-    )
+    else:
+        flash(request, "Invalid delete mode selected.")
+        return RedirectResponse("/emails", status_code=303)
 
 
 def _delete_emails_from_db(ids: List[int]) -> int:
@@ -354,57 +338,3 @@ def _delete_emails_from_imap_and_db(ids: List[int]) -> tuple[int, list[str]]:
         )
 
     return deleted, errors
-
-
-@router.post("/emails/delete")
-def perform_delete(
-    request: Request,
-    ids: List[int] = Form(...),
-    mode: str = Form(...),  # "db" or "imap"
-    return_url: str = Form("/emails"),
-):
-    """
-    Perform the actual delete, either:
-    - Database Only
-    - Database and Mail Server (IMAP/Gmail/O365)
-    """
-    if not require_login(request):
-        return RedirectResponse("/login", status_code=303)
-    
-    if not can_delete(request):
-        flash(request, "You don't have permission to delete emails.")
-        return RedirectResponse(return_url or "/emails", status_code=303)
-
-    if not isinstance(ids, list):
-        ids = [ids]
-
-    if mode == "db":
-        deleted = _delete_emails_from_db(ids)
-        username = request.session.get("username", "unknown")
-        log("warning", "Emails", f"User '{username}' deleted {deleted} email(s) from database (IDs: {ids})", "")
-        flash(request, f"Deleted {deleted} email(s) from the database.")
-        return RedirectResponse("/emails", status_code=303)
-
-    elif mode == "imap":
-        deleted, errors = _delete_emails_from_imap_and_db(ids)
-
-        username = request.session.get("username", "unknown")
-        if errors:
-            error_text = " | ".join(errors)
-            log("warning", "Emails", f"User '{username}' deleted {deleted} email(s) from IMAP and database with errors (IDs: {ids})", error_text)
-            flash(
-                request,
-                f"Deleted {deleted} email(s) from database and mail server. Some errors occurred: {error_text}",
-            )
-        else:
-            log("warning", "Emails", f"User '{username}' deleted {deleted} email(s) from IMAP and database (IDs: {ids})", "")
-            flash(
-                request,
-                f"Deleted {deleted} email(s) from database and mail server.",
-            )
-
-        return RedirectResponse("/emails", status_code=303)
-
-    else:
-        flash(request, "Invalid delete mode selected.")
-        return RedirectResponse(return_url or "/emails", status_code=303)
