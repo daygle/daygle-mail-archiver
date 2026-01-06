@@ -20,9 +20,9 @@ services:
       context: ./api
     container_name: daygle-mail-archiver-api
     environment:
-      DB_DSN: ${DB_DSN}
-      SESSION_SECRET: ${SESSION_SECRET}
-      IMAP_PASSWORD_KEY: ${IMAP_PASSWORD_KEY}
+      DB_DSN: ${DB_DSN:-}
+      SESSION_SECRET: ${SESSION_SECRET:-}
+      IMAP_PASSWORD_KEY: ${IMAP_PASSWORD_KEY:-}
     volumes:
       # Mount daygle_mail_archiver.conf file if it exists
       - ./daygle_mail_archiver.conf:/app/daygle_mail_archiver.conf:ro
@@ -38,8 +38,8 @@ services:
       context: ./worker
     container_name: daygle-mail-archiver-worker
     environment:
-      DB_DSN: ${DB_DSN}
-      IMAP_PASSWORD_KEY: ${IMAP_PASSWORD_KEY}
+      DB_DSN: ${DB_DSN:-}
+      IMAP_PASSWORD_KEY: ${IMAP_PASSWORD_KEY:-}
     volumes:
       # Mount daygle_mail_archiver.conf file if it exists
       - ./daygle_mail_archiver.conf:/app/daygle_mail_archiver.conf:ro
