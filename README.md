@@ -562,6 +562,67 @@ Your layout preferences are saved per-user, so each administrator can customize 
 
 ---
 
+# User Management
+
+Daygle Mail Archiver supports multiple users with role-based access control.
+
+## User Roles
+
+- **Administrator**: Full access to all features including settings, user management, fetch accounts, and audit logs
+- **Viewer**: Read-only access to view and search archived emails
+
+## Managing Users
+
+**Note:** Only administrators can manage users.
+
+1. Navigate to **User Management** from the sidebar (Administration section)
+2. Click **"Create New User"** to add a new user
+3. Fill in the username, email address, and select a role
+4. The new user will need to set their password on first login
+
+## Managing Your Profile
+
+All users can manage their own profile settings:
+
+1. Click on your username in the top-right corner
+2. Select **"Profile"** from the dropdown menu
+3. Update your personal information or change your password
+4. Click **"Save"** to apply changes
+
+Users can also customize their dashboard layout and user preferences through the **"User Settings"** option.
+
+---
+
+# Audit Logs
+
+The system maintains a complete audit trail of all actions for security and compliance.
+
+## Viewing Audit Logs
+
+**Note:** Only administrators can view audit logs.
+
+1. Navigate to **Logs** from the sidebar (Administration section)
+2. Browse the log entries showing all system events
+3. Use search and filter options to find specific events
+
+## Logged Events
+
+- User login and logout events
+- Email deletions (both manual and automated retention cleanup)
+- Fetch account creation, modification, and deletion
+- Settings changes
+- User management actions (create, update, delete)
+- OAuth authorization events
+- Worker status and errors
+
+Each log entry includes:
+- **Timestamp**: When the action occurred
+- **Username**: Who performed the action
+- **Action Type**: Category of the action
+- **Details**: Specific information about what was changed
+
+---
+
 # Additional Features
 
 - **Dashboard**: View email statistics, charts, and account status (default page after login)
@@ -571,6 +632,10 @@ Your layout preferences are saved per-user, so each administrator can customize 
 ---
 
 # Viewing Logs
+
+## Application Logs (Docker)
+
+View container logs for troubleshooting and monitoring:
 
 **Worker Logs** (email fetching process):
 ```
@@ -586,6 +651,10 @@ docker compose logs -f api
 ```
 docker compose logs -f
 ```
+
+## Audit Logs (Web UI)
+
+For viewing user activity and system events, see the **Audit Logs** section above. Administrators can access audit logs through the web interface at **Logs** in the sidebar.
 
 ---
 

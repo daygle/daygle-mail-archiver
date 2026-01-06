@@ -181,6 +181,131 @@
     </div>
 </div>
 
+<!-- User Management (Administrators Only) -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-users"></i>
+            <span>User Management</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <p style="margin-bottom: 16px;">Administrators can manage system users through the <strong>User Management</strong> page in the administration section.</p>
+        
+        <p style="margin-bottom: 12px;"><strong>Creating Users:</strong></p>
+        <ol style="padding-left: 24px; margin-bottom: 16px;">
+            <li style="margin-bottom: 8px;">Navigate to <strong>User Management</strong> from the sidebar</li>
+            <li style="margin-bottom: 8px;">Click <strong>"Create New User"</strong></li>
+            <li style="margin-bottom: 8px;">Enter username, email, and select a role (viewer or administrator)</li>
+            <li style="margin-bottom: 8px;">User will need to set their password on first login</li>
+        </ol>
+
+        <p style="margin-bottom: 12px;"><strong>User Roles:</strong></p>
+        <ul style="padding-left: 24px; margin-bottom: 16px;">
+            <li style="margin-bottom: 8px;"><strong>Administrator:</strong> Full access to all features including settings, user management, and logs</li>
+            <li style="margin-bottom: 8px;"><strong>Viewer:</strong> Read-only access to view and search emails</li>
+        </ul>
+
+        <p style="margin-bottom: 0;"><strong>Managing Your Profile:</strong> All users can access their profile settings from the user menu (top-right) to change password and update personal information.</p>
+    </div>
+</div>
+
+<!-- Audit Logs (Administrators Only) -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-list"></i>
+            <span>Audit Logs</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <p style="margin-bottom: 16px;">The system maintains a complete audit trail of all actions. Administrators can view logs through the <strong>Logs</strong> page in the administration section.</p>
+        
+        <p style="margin-bottom: 12px;"><strong>Logged Actions Include:</strong></p>
+        <ul style="padding-left: 24px; margin-bottom: 16px;">
+            <li style="margin-bottom: 8px;">User login and logout events</li>
+            <li style="margin-bottom: 8px;">Email deletions (manual and automated)</li>
+            <li style="margin-bottom: 8px;">Fetch account creation and modifications</li>
+            <li style="margin-bottom: 8px;">Settings changes</li>
+            <li style="margin-bottom: 8px;">User management actions</li>
+        </ul>
+
+        <p style="margin-bottom: 0;">Each log entry includes a timestamp, username, action type, and details. Use the search and filter features to find specific events.</p>
+    </div>
+</div>
+
+<!-- System Updates -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-sync-alt"></i>
+            <span>System Updates</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <p style="margin-bottom: 16px;">Daygle Mail Archiver includes an automatic update script similar to mailcow's update system. The script handles checking for updates, pulling the latest code and Docker images, and restarting containers.</p>
+        
+        <p style="margin-bottom: 12px;"><strong>Command-line usage:</strong></p>
+        <pre style="background-color: #f5f5f5; padding: 12px; border-radius: 4px; overflow-x: auto; margin-bottom: 16px;"><code># Check if updates are available
+./update.sh --check
+
+# Update the system (interactive, with confirmation)
+./update.sh
+
+# Update without confirmation prompts
+./update.sh --force
+
+# Update but don't restart containers
+./update.sh --skip-start</code></pre>
+
+        <p style="margin-bottom: 16px;"><strong>What happens during an update:</strong></p>
+        <ol style="padding-left: 24px; margin-bottom: 16px;">
+            <li style="margin-bottom: 8px;">Checks for available updates from the git repository</li>
+            <li style="margin-bottom: 8px;">Saves any local changes to <code>update_diffs/</code> directory</li>
+            <li style="margin-bottom: 8px;">Pulls the latest code from git</li>
+            <li style="margin-bottom: 8px;">Pulls updated Docker images</li>
+            <li style="margin-bottom: 8px;">Restarts all containers</li>
+            <li style="margin-bottom: 8px;">Cleans up old Docker resources</li>
+        </ol>
+
+        <div class="alert alert-warning" style="margin-bottom: 0;">
+            <i class="fas fa-exclamation-triangle"></i> <strong>Important:</strong> Always create a backup before updating: <code>./scripts/backup_restore.sh backup</code>. Your configuration file and local customizations are preserved during updates.
+        </div>
+    </div>
+</div>
+
+<!-- Backup and Restore -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-database"></i>
+            <span>Backup and Restore</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <p style="margin-bottom: 16px;">Protect your email archive with the built-in command-line backup and restore script. Backups include both the database AND the configuration file with encryption keys.</p>
+        
+        <p style="margin-bottom: 12px;"><strong>Creating a Backup:</strong></p>
+        <pre style="background-color: #f5f5f5; padding: 12px; border-radius: 4px; overflow-x: auto; margin-bottom: 16px;"><code>cd /opt/daygle-mail-archiver
+./scripts/backup_restore.sh backup</code></pre>
+        <p style="margin-bottom: 16px;">This creates a timestamped backup file in the <code>./backups/</code> directory (or custom location) containing the complete PostgreSQL database dump and <code>daygle_mail_archiver.conf</code> file with all encryption keys.</p>
+
+        <p style="margin-bottom: 12px;"><strong>Listing Available Backups:</strong></p>
+        <pre style="background-color: #f5f5f5; padding: 12px; border-radius: 4px; overflow-x: auto; margin-bottom: 16px;"><code>./scripts/backup_restore.sh list</code></pre>
+
+        <p style="margin-bottom: 12px;"><strong>Restoring from Backup:</strong></p>
+        <pre style="background-color: #f5f5f5; padding: 12px; border-radius: 4px; overflow-x: auto; margin-bottom: 16px;"><code>./scripts/backup_restore.sh restore daygle_mail_archiver_backup_20240105_120000.tar.gz</code></pre>
+        <p style="margin-bottom: 16px;">After restore, restart the services with: <code>docker compose restart</code></p>
+
+        <p style="margin-bottom: 12px;"><strong>Deleting Old Backups:</strong></p>
+        <pre style="background-color: #f5f5f5; padding: 12px; border-radius: 4px; overflow-x: auto; margin-bottom: 16px;"><code>./scripts/backup_restore.sh delete daygle_mail_archiver_backup_20240105_120000.tar.gz</code></pre>
+
+        <div class="alert alert-danger" style="margin-bottom: 0;">
+            <i class="fas fa-exclamation-circle"></i> <strong>Security Warning:</strong> Store backups securely! They contain all email data, encryption keys (IMAP_PASSWORD_KEY, SESSION_SECRET), and database credentials. The configuration file is required to decrypt stored passwords.
+        </div>
+    </div>
+</div>
+
 <!-- Additional Resources -->
 <div class="card">
     <div class="card-header">
