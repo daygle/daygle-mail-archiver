@@ -12,9 +12,124 @@ router = APIRouter()
 def logged_in(request: Request):
     return "user_id" in request.session
 
+def is_setup_complete():
+    """Check if initial setup has been completed"""
+    try:
+        result = query("SELECT value FROM settings WHERE key = 'setup_complete'").mappings().first()
+        return result and result["value"] == "true"
+    except Exception:
+        return False
+
+@router.get("/setup")
+def setup_wizard_form(request: Request):
+    """Initial setup wizard - only accessible if setup not complete"""
+    if is_setup_complete():
+        return RedirectResponse("/login", status_code=303)
+    
+    return templates.TemplateResponse("setup_wizard.html", {"request": request})
+
+@router.post("/setup")
+def setup_wizard_submit(
+    request: Request, 
+    username: str = Form(...), 
+    email: str = Form(""),
+    password: str = Form(...), 
+    confirm_password: str = Form(...)
+):
+    """Process initial setup wizard submission"""
+    if is_setup_complete():
+        return RedirectResponse("/login", status_code=303)
+    
+    # Validate username
+    if not username or len(username) < 3:
+        return templates.TemplateResponse(
+            "setup_wizard.html",
+            {"request": request, "error": "Username must be at least 3 characters long", "username": username, "email": email},
+        )
+    
+    # Check if username already exists
+    try:
+        existing_user = query("SELECT id FROM users WHERE username = :u", {"u": username}).mappings().first()
+        if existing_user:
+            return templates.TemplateResponse(
+                "setup_wizard.html",
+                {"request": request, "error": "Username already exists", "username": username, "email": email},
+            )
+    except Exception as e:
+        log("error", "setup", f"Database error checking username: {str(e)}")
+        return templates.TemplateResponse(
+            "setup_wizard.html",
+            {"request": request, "error": "System error. Please try again.", "username": username, "email": email},
+        )
+    
+    # Validate password matches confirmation
+    if password != confirm_password:
+        return templates.TemplateResponse(
+            "setup_wizard.html",
+            {"request": request, "error": "Passwords do not match", "username": username, "email": email},
+        )
+    
+    # Validate password strength
+    if len(password) < 8:
+        return templates.TemplateResponse(
+            "setup_wizard.html",
+            {"request": request, "error": "Password must be at least 8 characters long", "username": username, "email": email},
+        )
+    
+    if not re.search(r"[a-z]", password):
+        return templates.TemplateResponse(
+            "setup_wizard.html",
+            {"request": request, "error": "Password must contain at least one lowercase letter", "username": username, "email": email},
+        )
+    
+    if not re.search(r"[A-Z]", password):
+        return templates.TemplateResponse(
+            "setup_wizard.html",
+            {"request": request, "error": "Password must contain at least one uppercase letter", "username": username, "email": email},
+        )
+    
+    if not re.search(r"[0-9]", password):
+        return templates.TemplateResponse(
+            "setup_wizard.html",
+            {"request": request, "error": "Password must contain at least one number", "username": username, "email": email},
+        )
+    
+    # Create the administrator account
+    try:
+        hash_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        execute(
+            "INSERT INTO users (username, password_hash, email, role) VALUES (:username, :password_hash, :email, 'administrator')",
+            {"username": username, "password_hash": hash_pw, "email": email if email else None}
+        )
+        
+        # Mark setup as complete
+        execute(
+            "UPDATE settings SET value = 'true' WHERE key = 'setup_complete'",
+            {}
+        )
+        
+        log("info", "setup", f"Initial setup completed - Administrator account '{username}' created")
+        
+        # Redirect to login page
+        return RedirectResponse("/login?setup_complete=true", status_code=303)
+        
+    except Exception as e:
+        log("error", "setup", f"Failed to create administrator account: {str(e)}")
+        return templates.TemplateResponse(
+            "setup_wizard.html",
+            {"request": request, "error": "Failed to create account. Please try again.", "username": username, "email": email},
+        )
+
 @router.get("/login")
-def login_form(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+def login_form(request: Request, setup_complete: str = ""):
+    """Login form - redirects to setup if not complete"""
+    if not is_setup_complete():
+        return RedirectResponse("/setup", status_code=303)
+    
+    # Show success message if coming from setup
+    success_message = "Setup complete! Please login with your new account." if setup_complete == "true" else None
+    
+    return templates.TemplateResponse("login.html", {"request": request, "success": success_message})
 
 @router.post("/login")
 def login_submit(request: Request, username: str = Form(...), password: str = Form(...)):
