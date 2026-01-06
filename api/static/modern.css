@@ -1760,6 +1760,12 @@ a:hover {
     gap: 1rem;
 }
 
+/* Stats Grid Container - used in Overview and ClamAV widgets */
+.stats-grid-container {
+    flex: 1;
+    align-content: start;
+}
+
 .stat-mini {
     display: flex;
     align-items: center;
