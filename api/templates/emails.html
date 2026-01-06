@@ -5,11 +5,14 @@
 {% block content %}
 <!-- Filters Card (Initially Hidden) -->
 <div id="filterCard" class="card mb-4" style="display: none;">
-    <div class="card-header">
+    <div class="card-header" style="display: flex; align-items: center; justify-content: space-between;">
         <div class="card-title">
             <i class="fas fa-filter"></i>
             <span>Search & Filter</span>
         </div>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="toggleFilters()" title="Close">
+            <i class="fas fa-times"></i>
+        </button>
     </div>
     <div class="card-body">
         <form method="get" action="/emails">
