@@ -758,9 +758,9 @@ async def save_widget_settings(request: Request):
         # Upsert the settings
         query("""
             INSERT INTO user_widget_settings (user_id, settings, updated_at)
-            VALUES (:user_id, :settings::jsonb, NOW())
+            VALUES (:user_id, CAST(:settings AS jsonb), NOW())
             ON CONFLICT (user_id)
-            DO UPDATE SET settings = :settings::jsonb, updated_at = NOW()
+            DO UPDATE SET settings = CAST(:settings AS jsonb), updated_at = NOW()
         """, {"user_id": user_id, "settings": settings_json})
         
         username = request.session.get("username", "unknown")
