@@ -125,6 +125,34 @@
                 </div>
             </header>
 
+            <!-- Global Update Notification Banner -->
+            {% if request.session.username and request.session.role == 'administrator' %}
+            <div id="global-update-banner" style="display: none; margin: 1rem; padding: 1rem; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1)); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; position: relative;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div style="display: flex; align-items: center; justify-content: center; color: #3b82f6; font-size: 1.25rem;">
+                        <i class="fas fa-download"></i>
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">
+                            <i class="fas fa-info-circle" style="color: #3b82f6;"></i>
+                            System Update Available
+                        </div>
+                        <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem;" id="global-update-details">
+                            Loading update information...
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <a href="/dashboard" class="btn btn-sm btn-primary" style="text-decoration: none;">
+                                <i class="fas fa-tachometer-alt"></i> View Dashboard
+                            </a>
+                            <button onclick="dismissGlobalUpdateBanner()" class="btn btn-sm btn-ghost">
+                                <i class="fas fa-times"></i> Dismiss
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Page Content -->
             <div class="content-container">
                 {% if flash %}
@@ -232,6 +260,75 @@
                 userMenuDropdown.classList.remove('show');
             });
         }
+
+        // Global update check (for administrators only, on non-dashboard pages)
+        {% if request.session.username and request.session.role == 'administrator' %}
+        function dismissGlobalUpdateBanner() {
+            const banner = document.getElementById('global-update-banner');
+            if (banner) {
+                banner.style.display = 'none';
+                
+                // Remember dismissal for this specific update
+                fetch('/api/dashboard/check-updates')
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.latest_commit) {
+                            localStorage.setItem('dismissedUpdate', data.latest_commit);
+                        }
+                    })
+                    .catch(err => console.error('Error saving dismissal:', err));
+            }
+        }
+
+        async function checkGlobalUpdates() {
+            // Only check on non-dashboard pages
+            if (window.location.pathname === '/dashboard') {
+                return; // Dashboard has its own update check
+            }
+            
+            try {
+                const response = await fetch('/api/dashboard/check-updates');
+                const data = await response.json();
+                
+                const banner = document.getElementById('global-update-banner');
+                const detailsEl = document.getElementById('global-update-details');
+                
+                if (!banner || !detailsEl) return;
+                
+                // Check if user has dismissed this update
+                const dismissedUpdate = localStorage.getItem('dismissedUpdate');
+                if (dismissedUpdate === data.latest_commit) {
+                    banner.style.display = 'none';
+                    return;
+                }
+                
+                if (data.updates_available && !data.error) {
+                    let detailsText = `Version ${data.latest_commit} is available`;
+                    if (data.commits_behind > 0) {
+                        detailsText += ` (${data.commits_behind} commit${data.commits_behind > 1 ? 's' : ''} behind)`;
+                    }
+                    if (data.latest_message) {
+                        detailsText += `. Latest: ${data.latest_message}`;
+                    }
+                    
+                    detailsEl.textContent = detailsText;
+                    banner.style.display = 'block';
+                } else {
+                    banner.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error checking for updates:', error);
+                // Silently fail
+            }
+        }
+
+        // Check for updates on page load
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', checkGlobalUpdates);
+        } else {
+            checkGlobalUpdates();
+        }
+        {% endif %}
     </script>
 
     {% block extra_js %}{% endblock %}

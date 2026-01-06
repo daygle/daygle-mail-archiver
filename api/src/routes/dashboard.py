@@ -8,6 +8,7 @@ from utils.db import query
 from utils.logger import log
 from utils.templates import templates
 from utils.timezone import convert_utc_to_user_timezone, get_user_timezone
+from utils.update_checker import check_for_updates
 
 router = APIRouter()
 
@@ -599,4 +600,29 @@ def system_status(request: Request):
         username = request.session.get("username", "unknown")
         log("error", "Dashboard", f"Failed to fetch system status for user '{username}': {str(e)}", "")
         return JSONResponse({"error": "Failed to load data"}, status_code=500)
+
+
+@router.get("/api/dashboard/check-updates")
+def check_updates(request: Request):
+    """Check for available system updates from git repository"""
+    if not require_login(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+    
+    try:
+        update_info = check_for_updates()
+        
+        if update_info.get("error"):
+            # Log the error but don't fail the request
+            username = request.session.get("username", "unknown")
+            log("warning", "Dashboard", f"Update check failed for user '{username}': {update_info['error']}", "")
+        
+        return update_info
+    except Exception as e:
+        username = request.session.get("username", "unknown")
+        log("error", "Dashboard", f"Failed to check for updates for user '{username}': {str(e)}", "")
+        # Return a safe response even on error
+        return {
+            "updates_available": False,
+            "error": "Failed to check for updates"
+        }
 
