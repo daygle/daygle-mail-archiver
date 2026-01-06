@@ -13,7 +13,6 @@
 #   ./update.sh --check             # Check for updates without applying
 #   ./update.sh --force             # Update without confirmation
 #   ./update.sh --skip-start        # Don't start containers after update
-#   ./update.sh --skip-backup       # Skip automatic backup (not recommended)
 #
 # Based on mailcow update.sh design
 # ============================================
@@ -31,14 +30,12 @@ NC='\033[0m' # No Color
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$SCRIPT_DIR"
-BACKUP_SCRIPT="${ROOT_DIR}/scripts/backup_restore.sh"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 DIFF_DIRECTORY="${ROOT_DIR}/update_diffs"
 
 # Default values
 FORCE=false
 SKIP_START=false
-SKIP_BACKUP=false
 CHECK_ONLY=false
 
 # Function to print colored messages
@@ -74,7 +71,6 @@ EOF
   -c, --check           Check for updates without applying them
   -f, --force           Update without confirmation prompts
   --skip-start          Don't start containers after update
-  --skip-backup         Skip automatic backup before update (not recommended)
   -h, --help            Show this help message
 EOF
     
@@ -97,7 +93,6 @@ EOF
     echo ""
     echo -e "${YELLOW}Important Notes:${NC}"
     cat <<EOF
-  - The script automatically creates a backup before updating
   - Use --check first to see what will be updated
   - Your configuration file (daygle_mail_archiver.conf) is preserved
   - Local changes are saved to ${DIFF_DIRECTORY}/ for reference
@@ -169,7 +164,7 @@ check_for_updates() {
         echo ""
         log_info "Changes:"
         echo ""
-        git log --oneline --decorate --graph HEAD.."origin/$BRANCH"
+        git log --oneline --graph HEAD.."origin/$BRANCH"
         echo ""
         return 0
     fi
@@ -194,41 +189,6 @@ save_local_changes() {
         echo ""
         log_warning "These changes will be preserved during update"
         log_warning "Review the diff file if you need to reapply customizations"
-    fi
-}
-
-# Function to create backup
-create_backup() {
-    if [ "$SKIP_BACKUP" = true ]; then
-        log_warning "Skipping backup (--skip-backup flag set)"
-        log_warning "This is not recommended!"
-        return 0
-    fi
-    
-    if [ ! -f "$BACKUP_SCRIPT" ]; then
-        log_warning "Backup script not found at: $BACKUP_SCRIPT"
-        log_warning "Continuing without backup..."
-        return 0
-    fi
-    
-    log_info "Creating backup before update..."
-    echo ""
-    
-    if bash "$BACKUP_SCRIPT" backup; then
-        log_success "Backup completed successfully"
-        echo ""
-    else
-        log_error "Backup failed!"
-        
-        if [ "$FORCE" = false ]; then
-            read -p "Continue without backup? (yes/no): " -r
-            if [[ ! $REPLY =~ ^[Yy][Ee][Ss]$ ]]; then
-                log_info "Update cancelled"
-                exit 0
-            fi
-        else
-            log_warning "Continuing without backup (--force mode)"
-        fi
     fi
 }
 
@@ -350,11 +310,11 @@ cleanup_docker() {
 # Function to show post-update information
 show_post_update_info() {
     echo ""
-    echo "╔════════════════════════════════════════════════════════════╗"
-    echo "║                                                            ║"
-    echo "║  ${GREEN}Daygle Mail Archiver has been updated successfully!${NC}      ║"
-    echo "║                                                            ║"
-    echo "╚════════════════════════════════════════════════════════════╝"
+    echo "============================================================"
+    echo ""
+    log_success "Daygle Mail Archiver has been updated successfully!"
+    echo ""
+    echo "============================================================"
     echo ""
     
     log_info "Access the web interface at: http://localhost:8000"
@@ -394,10 +354,6 @@ parse_args() {
                 SKIP_START=true
                 shift
                 ;;
-            --skip-backup)
-                SKIP_BACKUP=true
-                shift
-                ;;
             -h|--help)
                 show_usage
                 exit 0
@@ -415,11 +371,11 @@ parse_args() {
 # Main update function
 main() {
     echo ""
-    echo "╔════════════════════════════════════════════════════════════╗"
-    echo "║                                                            ║"
-    echo -e "║        ${CYAN}Daygle Mail Archiver - Update Script${NC}               ║"
-    echo "║                                                            ║"
-    echo "╚════════════════════════════════════════════════════════════╝"
+    echo "============================================================"
+    echo ""
+    echo -e "        ${CYAN}Daygle Mail Archiver - Update Script${NC}"
+    echo ""
+    echo "============================================================"
     echo ""
     
     # Parse arguments
@@ -460,9 +416,6 @@ main() {
         
         # Save local changes
         save_local_changes
-        
-        # Create backup
-        create_backup
         
         # Perform update
         stop_containers
