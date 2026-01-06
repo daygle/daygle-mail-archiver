@@ -7,137 +7,31 @@
     <link rel="icon" type="image/png" href="/static/daygle.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/static/modern.css">
-    <style>
-        .setup-container {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--bg-secondary);
-            padding: 20px;
-        }
-        
-        .setup-card {
-            background: var(--bg-primary);
-            border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-lg);
-            padding: 48px;
-            width: 100%;
-            max-width: 600px;
-            animation: fadeIn 0.3s ease-out;
-        }
-        
-        .setup-header {
-            text-align: center;
-            margin-bottom: 32px;
-        }
-        
-        .setup-logo {
-            height: 48px;
-            width: auto;
-            margin-bottom: 16px;
-        }
-        
-        .setup-title {
-            font-size: 1.75rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin: 0;
-        }
-        
-        .setup-subtitle {
-            font-size: 0.9375rem;
-            color: var(--text-secondary);
-            margin-top: 8px;
-            line-height: 1.5;
-        }
-        
-        .setup-form .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .setup-form .form-label {
-            display: block;
-            font-weight: 500;
-            color: var(--text-primary);
-            margin-bottom: 8px;
-            font-size: 0.9375rem;
-        }
-        
-        .setup-form .form-control {
-            width: 100%;
-        }
-        
-        .setup-form .btn {
-            width: 100%;
-            padding: 12px;
-            font-size: 1rem;
-            font-weight: 500;
-        }
-        
-        .setup-error {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            color: var(--danger);
-            padding: 12px;
-            border-radius: var(--radius-md);
-            margin-bottom: 20px;
-            font-size: 0.9375rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .setup-info {
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            color: var(--primary);
-            padding: 16px;
-            border-radius: var(--radius-md);
-            margin-bottom: 24px;
-            font-size: 0.9375rem;
-        }
-        
-        .setup-info i {
-            margin-right: 8px;
-        }
-        
-        .password-requirements {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            margin-top: 8px;
-            padding-left: 20px;
-        }
-        
-        .password-requirements li {
-            margin-bottom: 4px;
-        }
-    </style>
 </head>
 <body>
-    <div class="setup-container">
-        <div class="setup-card">
-            <div class="setup-header">
-                <img src="/static/daygle.png" alt="Daygle" class="setup-logo logo-dark">
-                <img src="/static/daygle-light.png" alt="Daygle" class="setup-logo logo-light">
-                <h1 class="setup-title">Welcome to Daygle Mail Archiver</h1>
-                <p class="setup-subtitle">Let's set up your administrator account to get started</p>
+    <div class="auth-container">
+        <div class="auth-card wide">
+            <div class="auth-header">
+                <img src="/static/daygle.png" alt="Daygle" class="auth-logo logo-dark">
+                <img src="/static/daygle-light.png" alt="Daygle" class="auth-logo logo-light">
+                <h1 class="auth-title large">Welcome to Daygle Mail Archiver</h1>
+                <p class="auth-subtitle large">Let's set up your administrator account to get started</p>
             </div>
             
-            <div class="setup-info">
+            <div class="auth-info">
                 <i class="fas fa-info-circle"></i>
                 <strong>First Time Setup:</strong> This wizard will create your primary administrator account. 
                 This account will have full access to all system features.
             </div>
             
             {% if error %}
-            <div class="setup-error">
+            <div class="auth-error">
                 <i class="fas fa-exclamation-circle"></i>
                 <span>{{ error }}</span>
             </div>
             {% endif %}
             
-            <form method="post" class="setup-form">
+            <form method="post" class="auth-form">
                 <div class="form-group">
                     <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
                     <input type="text" id="username" name="username" class="form-control" 
