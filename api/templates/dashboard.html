@@ -36,6 +36,9 @@
 }
 .stat-box .stat-icon {
     flex-shrink: 0;
+    position: static !important;
+    opacity: 1 !important;
+    transform: none !important;
 }
 /* Modal styles */
 .modal {
@@ -237,7 +240,7 @@
             </div>
         </div>
         <div class="widget-body">
-            <div class="stats-grid-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; height: 100%;">
+            <div class="stats-grid-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
                 <div class="stat-box" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md); min-width: 0;">
                     <div class="stat-icon" style="width: 40px; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; background: rgba(59, 130, 246, 0.1); border-radius: var(--radius-md); color: #3b82f6; font-size: 1.25rem;">
                         <i class="fas fa-envelope"></i>
@@ -474,7 +477,7 @@
             
         </div>
         <div class="widget-body">
-            <div class="stats-grid-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; height: 100%;">
+            <div class="stats-grid-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem;">
                 <div class="stat-box" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md); min-width: 0;">
                     <div class="stat-icon" style="width: 40px; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.1); border-radius: var(--radius-md); color: #ef4444; font-size: 1.25rem;">
                         <i class="fas fa-exclamation-triangle"></i>
