@@ -3,33 +3,23 @@
 {% block page_title %}System Logs{% endblock %}
 
 {% block content %}
-<div class="card">
-    <div class="card-header" style="display: flex; align-items: center; justify-content: space-between;">
+<!-- Filters Card -->
+<div class="card mb-4">
+    <div class="card-header">
         <div class="card-title">
-            <i class="fas fa-file-alt"></i>
-            <span>System Logs</span>
-        </div>
-        <button id="toggleFilterBtn" class="btn btn-secondary" onclick="toggleFilters()">
             <i class="fas fa-filter"></i>
             <span>Search & Filter</span>
-        </button>
+        </div>
     </div>
-    
-    <!-- Search and Filter Card (Initially Hidden) -->
-    <div id="filterCard" class="card-body" style="display: none; border-bottom: 1px solid var(--border-color); background: var(--bg-secondary);">
+    <div class="card-body">
         <form method="get" id="filterForm">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
-                <!-- Search Field -->
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label for="search" class="form-label">Search</label>
+            <div class="grid grid-cols-4 gap-3">
+                <div>
                     <input type="text" id="search" name="search" class="form-control" 
                            placeholder="Search message or source..." 
                            value="{{ current_search }}">
                 </div>
-                
-                <!-- Source Filter -->
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label for="source" class="form-label">Source</label>
+                <div>
                     <select id="source" name="source" class="form-select">
                         <option value="">All Sources</option>
                         {% for s in sources %}
@@ -37,12 +27,7 @@
                         {% endfor %}
                     </select>
                 </div>
-            </div>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px;">
-                <!-- Log Level Filter -->
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label for="level" class="form-label">Level</label>
+                <div>
                     <select id="level" name="level" class="form-select">
                         <option value="all" {% if current_level == 'all' %}selected{% endif %}>All Levels</option>
                         <option value="error" {% if current_level == 'error' %}selected{% endif %}>Error Only</option>
@@ -50,34 +35,40 @@
                         <option value="info" {% if current_level == 'info' %}selected{% endif %}>Info Only</option>
                     </select>
                 </div>
-                
-                <!-- Date From -->
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label for="date_from" class="form-label">Date From</label>
+                <div class="flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-1">
+                        <i class="fas fa-search"></i>
+                        <span>Search</span>
+                    </button>
+                    <a href="/logs" class="btn btn-secondary">
+                        <i class="fas fa-times"></i>
+                        <span>Clear</span>
+                    </a>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3 mt-3">
+                <div>
                     <input type="date" id="date_from" name="date_from" class="form-control" 
+                           placeholder="Date From"
                            value="{{ current_date_from }}">
                 </div>
-                
-                <!-- Date To -->
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label for="date_to" class="form-label">Date To</label>
+                <div>
                     <input type="date" id="date_to" name="date_to" class="form-control" 
+                           placeholder="Date To"
                            value="{{ current_date_to }}">
                 </div>
             </div>
-            
-            <!-- Filter Action Buttons -->
-            <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                <button type="button" class="btn btn-secondary" onclick="clearFilters()">
-                    <i class="fas fa-times"></i>
-                    <span>Clear</span>
-                </button>
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-search"></i>
-                    <span>Apply Filters</span>
-                </button>
-            </div>
         </form>
+    </div>
+</div>
+
+<!-- System Logs Card -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-file-alt"></i>
+            <span>System Logs</span>
+        </div>
     </div>
     
     <div class="card-body" style="padding: 0;">
@@ -153,39 +144,4 @@
     </div>
     {% endif %}
 </div>
-
-<script>
-    function toggleFilters() {
-        const filterCard = document.getElementById('filterCard');
-        const toggleBtn = document.getElementById('toggleFilterBtn');
-        
-        if (filterCard.style.display === 'none') {
-            filterCard.style.display = 'block';
-            toggleBtn.innerHTML = '<i class="fas fa-times"></i><span>Hide Filters</span>';
-        } else {
-            filterCard.style.display = 'none';
-            toggleBtn.innerHTML = '<i class="fas fa-filter"></i><span>Search & Filter</span>';
-        }
-    }
-    
-    function clearFilters() {
-        // Clear all form fields
-        document.getElementById('search').value = '';
-        document.getElementById('source').value = '';
-        document.getElementById('level').value = 'all';
-        document.getElementById('date_from').value = '';
-        document.getElementById('date_to').value = '';
-        
-        // Submit the form to reload with cleared filters
-        document.getElementById('filterForm').submit();
-    }
-    
-    // Show filter card if any filters are active
-    document.addEventListener('DOMContentLoaded', function() {
-        const hasFilters = {{ 'true' if has_active_filters else 'false' }};
-        if (hasFilters) {
-            toggleFilters();
-        }
-    });
-</script>
 {% endblock %}
