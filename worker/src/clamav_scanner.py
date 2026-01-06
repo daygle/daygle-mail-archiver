@@ -4,7 +4,28 @@ ClamAV scanner module for virus scanning of emails.
 import pyclamd
 from typing import Optional, Tuple
 from datetime import datetime, timezone
-from db import query
+from db import query, execute
+
+
+def log_warning(message: str, details: str = ""):
+    """Log warning message to database."""
+    try:
+        execute(
+            """
+            INSERT INTO logs (timestamp, level, source, message, details)
+            VALUES (:ts, :level, :source, :message, :details)
+            """,
+            {
+                "ts": datetime.now(timezone.utc),
+                "level": "warning",
+                "source": "ClamAV",
+                "message": message[:500],
+                "details": details[:4000],
+            },
+        )
+    except Exception:
+        # If logging fails, just continue - don't break email processing
+        pass
 
 
 class ClamAVScanner:
@@ -44,7 +65,7 @@ class ClamAVScanner:
             self._action = settings_dict.get('clamav_action', 'quarantine')
         except Exception as e:
             # If we can't load settings, use defaults and disable scanning
-            print(f"Warning: Could not load ClamAV settings from database: {e}")
+            log_warning("Could not load ClamAV settings from database", str(e))
             self._enabled = False
     
     def _connect(self) -> Optional[pyclamd.ClamdNetworkSocket]:
@@ -63,8 +84,14 @@ class ClamAVScanner:
             if scanner.ping():
                 self._scanner = scanner
                 return scanner
+            else:
+                # ping() returned False - connection failed
+                log_warning(f"ClamAV ping failed at {self.host}:{self.port}")
+                return None
         except Exception as e:
-            print(f"Warning: Could not connect to ClamAV at {self.host}:{self.port}: {e}")
+            log_warning(f"Could not connect to ClamAV at {self.host}:{self.port}", str(e))
+            # Reset cached scanner on connection failure
+            self._scanner = None
         
         return None
     
@@ -94,7 +121,7 @@ class ClamAVScanner:
         scanner = self._connect()
         if not scanner:
             # If we can't connect, log warning and allow email through
-            print("Warning: ClamAV scanner not available, skipping virus scan")
+            log_warning("ClamAV scanner not available, skipping virus scan")
             return False, None, scan_timestamp
         
         try:
@@ -113,7 +140,9 @@ class ClamAVScanner:
             return False, None, scan_timestamp
             
         except Exception as e:
-            print(f"Warning: Error during virus scan: {e}")
+            log_warning("Error during virus scan", str(e))
+            # Reset cached scanner on error to force reconnection next time
+            self._scanner = None
             # On error, allow email through but log the issue
             return False, None, scan_timestamp
     
