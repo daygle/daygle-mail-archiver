@@ -502,16 +502,6 @@
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
         toggleAccountFields();
-        
-        // Check if we should show the form (e.g., after validation error)
-        const showForm = {{ 'true' if form_mode else 'false' }};
-        if (showForm) {
-            {% if account %}
-            showEditForm({{ account.id | tojson }}, {{ account | tojson }});
-            {% else %}
-            showCreateForm();
-            {% endif %}
-        }
     });
 </script>
 
