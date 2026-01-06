@@ -607,6 +607,7 @@ button:focus-visible,
 
 .btn-primary:hover:not(:disabled) {
     background: var(--accent-hover);
+    color: white;
     transform: translateY(-1px);
     box-shadow: var(--shadow-md);
 }
