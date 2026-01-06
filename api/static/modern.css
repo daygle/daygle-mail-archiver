@@ -1749,6 +1749,8 @@ a:hover {
     padding: 1.25rem;
     overflow: auto;
     position: relative;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Mini Stats Grid */
