@@ -420,7 +420,7 @@
         document.getElementById('expunge_deleted').checked = account.expunge_deleted || false;
         document.getElementById('enabled').checked = account.enabled !== false;
         document.getElementById('oauth_client_id').value = account.oauth_client_id || '';
-        document.getElementById('oauth_client_secret').value = account.oauth_client_secret || '';
+        document.getElementById('oauth_client_secret').value = ''; // Don't expose secret
         
         // Show form, hide table
         document.getElementById('form-section').style.display = 'block';

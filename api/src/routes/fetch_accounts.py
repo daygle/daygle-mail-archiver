@@ -71,25 +71,18 @@ def list_accounts(request: Request, page: int = 1):
     
     # Convert RowMapping objects to dictionaries and create JSON-safe versions
     accounts = []
+    # Define fields that are safe to expose to JavaScript (exclude sensitive data)
+    json_safe_fields = [
+        'id', 'name', 'account_type', 'host', 'port', 'username',
+        'use_ssl', 'require_starttls', 'poll_interval_seconds',
+        'delete_after_processing', 'expunge_deleted', 'enabled',
+        'oauth_client_id'  # Client ID is public, but NOT client_secret
+    ]
+    
     for acc in accounts_raw:
         acc_dict = dict(acc)
-        # Create a JSON-safe version without datetime fields for JavaScript
-        acc_dict['json_safe'] = {
-            'id': acc_dict['id'],
-            'name': acc_dict['name'],
-            'account_type': acc_dict['account_type'],
-            'host': acc_dict['host'],
-            'port': acc_dict['port'],
-            'username': acc_dict['username'],
-            'use_ssl': acc_dict['use_ssl'],
-            'require_starttls': acc_dict['require_starttls'],
-            'poll_interval_seconds': acc_dict['poll_interval_seconds'],
-            'delete_after_processing': acc_dict['delete_after_processing'],
-            'expunge_deleted': acc_dict['expunge_deleted'],
-            'enabled': acc_dict['enabled'],
-            'oauth_client_id': acc_dict['oauth_client_id'],
-            'oauth_client_secret': acc_dict['oauth_client_secret'],
-        }
+        # Create a JSON-safe version without datetime fields or sensitive data for JavaScript
+        acc_dict['json_safe'] = {field: acc_dict.get(field) for field in json_safe_fields}
         accounts.append(acc_dict)
 
     msg = request.session.pop("flash", None)
