@@ -70,3 +70,10 @@ services:
 volumes:
   db_data:
   clamav_data:
+
+networks:
+  default:
+    enable_ipv6: ${ENABLE_IPV6:-false}
+    ipam:
+      config:
+        - subnet: ${IPV6_SUBNET:-2001:db8::/32}
