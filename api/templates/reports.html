@@ -1,0 +1,517 @@
+{% extends "base.html" %}
+
+{% block page_title %}Reports{% endblock %}
+
+{% block extra_css %}
+<style>
+.report-section {
+    margin-bottom: 2rem;
+}
+
+.report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.report-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.report-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.report-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+    margin-bottom: 1rem;
+}
+
+.table-responsive {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.status-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+}
+
+.status-online { background-color: #10b981; }
+.status-warning { background-color: #f59e0b; }
+.status-error { background-color: #ef4444; }
+.status-offline { background-color: #6b7280; }
+
+.metric-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.metric-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    text-align: center;
+}
+
+.metric-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.metric-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Email Volume Report -->
+    <div class="report-section">
+        <div class="report-header">
+            <h2 class="report-title">Email Volume Report</h2>
+            <div class="report-controls">
+                <select id="emailVolumePeriod" class="form-select form-select-sm">
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                </select>
+                <select id="emailVolumeDays" class="form-select form-select-sm">
+                    <option value="7">7 days</option>
+                    <option value="14">14 days</option>
+                    <option value="30" selected>30 days</option>
+                    <option value="60">60 days</option>
+                    <option value="90">90 days</option>
+                    <option value="180">180 days</option>
+                    <option value="365">365 days</option>
+                </select>
+                <button id="refreshEmailVolume" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+        </div>
+        <div class="report-card">
+            <div class="chart-container">
+                <canvas id="emailVolumeChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Account Activity Report -->
+    <div class="report-section">
+        <div class="report-header">
+            <h2 class="report-title">Account Activity Report</h2>
+            <div class="report-controls">
+                <select id="accountActivityDays" class="form-select form-select-sm">
+                    <option value="7">7 days</option>
+                    <option value="14">14 days</option>
+                    <option value="30" selected>30 days</option>
+                    <option value="60">60 days</option>
+                    <option value="90">90 days</option>
+                </select>
+                <button id="refreshAccountActivity" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+        </div>
+        <div class="report-card">
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="totalAccounts">-</div>
+                    <div class="metric-label">Total Accounts</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="enabledAccounts">-</div>
+                    <div class="metric-label">Enabled Accounts</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="accountsWithErrors">-</div>
+                    <div class="metric-label">Accounts with Errors</div>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="accountActivityChart"></canvas>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Account</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Last Success</th>
+                            <th>Emails Today</th>
+                            <th>Heartbeat</th>
+                        </tr>
+                    </thead>
+                    <tbody id="accountTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Activity Report (Admin Only) -->
+    {% if request.session.role == 'administrator' %}
+    <div class="report-section">
+        <div class="report-header">
+            <h2 class="report-title">User Activity Report</h2>
+            <div class="report-controls">
+                <select id="userActivityDays" class="form-select form-select-sm">
+                    <option value="7">7 days</option>
+                    <option value="14">14 days</option>
+                    <option value="30" selected>30 days</option>
+                    <option value="60">60 days</option>
+                    <option value="90">90 days</option>
+                </select>
+                <button id="refreshUserActivity" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+        </div>
+        <div class="report-card">
+            <div class="chart-container">
+                <canvas id="userCreationChart"></canvas>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Role</th>
+                            <th>Created</th>
+                            <th>Last Login</th>
+                            <th>Logins Today</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- System Health Report -->
+    <div class="report-section">
+        <div class="report-header">
+            <h2 class="report-title">System Health Report</h2>
+            <div class="report-controls">
+                <select id="systemHealthDays" class="form-select form-select-sm">
+                    <option value="7">7 days</option>
+                    <option value="14">14 days</option>
+                    <option value="30" selected>30 days</option>
+                    <option value="60">60 days</option>
+                    <option value="90">90 days</option>
+                </select>
+                <button id="refreshSystemHealth" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+        </div>
+        <div class="report-card">
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="databaseSize">-</div>
+                    <div class="metric-label">Database Size</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="avgHeartbeat">-</div>
+                    <div class="metric-label">Avg Hours Since Heartbeat</div>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="errorTrendsChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/static/vendor/chart.min.js"></script>
+
+<script>
+// Global chart instances
+let emailVolumeChart, accountActivityChart, userCreationChart, errorTrendsChart;
+
+// Initialize charts and load data
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCharts();
+    loadAllReports();
+});
+
+// Initialize chart instances
+function initializeCharts() {
+    // Email Volume Chart
+    const emailVolumeCtx = document.getElementById('emailVolumeChart').getContext('2d');
+    emailVolumeChart = new Chart(emailVolumeCtx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Emails',
+                data: [],
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4
+            }, {
+                label: 'Virus Detected',
+                data: [],
+                borderColor: '#ef4444',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top' }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    // Account Activity Chart
+    const accountActivityCtx = document.getElementById('accountActivityChart').getContext('2d');
+    accountActivityChart = new Chart(accountActivityCtx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: []
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top' }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    // User Creation Chart
+    const userCreationCtx = document.getElementById('userCreationChart').getContext('2d');
+    userCreationChart = new Chart(userCreationCtx, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'New Users',
+                data: [],
+                backgroundColor: '#10b981'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top' }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    // Error Trends Chart
+    const errorTrendsCtx = document.getElementById('errorTrendsChart').getContext('2d');
+    errorTrendsChart = new Chart(errorTrendsCtx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Errors',
+                data: [],
+                borderColor: '#f59e0b',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top' }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+}
+
+// Load all reports
+function loadAllReports() {
+    loadEmailVolumeReport();
+    loadAccountActivityReport();
+    loadUserActivityReport();
+    loadSystemHealthReport();
+}
+
+// Email Volume Report
+function loadEmailVolumeReport() {
+    const period = document.getElementById('emailVolumePeriod').value;
+    const days = document.getElementById('emailVolumeDays').value;
+
+    fetch(`/api/reports/email-volume?period=${period}&days=${days}`)
+        .then(response => response.json())
+        .then(data => {
+            emailVolumeChart.data.labels = data.labels;
+            emailVolumeChart.data.datasets[0].data = data.email_counts;
+            emailVolumeChart.data.datasets[1].data = data.virus_counts;
+            emailVolumeChart.update();
+        })
+        .catch(error => console.error('Error loading email volume report:', error));
+}
+
+// Account Activity Report
+function loadAccountActivityReport() {
+    const days = document.getElementById('accountActivityDays').value;
+
+    fetch(`/api/reports/account-activity?days=${days}`)
+        .then(response => response.json())
+        .then(data => {
+            // Update metrics
+            document.getElementById('totalAccounts').textContent = data.accounts.length;
+            document.getElementById('enabledAccounts').textContent = data.accounts.filter(a => a.enabled).length;
+            document.getElementById('accountsWithErrors').textContent = data.accounts.filter(a => a.last_error).length;
+
+            // Update chart
+            accountActivityChart.data.labels = data.trend_labels;
+            accountActivityChart.data.datasets = data.trend_datasets.map((dataset, index) => ({
+                label: dataset.label,
+                data: dataset.data,
+                borderColor: `hsl(${(index * 137) % 360}, 70%, 50%)`,
+                backgroundColor: `hsla(${(index * 137) % 360}, 70%, 50%, 0.1)`,
+                tension: 0.4
+            }));
+            accountActivityChart.update();
+
+            // Update table
+            const tbody = document.getElementById('accountTableBody');
+            tbody.innerHTML = data.accounts.map(account => {
+                let statusClass = 'status-offline';
+                let statusText = 'Offline';
+                if (account.enabled) {
+                    if (account.hours_since_heartbeat < 1) {
+                        statusClass = 'status-online';
+                        statusText = 'Online';
+                    } else if (account.hours_since_heartbeat < 24) {
+                        statusClass = 'status-warning';
+                        statusText = 'Warning';
+                    } else {
+                        statusClass = 'status-error';
+                        statusText = 'Error';
+                    }
+                }
+
+                return `
+                    <tr>
+                        <td>${account.name}</td>
+                        <td>${account.type.toUpperCase()}</td>
+                        <td><span class="status-indicator ${statusClass}"></span>${statusText}</td>
+                        <td>${account.last_success || 'Never'}</td>
+                        <td>${account.emails_today}</td>
+                        <td>${account.hours_since_heartbeat}h ago</td>
+                    </tr>
+                `;
+            }).join('');
+        })
+        .catch(error => console.error('Error loading account activity report:', error));
+}
+
+// User Activity Report
+function loadUserActivityReport() {
+    const days = document.getElementById('userActivityDays').value;
+
+    fetch(`/api/reports/user-activity?days=${days}`)
+        .then(response => response.json())
+        .then(data => {
+            // Update chart
+            userCreationChart.data.labels = data.creation_labels;
+            userCreationChart.data.datasets[0].data = data.creation_counts;
+            userCreationChart.update();
+
+            // Update table
+            const tbody = document.getElementById('userTableBody');
+            tbody.innerHTML = data.users.map(user => `
+                <tr>
+                    <td>${user.username}</td>
+                    <td>${user.role}</td>
+                    <td>${user.created_at || 'Unknown'}</td>
+                    <td>${user.last_login || 'Never'}</td>
+                    <td>${user.logins_today}</td>
+                </tr>
+            `).join('');
+        })
+        .catch(error => {
+            if (error.status !== 403) {
+                console.error('Error loading user activity report:', error);
+            }
+        });
+}
+
+// System Health Report
+function loadSystemHealthReport() {
+    const days = document.getElementById('systemHealthDays').value;
+
+    fetch(`/api/reports/system-health?days=${days}`)
+        .then(response => response.json())
+        .then(data => {
+            // Update metrics
+            document.getElementById('databaseSize').textContent = data.database_size;
+            document.getElementById('avgHeartbeat').textContent = `${data.worker_stats.avg_hours_since_heartbeat}h`;
+
+            // Update chart
+            errorTrendsChart.data.labels = data.error_labels;
+            errorTrendsChart.data.datasets[0].data = data.error_counts;
+            errorTrendsChart.update();
+        })
+        .catch(error => console.error('Error loading system health report:', error));
+}
+
+// Event listeners for refresh buttons
+document.getElementById('refreshEmailVolume').addEventListener('click', loadEmailVolumeReport);
+document.getElementById('refreshAccountActivity').addEventListener('click', loadAccountActivityReport);
+document.getElementById('refreshUserActivity').addEventListener('click', loadUserActivityReport);
+document.getElementById('refreshSystemHealth').addEventListener('click', loadSystemHealthReport);
+
+// Event listeners for period/days changes
+document.getElementById('emailVolumePeriod').addEventListener('change', loadEmailVolumeReport);
+document.getElementById('emailVolumeDays').addEventListener('change', loadEmailVolumeReport);
+document.getElementById('accountActivityDays').addEventListener('change', loadAccountActivityReport);
+document.getElementById('userActivityDays').addEventListener('change', loadUserActivityReport);
+document.getElementById('systemHealthDays').addEventListener('change', loadSystemHealthReport);
+</script>
+{% endblock %}
