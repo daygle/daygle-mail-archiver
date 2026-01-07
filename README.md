@@ -32,15 +32,15 @@ This project is built with explicit, maintainable configuration, modular backend
 
 ### Quick Links
 
-- **[Installation Guide](docs/wiki/Installation-Guide.md)** - Get started with installation
-- **[Configuration](docs/wiki/Configuration.md)** - Configure the system
-- **[Email Accounts Setup](docs/wiki/Email-Accounts-Setup.md)** - Set up IMAP, Gmail, Office 365
-- **[User Management](docs/wiki/User-Management.md)** - Manage users and roles
-- **[Dashboard Customization](docs/wiki/Dashboard-Customization.md)** - Customize your dashboard
-- **[ClamAV Virus Scanning](docs/wiki/ClamAV-Virus-Scanning.md)** - Configure virus scanning
-- **[Backup and Restore](docs/wiki/Backup-and-Restore.md)** - Backup and restore procedures
-- **[Troubleshooting](docs/wiki/Troubleshooting.md)** - Common issues and solutions
-- **[Security Notes](docs/wiki/Security-Notes.md)** - Security best practices
+- **[Installation Guide](https://github.com/daygle/daygle-mail-archiver/wiki/Installation-Guide)** - Get started with installation
+- **[Configuration](https://github.com/daygle/daygle-mail-archiver/wiki/Configuration)** - Configure the system
+- **[Email Accounts Setup](https://github.com/daygle/daygle-mail-archiver/wiki/Email-Accounts-Setup)** - Set up IMAP, Gmail, Office 365
+- **[User Management](https://github.com/daygle/daygle-mail-archiver/wiki/User-Management)** - Manage users and roles
+- **[Dashboard Customization](https://github.com/daygle/daygle-mail-archiver/wiki/Dashboard-Customization)** - Customize your dashboard
+- **[ClamAV Virus Scanning](https://github.com/daygle/daygle-mail-archiver/wiki/ClamAV-Virus-Scanning)** - Configure virus scanning
+- **[Backup and Restore](https://github.com/daygle/daygle-mail-archiver/wiki/Backup-and-Restore)** - Backup and restore procedures
+- **[Troubleshooting](https://github.com/daygle/daygle-mail-archiver/wiki/Troubleshooting)** - Common issues and solutions
+- **[Security Notes](https://github.com/daygle/daygle-mail-archiver/wiki/Security-Notes)** - Security best practices
 
 ---
 
@@ -74,7 +74,7 @@ docker compose up -d --build
 
 **Important**: Change default security values in `daygle_mail_archiver.conf` before production use!
 
-See the [Installation Guide](docs/wiki/Installation-Guide.md) for detailed instructions.
+See the [Installation Guide](https://github.com/daygle/daygle-mail-archiver/wiki/Installation-Guide) for detailed instructions.
 
 ---
 
@@ -126,9 +126,9 @@ This project is licensed under the MIT License. See the LICENSE file for details
 
 ## 🆘 Support
 
-- **Documentation**: [Wiki](docs/wiki/Home.md)
+- **Documentation**: [Wiki](https://github.com/daygle/daygle-mail-archiver/wiki/)
 - **Issues**: [GitHub Issues](https://github.com/daygle/daygle-mail-archiver/issues)
-- **Troubleshooting**: [Troubleshooting Guide](docs/wiki/Troubleshooting.md)
+- **Troubleshooting**: [Troubleshooting Guide](https://github.com/daygle/daygle-mail-archiver/wiki/Troubleshooting)
 
 ---
 
@@ -141,4 +141,4 @@ This project is licensed under the MIT License. See the LICENSE file for details
 - Enable virus scanning
 - Set up regular backups
 
-See [Security Notes](docs/wiki/Security-Notes.md) for complete security guidelines.
+See [Security Notes](https://github.com/daygle/daygle-mail-archiver/wiki/Security-Notes) for complete security guidelines.
