@@ -136,12 +136,16 @@ def user_settings_form(request: Request):
         return RedirectResponse("/login", status_code=303)
 
     user_id = request.session["user_id"]
-    user = query("SELECT page_size, date_format, time_format, timezone, email_notifications, role FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+    user = query("SELECT page_size, date_format, time_format, timezone, email_notifications, role, alert_error_enabled, alert_warning_enabled, alert_info_enabled, alert_success_enabled FROM users WHERE id = :id", {"id": user_id}).mappings().first()
     current_page_size = user["page_size"] if user else 50
     current_date_format = user["date_format"] if user else "%d/%m/%Y"
     current_time_format = user["time_format"] if user else "%H:%M"
     current_timezone = user["timezone"] if user and user["timezone"] else "Australia/Melbourne"
     current_email_notifications = user["email_notifications"] if user else True
+    current_alert_error_enabled = user["alert_error_enabled"] if user else True
+    current_alert_warning_enabled = user["alert_warning_enabled"] if user else True
+    current_alert_info_enabled = user["alert_info_enabled"] if user else True
+    current_alert_success_enabled = user["alert_success_enabled"] if user else True
     user_role = user["role"] if user else "administrator"
 
     msg = request.session.pop("flash", None)
@@ -153,11 +157,15 @@ def user_settings_form(request: Request):
         "time_format": current_time_format,
         "timezone": current_timezone,
         "email_notifications": current_email_notifications,
+        "alert_error_enabled": current_alert_error_enabled,
+        "alert_warning_enabled": current_alert_warning_enabled,
+        "alert_info_enabled": current_alert_info_enabled,
+        "alert_success_enabled": current_alert_success_enabled,
         "user_role": user_role
     })
 
 @router.post("/user-settings/update")
-def update_user_settings(request: Request, page_size: int = Form(...), date_format: str = Form(...), time_format: str = Form(...), timezone: str = Form("Australia/Melbourne"), email_notifications: bool = Form(True)):
+def update_user_settings(request: Request, page_size: int = Form(...), date_format: str = Form(...), time_format: str = Form(...), timezone: str = Form("Australia/Melbourne"), email_notifications: bool = Form(True), alert_error_enabled: bool = Form(False), alert_warning_enabled: bool = Form(False), alert_info_enabled: bool = Form(False), alert_success_enabled: bool = Form(False)):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
@@ -176,11 +184,11 @@ def update_user_settings(request: Request, page_size: int = Form(...), date_form
     try:
         # Only update email_notifications for administrators
         if user_role == "administrator":
-            execute("UPDATE users SET page_size = :ps, date_format = :df, time_format = :tf, timezone = :tz, email_notifications = :en WHERE id = :id", 
-                    {"ps": page_size, "df": date_format, "tf": time_format, "tz": timezone, "en": email_notifications, "id": user_id})
+            execute("UPDATE users SET page_size = :ps, date_format = :df, time_format = :tf, timezone = :tz, email_notifications = :en, alert_error_enabled = :ae, alert_warning_enabled = :aw, alert_info_enabled = :ai, alert_success_enabled = :as WHERE id = :id", 
+                    {"ps": page_size, "df": date_format, "tf": time_format, "tz": timezone, "en": email_notifications, "ae": alert_error_enabled, "aw": alert_warning_enabled, "ai": alert_info_enabled, "as": alert_success_enabled, "id": user_id})
         else:
-            execute("UPDATE users SET page_size = :ps, date_format = :df, time_format = :tf, timezone = :tz WHERE id = :id", 
-                    {"ps": page_size, "df": date_format, "tf": time_format, "tz": timezone, "id": user_id})
+            execute("UPDATE users SET page_size = :ps, date_format = :df, time_format = :tf, timezone = :tz, alert_error_enabled = :ae, alert_warning_enabled = :aw, alert_info_enabled = :ai, alert_success_enabled = :as WHERE id = :id", 
+                    {"ps": page_size, "df": date_format, "tf": time_format, "tz": timezone, "ae": alert_error_enabled, "aw": alert_warning_enabled, "ai": alert_info_enabled, "as": alert_success_enabled, "id": user_id})
         
         # Update session variables
         request.session["page_size"] = page_size
@@ -188,7 +196,7 @@ def update_user_settings(request: Request, page_size: int = Form(...), date_form
         request.session["time_format"] = time_format
         request.session["timezone"] = timezone
         
-        log("info", "Settings", f"User '{username}' updated their settings (page_size={page_size}, date_format={date_format}, time_format={time_format}, timezone={timezone}, email_notifications={email_notifications if user_role == 'administrator' else 'N/A'})", "")
+        log("info", "Settings", f"User '{username}' updated their settings (page_size={page_size}, date_format={date_format}, time_format={time_format}, timezone={timezone}, email_notifications={email_notifications if user_role == 'administrator' else 'N/A'}, alert_error={alert_error_enabled}, alert_warning={alert_warning_enabled}, alert_info={alert_info_enabled}, alert_success={alert_success_enabled})", "")
         flash(request, "User settings updated successfully.")
         return RedirectResponse("/user-settings", status_code=303)
     except Exception as e:

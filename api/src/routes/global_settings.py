@@ -52,6 +52,10 @@ def save_settings(
     smtp_use_tls: bool = Form(True),
     smtp_from_email: str = Form(""),
     smtp_from_name: str = Form("Daygle Mail Archiver"),
+    alert_error_enabled: bool = Form(True),
+    alert_warning_enabled: bool = Form(True),
+    alert_info_enabled: bool = Form(False),
+    alert_success_enabled: bool = Form(False),
 ):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
@@ -83,6 +87,10 @@ def save_settings(
             ('smtp_use_tls', str(smtp_use_tls).lower()),
             ('smtp_from_email', smtp_from_email),
             ('smtp_from_name', smtp_from_name),
+            ('alert_error_enabled', str(alert_error_enabled).lower()),
+            ('alert_warning_enabled', str(alert_warning_enabled).lower()),
+            ('alert_info_enabled', str(alert_info_enabled).lower()),
+            ('alert_success_enabled', str(alert_success_enabled).lower()),
         ]
         
         for key, value in settings_data:

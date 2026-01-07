@@ -122,6 +122,10 @@ CREATE TABLE IF NOT EXISTS users (
     time_format TEXT NOT NULL DEFAULT '%H:%M',
     timezone TEXT NOT NULL DEFAULT 'Australia/Melbourne',
     email_notifications BOOLEAN NOT NULL DEFAULT TRUE,
+    alert_error_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    alert_warning_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    alert_info_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    alert_success_enabled BOOLEAN NOT NULL DEFAULT FALSE,
     enabled BOOLEAN NOT NULL DEFAULT TRUE,
     last_login TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -165,6 +169,11 @@ INSERT INTO settings (key, value) VALUES ('smtp_password', '') ON CONFLICT (key)
 INSERT INTO settings (key, value) VALUES ('smtp_use_tls', 'true') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('smtp_from_email', '') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('smtp_from_name', 'Daygle Mail Archiver') ON CONFLICT (key) DO NOTHING;
+-- Alert type settings
+INSERT INTO settings (key, value) VALUES ('alert_error_enabled', 'true') ON CONFLICT (key) DO NOTHING;
+INSERT INTO settings (key, value) VALUES ('alert_warning_enabled', 'true') ON CONFLICT (key) DO NOTHING;
+INSERT INTO settings (key, value) VALUES ('alert_info_enabled', 'false') ON CONFLICT (key) DO NOTHING;
+INSERT INTO settings (key, value) VALUES ('alert_success_enabled', 'false') ON CONFLICT (key) DO NOTHING;
 
 -- ----------------------------
 -- logs
