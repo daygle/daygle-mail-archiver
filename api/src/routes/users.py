@@ -22,7 +22,9 @@ def list_users(request: Request):
         return RedirectResponse("/login", status_code=303)
 
     users = query("""
-        SELECT id, username, first_name, last_name, email, role, email_notifications, enabled, last_login, created_at 
+        SELECT id, username, first_name, last_name, email, role, 
+               COALESCE(email_notifications, TRUE) as email_notifications,
+               enabled, last_login, created_at 
         FROM users 
         ORDER BY id
     """).mappings().all()
@@ -119,7 +121,9 @@ def get_user(request: Request, user_id: int):
 
     try:
         user = query("""
-            SELECT id, username, first_name, last_name, email, role, email_notifications, enabled, last_login, created_at 
+            SELECT id, username, first_name, last_name, email, role, 
+                   COALESCE(email_notifications, TRUE) as email_notifications,
+                   enabled, last_login, created_at 
             FROM users 
             WHERE id = :id
         """, {"id": user_id}).mappings().first()
