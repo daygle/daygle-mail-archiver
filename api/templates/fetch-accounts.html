@@ -398,3 +398,111 @@
 
     function showEditForm(id, account) {
         editMode = true;
+        editAccountId = id;
+        
+        // Populate form
+        document.getElementById('form-account-id').value = account.id;
+        document.getElementById('form-title').textContent = 'Edit Fetch Account';
+        document.getElementById('submit-btn').innerHTML = '<i class="fas fa-save"></i><span>Update Account</span>';
+        document.getElementById('account-form').action = '/fetch-accounts/' + id + '/edit';
+        document.getElementById('password-help').style.display = 'block';
+        
+        document.getElementById('name').value = account.name || '';
+        document.getElementById('account_type').value = account.account_type || 'imap';
+        document.getElementById('host').value = account.host || '';
+        document.getElementById('port').value = account.port || 993;
+        document.getElementById('username').value = account.username || '';
+        document.getElementById('password').value = '';
+        document.getElementById('use_ssl').checked = account.use_ssl || false;
+        document.getElementById('require_starttls').checked = account.require_starttls || false;
+        document.getElementById('poll_interval_seconds').value = account.poll_interval_seconds || 300;
+        document.getElementById('delete_after_processing').checked = account.delete_after_processing || false;
+        document.getElementById('expunge_deleted').checked = account.expunge_deleted || false;
+        document.getElementById('enabled').checked = account.enabled !== false;
+        document.getElementById('oauth_client_id').value = account.oauth_client_id || '';
+        document.getElementById('oauth_client_secret').value = ''; // Don't expose secret
+        
+        // Show form, hide table
+        document.getElementById('form-section').style.display = 'block';
+        document.getElementById('table-section').style.display = 'none';
+        
+        // Scroll to top
+        window.scrollTo(0, 0);
+        
+        // Initialize field visibility
+        toggleAccountFields();
+    }
+
+    function cancelForm() {
+        // Show table, hide form
+        document.getElementById('form-section').style.display = 'none';
+        document.getElementById('table-section').style.display = 'block';
+        
+        // Scroll to top
+        window.scrollTo(0, 0);
+    }
+
+    function showDeleteConfirmation(accountId, accountName, emailCount) {
+        deleteAccountId = accountId;
+        
+        // Update the form action
+        document.getElementById('delete-form').action = '/fetch-accounts/' + accountId + '/delete';
+        
+        // Update the account name
+        document.getElementById('delete-account-name').textContent = accountName;
+        
+        // Update email count information
+        const plural = emailCount !== 1 ? 's' : '';
+        
+        document.getElementById('delete-email-count-alert').innerHTML = 
+            '<i class="fas fa-info-circle"></i><span>This account has <strong>' + 
+            emailCount + '</strong> email' + plural + ' associated with it.</span>';
+        
+        document.getElementById('delete-retain-text').textContent = 
+            'Delete Account Only (retain ' + emailCount + ' email' + plural + ')';
+        
+        document.getElementById('delete-all-text').textContent = 
+            'Delete Account + All ' + emailCount + ' Email' + plural;
+        
+        // Hide form and table sections, show delete confirmation
+        document.getElementById('form-section').style.display = 'none';
+        document.getElementById('table-section').style.display = 'none';
+        document.getElementById('delete-confirmation').style.display = 'block';
+        
+        // Scroll to top
+        window.scrollTo(0, 0);
+    }
+
+    function hideDeleteConfirmation() {
+        // Show table section, hide delete confirmation
+        document.getElementById('delete-confirmation').style.display = 'none';
+        document.getElementById('table-section').style.display = 'block';
+        
+        // Scroll to top
+        window.scrollTo(0, 0);
+    }
+
+    function toggleAccountFields() {
+        const accountType = document.getElementById('account_type').value;
+        const imapFields = document.getElementById('imap_fields');
+        const oauthFields = document.getElementById('oauth_fields');
+        const expungeGroup = document.getElementById('expunge_deleted_group');
+
+        if (accountType === 'imap') {
+            imapFields.style.display = 'block';
+            oauthFields.style.display = 'none';
+            expungeGroup.style.display = 'block';
+        } else {
+            imapFields.style.display = 'none';
+            oauthFields.style.display = 'block';
+            expungeGroup.style.display = 'none';
+        }
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleAccountFields();
+    });
+</script>
+
+{% endblock %}
