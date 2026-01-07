@@ -28,7 +28,7 @@ This project is built with explicit, maintainable configuration, modular backend
 
 ## 📖 Documentation
 
-**Complete documentation is available in the [Wiki](/wiki/Home.md)**
+**Complete documentation is available in the [Wiki](https://github.com/daygle/daygle-mail-archiver/wiki/Home.md)**
 
 ### Quick Links
 
