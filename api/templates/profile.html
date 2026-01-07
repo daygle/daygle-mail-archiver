@@ -46,7 +46,7 @@
                 <label for="email" class="form-label">Email</label>
                 <input id="email" class="form-control" name="email" type="email" value="{{ user.email or '' }}" placeholder="your.email@example.com">
             </div>
-            <div class="mt-4">
+            <div style="display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end;">
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-save"></i>
                     <span>Update Information</span>
@@ -78,7 +78,7 @@
                 <label for="confirm_password" class="form-label">Confirm New Password</label>
                 <input id="confirm_password" class="form-control" name="confirm_password" type="password" placeholder="Confirm your new password" required>
             </div>
-            <div class="mt-4">
+            <div style="display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end;">
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-key"></i>
                     <span>Change Password</span>
