@@ -23,6 +23,9 @@ This project is built with explicit, maintainable configuration, modular backend
 - **Database Backup & Restore**: Built-in backup functionality
 - **Audit Logging**: Complete audit trail of all system actions
 - **Virus Scanning**: Integrated ClamAV for scanning incoming emails with configurable actions
+- **Advanced Reporting**: Email volume trends, account activity, user analytics, and system health reports
+- **Email Alerts**: Configurable SMTP alerts for system events, virus detections, and critical issues
+- **Alert Management**: Real-time alert dashboard with acknowledgment and email notifications
 
 ---
 
@@ -38,6 +41,8 @@ This project is built with explicit, maintainable configuration, modular backend
 - **[User Management](https://github.com/daygle/daygle-mail-archiver/wiki/User-Management)** - Manage users and roles
 - **[Dashboard Customization](https://github.com/daygle/daygle-mail-archiver/wiki/Dashboard-Customization)** - Customize your dashboard
 - **[ClamAV Virus Scanning](https://github.com/daygle/daygle-mail-archiver/wiki/ClamAV-Virus-Scanning)** - Configure virus scanning
+- **[Advanced Reporting](https://github.com/daygle/daygle-mail-archiver/wiki/Advanced-Reporting)** - Email volume, account activity, and system health reports
+- **[Email Alerts & Notifications](https://github.com/daygle/daygle-mail-archiver/wiki/Email-Alerts-&-Notifications)** - Configure SMTP alerts and notification system
 - **[Backup and Restore](https://github.com/daygle/daygle-mail-archiver/wiki/Backup-and-Restore)** - Backup and restore procedures
 - **[Troubleshooting](https://github.com/daygle/daygle-mail-archiver/wiki/Troubleshooting)** - Common issues and solutions
 - **[Security Notes](https://github.com/daygle/daygle-mail-archiver/wiki/Security-Notes)** - Security best practices
@@ -91,7 +96,53 @@ All components run in Docker containers orchestrated by Docker Compose.
 
 ---
 
-## 🔄 Updating
+## � Advanced Reporting & Analytics
+
+Daygle Mail Archiver includes comprehensive reporting capabilities to monitor system performance and email processing:
+
+### Report Types
+- **Email Volume Reports**: Daily/weekly/monthly email ingestion trends with virus detection statistics
+- **Account Activity Reports**: Sync performance, success rates, and email processing per account
+- **User Activity Reports**: User login patterns and account management analytics
+- **System Health Reports**: Database growth, error trends, and worker heartbeat monitoring
+
+### Key Metrics
+- Email processing volumes over time
+- Account synchronization status
+- Virus detection rates
+- System performance indicators
+- User activity patterns
+
+Reports are accessible via the **Reports** menu and support customizable date ranges and export capabilities.
+
+---
+
+## 🚨 Email Alerts & Notifications
+
+Stay informed about critical system events with the built-in alert system:
+
+### Alert Types
+- **Security Alerts**: Virus detections, authentication failures, suspicious activity
+- **System Alerts**: Service failures, configuration errors, performance issues
+- **Operational Alerts**: Account sync failures, retention cleanup status, maintenance notifications
+
+### Email Configuration
+- **SMTP Support**: Configure any SMTP server (Gmail, Outlook, custom)
+- **TLS Encryption**: Secure email delivery with STARTTLS
+- **Recipient Management**: Alerts sent to all administrator users
+- **Alert Acknowledgment**: Track and manage alert responses
+
+### Alert Management
+- **Real-time Dashboard**: View all alerts with filtering and search
+- **Email Notifications**: Instant alerts for critical issues
+- **Acknowledgment System**: Mark alerts as reviewed
+- **Alert History**: Complete audit trail of system events
+
+Configure SMTP settings in **Global Settings** → **SMTP Email Configuration** to enable email alerts.
+
+---
+
+## �🔄 Updating
 
 Check for updates from the dashboard or via command line:
 
@@ -139,6 +190,9 @@ This project is licensed under the MIT License. See the LICENSE file for details
 - Enable HTTPS via reverse proxy
 - Configure firewall rules
 - Enable virus scanning
+- Configure email alerts for security monitoring
 - Set up regular backups
+
+The system provides real-time security alerts for virus detections, authentication failures, and system anomalies. Configure SMTP settings to receive immediate email notifications of security events.
 
 See [Security Notes](https://github.com/daygle/daygle-mail-archiver/wiki/Security-Notes) for complete security guidelines.
