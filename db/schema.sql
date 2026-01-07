@@ -162,7 +162,7 @@ INSERT INTO settings (key, value) VALUES ('clamav_action', 'quarantine') ON CONF
 CREATE TABLE IF NOT EXISTS logs (
     id SERIAL PRIMARY KEY,
     timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    level TEXT NOT NULL DEFAULT 'error',
+    level TEXT NOT NULL DEFAULT 'info',
     source TEXT,
     message TEXT NOT NULL,
     details TEXT
