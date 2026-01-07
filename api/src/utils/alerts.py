@@ -188,6 +188,11 @@ def _send_alert_email(alert_id: int, alert_type: str, title: str, message: str) 
         message: Alert message
     """
     try:
+        # First check if the alert type is globally enabled
+        if not _is_alert_type_enabled(alert_type):
+            log("info", "Alert", f"Alert type '{alert_type}' is globally disabled, skipping email for alert {alert_id}", "")
+            return
+
         # Get admin users with email addresses and email notifications enabled, and the specific alert type enabled
         alert_type_column = f"alert_{alert_type}_enabled"
         admin_users = query(f"""
