@@ -63,6 +63,7 @@ def alerts_page(
 
     # Get unacknowledged count for badge
     unacknowledged_count = get_unacknowledged_count()
+    request.session["unacknowledged_alerts"] = unacknowledged_count
 
     flash_msg = request.session.pop("flash", None)
 

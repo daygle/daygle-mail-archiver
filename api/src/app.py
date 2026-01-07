@@ -50,22 +50,6 @@ async def add_security_headers(request: Request, call_next):
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     return response
 
-# Unacknowledged Alerts Middleware
-@app.middleware("http")
-async def set_unacknowledged_alerts(request: Request, call_next):
-    # Only set for authenticated users
-    if "user_id" in request.session:
-        try:
-            from utils.alerts import get_unacknowledged_count
-            unacknowledged_count = get_unacknowledged_count()
-            request.session["unacknowledged_alerts"] = unacknowledged_count
-        except Exception:
-            # If there's an error getting the count, set to 0
-            request.session["unacknowledged_alerts"] = 0
-    
-    response = await call_next(request)
-    return response
-
 # Global Exception Handler
 @app.exception_handler(500)
 async def internal_error_handler(request: Request, exc: Exception):

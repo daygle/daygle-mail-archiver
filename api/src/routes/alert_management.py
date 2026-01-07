@@ -24,6 +24,14 @@ def alert_management_form(request: Request):
     if not require_admin(request):
         return RedirectResponse("/login", status_code=303)
 
+    # Set unacknowledged alerts count for bell icon
+    try:
+        from utils.alerts import get_unacknowledged_count
+        unacknowledged_count = get_unacknowledged_count()
+        request.session["unacknowledged_alerts"] = unacknowledged_count
+    except Exception:
+        request.session["unacknowledged_alerts"] = 0
+
     # Get all alert triggers
     triggers = query("""
         SELECT id, trigger_key, name, description, alert_type, enabled

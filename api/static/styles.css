@@ -2269,3 +2269,52 @@ a:hover {
 .password-requirements li {
     margin-bottom: 4px;
 }
+
+/* ========================================
+   Alerts Menu (Bell Icon)
+   ======================================== */
+
+.alerts-menu {
+    position: relative;
+    margin-right: 16px;
+}
+
+.alerts-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all var(--transition-fast);
+    position: relative;
+}
+
+.alerts-button:hover {
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.alerts-button i {
+    font-size: 1.125rem;
+}
+
+.alerts-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background-color: var(--danger);
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 2px solid var(--bg-primary);
+    min-width: 18px;
+}
