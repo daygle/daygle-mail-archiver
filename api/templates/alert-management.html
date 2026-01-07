@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block page_title %}Alert Management{% endblock %}
+
+{% block content %}
+<!-- Alert Types Settings Card -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Global Alert Types</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <p class="section-description">Configure which types of alerts are enabled globally. These settings apply to all alert triggers.</p>
+
+        <form method="post" action="/alert-management/types/update">
+            <div class="form-group">
+                <label class="form-label">Alert Severity Levels</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="alert_error_enabled" name="alert_error_enabled" value="true" {% if alert_settings.error %}checked{% endif %}>
+                    <label class="form-check-label" for="alert_error_enabled">
+                        <span class="badge bg-danger me-2">Error</span>
+                        Critical errors and system failures
+                    </label>
+                </div>
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" id="alert_warning_enabled" name="alert_warning_enabled" value="true" {% if alert_settings.warning %}checked{% endif %}>
+                    <label class="form-check-label" for="alert_warning_enabled">
+                        <span class="badge bg-warning me-2">Warning</span>
+                        Warnings and potential issues
+                    </label>
+                </div>
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" id="alert_info_enabled" name="alert_info_enabled" value="true" {% if alert_settings.info %}checked{% endif %}>
+                    <label class="form-check-label" for="alert_info_enabled">
+                        <span class="badge bg-info me-2">Info</span>
+                        General information and status updates
+                    </label>
+                </div>
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" id="alert_success_enabled" name="alert_success_enabled" value="true" {% if alert_settings.success %}checked{% endif %}>
+                    <label class="form-check-label" for="alert_success_enabled">
+                        <span class="badge bg-success me-2">Success</span>
+                        Successful operations and completions
+                    </label>
+                </div>
+                <small class="form-text mt-2">These settings control which alert severity levels are allowed system-wide. Individual alert triggers below must also be enabled.</small>
+            </div>
+            <div class="card-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    <span>Save Alert Types</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Alert Triggers Card -->
+<div class="card mt-4">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-bell"></i>
+            <span>Alert Triggers</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <p class="section-description">Manage individual alert triggers. Each trigger represents a specific type of event that can generate alerts.</p>
+
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Trigger Name</th>
+                        <th>Description</th>
+                        <th>Severity</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for trigger in triggers %}
+                    <tr>
+                        <td>{{ trigger.name }}</td>
+                        <td>{{ trigger.description or 'No description available' }}</td>
+                        <td>
+                            {% if trigger.alert_type == 'error' %}
+                                <span class="badge bg-danger">{{ trigger.alert_type|title }}</span>
+                            {% elif trigger.alert_type == 'warning' %}
+                                <span class="badge bg-warning">{{ trigger.alert_type|title }}</span>
+                            {% elif trigger.alert_type == 'info' %}
+                                <span class="badge bg-info">{{ trigger.alert_type|title }}</span>
+                            {% elif trigger.alert_type == 'success' %}
+                                <span class="badge bg-success">{{ trigger.alert_type|title }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if trigger.enabled %}
+                                <span class="badge bg-success">Enabled</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Disabled</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="post" action="/alert-management/triggers/update" style="display: inline;">
+                                <input type="hidden" name="trigger_id" value="{{ trigger.id }}">
+                                {% if trigger.enabled %}
+                                    <input type="hidden" name="enabled" value="false">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-ban"></i> Disable
+                                    </button>
+                                {% else %}
+                                    <input type="hidden" name="enabled" value="true">
+                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                        <i class="fas fa-check"></i> Enable
+                                    </button>
+                                {% endif %}
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if not triggers %}
+        <div class="text-center text-muted mt-4">
+            <i class="fas fa-info-circle fa-2x mb-3"></i>
+            <p>No alert triggers found. Default triggers will be created when the system starts.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Alert Logic Explanation -->
+<div class="card mt-4">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-info-circle"></i>
+            <span>How Alerts Work</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Alert Generation Logic</h6>
+                <p>An alert is only created and sent when:</p>
+                <ol>
+                    <li><strong>Trigger is enabled</strong> (configured above)</li>
+                    <li><strong>Severity level is enabled</strong> globally (configured above)</li>
+                    <li><strong>User has email notifications enabled</strong> (in user settings)</li>
+                    <li><strong>User has the severity level enabled</strong> (in user settings)</li>
+                </ol>
+            </div>
+            <div class="col-md-6">
+                <h6>Alert Hierarchy</h6>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-cog text-primary me-2"></i><strong>Global Settings:</strong> Alert types (error/warning/info/success)</li>
+                    <li><i class="fas fa-toggle-on text-success me-2"></i><strong>Alert Triggers:</strong> Specific events (virus detected, etc.)</li>
+                    <li><i class="fas fa-user text-info me-2"></i><strong>User Preferences:</strong> Per-user alert type preferences</li>
+                    <li><i class="fas fa-envelope text-warning me-2"></i><strong>Email Settings:</strong> SMTP configuration for delivery</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

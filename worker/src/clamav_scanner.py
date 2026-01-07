@@ -28,7 +28,7 @@ def log_warning(message: str, details: str = ""):
         pass
 
 
-def create_alert(alert_type: str, title: str, message: str, details: str = None):
+def create_alert(alert_type: str, title: str, message: str, details: str = None, trigger_key: str = None):
     """
     Create a system alert (ClamAV-side implementation).
     
@@ -37,7 +37,19 @@ def create_alert(alert_type: str, title: str, message: str, details: str = None)
         title: Alert title
         message: Alert message
         details: Optional detailed information
+        trigger_key: Optional trigger key to check if alert should be created
     """
+    # Check if trigger is enabled (if specified)
+    if trigger_key:
+        try:
+            result = query("SELECT enabled FROM alert_triggers WHERE trigger_key = :key", {"key": trigger_key}).mappings().first()
+            if result and not result["enabled"]:
+                # Trigger is disabled, don't create alert
+                return
+        except Exception:
+            # If we can't check the trigger, default to creating the alert
+            pass
+    
     try:
         execute("""
             INSERT INTO alerts (alert_type, title, message, details)
@@ -98,7 +110,8 @@ class ClamAVScanner:
                 'error',
                 'ClamAV Configuration Error',
                 'Failed to load virus scanning settings from database',
-                f'Error: {str(e)}. Virus scanning has been disabled.'
+                f'Error: {str(e)}. Virus scanning has been disabled.',
+                'clamav_config_error'
             )
             self._enabled = False
     
@@ -125,7 +138,8 @@ class ClamAVScanner:
                     'error',
                     'ClamAV Connection Failed',
                     f'Cannot connect to ClamAV daemon at {self.host}:{self.port}',
-                    'Virus scanning is unavailable. Check ClamAV service status.'
+                    'Virus scanning is unavailable. Check ClamAV service status.',
+                    'clamav_unavailable'
                 )
                 return None
         except Exception as e:
@@ -134,7 +148,8 @@ class ClamAVScanner:
                 'error',
                 'ClamAV Service Unavailable',
                 f'Failed to establish connection to ClamAV daemon',
-                f'Host: {self.host}:{self.port}, Error: {str(e)}. Virus scanning is disabled.'
+                f'Host: {self.host}:{self.port}, Error: {str(e)}. Virus scanning is disabled.',
+                'clamav_unavailable'
             )
             # Reset cached scanner on connection failure
             self._scanner = None
@@ -181,7 +196,8 @@ class ClamAVScanner:
                 'warning',
                 'ClamAV Scanner Unavailable',
                 'Virus scanning skipped due to ClamAV service unavailability',
-                f'Host: {self.host}:{self.port}. Email processing continues without virus scanning.'
+                f'Host: {self.host}:{self.port}. Email processing continues without virus scanning.',
+                'clamav_unavailable'
             )
             return False, None, scan_timestamp
         
@@ -206,7 +222,8 @@ class ClamAVScanner:
                 'warning',
                 'ClamAV Scan Error',
                 'An error occurred during virus scanning',
-                f'Error: {str(e)}. Email was allowed through without scanning.'
+                f'Error: {str(e)}. Email was allowed through without scanning.',
+                'clamav_error'
             )
             # Reset cached scanner on error to force reconnection next time
             self._scanner = None

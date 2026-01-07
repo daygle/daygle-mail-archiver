@@ -12,7 +12,8 @@ def create_alert(
     title: str,
     message: str,
     details: Optional[str] = None,
-    send_email: bool = True
+    send_email: bool = True,
+    trigger_key: Optional[str] = None
 ) -> int:
     """
     Create a new alert
@@ -23,12 +24,18 @@ def create_alert(
         message: Alert message
         details: Optional detailed information
         send_email: Whether to send email notification
+        trigger_key: Optional trigger key to check if alert should be created
 
     Returns:
         int: Alert ID
     """
     if alert_type not in ['error', 'warning', 'info', 'success']:
         raise ValueError("Invalid alert type")
+
+    # Check if trigger is enabled (if specified)
+    if trigger_key and not _is_alert_trigger_enabled(trigger_key):
+        log("info", "Alert", f"Alert trigger '{trigger_key}' is disabled, skipping alert creation", "")
+        return 0  # Return 0 to indicate alert was not created
 
     try:
         result = execute("""
@@ -81,6 +88,32 @@ def _is_alert_type_enabled(alert_type: str) -> bool:
         log("error", "Alert", f"Failed to check alert type settings for '{alert_type}': {str(e)}", "")
         # Default to enabled for error and warning on error
         return alert_type in ['error', 'warning']
+
+
+def _is_alert_trigger_enabled(trigger_key: str) -> bool:
+    """
+    Check if a specific alert trigger is enabled.
+
+    Args:
+        trigger_key: The trigger key to check
+
+    Returns:
+        bool: True if the trigger is enabled
+    """
+    try:
+        result = query("SELECT enabled FROM alert_triggers WHERE trigger_key = :key", {"key": trigger_key}).mappings().first()
+        
+        if result:
+            return result["enabled"]
+        else:
+            # If trigger doesn't exist, default to enabled
+            log("warning", "Alert", f"Alert trigger '{trigger_key}' not found in database, defaulting to enabled", "")
+            return True
+    
+    except Exception as e:
+        log("error", "Alert", f"Failed to check alert trigger settings for '{trigger_key}': {str(e)}", "")
+        # Default to enabled on error
+        return True
 
 
 def get_alerts(

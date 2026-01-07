@@ -39,7 +39,7 @@ def log_error(source: str, message: str, details: str = "", level: str = "error"
     )
 
 
-def create_alert(alert_type: str, title: str, message: str, details: str = None):
+def create_alert(alert_type: str, title: str, message: str, details: str = None, trigger_key: str = None):
     """
     Create a system alert (worker-side implementation).
     
@@ -48,7 +48,19 @@ def create_alert(alert_type: str, title: str, message: str, details: str = None)
         title: Alert title
         message: Alert message
         details: Optional detailed information
+        trigger_key: Optional trigger key to check if alert should be created
     """
+    # Check if trigger is enabled (if specified)
+    if trigger_key:
+        try:
+            result = query("SELECT enabled FROM alert_triggers WHERE trigger_key = :key", {"key": trigger_key}).mappings().first()
+            if result and not result["enabled"]:
+                # Trigger is disabled, don't create alert
+                return
+        except Exception:
+            # If we can't check the trigger, default to creating the alert
+            pass
+    
     try:
         execute("""
             INSERT INTO alerts (alert_type, title, message, details)
@@ -186,7 +198,8 @@ Action Taken: {action}"""
                 'error',
                 'Virus Detected in Email',
                 f'Malicious email blocked: {virus_name}',
-                alert_details
+                alert_details,
+                'virus_detected'
             )
             
             if action == 'reject':

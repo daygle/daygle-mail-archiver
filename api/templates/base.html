@@ -56,6 +56,10 @@
                         <span class="badge bg-danger ms-auto">{{ request.session.unacknowledged_alerts }}</span>
                         {% endif %}
                     </a>
+                    <a href="/alert-management" class="nav-link {% if '/alert-management' in request.url.path %}active{% endif %}">
+                        <i class="fas fa-cog"></i>
+                        <span>Alert Management</span>
+                    </a>
                     <a href="/global-settings" class="nav-link {% if request.url.path == '/global-settings' %}active{% endif %}">
                         <i class="fas fa-sliders"></i>
                         <span>Global Settings</span>

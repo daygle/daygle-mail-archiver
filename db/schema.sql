@@ -259,3 +259,33 @@ CREATE TABLE IF NOT EXISTS alerts (
 CREATE INDEX IF NOT EXISTS alerts_type_idx ON alerts(alert_type);
 CREATE INDEX IF NOT EXISTS alerts_acknowledged_idx ON alerts(acknowledged);
 CREATE INDEX IF NOT EXISTS alerts_created_at_idx ON alerts(created_at DESC);
+
+-- ----------------------------
+-- alert_triggers
+-- Defines available alert triggers that can be enabled/disabled
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS alert_triggers (
+    id SERIAL PRIMARY KEY,
+    trigger_key TEXT UNIQUE NOT NULL, -- Unique identifier like 'virus_detected', 'clamav_error'
+    name TEXT NOT NULL, -- Human-readable name like 'Virus Detected'
+    description TEXT, -- Description of what this alert is for
+    alert_type TEXT NOT NULL DEFAULT 'warning', -- Default severity: 'error', 'warning', 'info', 'success'
+    enabled BOOLEAN NOT NULL DEFAULT TRUE, -- Whether this trigger is enabled globally
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Index for quick lookups
+CREATE INDEX IF NOT EXISTS alert_triggers_enabled_idx ON alert_triggers(enabled);
+CREATE INDEX IF NOT EXISTS alert_triggers_key_idx ON alert_triggers(trigger_key);
+
+-- Insert default alert triggers
+INSERT INTO alert_triggers (trigger_key, name, description, alert_type, enabled) VALUES
+    ('virus_detected', 'Virus Detected', 'Alert when a virus is detected in an email', 'error', TRUE),
+    ('clamav_error', 'ClamAV Error', 'Alert when ClamAV service encounters an error', 'error', TRUE),
+    ('clamav_unavailable', 'ClamAV Unavailable', 'Alert when ClamAV service is unavailable', 'warning', TRUE),
+    ('clamav_config_error', 'ClamAV Configuration Error', 'Alert when ClamAV configuration cannot be loaded', 'error', TRUE),
+    ('low_disk_space', 'Low Disk Space', 'Alert when disk space is running low', 'warning', TRUE),
+    ('worker_error', 'Worker Error', 'Alert when email worker encounters an error', 'error', TRUE),
+    ('account_sync_error', 'Account Sync Error', 'Alert when email account synchronization fails', 'error', TRUE),
+    ('smtp_error', 'SMTP Error', 'Alert when email sending fails', 'warning', TRUE)
+ON CONFLICT (trigger_key) DO NOTHING;
