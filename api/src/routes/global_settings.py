@@ -52,10 +52,6 @@ def save_settings(
     smtp_use_tls: bool = Form(True),
     smtp_from_email: str = Form(""),
     smtp_from_name: str = Form("Daygle Mail Archiver"),
-    alert_error_enabled: bool = Form(True),
-    alert_warning_enabled: bool = Form(True),
-    alert_info_enabled: bool = Form(False),
-    alert_success_enabled: bool = Form(False),
 ):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
@@ -87,10 +83,6 @@ def save_settings(
             ('smtp_use_tls', str(smtp_use_tls).lower()),
             ('smtp_from_email', smtp_from_email),
             ('smtp_from_name', smtp_from_name),
-            ('alert_error_enabled', str(alert_error_enabled).lower()),
-            ('alert_warning_enabled', str(alert_warning_enabled).lower()),
-            ('alert_info_enabled', str(alert_info_enabled).lower()),
-            ('alert_success_enabled', str(alert_success_enabled).lower()),
         ]
         
         for key, value in settings_data:
@@ -138,25 +130,6 @@ def save_settings(
         'smtp_from_email': smtp_from_email,
         'smtp_from_name': smtp_from_name,
     }
-    
-    for key, new_value in new_settings.items():
-        old_value = old_settings.get(key)
-        if old_value != new_value:
-            # Format retention as a combined field
-            if key == 'retention_value':
-                old_retention = f"{old_settings.get('retention_value', '1')} {old_settings.get('retention_unit', 'years')}"
-                new_retention = f"{retention_value} {retention_unit}"
-                if old_retention != new_retention:
-                    changed_fields.append(f"retention={new_retention}")
-            elif key == 'retention_unit':
-                continue  # Skip, already handled with retention_value
-            else:
-                changed_fields.append(f"{key}={new_value}")
-    
-    if changed_fields:
-        log("info", "Settings", f"User '{username}' updated global settings ({', '.join(changed_fields)})", "")
-    else:
-        log("info", "Settings", f"User '{username}' saved global settings (no changes)", "")
 
     flash(request, "Settings updated successfully.")
     return RedirectResponse("/global-settings", status_code=303)

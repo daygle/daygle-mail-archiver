@@ -3,62 +3,14 @@
 {% block page_title %}Alert Management{% endblock %}
 
 {% block content %}
-<!-- Alert Types Settings Card -->
+<!-- Alert Triggers Card -->
 <div class="card">
     <div class="card-header">
         <div class="card-title">
-            <i class="fas fa-exclamation-triangle"></i>
-            <span>Global Alert Types</span>
+            <i class="fas fa-bell"></i>
+            <span>Alert Triggers</span>
         </div>
     </div>
-    <div class="card-body">
-        <p class="section-description">Configure which types of alerts are enabled globally. These settings apply to all alert triggers.</p>
-
-        <form method="post" action="/alert-management/types/update">
-            <div class="form-group">
-                <label class="form-label">Alert Severity Levels</label>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="alert_error_enabled" name="alert_error_enabled" value="true" {% if alert_settings.error %}checked{% endif %}>
-                    <label class="form-check-label" for="alert_error_enabled">
-                        <span class="badge bg-danger me-2">Error</span>
-                        Critical errors and system failures
-                    </label>
-                </div>
-                <div class="form-check mt-2">
-                    <input class="form-check-input" type="checkbox" id="alert_warning_enabled" name="alert_warning_enabled" value="true" {% if alert_settings.warning %}checked{% endif %}>
-                    <label class="form-check-label" for="alert_warning_enabled">
-                        <span class="badge bg-warning me-2">Warning</span>
-                        Warnings and potential issues
-                    </label>
-                </div>
-                <div class="form-check mt-2">
-                    <input class="form-check-input" type="checkbox" id="alert_info_enabled" name="alert_info_enabled" value="true" {% if alert_settings.info %}checked{% endif %}>
-                    <label class="form-check-label" for="alert_info_enabled">
-                        <span class="badge bg-info me-2">Info</span>
-                        General information and status updates
-                    </label>
-                </div>
-                <div class="form-check mt-2">
-                    <input class="form-check-input" type="checkbox" id="alert_success_enabled" name="alert_success_enabled" value="true" {% if alert_settings.success %}checked{% endif %}>
-                    <label class="form-check-label" for="alert_success_enabled">
-                        <span class="badge bg-success me-2">Success</span>
-                        Successful operations and completions
-                    </label>
-                </div>
-                <small class="form-text mt-2">These settings control which alert severity levels are allowed system-wide. Individual alert triggers below must also be enabled.</small>
-            </div>
-            <div class="card-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem;">
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i>
-                    <span>Save Alert Types</span>
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Alert Triggers Card -->
-<div class="card mt-4">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-bell"></i>

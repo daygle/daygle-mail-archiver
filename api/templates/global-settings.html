@@ -219,46 +219,6 @@
                 </button>
                 <small class="form-text d-block mt-1">Test the SMTP configuration without sending an email</small>
             </div>
-
-            <hr class="my-4">
-
-            <h6 class="mb-3">
-                <i class="fas fa-bell"></i>
-                <span>Alert Types</span>
-            </h6>
-            <p class="text-muted small mb-3">Choose which types of system alerts should send email notifications</p>
-
-            <div class="form-check mb-2">
-                <input class="form-check-input" type="checkbox" id="alert_error_enabled" name="alert_error_enabled" {% if settings.alert_error_enabled != 'false' %}checked{% endif %}>
-                <label class="form-check-label" for="alert_error_enabled">
-                    <strong class="text-danger">Error Alerts</strong>
-                    <small class="d-block text-secondary">Critical system errors, virus detections, service failures</small>
-                </label>
-            </div>
-
-            <div class="form-check mb-2">
-                <input class="form-check-input" type="checkbox" id="alert_warning_enabled" name="alert_warning_enabled" {% if settings.alert_warning_enabled != 'false' %}checked{% endif %}>
-                <label class="form-check-label" for="alert_warning_enabled">
-                    <strong class="text-warning">Warning Alerts</strong>
-                    <small class="d-block text-secondary">Non-critical issues, service unavailability, scan errors</small>
-                </label>
-            </div>
-
-            <div class="form-check mb-2">
-                <input class="form-check-input" type="checkbox" id="alert_info_enabled" name="alert_info_enabled" {% if settings.alert_info_enabled == 'true' %}checked{% endif %}>
-                <label class="form-check-label" for="alert_info_enabled">
-                    <strong class="text-info">Info Alerts</strong>
-                    <small class="d-block text-secondary">Informational messages, system status updates</small>
-                </label>
-            </div>
-
-            <div class="form-check mb-2">
-                <input class="form-check-input" type="checkbox" id="alert_success_enabled" name="alert_success_enabled" {% if settings.alert_success_enabled == 'true' %}checked{% endif %}>
-                <label class="form-check-label" for="alert_success_enabled">
-                    <strong class="text-success">Success Alerts</strong>
-                    <small class="d-block text-secondary">Successful operations, system recoveries</small>
-                </label>
-            </div>
         </div>
         <div class="card-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem;">
             <a href="/dashboard" class="btn btn-secondary">

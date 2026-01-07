@@ -49,9 +49,10 @@ def create_alert(
             # If we can't check the trigger, use the provided alert_type
 
     # Check if the alert type is globally enabled
-    if not _is_alert_type_enabled(actual_alert_type):
-        log("info", "Alert", f"Alert type '{actual_alert_type}' is globally disabled, skipping alert creation", "")
-        return 0
+    # Note: Global alert type filtering is now handled by trigger enable/disable
+    # if not _is_alert_type_enabled(actual_alert_type):
+    #     log("info", "Alert", f"Alert type '{actual_alert_type}' is globally disabled, skipping alert creation", "")
+    #     return 0
 
     try:
         result = execute("""
@@ -70,7 +71,8 @@ def create_alert(
         log(actual_alert_type, "Alert", f"Alert created: {title}", f"ID: {alert_id}")
 
         # Send email if requested and alert type is enabled
-        if send_email and _is_alert_type_enabled(actual_alert_type):
+        # Note: Global alert type filtering is now handled by trigger enable/disable
+        if send_email:
             _send_alert_email(alert_id, actual_alert_type, title, message)
 
         return alert_id
@@ -78,32 +80,6 @@ def create_alert(
     except Exception as e:
         log("error", "Alert", f"Failed to create alert '{title}': {str(e)}", "")
         raise
-
-
-def _is_alert_type_enabled(alert_type: str) -> bool:
-    """
-    Check if a specific alert type is enabled for email notifications.
-
-    Args:
-        alert_type: Type of alert ('error', 'warning', 'info', 'success')
-
-    Returns:
-        bool: True if the alert type is enabled for email notifications
-    """
-    try:
-        setting_key = f"alert_{alert_type}_enabled"
-        result = query("SELECT value FROM settings WHERE key = :key", {"key": setting_key}).mappings().first()
-        
-        if result:
-            return result["value"].lower() == "true"
-        else:
-            # Default to enabled for error and warning, disabled for info and success
-            return alert_type in ['error', 'warning']
-    
-    except Exception as e:
-        log("error", "Alert", f"Failed to check alert type settings for '{alert_type}': {str(e)}", "")
-        # Default to enabled for error and warning on error
-        return alert_type in ['error', 'warning']
 
 
 def _is_alert_trigger_enabled(trigger_key: str) -> bool:
@@ -237,17 +213,17 @@ def _send_alert_email(alert_id: int, alert_type: str, title: str, message: str) 
         message: Alert message
     """
     try:
+        # Note: Global alert type filtering is now handled by trigger enable/disable
         # First check if the alert type is globally enabled
-        if not _is_alert_type_enabled(alert_type):
-            log("info", "Alert", f"Alert type '{alert_type}' is globally disabled, skipping email for alert {alert_id}", "")
-            return
+        # if not _is_alert_type_enabled(alert_type):
+        #     log("info", "Alert", f"Alert type '{alert_type}' is globally disabled, skipping email for alert {alert_id}", "")
+        #     return
 
-        # Get admin users with email addresses and email notifications enabled, and the specific alert type enabled
-        alert_type_column = f"alert_{alert_type}_enabled"
-        admin_users = query(f"""
+        # Get admin users with email addresses and email notifications enabled
+        admin_users = query("""
             SELECT email FROM users
             WHERE role = 'administrator' AND email IS NOT NULL AND email != '' AND enabled = TRUE 
-            AND email_notifications = TRUE AND {alert_type_column} = TRUE
+            AND email_notifications = TRUE
         """).mappings().all()
 
         recipients = [user["email"] for user in admin_users]

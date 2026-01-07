@@ -31,12 +31,6 @@ def alert_management_form(request: Request):
         ORDER BY name
     """).mappings().all()
 
-    # Get global alert type settings
-    alert_settings = {}
-    for alert_type in ['error', 'warning', 'info', 'success']:
-        result = query("SELECT value FROM settings WHERE key = :key", {"key": f"alert_{alert_type}_enabled"}).mappings().first()
-        alert_settings[alert_type] = result["value"].lower() == "true" if result else (alert_type in ['error', 'warning'])
-
     msg = request.session.pop("flash", None)
 
     return templates.TemplateResponse(
@@ -44,7 +38,6 @@ def alert_management_form(request: Request):
         {
             "request": request,
             "triggers": triggers,
-            "alert_settings": alert_settings,
             "flash": msg
         },
     )
