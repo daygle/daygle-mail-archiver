@@ -46,11 +46,12 @@
                     <input id="email" class="form-control" name="email" type="email">
                 </div>
                 <div class="form-group">
-                    <label for="role">Role <span style="color: var(--danger);">*</span></label>
-                    <select id="role" class="form-control" name="role" required>
-                        <option value="administrator">Administrator (Full Access)</option>
-                        <option value="read_only">Read Only (View Emails Only)</option>
+                    <label for="email_notifications">Email Notifications</label>
+                    <select id="email_notifications" class="form-control" name="email_notifications">
+                        <option value="true" selected>Enabled</option>
+                        <option value="false">Disabled</option>
                     </select>
+                    <small class="form-text">Receive email alerts and notifications</small>
                 </div>
             </div>
             
@@ -232,6 +233,7 @@ async function editUser(userId) {
         document.getElementById('first_name').value = user.first_name || '';
         document.getElementById('last_name').value = user.last_name || '';
         document.getElementById('email').value = user.email || '';
+        document.getElementById('email_notifications').value = user.email_notifications ? 'true' : 'false';
         document.getElementById('role').value = user.role || 'administrator';
         document.getElementById('enabled').value = user.enabled ? 'true' : 'false';
         document.getElementById('password').value = '';

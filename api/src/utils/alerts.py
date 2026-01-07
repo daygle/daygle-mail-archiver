@@ -162,10 +162,10 @@ def _send_alert_email(alert_id: int, alert_type: str, title: str, message: str) 
         message: Alert message
     """
     try:
-        # Get admin users with email addresses
+        # Get admin users with email addresses and email notifications enabled
         admin_users = query("""
             SELECT email FROM users
-            WHERE role = 'administrator' AND email IS NOT NULL AND email != '' AND enabled = TRUE
+            WHERE role = 'administrator' AND email IS NOT NULL AND email != '' AND enabled = TRUE AND email_notifications = TRUE
         """).mappings().all()
 
         recipients = [user["email"] for user in admin_users]

@@ -121,6 +121,7 @@ CREATE TABLE IF NOT EXISTS users (
     date_format TEXT NOT NULL DEFAULT '%d/%m/%Y',
     time_format TEXT NOT NULL DEFAULT '%H:%M',
     timezone TEXT NOT NULL DEFAULT 'Australia/Melbourne',
+    email_notifications BOOLEAN NOT NULL DEFAULT TRUE,
     enabled BOOLEAN NOT NULL DEFAULT TRUE,
     last_login TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

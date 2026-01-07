@@ -22,7 +22,7 @@ def list_users(request: Request):
         return RedirectResponse("/login", status_code=303)
 
     users = query("""
-        SELECT id, username, first_name, last_name, email, role, enabled, last_login, created_at 
+        SELECT id, username, first_name, last_name, email, role, email_notifications, enabled, last_login, created_at 
         FROM users 
         ORDER BY id
     """).mappings().all()
@@ -42,6 +42,7 @@ def create_user(
     last_name: str = Form(""),
     email: str = Form(""),
     role: str = Form("administrator"),
+    email_notifications: bool = Form(True),
     enabled: bool = Form(True)
 ):
     if not require_login(request):
@@ -91,8 +92,8 @@ def create_user(
     try:
         hash_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         execute("""
-            INSERT INTO users (username, password_hash, first_name, last_name, email, role, enabled) 
-            VALUES (:u, :h, :fn, :ln, :e, :r, :en)
+            INSERT INTO users (username, password_hash, first_name, last_name, email, role, email_notifications, enabled) 
+            VALUES (:u, :h, :fn, :ln, :e, :r, :enf, :en)
         """, {
             "u": username, 
             "h": hash_pw, 
@@ -100,6 +101,7 @@ def create_user(
             "ln": last_name,
             "e": email,
             "r": role,
+            "enf": email_notifications,
             "en": enabled
         })
         log("info", "Users", f"Admin '{admin_username}' created new user '{username}' with role '{role}'", "")
@@ -117,7 +119,7 @@ def get_user(request: Request, user_id: int):
 
     try:
         user = query("""
-            SELECT id, username, first_name, last_name, email, role, enabled, last_login, created_at 
+            SELECT id, username, first_name, last_name, email, role, email_notifications, enabled, last_login, created_at 
             FROM users 
             WHERE id = :id
         """, {"id": user_id}).mappings().first()
@@ -135,6 +137,7 @@ def get_user(request: Request, user_id: int):
             "last_name": user["last_name"] or "",
             "email": user["email"] or "",
             "role": user["role"] or "administrator",
+            "email_notifications": user["email_notifications"],
             "enabled": user["enabled"],
             "last_login": format_datetime(user["last_login"], current_user_id) if user["last_login"] else None,
             "created_at": format_datetime(user["created_at"], current_user_id) if user["created_at"] else None
@@ -153,6 +156,7 @@ def update_user(
     last_name: str = Form(""),
     email: str = Form(""),
     role: str = Form("administrator"),
+    email_notifications: bool = Form(True),
     enabled: bool = Form(False),
     password: str = Form("")
 ):
@@ -211,7 +215,7 @@ def update_user(
             execute("""
                 UPDATE users 
                 SET username = :u, first_name = :fn, last_name = :ln, 
-                    email = :e, role = :r, enabled = :en, password_hash = :h
+                    email = :e, role = :r, email_notifications = :enf, enabled = :en, password_hash = :h
                 WHERE id = :id
             """, {
                 "u": username,
@@ -219,6 +223,7 @@ def update_user(
                 "ln": last_name,
                 "e": email,
                 "r": role,
+                "enf": email_notifications,
                 "en": enabled if user_id != current_user_id else True,
                 "h": hash_pw,
                 "id": user_id
@@ -229,7 +234,7 @@ def update_user(
             execute("""
                 UPDATE users 
                 SET username = :u, first_name = :fn, last_name = :ln, 
-                    email = :e, role = :r, enabled = :en
+                    email = :e, role = :r, email_notifications = :enf, enabled = :en
                 WHERE id = :id
             """, {
                 "u": username,
@@ -237,6 +242,7 @@ def update_user(
                 "ln": last_name,
                 "e": email,
                 "r": role,
+                "enf": email_notifications,
                 "en": enabled if user_id != current_user_id else True,
                 "id": user_id
             })

@@ -65,6 +65,18 @@
                 </select>
                 <small class="form-text">Your preferred timezone for displaying dates and times</small>
             </div>
+
+            {% if user_role == 'administrator' %}
+            <div class="form-group mt-3">
+                <label for="email_notifications" class="form-label">Email Notifications</label>
+                <select id="email_notifications" class="form-select" name="email_notifications">
+                    <option value="true" {% if email_notifications %}selected{% endif %}>Enabled</option>
+                    <option value="false" {% if not email_notifications %}selected{% endif %}>Disabled</option>
+                </select>
+                <small class="form-text">Receive email alerts and notifications for system events</small>
+            </div>
+            {% endif %}
+            {% endif %}
         </div>
         <div class="card-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem;">
             <button type="submit" class="btn btn-primary">
