@@ -266,7 +266,7 @@ def delete_user(request: Request, user_id: int):
         username = user["username"] if user else f"ID {user_id}"
         
         execute("DELETE FROM users WHERE id = :id", {"id": user_id})
-        log("warning", "Users", f"Admin '{admin_username}' deleted user '{username}' (ID: {user_id})", "")
+        log("info", "Users", f"Admin '{admin_username}' deleted user '{username}' (ID: {user_id})", "")
         flash(request, "User deleted successfully.")
     except Exception as e:
         log("error", "Users", f"Failed to delete user {user_id} by admin '{admin_username}': {str(e)}", "")
@@ -298,7 +298,7 @@ def toggle_user_enabled(request: Request, user_id: int):
             {"id": user_id}
         )
         new_status = "disabled" if user["enabled"] else "enabled"
-        log("warning", "Users", f"Admin '{admin_username}' {new_status} user '{user['username']}' (ID: {user_id})", "")
+        log("info", "Users", f"Admin '{admin_username}' {new_status} user '{user['username']}' (ID: {user_id})", "")
         flash(request, "User status updated successfully.")
     except Exception as e:
         log("error", "Users", f"Failed to toggle user {user_id} by admin '{admin_username}': {str(e)}", "")
