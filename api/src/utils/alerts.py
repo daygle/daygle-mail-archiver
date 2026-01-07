@@ -19,12 +19,12 @@ def create_alert(
     Create a new alert
 
     Args:
-        alert_type: Type of alert ('error', 'warning', 'info', 'success')
+        alert_type: Type of alert ('error', 'warning', 'info', 'success') - can be overridden by trigger_key
         title: Alert title
         message: Alert message
         details: Optional detailed information
         send_email: Whether to send email notification
-        trigger_key: Optional trigger key to check if alert should be created
+        trigger_key: Optional trigger key to check if alert should be created and get severity from
 
     Returns:
         int: Alert ID
@@ -32,10 +32,26 @@ def create_alert(
     if alert_type not in ['error', 'warning', 'info', 'success']:
         raise ValueError("Invalid alert type")
 
-    # Check if trigger is enabled (if specified)
-    if trigger_key and not _is_alert_trigger_enabled(trigger_key):
-        log("info", "Alert", f"Alert trigger '{trigger_key}' is disabled, skipping alert creation", "")
-        return 0  # Return 0 to indicate alert was not created
+    # If trigger_key is provided, look up the configured alert_type and check if enabled
+    actual_alert_type = alert_type
+    if trigger_key:
+        try:
+            result = query("SELECT alert_type, enabled FROM alert_triggers WHERE trigger_key = :key", {"key": trigger_key}).mappings().first()
+            if result:
+                if not result["enabled"]:
+                    # Trigger is disabled, don't create alert
+                    log("info", "Alert", f"Alert trigger '{trigger_key}' is disabled, skipping alert creation", "")
+                    return 0
+                # Use the configured alert_type from the database
+                actual_alert_type = result["alert_type"]
+        except Exception as e:
+            log("error", "Alert", f"Failed to check alert trigger settings for '{trigger_key}': {str(e)}", "")
+            # If we can't check the trigger, use the provided alert_type
+
+    # Check if the alert type is globally enabled
+    if not _is_alert_type_enabled(actual_alert_type):
+        log("info", "Alert", f"Alert type '{actual_alert_type}' is globally disabled, skipping alert creation", "")
+        return 0
 
     try:
         result = execute("""
@@ -43,7 +59,7 @@ def create_alert(
             VALUES (:alert_type, :title, :message, :details)
             RETURNING id
         """, {
-            "alert_type": alert_type,
+            "alert_type": actual_alert_type,
             "title": title,
             "message": message,
             "details": details
@@ -51,11 +67,11 @@ def create_alert(
 
         alert_id = result.fetchone()[0]
 
-        log(alert_type, "Alert", f"Alert created: {title}", f"ID: {alert_id}")
+        log(actual_alert_type, "Alert", f"Alert created: {title}", f"ID: {alert_id}")
 
         # Send email if requested and alert type is enabled
-        if send_email and _is_alert_type_enabled(alert_type):
-            _send_alert_email(alert_id, alert_type, title, message)
+        if send_email and _is_alert_type_enabled(actual_alert_type):
+            _send_alert_email(alert_id, actual_alert_type, title, message)
 
         return alert_id
 

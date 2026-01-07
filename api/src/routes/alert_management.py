@@ -70,33 +70,28 @@ def update_trigger_status(request: Request, trigger_id: int = Form(...), enabled
         flash(request, "Failed to update trigger status.")
         return RedirectResponse("/alert-management", status_code=303)
 
-@router.post("/alert-management/types/update")
-def update_alert_types(request: Request,
-                      alert_error_enabled: bool = Form(True),
-                      alert_warning_enabled: bool = Form(True),
-                      alert_info_enabled: bool = Form(False),
-                      alert_success_enabled: bool = Form(False)):
+@router.post("/alert-management/triggers/update-severity")
+def update_trigger_severity(request: Request, trigger_id: int = Form(...), alert_type: str = Form(...)):
     if not require_admin(request):
         return RedirectResponse("/login", status_code=303)
 
+    # Validate alert_type
+    if alert_type not in ['error', 'warning', 'info', 'success']:
+        flash(request, "Invalid alert type selected.")
+        return RedirectResponse("/alert-management", status_code=303)
+
     try:
-        # Update each alert type setting
-        settings_to_update = {
-            'alert_error_enabled': alert_error_enabled,
-            'alert_warning_enabled': alert_warning_enabled,
-            'alert_info_enabled': alert_info_enabled,
-            'alert_success_enabled': alert_success_enabled
-        }
+        execute("UPDATE alert_triggers SET alert_type = :alert_type WHERE id = :id",
+                {"alert_type": alert_type, "id": trigger_id})
 
-        for key, value in settings_to_update.items():
-            execute("INSERT INTO settings (key, value) VALUES (:key, :value) ON CONFLICT (key) DO UPDATE SET value = :value",
-                    {"key": key, "value": str(value).lower()})
+        trigger = query("SELECT name FROM alert_triggers WHERE id = :id", {"id": trigger_id}).mappings().first()
+        trigger_name = trigger["name"] if trigger else f"ID {trigger_id}"
 
-        log("info", "Alert Management", "Global alert type settings updated", f"Error: {alert_error_enabled}, Warning: {alert_warning_enabled}, Info: {alert_info_enabled}, Success: {alert_success_enabled}")
+        log("info", "Alert Management", f"Alert trigger '{trigger_name}' severity changed to {alert_type}", "")
 
-        flash(request, "Global alert type settings updated successfully.")
+        flash(request, f"Alert trigger '{trigger_name}' severity updated to {alert_type}.")
         return RedirectResponse("/alert-management", status_code=303)
     except Exception as e:
-        log("error", "Alert Management", f"Failed to update alert type settings: {str(e)}", "")
-        flash(request, "Failed to update alert type settings.")
+        log("error", "Alert Management", f"Failed to update trigger severity: {str(e)}", "")
+        flash(request, "Failed to update trigger severity.")
         return RedirectResponse("/alert-management", status_code=303)

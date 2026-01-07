@@ -66,7 +66,7 @@
         </div>
     </div>
     <div class="card-body">
-        <p class="section-description">Manage individual alert triggers. Each trigger represents a specific type of event that can generate alerts.</p>
+        <p class="section-description">Manage individual alert triggers. Each trigger represents a specific type of event that can generate alerts. You can enable/disable triggers and adjust their severity level.</p>
 
         <div class="table-responsive">
             <table class="table table-striped">
@@ -85,15 +85,15 @@
                         <td>{{ trigger.name }}</td>
                         <td>{{ trigger.description or 'No description available' }}</td>
                         <td>
-                            {% if trigger.alert_type == 'error' %}
-                                <span class="badge bg-danger">{{ trigger.alert_type|title }}</span>
-                            {% elif trigger.alert_type == 'warning' %}
-                                <span class="badge bg-warning">{{ trigger.alert_type|title }}</span>
-                            {% elif trigger.alert_type == 'info' %}
-                                <span class="badge bg-info">{{ trigger.alert_type|title }}</span>
-                            {% elif trigger.alert_type == 'success' %}
-                                <span class="badge bg-success">{{ trigger.alert_type|title }}</span>
-                            {% endif %}
+                            <form method="post" action="/alert-management/triggers/update-severity" style="display: inline-block; min-width: 120px;">
+                                <input type="hidden" name="trigger_id" value="{{ trigger.id }}">
+                                <select name="alert_type" class="form-select form-select-sm" onchange="this.form.submit()">
+                                    <option value="error" {% if trigger.alert_type == 'error' %}selected{% endif %}>Error</option>
+                                    <option value="warning" {% if trigger.alert_type == 'warning' %}selected{% endif %}>Warning</option>
+                                    <option value="info" {% if trigger.alert_type == 'info' %}selected{% endif %}>Info</option>
+                                    <option value="success" {% if trigger.alert_type == 'success' %}selected{% endif %}>Success</option>
+                                </select>
+                            </form>
                         </td>
                         <td>
                             {% if trigger.enabled %}
@@ -157,7 +157,7 @@
                 <h6>Alert Hierarchy</h6>
                 <ul class="list-unstyled">
                     <li><i class="fas fa-cog text-primary me-2"></i><strong>Global Settings:</strong> Alert types (error/warning/info/success)</li>
-                    <li><i class="fas fa-toggle-on text-success me-2"></i><strong>Alert Triggers:</strong> Specific events (virus detected, etc.)</li>
+                    <li><i class="fas fa-toggle-on text-success me-2"></i><strong>Alert Triggers:</strong> Specific events with customizable severity</li>
                     <li><i class="fas fa-user text-info me-2"></i><strong>User Preferences:</strong> Per-user alert type preferences</li>
                     <li><i class="fas fa-envelope text-warning me-2"></i><strong>Email Settings:</strong> SMTP configuration for delivery</li>
                 </ul>

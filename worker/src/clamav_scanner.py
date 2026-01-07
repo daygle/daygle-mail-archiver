@@ -33,21 +33,25 @@ def create_alert(alert_type: str, title: str, message: str, details: str = None,
     Create a system alert (ClamAV-side implementation).
     
     Args:
-        alert_type: Type of alert ('error', 'warning', 'info', 'success')
+        alert_type: Type of alert ('error', 'warning', 'info', 'success') - can be overridden by trigger_key
         title: Alert title
         message: Alert message
         details: Optional detailed information
-        trigger_key: Optional trigger key to check if alert should be created
+        trigger_key: Optional trigger key to check if alert should be created and get severity from
     """
-    # Check if trigger is enabled (if specified)
+    # If trigger_key is provided, look up the configured alert_type and check if enabled
+    actual_alert_type = alert_type
     if trigger_key:
         try:
-            result = query("SELECT enabled FROM alert_triggers WHERE trigger_key = :key", {"key": trigger_key}).mappings().first()
-            if result and not result["enabled"]:
-                # Trigger is disabled, don't create alert
-                return
+            result = query("SELECT alert_type, enabled FROM alert_triggers WHERE trigger_key = :key", {"key": trigger_key}).mappings().first()
+            if result:
+                if not result["enabled"]:
+                    # Trigger is disabled, don't create alert
+                    return
+                # Use the configured alert_type from the database
+                actual_alert_type = result["alert_type"]
         except Exception:
-            # If we can't check the trigger, default to creating the alert
+            # If we can't check the trigger, use the provided alert_type
             pass
     
     try:
@@ -55,7 +59,7 @@ def create_alert(alert_type: str, title: str, message: str, details: str = None,
             INSERT INTO alerts (alert_type, title, message, details)
             VALUES (:alert_type, :title, :message, :details)
         """, {
-            "alert_type": alert_type,
+            "alert_type": actual_alert_type,
             "title": title,
             "message": message,
             "details": details
