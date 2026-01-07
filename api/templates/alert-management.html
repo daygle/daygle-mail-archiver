@@ -40,9 +40,9 @@
                         <td>{{ trigger.name }}</td>
                         <td>{{ trigger.description or 'No description available' }}</td>
                         <td>
-                            <form method="post" action="/alert-management/triggers/update-severity" style="display: inline-block; min-width: 120px;">
+                            <form method="post" action="/alert-management/triggers/update-severity" style="display: inline-block; width: 120px;">
                                 <input type="hidden" name="trigger_id" value="{{ trigger.id }}">
-                                <select name="alert_type" class="form-select form-select-sm" onchange="this.form.submit()">
+                                <select name="alert_type" class="form-select form-select-sm" style="width: 100%;" onchange="this.form.submit()">
                                     <option value="error" {% if trigger.alert_type == 'error' %}selected{% endif %}>Error</option>
                                     <option value="warning" {% if trigger.alert_type == 'warning' %}selected{% endif %}>Warning</option>
                                     <option value="info" {% if trigger.alert_type == 'info' %}selected{% endif %}>Info</option>
@@ -116,6 +116,10 @@
                     <li><strong>Trigger is enabled</strong> (configured above)</li>
                     <li><strong>User has email notifications enabled</strong> (in user settings)</li>
                 </ol>
+                <p class="text-muted small mt-2">
+                    <i class="fas fa-info-circle me-1"></i>
+                    <strong>Note:</strong> Only users with <strong>Administrator</strong> role receive email notifications.
+                </p>
             </div>
             <div class="col-md-6">
                 <h6>Alert Hierarchy</h6>
