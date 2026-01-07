@@ -5,7 +5,7 @@ from typing import Optional
 from utils.db import query
 from utils.logger import log
 from utils.templates import templates
-from utils.alerts import create_alert
+from utils.alerts import create_alert, get_alerts, acknowledge_alert, get_unacknowledged_count
 
 router = APIRouter()
 
