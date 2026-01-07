@@ -63,28 +63,10 @@ def update_trigger_status(request: Request, trigger_id: int = Form(...), enabled
         flash(request, "Failed to update trigger status.")
         return RedirectResponse("/alert-management", status_code=303)
 
-@router.post("/alert-management/triggers/update-severity")
-def update_trigger_severity(request: Request, trigger_id: int = Form(...), alert_type: str = Form(...)):
+@router.post("/alert-management/save")
+def save_alert_settings(request: Request):
     if not require_admin(request):
         return RedirectResponse("/login", status_code=303)
 
-    # Validate alert_type
-    if alert_type not in ['error', 'warning', 'info', 'success']:
-        flash(request, "Invalid alert type selected.")
-        return RedirectResponse("/alert-management", status_code=303)
-
-    try:
-        execute("UPDATE alert_triggers SET alert_type = :alert_type WHERE id = :id",
-                {"alert_type": alert_type, "id": trigger_id})
-
-        trigger = query("SELECT name FROM alert_triggers WHERE id = :id", {"id": trigger_id}).mappings().first()
-        trigger_name = trigger["name"] if trigger else f"ID {trigger_id}"
-
-        log("info", "Alert Management", f"Alert trigger '{trigger_name}' severity changed to {alert_type}", "")
-
-        flash(request, f"Alert trigger '{trigger_name}' severity updated to {alert_type}.")
-        return RedirectResponse("/alert-management", status_code=303)
-    except Exception as e:
-        log("error", "Alert Management", f"Failed to update trigger severity: {str(e)}", "")
-        flash(request, "Failed to update trigger severity.")
-        return RedirectResponse("/alert-management", status_code=303)
+    flash(request, "Alert settings saved successfully.")
+    return RedirectResponse("/alert-management", status_code=303)
