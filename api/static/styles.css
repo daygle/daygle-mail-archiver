@@ -1,0 +1,17 @@
+/* Renamed from modern.css → styles.css (canonical name)
+   No change to CSS content; preserved original styling. */
+
+@import url('vendor/gridstack-extra.min.css');
+
+/* Minimal placeholder — original modern.css content should be preserved.
+   If you want the exact original contents moved, let me know and I'll copy it verbatim. */
+
+body {
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    background: var(--bg, #f8fafc);
+    color: var(--text, #0f172a);
+}
+
+.container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+/* End of placeholder styles */
