@@ -49,7 +49,7 @@ def convert_utc_to_timezone(utc_datetime, target_timezone: str):
     Convert a UTC datetime to a specific timezone.
     
     Args:
-        utc_datetime: A datetime object (can be timezone-aware or naive)
+        utc_datetime: A datetime object (can be timezone-aware or naive) or date object
         target_timezone: Timezone string (e.g., 'Australia/Melbourne')
         
     Returns:
@@ -58,8 +58,13 @@ def convert_utc_to_timezone(utc_datetime, target_timezone: str):
     if utc_datetime is None:
         return None
     
-    # If datetime is naive, assume it's UTC
-    if utc_datetime.tzinfo is None:
+    # Handle date objects by converting to datetime at midnight UTC
+    if hasattr(utc_datetime, 'tzinfo') and utc_datetime.tzinfo is None:
+        # It's a naive datetime, assume UTC
+        utc_datetime = pytz.utc.localize(utc_datetime)
+    elif not hasattr(utc_datetime, 'tzinfo'):
+        # It's a date object, convert to datetime at midnight UTC
+        utc_datetime = datetime.combine(utc_datetime, datetime.min.time())
         utc_datetime = pytz.utc.localize(utc_datetime)
     
     # Convert to target timezone

@@ -241,6 +241,7 @@ def user_activity_report(request: Request, days: int = 30):
 
         user_id = request.session.get("user_id")
         date_format = get_user_date_format(request, date_only=True)
+        datetime_format = get_user_date_format(request)
 
         # User login activity
         login_results = query("""
@@ -264,7 +265,7 @@ def user_activity_report(request: Request, days: int = 30):
 
             created_at = None
             if row["created_at"]:
-                created_at = convert_utc_to_user_timezone(row["created_at"], user_id).strftime(date_format)
+                created_at = convert_utc_to_user_timezone(row["created_at"], user_id).strftime(datetime_format)
 
             users.append({
                 "username": row["username"],
