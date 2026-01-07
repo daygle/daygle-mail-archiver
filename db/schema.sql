@@ -155,6 +155,15 @@ INSERT INTO settings (key, value) VALUES ('clamav_enabled', 'true') ON CONFLICT 
 INSERT INTO settings (key, value) VALUES ('clamav_host', 'clamav') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('clamav_port', '3310') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('clamav_action', 'quarantine') ON CONFLICT (key) DO NOTHING;
+-- SMTP settings for email alerts
+INSERT INTO settings (key, value) VALUES ('smtp_enabled', 'false') ON CONFLICT (key) DO NOTHING;
+INSERT INTO settings (key, value) VALUES ('smtp_host', '') ON CONFLICT (key) DO NOTHING;
+INSERT INTO settings (key, value) VALUES ('smtp_port', '587') ON CONFLICT (key) DO NOTHING;
+INSERT INTO settings (key, value) VALUES ('smtp_username', '') ON CONFLICT (key) DO NOTHING;
+INSERT INTO settings (key, value) VALUES ('smtp_password', '') ON CONFLICT (key) DO NOTHING;
+INSERT INTO settings (key, value) VALUES ('smtp_use_tls', 'true') ON CONFLICT (key) DO NOTHING;
+INSERT INTO settings (key, value) VALUES ('smtp_from_email', '') ON CONFLICT (key) DO NOTHING;
+INSERT INTO settings (key, value) VALUES ('smtp_from_name', 'Daygle Mail Archiver') ON CONFLICT (key) DO NOTHING;
 
 -- ----------------------------
 -- logs
@@ -218,3 +227,25 @@ CREATE TABLE IF NOT EXISTS user_widget_settings (
 
 -- Index for quick lookups by user
 CREATE INDEX IF NOT EXISTS user_widget_settings_user_idx ON user_widget_settings(user_id);
+
+-- ----------------------------
+-- alerts
+-- System alerts and notifications
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS alerts (
+    id SERIAL PRIMARY KEY,
+    alert_type TEXT NOT NULL, -- 'error', 'warning', 'info', 'success'
+    title TEXT NOT NULL,
+    message TEXT NOT NULL,
+    details TEXT,
+    acknowledged BOOLEAN NOT NULL DEFAULT FALSE,
+    email_sent BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    acknowledged_at TIMESTAMPTZ,
+    acknowledged_by INTEGER REFERENCES users(id)
+);
+
+-- Index for filtering by type and status
+CREATE INDEX IF NOT EXISTS alerts_type_idx ON alerts(alert_type);
+CREATE INDEX IF NOT EXISTS alerts_acknowledged_idx ON alerts(acknowledged);
+CREATE INDEX IF NOT EXISTS alerts_created_at_idx ON alerts(created_at DESC);

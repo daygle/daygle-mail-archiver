@@ -49,6 +49,13 @@
                         <i class="fas fa-chart-bar"></i>
                         <span>Reports</span>
                     </a>
+                    <a href="/alerts" class="nav-link {% if '/alerts' in request.url.path %}active{% endif %}">
+                        <i class="fas fa-bell"></i>
+                        <span>Alerts</span>
+                        {% if request.session.get('unacknowledged_alerts', 0) > 0 %}
+                        <span class="badge bg-danger ms-auto">{{ request.session.unacknowledged_alerts }}</span>
+                        {% endif %}
+                    </a>
                     <a href="/global-settings" class="nav-link {% if request.url.path == '/global-settings' %}active{% endif %}">
                         <i class="fas fa-sliders"></i>
                         <span>Global Settings</span>

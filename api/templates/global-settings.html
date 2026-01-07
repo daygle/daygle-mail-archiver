@@ -149,6 +149,81 @@
                 </small>
             </div>
         </div>
+    </div>
+
+    <!-- SMTP Email Configuration Card -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fas fa-envelope"></i>
+                <span>SMTP Email Configuration</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="smtp_enabled" name="smtp_enabled" {% if settings.smtp_enabled == 'true' %}checked{% endif %}>
+                <label class="form-check-label" for="smtp_enabled">
+                    <strong>Enable Email Alerts</strong>
+                    <small class="d-block text-secondary">Send email notifications for system alerts and important events</small>
+                </label>
+            </div>
+
+            <div class="form-group mt-3">
+                <label for="smtp_host" class="form-label">SMTP Host</label>
+                <input id="smtp_host" class="form-control" name="smtp_host" type="text" value="{{ settings.smtp_host or '' }}" placeholder="smtp.gmail.com">
+                <small class="form-text">SMTP server hostname or IP address</small>
+            </div>
+
+            <div class="form-group mt-3">
+                <label for="smtp_port" class="form-label">SMTP Port</label>
+                <input id="smtp_port" class="form-control" name="smtp_port" type="number" value="{{ settings.smtp_port or '587' }}" min="1" max="65535">
+                <small class="form-text">SMTP server port (587 for TLS, 465 for SSL, 25 for plain)</small>
+            </div>
+
+            <div class="form-group mt-3">
+                <label for="smtp_username" class="form-label">SMTP Username</label>
+                <input id="smtp_username" class="form-control" name="smtp_username" type="text" value="{{ settings.smtp_username or '' }}" placeholder="your-email@example.com">
+                <small class="form-text">Username for SMTP authentication (usually your email address)</small>
+            </div>
+
+            <div class="form-group mt-3">
+                <label for="smtp_password" class="form-label">SMTP Password</label>
+                <input id="smtp_password" class="form-control" name="smtp_password" type="password" value="{{ settings.smtp_password or '' }}" placeholder="your-password">
+                <small class="form-text">Password for SMTP authentication (use app passwords for Gmail)</small>
+            </div>
+
+            <div class="form-check mt-3">
+                <input class="form-check-input" type="checkbox" id="smtp_use_tls" name="smtp_use_tls" {% if settings.smtp_use_tls != 'false' %}checked{% endif %}>
+                <label class="form-check-label" for="smtp_use_tls">
+                    <strong>Use TLS Encryption</strong>
+                    <small class="d-block text-secondary">Use STARTTLS for secure connection (recommended for most servers)</small>
+                </label>
+            </div>
+
+            <div class="form-group mt-3">
+                <label for="smtp_from_email" class="form-label">From Email Address</label>
+                <input id="smtp_from_email" class="form-control" name="smtp_from_email" type="email" value="{{ settings.smtp_from_email or '' }}" placeholder="noreply@example.com">
+                <small class="form-text">Email address to send alerts from</small>
+            </div>
+
+            <div class="form-group mt-3">
+                <label for="smtp_from_name" class="form-label">From Name</label>
+                <input id="smtp_from_name" class="form-control" name="smtp_from_name" type="text" value="{{ settings.smtp_from_name or 'Daygle Mail Archiver' }}" placeholder="Daygle Mail Archiver">
+                <small class="form-text">Display name for alert emails</small>
+            </div>
+
+            <div class="mt-3">
+                <button type="button" class="btn btn-outline-secondary" id="testSmtpBtn">
+                    <i class="fas fa-flask"></i>
+                    <span>Test SMTP Connection</span>
+                </button>
+                <small class="form-text d-block mt-1">Test the SMTP configuration without sending an email</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Save/Cancel Buttons Card -->
+    <div class="card">
         <div class="card-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem;">
             <a href="/dashboard" class="btn btn-secondary">
                 <i class="fas fa-times"></i>
@@ -161,4 +236,35 @@
         </div>
     </div>
 </form>
+
+<script>
+// Test SMTP connection
+document.getElementById('testSmtpBtn').addEventListener('click', function() {
+    const btn = this;
+    const originalText = btn.innerHTML;
+
+    // Disable button and show loading
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Testing...</span>';
+
+    fetch('/api/test-smtp')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ SMTP connection successful!\n\n' + data.message);
+            } else {
+                alert('❌ SMTP connection failed!\n\n' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error testing SMTP:', error);
+            alert('❌ Error testing SMTP connection. Check the console for details.');
+        })
+        .finally(() => {
+            // Re-enable button and restore text
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        });
+});
+</script>
 {% endblock %}

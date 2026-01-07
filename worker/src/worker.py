@@ -38,6 +38,31 @@ def log_error(source: str, message: str, details: str = "", level: str = "error"
         },
     )
 
+
+def create_alert(alert_type: str, title: str, message: str, details: str = None):
+    """
+    Create a system alert (worker-side implementation).
+    
+    Args:
+        alert_type: Type of alert ('error', 'warning', 'info', 'success')
+        title: Alert title
+        message: Alert message
+        details: Optional detailed information
+    """
+    try:
+        execute("""
+            INSERT INTO alerts (alert_type, title, message, details)
+            VALUES (:alert_type, :title, :message, :details)
+        """, {
+            "alert_type": alert_type,
+            "title": title,
+            "message": message,
+            "details": details
+        })
+    except Exception as e:
+        # If alert creation fails, just log it - don't break email processing
+        log_error("Alert", f"Failed to create alert '{title}': {str(e)}", level="warning")
+
 def update_heartbeat(account_id: int):
     execute(
         """
@@ -146,6 +171,22 @@ def store_email(
                 f"Virus detected in email: {virus_name}",
                 f"Subject: {subject or 'N/A'}, UID: {uid}, Folder: {folder}, Action: {action}",
                 level="warning"
+            )
+            
+            # Create security alert for virus detection
+            alert_details = f"""Virus: {virus_name}
+Subject: {subject or 'N/A'}
+From: {msg.get('From', 'Unknown')}
+Account: {source}
+Folder: {folder}
+UID: {uid}
+Action Taken: {action}"""
+            
+            create_alert(
+                'error',
+                'Virus Detected in Email',
+                f'Malicious email blocked: {virus_name}',
+                alert_details
             )
             
             if action == 'reject':

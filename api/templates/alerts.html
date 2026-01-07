@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+
+{% block page_title %}Alerts{% endblock %}
+
+{% block extra_css %}
+<style>
+.alert-item {
+    border-left: 4px solid;
+    margin-bottom: 1rem;
+    transition: all 0.2s ease;
+}
+
+.alert-item.error { border-left-color: #dc3545; }
+.alert-item.warning { border-left-color: #ffc107; }
+.alert-item.info { border-left-color: #17a2b8; }
+.alert-item.success { border-left-color: #28a745; }
+
+.alert-item.acknowledged {
+    opacity: 0.6;
+    background-color: var(--bg-secondary);
+}
+
+.alert-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.alert-title {
+    font-weight: 600;
+    margin: 0;
+}
+
+.alert-meta {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.alert-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.filter-section {
+    background: var(--bg-secondary);
+    padding: 1rem;
+    border-radius: var(--radius-lg);
+    margin-bottom: 1.5rem;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 2rem;
+}
+
+.page-link {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    text-decoration: none;
+    border-radius: var(--radius-md);
+    transition: all 0.2s ease;
+}
+
+.page-link:hover, .page-link.active {
+    background: var(--accent-color);
+    color: white;
+}
+
+.alert-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    border-radius: var(--radius-sm);
+}
+
+.alert-badge.error { background: #dc3545; color: white; }
+.alert-badge.warning { background: #ffc107; color: black; }
+.alert-badge.info { background: #17a2b8; color: white; }
+.alert-badge.success { background: #28a745; color: white; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">System Alerts</h1>
+            <p class="text-secondary">Monitor system notifications and alerts</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" onclick="refreshAlerts()">
+                <i class="fas fa-sync-alt"></i>
+                <span>Refresh</span>
+            </button>
+            {% if request.session.role == 'administrator' %}
+            <button class="btn btn-outline-primary" onclick="createTestAlert()">
+                <i class="fas fa-plus"></i>
+                <span>Create Test Alert</span>
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Flash Message -->
+    {% if flash %}
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        {{ flash }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+
+    <!-- Filters -->
+    <div class="filter-section">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="alert_type" class="form-label">Alert Type</label>
+                <select id="alert_type" name="alert_type" class="form-select">
+                    <option value="">All Types</option>
+                    <option value="error" {% if alert_type == 'error' %}selected{% endif %}>Errors</option>
+                    <option value="warning" {% if alert_type == 'warning' %}selected{% endif %}>Warnings</option>
+                    <option value="info" {% if alert_type == 'info' %}selected{% endif %}>Info</option>
+                    <option value="success" {% if alert_type == 'success' %}selected{% endif %}>Success</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="show_acknowledged" name="show_acknowledged"
+                           {% if show_acknowledged %}checked{% endif %}>
+                    <label class="form-check-label" for="show_acknowledged">
+                        Show Acknowledged Alerts
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-filter"></i>
+                    <span>Filter</span>
+                </button>
+            </div>
+            <div class="col-md-3 d-flex align-items-end justify-content-end">
+                <div class="text-end">
+                    <div class="h5 mb-0">{{ unacknowledged_count }}</div>
+                    <small class="text-secondary">Unacknowledged</small>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Alerts List -->
+    <div id="alertsContainer">
+        {% for alert in alerts %}
+        <div class="card alert-item {{ alert.alert_type }} {% if alert.acknowledged %}acknowledged{% endif %}">
+            <div class="card-body">
+                <div class="alert-header">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="alert-badge {{ alert.alert_type }}">{{ alert.alert_type }}</span>
+                        <h5 class="alert-title mb-0">{{ alert.title }}</h5>
+                        {% if alert.acknowledged %}
+                        <i class="fas fa-check-circle text-success" title="Acknowledged"></i>
+                        {% endif %}
+                        {% if alert.email_sent %}
+                        <i class="fas fa-envelope text-primary" title="Email sent"></i>
+                        {% endif %}
+                    </div>
+                    <div class="alert-actions">
+                        {% if not alert.acknowledged %}
+                        <button class="btn btn-sm btn-outline-primary" onclick="acknowledgeAlert({{ alert.id }})">
+                            <i class="fas fa-check"></i>
+                            <span>Acknowledge</span>
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <p class="mb-2">{{ alert.message }}</p>
+
+                {% if alert.details %}
+                <details>
+                    <summary class="text-secondary" style="cursor: pointer;">Show Details</summary>
+                    <pre class="mt-2 p-2 bg-light rounded small">{{ alert.details }}</pre>
+                </details>
+                {% endif %}
+
+                <div class="alert-meta">
+                    <small>
+                        <i class="fas fa-clock"></i>
+                        {{ alert.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                        {% if alert.acknowledged and alert.acknowledged_at %}
+                        • Acknowledged {{ alert.acknowledged_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        {% if not alerts %}
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-bell-slash fa-3x text-secondary mb-3"></i>
+                <h5 class="text-secondary">No alerts found</h5>
+                <p class="text-secondary">There are no alerts matching your current filters.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="pagination">
+        {% if page > 1 %}
+        <a href="?page={{ page - 1 }}{% if alert_type %}&alert_type={{ alert_type }}{% endif %}{% if show_acknowledged %}&show_acknowledged=1{% endif %}" class="page-link">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        {% endif %}
+
+        {% for page_num in range(max(1, page - 2), min(total_pages + 1, page + 3)) %}
+        <a href="?page={{ page_num }}{% if alert_type %}&alert_type={{ alert_type }}{% endif %}{% if show_acknowledged %}&show_acknowledged=1{% endif %}"
+           class="page-link {% if page_num == page %}active{% endif %}">{{ page_num }}</a>
+        {% endfor %}
+
+        {% if page < total_pages %}
+        <a href="?page={{ page + 1 }}{% if alert_type %}&alert_type={{ alert_type }}{% endif %}{% if show_acknowledged %}&show_acknowledged=1{% endif %}" class="page-link">
+            <i class="fas fa-chevron-right"></i>
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// Acknowledge an alert
+function acknowledgeAlert(alertId) {
+    if (!confirm('Are you sure you want to acknowledge this alert?')) {
+        return;
+    }
+
+    fetch(`/api/alerts/${alertId}/acknowledge`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Reload the page to show updated state
+            window.location.reload();
+        } else {
+            alert('Failed to acknowledge alert: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error acknowledging alert:', error);
+        alert('Error acknowledging alert. Check the console for details.');
+    });
+}
+
+// Refresh alerts
+function refreshAlerts() {
+    window.location.reload();
+}
+
+// Auto-refresh unacknowledged count in header
+function updateUnacknowledgedBadge() {
+    fetch('/api/alerts/unacknowledged-count')
+        .then(response => response.json())
+        .then(data => {
+            const badge = document.querySelector('.nav-link[href="/alerts"] .badge');
+            if (badge) {
+                if (data.count > 0) {
+                    badge.textContent = data.count;
+                    badge.style.display = 'inline-block';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        })
+        .catch(error => console.error('Error updating badge:', error));
+}
+
+// Update badge every 30 seconds
+setInterval(updateUnacknowledgedBadge, 30000);
+
+// Create test alert
+function createTestAlert() {
+    const alertTypes = ['error', 'warning', 'info', 'success'];
+    const randomType = alertTypes[Math.floor(Math.random() * alertTypes.length)];
+
+    const testTitles = {
+        'error': 'Test Error Alert',
+        'warning': 'Test Warning Alert',
+        'info': 'Test Info Alert',
+        'success': 'Test Success Alert'
+    };
+
+    const testMessages = {
+        'error': 'This is a test error alert to demonstrate the alerting system.',
+        'warning': 'This is a test warning alert to demonstrate the alerting system.',
+        'info': 'This is a test info alert to demonstrate the alerting system.',
+        'success': 'This is a test success alert to demonstrate the alerting system.'
+    };
+
+    const formData = new FormData();
+    formData.append('alert_type', randomType);
+    formData.append('title', testTitles[randomType]);
+    formData.append('message', testMessages[randomType]);
+    formData.append('send_email', 'false'); // Don't send email for test alerts
+
+    fetch('/api/alerts', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Test alert created successfully!');
+            refreshAlerts();
+        } else {
+            alert('Failed to create test alert: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error creating test alert:', error);
+        alert('Error creating test alert. Check the console for details.');
+    });
+}
+</script>
+{% endblock %}

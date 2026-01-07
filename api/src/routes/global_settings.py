@@ -1,9 +1,7 @@
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import RedirectResponse
 
-from utils.db import query, execute
-from utils.logger import log
-from utils.templates import templates
+from utils.email import test_smtp_connection
 
 router = APIRouter()
 
@@ -43,6 +41,14 @@ def save_settings(
     clamav_host: str = Form("clamav"),
     clamav_port: int = Form(3310),
     clamav_action: str = Form("quarantine"),
+    smtp_enabled: bool = Form(False),
+    smtp_host: str = Form(""),
+    smtp_port: int = Form(587),
+    smtp_username: str = Form(""),
+    smtp_password: str = Form(""),
+    smtp_use_tls: bool = Form(True),
+    smtp_from_email: str = Form(""),
+    smtp_from_name: str = Form("Daygle Mail Archiver"),
 ):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
@@ -66,6 +72,14 @@ def save_settings(
             ('clamav_host', clamav_host),
             ('clamav_port', str(clamav_port)),
             ('clamav_action', clamav_action),
+            ('smtp_enabled', str(smtp_enabled).lower()),
+            ('smtp_host', smtp_host),
+            ('smtp_port', str(smtp_port)),
+            ('smtp_username', smtp_username),
+            ('smtp_password', smtp_password),
+            ('smtp_use_tls', str(smtp_use_tls).lower()),
+            ('smtp_from_email', smtp_from_email),
+            ('smtp_from_name', smtp_from_name),
         ]
         
         for key, value in settings_data:
@@ -104,6 +118,14 @@ def save_settings(
         'clamav_host': clamav_host,
         'clamav_port': str(clamav_port),
         'clamav_action': clamav_action,
+        'smtp_enabled': str(smtp_enabled).lower(),
+        'smtp_host': smtp_host,
+        'smtp_port': str(smtp_port),
+        'smtp_username': smtp_username,
+        'smtp_password': smtp_password,
+        'smtp_use_tls': str(smtp_use_tls).lower(),
+        'smtp_from_email': smtp_from_email,
+        'smtp_from_name': smtp_from_name,
     }
     
     for key, new_value in new_settings.items():
@@ -127,3 +149,22 @@ def save_settings(
 
     flash(request, "Settings updated successfully.")
     return RedirectResponse("/global-settings", status_code=303)
+
+@router.get("/api/test-smtp")
+def test_smtp(request: Request):
+    """Test SMTP connection"""
+    if not require_login(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    try:
+        success, message = test_smtp_connection()
+        return JSONResponse({
+            "success": success,
+            "message": message
+        })
+    except Exception as e:
+        log("error", "Settings", f"SMTP test failed: {str(e)}", "")
+        return JSONResponse({
+            "success": False,
+            "message": f"Test failed: {str(e)}"
+        }, status_code=500)
