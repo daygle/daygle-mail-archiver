@@ -287,5 +287,13 @@ INSERT INTO alert_triggers (trigger_key, name, description, alert_type, enabled)
     ('low_disk_space', 'Low Disk Space', 'Alert when disk space is running low', 'warning', TRUE),
     ('worker_error', 'Worker Error', 'Alert when email worker encounters an error', 'error', TRUE),
     ('account_sync_error', 'Account Sync Error', 'Alert when email account synchronization fails', 'error', TRUE),
-    ('smtp_error', 'SMTP Error', 'Alert when email sending fails', 'warning', TRUE)
-ON CONFLICT (trigger_key) DO NOTHING;
+    ('smtp_error', 'SMTP Error', 'Alert when email sending fails', 'warning', TRUE),
+    ('email_processed', 'Email Processed Successfully', 'Alert when an email is successfully processed and archived', 'success', FALSE),
+    ('backup_completed', 'Backup Completed', 'Alert when a system backup completes successfully', 'success', FALSE),
+    ('system_startup', 'System Startup', 'Alert when the system starts up successfully', 'info', FALSE),
+    ('maintenance_mode', 'Maintenance Mode', 'Alert when maintenance mode is enabled or disabled', 'info', TRUE)
+ON CONFLICT (trigger_key) DO UPDATE SET
+    name = EXCLUDED.name,
+    description = EXCLUDED.description,
+    alert_type = EXCLUDED.alert_type,
+    enabled = EXCLUDED.enabled;
