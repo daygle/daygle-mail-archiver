@@ -143,7 +143,7 @@ def user_settings_form(request: Request):
     current_timezone = user["timezone"] if user and user["timezone"] else "Australia/Melbourne"
 
     msg = request.session.pop("flash", None)
-    return templates.TemplateResponse("user_settings.html", {
+    return templates.TemplateResponse("user-settings.html", {
         "request": request, 
         "flash": msg,
         "page_size": current_page_size,

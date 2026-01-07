@@ -43,7 +43,7 @@ def worker_status(request: Request):
         log("error", "Worker Status", f"Failed to fetch worker status for user '{username}': {str(e)}", "")
         flash = "Failed to load worker status. Please try again."
         return templates.TemplateResponse(
-            "worker_status.html",
+            "worker-status.html",
             {
                 "request": request,
                 "accounts": [],
@@ -136,7 +136,7 @@ def worker_status(request: Request):
     flash = request.session.pop("flash", None)
     
     return templates.TemplateResponse(
-        "worker_status.html",
+        "worker-status.html",
         {
             "request": request,
             "accounts": account_statuses,

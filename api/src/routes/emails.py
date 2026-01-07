@@ -127,7 +127,7 @@ def view_email(request: Request, email_id: int):
     msg = request.session.pop("flash", None)
 
     return templates.TemplateResponse(
-        "email_view.html",
+        "email-view.html",
         {
             "request": request,
             "email": row,

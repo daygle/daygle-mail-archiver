@@ -1,0 +1,400 @@
+{% extends "base.html" %}
+
+{% block page_title %}Fetch Accounts{% endblock %}
+
+{% block content %}
+
+<!-- Form Section (Initially Hidden) -->
+<div id="form-section" style="display: none;">
+    <form method="post" id="account-form">
+        <input type="hidden" name="account_id" id="form-account-id" value="">
+        
+        <!-- Account Details Card -->
+        <div class="card" style="margin-bottom: 24px;">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fas fa-server"></i>
+                    <span id="form-title">New Fetch Account</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="name" class="form-label">Account Name <span class="text-danger">*</span></label>
+                    <input id="name" class="form-control" name="name" placeholder="My Email Account" required>
+                    <small class="form-text">A friendly name to identify this account</small>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label for="account_type" class="form-label">Account Type <span class="text-danger">*</span></label>
+                    <select id="account_type" class="form-select" name="account_type" required onchange="toggleAccountFields()">
+                        <option value="imap" selected>IMAP</option>
+                        <option value="gmail">Gmail API</option>
+                        <option value="o365">Office 365 API</option>
+                    </select>
+                    <small class="form-text">Select the type of email service to fetch from</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- IMAP Configuration Card -->
+        <div id="imap_fields" class="card" style="display: none; margin-bottom: 24px;">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fas fa-envelope"></i>
+                    <span>IMAP Configuration</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label for="host" class="form-label">Host <span class="text-danger">*</span></label>
+                        <input id="host" class="form-control" name="host" placeholder="imap.example.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="port" class="form-label">Port <span class="text-danger">*</span></label>
+                        <input id="port" class="form-control" name="port" type="number" value="993" placeholder="993">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 16px;">
+                    <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
+                    <input id="username" class="form-control" name="username" placeholder="user@example.com">
+                </div>
+
+                <div class="form-group" style="margin-top: 16px;">
+                    <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
+                    <input id="password" class="form-control" name="password" type="password" placeholder="Enter password">
+                    <small class="form-text" id="password-help" style="display: none;">Leave blank to keep the existing password</small>
+                </div>
+
+                <div style="margin-top: 16px;">
+                    <div style="margin-bottom: 12px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="use_ssl" name="use_ssl">
+                            <div>
+                                <strong>Use SSL/TLS</strong>
+                                <small style="display: block; color: var(--text-secondary);">Recommended for secure connections (port 993)</small>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="require_starttls" name="require_starttls">
+                            <div>
+                                <strong>Require STARTTLS</strong>
+                                <small style="display: block; color: var(--text-secondary);">For plain connections that upgrade to TLS (port 143)</small>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- OAuth Configuration Card -->
+        <div id="oauth_fields" class="card" style="display: none; margin-bottom: 24px;">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fas fa-key"></i>
+                    <span>OAuth Configuration</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info" style="margin-bottom: 24px;">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>OAuth Setup Required</strong>
+                    <p class="mt-2 mb-2">To use Gmail or Office 365, you need to:</p>
+                    <ol class="mb-0" style="padding-left: 20px;">
+                        <li>Create an OAuth app in Google/Microsoft developer console</li>
+                        <li>Enter your Client ID and Client Secret below</li>
+                        <li>Save the account</li>
+                        <li>Click "Authorize" to grant access</li>
+                    </ol>
+                </div>
+
+                <div class="form-group">
+                    <label for="oauth_client_id" class="form-label">OAuth Client ID <span class="text-danger">*</span></label>
+                    <input id="oauth_client_id" class="form-control" name="oauth_client_id" placeholder="Enter your OAuth Client ID">
+                    <small class="form-text">From your Google/Microsoft OAuth app</small>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label for="oauth_client_secret" class="form-label">OAuth Client Secret <span class="text-danger">*</span></label>
+                    <input id="oauth_client_secret" class="form-control" name="oauth_client_secret" type="password" placeholder="Enter your OAuth Client Secret">
+                    <small class="form-text">Keep this secret secure</small>
+                </div>
+
+                <div id="oauth_status" style="display: none; margin-top: 16px;"></div>
+            </div>
+        </div>
+
+        <!-- Fetch Settings Card -->
+        <div class="card" style="margin-bottom: 24px;">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fas fa-cog"></i>
+                    <span>Fetch Settings</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="poll_interval_seconds" class="form-label">Poll Interval (seconds)</label>
+                    <input id="poll_interval_seconds" class="form-control" name="poll_interval_seconds" type="number" value="300" min="60" placeholder="300" style="max-width: 200px;">
+                    <small class="form-text">How often to check for new emails (minimum 60 seconds)</small>
+                </div>
+
+                <div style="margin-top: 24px;">
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="delete_after_processing" name="delete_after_processing">
+                            <div>
+                                <strong>Delete Email After Processing</strong>
+                                <small style="display: block; color: var(--text-secondary);">
+                                    Gmail: moves to Trash | Office 365: moves to Deleted Items | IMAP: marks as deleted (recoverable)
+                                </small>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div id="expunge_deleted_group" style="display: none; margin-bottom: 16px;">
+                        <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="expunge_deleted" name="expunge_deleted">
+                            <div>
+                                <strong>Permanently Expunge Deleted (IMAP only)</strong>
+                                <small style="display: block; color: var(--danger);">⚠️ Warning: Permanently removes deleted emails from server - cannot be recovered</small>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div>
+                        <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="enabled" name="enabled" checked>
+                            <div>
+                                <strong>Enabled</strong>
+                                <small style="display: block; color: var(--text-secondary);">Enable automatic email fetching for this account</small>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer" style="display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" class="btn btn-secondary" onclick="cancelForm()">
+                    <i class="fas fa-times"></i>
+                    <span>Cancel</span>
+                </button>
+                <button type="submit" class="btn btn-primary" id="submit-btn">
+                    <i class="fas fa-save"></i>
+                    <span>Create Account</span>
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Table Section -->
+<div id="table-section">
+    <div class="card">
+        <div class="card-header" style="display: flex; align-items: center; justify-content: space-between;">
+            <div class="card-title">
+                <i class="fas fa-server"></i>
+                <span>Fetch Accounts</span>
+            </div>
+            <button class="btn btn-primary" onclick="showCreateForm()">
+                <i class="fas fa-plus"></i>
+                <span>Add Fetch Account</span>
+            </button>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Host/Service</th>
+                            <th>User</th>
+                            <th>Poll Interval</th>
+                            <th>Enabled</th>
+                            <th>Last Success</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for acc in accounts %}
+                        <tr>
+                            <td><strong>{{ acc.name }}</strong></td>
+                            <td>
+                                {% if acc.account_type == 'imap' %}
+                                    <span class="badge badge-primary"><i class="fas fa-envelope"></i> IMAP</span>
+                                {% elif acc.account_type == 'gmail' %}
+                                    <span class="badge badge-danger"><i class="fab fa-google"></i> Gmail</span>
+                                {% elif acc.account_type == 'o365' %}
+                                    <span class="badge badge-info"><i class="fab fa-microsoft"></i> O365</span>
+                                {% else %}
+                                    <span class="badge badge-secondary">{{ acc.account_type }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ acc.host or '-' }}
+                                {% if acc.port and acc.account_type == 'imap' %}
+                                    :{{ acc.port }}
+                                    {% if acc.use_ssl %}<i class="fas fa-lock text-success" title="SSL Enabled"></i>{% endif %}
+                                {% endif %}
+                            </td>
+                            <td>{{ acc.username or '-' }}</td>
+                            <td>{{ acc.poll_interval_seconds }}s</td>
+                            <td>
+                                {% if acc.enabled %}
+                                    <span class="badge badge-success"><i class="fas fa-check"></i> Enabled</span>
+                                {% else %}
+                                    <span class="badge badge-danger"><i class="fas fa-times"></i> Disabled</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if acc.last_success %}
+                                    <small>{{ acc.last_success.strftime(request.session.get('date_format', '%d/%m/%Y %H:%M')) }}</small>
+                                {% else %}
+                                    <span class="text-secondary">Never</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="flex gap-2">
+                                    <button class="btn btn-secondary btn-sm" title="Edit" onclick='showEditForm({{ acc.id | tojson }}, {{ acc.json_safe | tojson }})'>
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <a href="/fetch-accounts/{{ acc.id }}/test" class="btn btn-info btn-sm" title="Test Connection">
+                                        <i class="fas fa-plug"></i>
+                                    </a>
+                                    <button class="btn btn-danger btn-sm" title="Delete" onclick='showDeleteConfirmation({{ acc.id | tojson }}, {{ acc.name | tojson }}, {{ acc.email_count }})'>
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% if accounts|length == 0 %}
+                        <tr>
+                            <td colspan="8" class="text-center" style="padding: 48px 0;">
+                                <div style="color: var(--text-secondary);">
+                                    <i class="fas fa-server" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                                    <p>No fetch accounts configured.</p>
+                                    <button class="btn btn-primary mt-3" onclick="showCreateForm()">
+                                        <i class="fas fa-plus"></i>
+                                        <span>Add Fetch Account</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Pagination -->
+        {% if page > 1 or page < total_pages %}
+        <div class="card-footer">
+            <div class="flex items-center justify-between">
+                <div>
+                    {% if page > 1 %}
+                    <a href="/fetch-accounts?page={{ page - 1 }}" class="btn btn-secondary">
+                        <i class="fas fa-chevron-left"></i>
+                        <span>Previous</span>
+                    </a>
+                    {% endif %}
+                </div>
+                
+                <span class="text-secondary">Page {{ page }} of {{ total_pages }}</span>
+                
+                <div>
+                    {% if page < total_pages %}
+                    <a href="/fetch-accounts?page={{ page + 1 }}" class="btn btn-secondary">
+                        <span>Next</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Section (Initially Hidden) -->
+<div id="delete-confirmation" class="card" style="display: none;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i>
+            <span>Delete Fetch Account</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-circle"></i>
+            <div style="margin-top: 8px;">
+                <strong>Warning:</strong> You are about to delete the fetch account:
+                <div style="margin-top: 8px; font-size: 1.125rem;"><strong id="delete-account-name"></strong></div>
+            </div>
+        </div>
+
+        <div class="alert alert-info" style="margin-top: 16px;" id="delete-email-count-alert">
+            <i class="fas fa-info-circle"></i>
+            <span>Loading email count...</span>
+        </div>
+
+        <p style="margin-top: 20px; margin-bottom: 20px;"><strong>What would you like to do?</strong></p>
+
+        <form method="post" id="delete-form">
+            <div style="display: grid; gap: 12px; margin-bottom: 20px;">
+                <button type="submit" name="mode" value="retain" class="btn btn-warning w-100">
+                    <i class="fas fa-folder-minus"></i>
+                    <span id="delete-retain-text">Delete Account Only (retain emails)</span>
+                </button>
+
+                <button type="submit" name="mode" value="delete_messages" class="btn btn-danger w-100">
+                    <i class="fas fa-trash"></i>
+                    <span id="delete-all-text">Delete Account + All Emails</span>
+                </button>
+            </div>
+
+            <div class="text-center">
+                <button type="button" class="btn btn-secondary" onclick="hideDeleteConfirmation()">
+                    <i class="fas fa-times"></i>
+                    <span>Cancel</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let editMode = false;
+    let editAccountId = null;
+    let deleteAccountId = null;
+
+    function showCreateForm() {
+        editMode = false;
+        editAccountId = null;
+        
+        // Reset form
+        document.getElementById('account-form').reset();
+        document.getElementById('form-account-id').value = '';
+        document.getElementById('form-title').textContent = 'New Fetch Account';
+        document.getElementById('submit-btn').innerHTML = '<i class="fas fa-save"></i><span>Create Account</span>';
+        document.getElementById('account-form').action = '/fetch-accounts/new';
+        document.getElementById('password-help').style.display = 'none';
+        
+        // Show form, hide table
+        document.getElementById('form-section').style.display = 'block';
+        document.getElementById('table-section').style.display = 'none';
+        
+        // Scroll to top
+        window.scrollTo(0, 0);
+        
+        // Initialize field visibility
+        toggleAccountFields();
+    }
+
+    function showEditForm(id, account) {
+        editMode = true;

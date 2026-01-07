@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block page_title %}User Settings{% endblock %}
+
+{% block content %}
+<form method="post" action="/user-settings/update">
+    <!-- Display & Formatting Card -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fas fa-cog"></i>
+                <span>Display & Formatting Settings</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <p class="section-description">Configure how content is displayed throughout the application</p>
+            
+            <div class="form-group">
+                <label for="page_size" class="form-label">Items Per Page</label>
+                <input id="page_size" class="form-control" name="page_size" type="number" value="{{ page_size or '50' }}" min="10" max="500">
+                <small class="form-text">Number of emails to display per page in lists</small>
+            </div>
+
+            <div class="form-group mt-3">
+                <label for="date_format" class="form-label">Date Format</label>
+                <select id="date_format" class="form-select" name="date_format">
+                    <option value="%d/%m/%Y" {% if date_format == '%d/%m/%Y' or not date_format %}selected{% endif %}>15/01/2024</option>
+                    <option value="%Y-%m-%d" {% if date_format == '%Y-%m-%d' %}selected{% endif %}>2024-01-15</option>
+                    <option value="%m/%d/%Y" {% if date_format == '%m/%d/%Y' %}selected{% endif %}>01/15/2024</option>
+                    <option value="%d %b %Y" {% if date_format == '%d %b %Y' %}selected{% endif %}>15 Jan 2024</option>
+                    <option value="%B %d, %Y" {% if date_format == '%B %d, %Y' %}selected{% endif %}>January 15, 2024</option>
+                </select>
+                <small class="form-text">Date display format</small>
+            </div>
+
+            <div class="form-group mt-3">
+                <label for="time_format" class="form-label">Time Format</label>
+                <select id="time_format" class="form-select" name="time_format">
+                    <option value="%H:%M" {% if time_format == '%H:%M' or not time_format %}selected{% endif %}>14:30 (24-hour)</option>
+                    <option value="%H:%M:%S" {% if time_format == '%H:%M:%S' %}selected{% endif %}>14:30:45 (24-hour with seconds)</option>
+                    <option value="%I:%M %p" {% if time_format == '%I:%M %p' %}selected{% endif %}>02:30 PM (12-hour)</option>
+                    <option value="%I:%M:%S %p" {% if time_format == '%I:%M:%S %p' %}selected{% endif %}>02:30:45 PM (12-hour with seconds)</option>
+                </select>
+                <small class="form-text">Time display format</small>
+            </div>
+
+            <div class="form-group mt-3">
+                <label for="timezone" class="form-label">Timezone</label>
+                <select id="timezone" class="form-select" name="timezone">
+                    <option value="Australia/Melbourne" {% if timezone == 'Australia/Melbourne' or not timezone %}selected{% endif %}>Australia/Melbourne</option>
+                    <option value="Australia/Sydney" {% if timezone == 'Australia/Sydney' %}selected{% endif %}>Australia/Sydney</option>
+                    <option value="Australia/Brisbane" {% if timezone == 'Australia/Brisbane' %}selected{% endif %}>Australia/Brisbane</option>
+                    <option value="Australia/Perth" {% if timezone == 'Australia/Perth' %}selected{% endif %}>Australia/Perth</option>
+                    <option value="Australia/Adelaide" {% if timezone == 'Australia/Adelaide' %}selected{% endif %}>Australia/Adelaide</option>
+                    <option value="Pacific/Auckland" {% if timezone == 'Pacific/Auckland' %}selected{% endif %}>Pacific/Auckland (New Zealand)</option>
+                    <option value="UTC" {% if timezone == 'UTC' %}selected{% endif %}>UTC</option>
+                    <option value="America/New_York" {% if timezone == 'America/New_York' %}selected{% endif %}>America/New York (EST)</option>
+                    <option value="America/Chicago" {% if timezone == 'America/Chicago' %}selected{% endif %}>America/Chicago (CST)</option>
+                    <option value="America/Los_Angeles" {% if timezone == 'America/Los_Angeles' %}selected{% endif %}>America/Los Angeles (PST)</option>
+                    <option value="Europe/London" {% if timezone == 'Europe/London' %}selected{% endif %}>Europe/London (GMT)</option>
+                    <option value="Europe/Paris" {% if timezone == 'Europe/Paris' %}selected{% endif %}>Europe/Paris (CET)</option>
+                    <option value="Asia/Tokyo" {% if timezone == 'Asia/Tokyo' %}selected{% endif %}>Asia/Tokyo (JST)</option>
+                    <option value="Asia/Singapore" {% if timezone == 'Asia/Singapore' %}selected{% endif %}>Asia/Singapore (SGT)</option>
+                    <option value="Asia/Hong_Kong" {% if timezone == 'Asia/Hong_Kong' %}selected{% endif %}>Asia/Hong Kong (HKT)</option>
+                </select>
+                <small class="form-text">Your preferred timezone for displaying dates and times</small>
+            </div>
+        </div>
+        <div class="card-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i>
+                <span>Save Settings</span>
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}

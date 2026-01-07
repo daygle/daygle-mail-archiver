@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block page_title %}Global Settings{% endblock %}
+
+{% block content %}
+<form method="post">
+    <!-- General Settings Card -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fas fa-cog"></i>
+                <span>General Settings</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="form-group">
+                <label for="page_size" class="form-label">Items Per Page</label>
+                <input id="page_size" class="form-control" name="page_size" type="number" value="{{ settings.page_size or '50' }}" min="10" max="500">
+                <small class="form-text">Number of emails to display per page in lists</small>
+            </div>
+
+            <div class="form-group mt-3">
+                <label for="date_format" class="form-label">Date Format</label>
+                <select id="date_format" class="form-select" name="date_format">
+                    <option value="%d/%m/%Y" {% if settings.date_format == '%d/%m/%Y' or not settings.date_format %}selected{% endif %}>15/01/2024</option>
+                    <option value="%Y-%m-%d" {% if settings.date_format == '%Y-%m-%d' %}selected{% endif %}>2024-01-15</option>
+                    <option value="%m/%d/%Y" {% if settings.date_format == '%m/%d/%Y' %}selected{% endif %}>01/15/2024</option>
+                    <option value="%d %b %Y" {% if settings.date_format == '%d %b %Y' %}selected{% endif %}>15 Jan 2024</option>
+                    <option value="%B %d, %Y" {% if settings.date_format == '%B %d, %Y' %}selected{% endif %}>January 15, 2024</option>
+                </select>
+                <small class="form-text">Date display format throughout the application</small>
+            </div>
+
+            <div class="form-group mt-3">
+                <label for="time_format" class="form-label">Time Format</label>
+                <select id="time_format" class="form-select" name="time_format">
+                    <option value="%H:%M" {% if settings.time_format == '%H:%M' or not settings.time_format %}selected{% endif %}>14:30 (24-hour)</option>
+                    <option value="%H:%M:%S" {% if settings.time_format == '%H:%M:%S' %}selected{% endif %}>14:30:45 (24-hour with seconds)</option>
+                    <option value="%I:%M %p" {% if settings.time_format == '%I:%M %p' %}selected{% endif %}>02:30 PM (12-hour)</option>
+                    <option value="%I:%M:%S %p" {% if settings.time_format == '%I:%M:%S %p' %}selected{% endif %}>02:30:45 PM (12-hour with seconds)</option>
+                </select>
+                <small class="form-text">Time display format throughout the application</small>
+            </div>
+
+            <div class="form-group mt-3">
+                <label for="timezone" class="form-label">Timezone</label>
+                <select id="timezone" class="form-select" name="timezone">
+                    <option value="Australia/Melbourne" {% if settings.timezone == 'Australia/Melbourne' or not settings.timezone %}selected{% endif %}>Australia/Melbourne</option>
+                    <option value="Australia/Sydney" {% if settings.timezone == 'Australia/Sydney' %}selected{% endif %}>Australia/Sydney</option>
+                    <option value="Australia/Brisbane" {% if settings.timezone == 'Australia/Brisbane' %}selected{% endif %}>Australia/Brisbane</option>
+                    <option value="Australia/Perth" {% if settings.timezone == 'Australia/Perth' %}selected{% endif %}>Australia/Perth</option>
+                    <option value="Australia/Adelaide" {% if settings.timezone == 'Australia/Adelaide' %}selected{% endif %}>Australia/Adelaide</option>
+                    <option value="Pacific/Auckland" {% if settings.timezone == 'Pacific/Auckland' %}selected{% endif %}>Pacific/Auckland (New Zealand)</option>
+                    <option value="UTC" {% if settings.timezone == 'UTC' %}selected{% endif %}>UTC</option>
+                    <option value="America/New_York" {% if settings.timezone == 'America/New_York' %}selected{% endif %}>America/New York (EST)</option>
+                    <option value="America/Chicago" {% if settings.timezone == 'America/Chicago' %}selected{% endif %}>America/Chicago (CST)</option>
+                    <option value="America/Los_Angeles" {% if settings.timezone == 'America/Los_Angeles' %}selected{% endif %}>America/Los Angeles (PST)</option>
+                    <option value="Europe/London" {% if settings.timezone == 'Europe/London' %}selected{% endif %}>Europe/London (GMT)</option>
+                    <option value="Europe/Paris" {% if settings.timezone == 'Europe/Paris' %}selected{% endif %}>Europe/Paris (CET)</option>
+                    <option value="Asia/Tokyo" {% if settings.timezone == 'Asia/Tokyo' %}selected{% endif %}>Asia/Tokyo (JST)</option>
+                    <option value="Asia/Singapore" {% if settings.timezone == 'Asia/Singapore' %}selected{% endif %}>Asia/Singapore (SGT)</option>
+                    <option value="Asia/Hong_Kong" {% if settings.timezone == 'Asia/Hong_Kong' %}selected{% endif %}>Asia/Hong Kong (HKT)</option>
+                </select>
+                <small class="form-text">Timezone for displaying dates and times throughout the application</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Retention Policy Card -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fas fa-clock"></i>
+                <span>Email Retention Policy</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="enable_purge" name="enable_purge" {% if settings.enable_purge == 'true' %}checked{% endif %}>
+                <label class="form-check-label" for="enable_purge">
+                    <strong>Enable Automatic Email Purging</strong>
+                    <small class="d-block text-secondary">Automatically delete emails older than the retention period</small>
+                </label>
+            </div>
+            
+            <div class="form-check mb-4">
+                <input class="form-check-input" type="checkbox" id="retention_delete_from_mail_server" name="retention_delete_from_mail_server" {% if settings.retention_delete_from_mail_server == 'true' %}checked{% endif %}>
+                <label class="form-check-label" for="retention_delete_from_mail_server">
+                    <strong>Delete from Mail Server During Retention Cleanup</strong>
+                    <small class="d-block text-secondary">When enabled, retention cleanup will also attempt to delete emails from the original IMAP mail servers (only applies to IMAP accounts with delete_after_processing enabled)</small>
+                </label>
+            </div>
+
+            <div class="form-group">
+                <label for="retention_value" class="form-label">Retention Period</label>
+                <div class="flex gap-3">
+                    <input id="retention_value" class="form-control" name="retention_value" type="number" min="1" value="{{ settings.retention_value or '1' }}" style="max-width: 150px;">
+                    <select id="retention_unit" class="form-select" name="retention_unit" style="max-width: 200px;">
+                        <option value="days" {% if settings.retention_unit == 'days' %}selected{% endif %}>Day(s)</option>
+                        <option value="months" {% if settings.retention_unit == 'months' %}selected{% endif %}>Month(s)</option>
+                        <option value="years" {% if settings.retention_unit == 'years' or not settings.retention_unit %}selected{% endif %}>Year(s)</option>
+                    </select>
+                </div>
+                <small class="form-text">Emails older than this period will be automatically deleted</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- ClamAV Virus Scanning Card -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fas fa-shield-virus"></i>
+                <span>Virus Scanning (ClamAV)</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="clamav_enabled" name="clamav_enabled" {% if settings.clamav_enabled == 'true' %}checked{% endif %}>
+                <label class="form-check-label" for="clamav_enabled">
+                    <strong>Enable Virus Scanning</strong>
+                    <small class="d-block text-secondary">Scan incoming emails for viruses using ClamAV</small>
+                </label>
+            </div>
+
+            <div class="form-group mt-3">
+                <label for="clamav_host" class="form-label">ClamAV Host</label>
+                <input id="clamav_host" class="form-control" name="clamav_host" type="text" value="{{ settings.clamav_host or 'clamav' }}">
+                <small class="form-text">Hostname or IP address of the ClamAV daemon (default: clamav for Docker)</small>
+            </div>
+
+            <div class="form-group mt-3">
+                <label for="clamav_port" class="form-label">ClamAV Port</label>
+                <input id="clamav_port" class="form-control" name="clamav_port" type="number" value="{{ settings.clamav_port or '3310' }}" min="1" max="65535">
+                <small class="form-text">Port number for the ClamAV daemon (default: 3310, typically 1-65535)</small>
+            </div>
+
+            <div class="form-group mt-3">
+                <label for="clamav_action" class="form-label">Action When Virus Detected</label>
+                <select id="clamav_action" class="form-select" name="clamav_action">
+                    <option value="quarantine" {% if settings.clamav_action == 'quarantine' or not settings.clamav_action %}selected{% endif %}>Quarantine (Store with virus flag)</option>
+                    <option value="reject" {% if settings.clamav_action == 'reject' %}selected{% endif %}>Reject (Do not store infected emails)</option>
+                    <option value="log_only" {% if settings.clamav_action == 'log_only' %}selected{% endif %}>Log Only (Store all emails, log detections)</option>
+                </select>
+                <small class="form-text">
+                    <strong>Quarantine:</strong> Emails with viruses are stored but marked as infected for review<br>
+                    <strong>Reject:</strong> Emails with viruses are not stored in the database<br>
+                    <strong>Log Only:</strong> All emails are stored, virus detections are logged for monitoring
+                </small>
+            </div>
+        </div>
+        <div class="card-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+            <a href="/dashboard" class="btn btn-secondary">
+                <i class="fas fa-times"></i>
+                <span>Cancel</span>
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i>
+                <span>Save Settings</span>
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}

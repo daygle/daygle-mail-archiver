@@ -24,7 +24,7 @@ def settings_form(request: Request):
     msg = request.session.pop("flash", None)
 
     return templates.TemplateResponse(
-        "global_settings.html",
+        "global-settings.html",
         {"request": request, "settings": settings, "flash": msg},
     )
 

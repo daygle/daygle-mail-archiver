@@ -90,7 +90,7 @@ def list_accounts(request: Request, page: int = 1):
     msg = request.session.pop("flash", None)
 
     return templates.TemplateResponse(
-        "fetch_accounts.html",
+        "fetch-accounts.html",
         {
             "request": request,
             "accounts": accounts,
@@ -191,7 +191,7 @@ def create_account(
         
         msg = request.session.pop("flash", None)
         return templates.TemplateResponse(
-            "fetch_account_form.html",
+            "fetch-accounts.html",
             {"request": request, "account": account, "flash": msg}
         )
 
@@ -540,6 +540,6 @@ def test_connection(
     msg = request.session.pop("flash", None)
 
     return templates.TemplateResponse(
-        "fetch_account_form.html",
+        "fetch-accounts.html",
         {"request": request, "account": account, "flash": msg},
     )
