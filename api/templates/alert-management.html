@@ -11,12 +11,6 @@
             <span>Alert Triggers</span>
         </div>
     </div>
-    <div class="card-header">
-        <div class="card-title">
-            <i class="fas fa-bell"></i>
-            <span>Alert Triggers</span>
-        </div>
-    </div>
     <div class="card-body">
         <p class="section-description">Manage individual alert triggers. Each trigger represents a specific type of event that can generate alerts. You can enable/disable triggers and adjust their severity level.</p>
 
@@ -83,6 +77,12 @@
         </div>
         {% endif %}
     </div>
+    <div class="card-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+        <a href="/dashboard" class="btn btn-secondary">
+            <i class="fas fa-times"></i>
+            <span>Cancel</span>
+        </a>
+    </div>
 </div>
 
 <!-- Alert Logic Explanation -->
@@ -100,17 +100,14 @@
                 <p>An alert is only created and sent when:</p>
                 <ol>
                     <li><strong>Trigger is enabled</strong> (configured above)</li>
-                    <li><strong>Severity level is enabled</strong> globally (configured above)</li>
                     <li><strong>User has email notifications enabled</strong> (in user settings)</li>
-                    <li><strong>User has the severity level enabled</strong> (in user settings)</li>
                 </ol>
             </div>
             <div class="col-md-6">
                 <h6>Alert Hierarchy</h6>
                 <ul class="list-unstyled">
-                    <li><i class="fas fa-cog text-primary me-2"></i><strong>Global Settings:</strong> Alert types (error/warning/info/success)</li>
                     <li><i class="fas fa-toggle-on text-success me-2"></i><strong>Alert Triggers:</strong> Specific events with customizable severity</li>
-                    <li><i class="fas fa-user text-info me-2"></i><strong>User Preferences:</strong> Per-user alert type preferences</li>
+                    <li><i class="fas fa-user text-info me-2"></i><strong>User Settings:</strong> Email notifications master switch</li>
                     <li><i class="fas fa-envelope text-warning me-2"></i><strong>Email Settings:</strong> SMTP configuration for delivery</li>
                 </ul>
             </div>
