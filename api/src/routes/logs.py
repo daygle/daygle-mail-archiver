@@ -99,10 +99,16 @@ def logs(
     """
     
     rows = query(logs_query, params).mappings().all()
-    
+
+    # Normalize rows to dicts and expose source_label (use DB value directly)
+    rows = [dict(r) for r in rows]
+    for r in rows:
+        r["source_label"] = r.get("source")
+
     # Get distinct sources for filter dropdown
     sources_query = "SELECT DISTINCT source FROM logs ORDER BY source"
-    sources = [row["source"] for row in query(sources_query).mappings().all()]
+    sources_values = [row["source"] for row in query(sources_query).mappings().all()]
+    sources = [{"value": s, "label": s} for s in sources_values]
     
     # Check if any filters are active
     has_active_filters = bool(search or source or (level != "all") or date_from or date_to)

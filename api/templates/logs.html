@@ -26,7 +26,7 @@
                     <select id="source" name="source" class="form-select">
                         <option value="">All Sources</option>
                         {% for s in sources %}
-                        <option value="{{ s }}" {% if current_source == s %}selected{% endif %}>{{ s }}</option>
+                        <option value="{{ s.value }}" {% if current_source == s.value %}selected{% endif %}>{{ s.label }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -105,7 +105,7 @@
                             <span class="badge badge-secondary">{{ e.level }}</span>
                         {% endif %}
                     </td>
-                    <td><span class="badge badge-secondary">{{ e.source }}</span></td>
+                    <td><span class="badge badge-secondary">{{ e.source_label }}</span></td>
                     <td>{{ e.message }}</td>
                 </tr>
                 {% endfor %}

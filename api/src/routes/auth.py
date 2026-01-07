@@ -58,7 +58,7 @@ def setup_wizard_submit(
                 {"request": request, "error": "Username already exists", "username": username, "first_name": first_name, "last_name": last_name, "email": email},
             )
     except Exception as e:
-        log("error", "setup", f"Database error checking username: {str(e)}")
+        log("error", "Setup", f"Database error checking username: {str(e)}")
         return templates.TemplateResponse(
             "setup_wizard.html",
             {"request": request, "error": "System error. Please try again.", "username": username, "first_name": first_name, "last_name": last_name, "email": email},
@@ -115,13 +115,13 @@ def setup_wizard_submit(
             "UPDATE settings SET value = 'true' WHERE key = 'setup_complete'"
         )
         
-        log("info", "setup", f"Initial setup completed - Administrator account '{username}' created")
+        log("info", "Setup", f"Initial setup completed - Administrator account '{username}' created")
         
         # Redirect to login page
         return RedirectResponse("/login?setup_complete=true", status_code=303)
         
     except Exception as e:
-        log("error", "setup", f"Failed to create administrator account: {str(e)}")
+        log("error", "Setup", f"Failed to create administrator account: {str(e)}")
         return templates.TemplateResponse(
             "setup_wizard.html",
             {"request": request, "error": "Failed to create account. Please try again.", "username": username, "first_name": first_name, "last_name": last_name, "email": email},
@@ -146,21 +146,21 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
             {"u": username}
         ).mappings().first()
     except Exception as e:
-        log("error", "auth", f"Database error during login for user {username}: {str(e)}")
+        log("error", "Login", f"Database error during login for user {username}: {str(e)}")
         return templates.TemplateResponse(
             "login.html",
             {"request": request, "error": "System error. Please try again."},
         )
 
     if not user:
-        log("warning", "auth", f"Failed login attempt for unknown user: {username}")
+        log("warning", "Login", f"Failed login attempt for unknown user: {username}")
         return templates.TemplateResponse(
             "login.html",
             {"request": request, "error": "Invalid credentials"},
         )
 
     if not user["enabled"]:
-        log("warning", "auth", f"Failed login attempt for disabled user: {username}")
+        log("warning", "Login", f"Failed login attempt for disabled user: {username}")
         return templates.TemplateResponse(
             "login.html",
             {"request": request, "error": "This account has been disabled"},
@@ -175,7 +175,7 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
         request.session["timezone"] = user["timezone"] or "Australia/Melbourne"
         request.session["role"] = user["role"] or "administrator"
         request.session["needs_password"] = True
-        log("info", "auth", f"User {username} initiated first login")
+        log("info", "Login", f"User {username} initiated first login")
         return RedirectResponse("/set-password", status_code=303)
 
     try:
@@ -191,18 +191,18 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
             try:
                 execute("UPDATE users SET last_login = NOW() WHERE id = :id", {"id": user["id"]})
             except Exception as e:
-                log("error", "auth", f"Failed to update last_login for user {username}: {str(e)}")
+                log("error", "Login", f"Failed to update last_login for user {username}: {str(e)}")
             
-            log("info", "auth", f"User {username} logged in successfully")
+            log("info", "Login", f"User {username} logged in successfully")
             return RedirectResponse("/dashboard", status_code=303)
     except Exception as e:
-        log("error", "auth", f"Password verification error for user {username}: {str(e)}")
+        log("error", "Login", f"Password verification error for user {username}: {str(e)}")
         return templates.TemplateResponse(
             "login.html",
             {"request": request, "error": "System error. Please try again."},
         )
 
-    log("warning", "auth", f"Failed login attempt for user: {username}")
+    log("warning", "Login", f"Failed login attempt for user: {username}")
     return templates.TemplateResponse(
         "login.html",
         {"request": request, "error": "Invalid credentials"},
@@ -260,10 +260,10 @@ def set_password(request: Request, password: str = Form(...), confirm_password: 
         execute("UPDATE users SET password_hash = :h WHERE id = :id", {"h": hash_pw, "id": user_id})
         del request.session["needs_password"]
         
-        log("info", "auth", f"User {username} successfully set their initial password")
+        log("info", "Login", f"User {username} successfully set their initial password")
         return RedirectResponse("/dashboard", status_code=303)
     except Exception as e:
-        log("error", "auth", f"Failed to set password for user {username}: {str(e)}")
+        log("error", "Login", f"Failed to set password for user {username}: {str(e)}")
         return templates.TemplateResponse(
             "set_password.html",
             {"request": request, "error": "Failed to set password. Please try again."},
