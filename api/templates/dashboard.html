@@ -551,7 +551,6 @@ const DashboardManager = {
 
         // Initialize GridStack
         try {
-            console.log('Initializing GridStack...');
             this.grid = GridStack.init({
                 column: 12,
                 cellHeight: 80,
@@ -562,8 +561,6 @@ const DashboardManager = {
                 draggable: { handle: '.widget-header' }
             });
 
-            console.log('GridStack initialized successfully');
-
             // Disable editing by default
             this.grid.disable();
 
@@ -572,8 +569,6 @@ const DashboardManager = {
 
             // Setup event listeners
             this.setupEventListeners();
-            
-            console.log('Dashboard initialization complete');
         } catch (error) {
             console.error('Error initializing dashboard:', error);
             console.error('Error stack:', error.stack);
@@ -583,9 +578,7 @@ const DashboardManager = {
 
     async loadLayout() {
         try {
-            console.log('Loading dashboard layout...');
             const response = await fetch('/api/dashboard/preferences');
-            console.log('Preferences response status:', response.status);
             
             if (!response.ok) {
                 console.warn('Preferences API returned error, using defaults');
@@ -595,7 +588,6 @@ const DashboardManager = {
             }
             
             const data = await response.json();
-            console.log('Preferences data:', data);
             
             let widgets = data.widgets && data.widgets.length > 0 
                 ? data.widgets.map(w => ({
@@ -624,15 +616,12 @@ const DashboardManager = {
                 widgets = this.defaultWidgets;
             }
 
-            console.log('Using widgets:', widgets);
-            
             // Load widget settings before rendering
             await this.loadWidgetSettingsFromPreferences();
             
             this.renderWidgets(widgets);
         } catch (error) {
             console.error('Error loading layout:', error);
-            console.log('Falling back to default widgets');
             await this.loadWidgetSettingsFromPreferences();
             this.renderWidgets(this.defaultWidgets);
         }
@@ -685,42 +674,33 @@ const DashboardManager = {
     },
 
     setupEventListeners() {
-        console.log('setupEventListeners called');
         
         // Customize button
         const customizeBtn = document.getElementById('btn-customize');
-        console.log('Customize button:', customizeBtn);
         if (!customizeBtn) {
             console.error('Customize button not found!');
             return;
         }
-        console.log('Setting up customize button listener');
         customizeBtn.addEventListener('click', () => {
-            console.log('Customize button clicked');
             this.toggleEditMode();
         });
 
         // Add widget button
         const addWidgetBtn = document.getElementById('btn-add-widget');
-        console.log('Add widget button:', addWidgetBtn);
         if (!addWidgetBtn) {
             console.error('Add widget button not found!');
             return;
         }
-        console.log('Setting up add widget button listener');
         addWidgetBtn.addEventListener('click', () => {
-            console.log('Add widget button clicked');
             this.showWidgetSelector();
         });
 
         // Save layout button
-        console.log('Setting up save layout button listener');
         document.getElementById('btn-save-layout').addEventListener('click', () => {
             this.saveLayout();
         });
 
         // Reset layout button
-        console.log('Setting up reset layout button listener');
         document.getElementById('btn-reset-layout').addEventListener('click', () => {
             if (confirm('Reset dashboard to default layout?')) {
                 this.renderWidgets(this.defaultWidgets);
@@ -729,19 +709,16 @@ const DashboardManager = {
         });
 
         // Cancel button
-        console.log('Setting up cancel button listener');
         document.getElementById('btn-cancel').addEventListener('click', () => {
             this.cancelEdit();
         });
 
         // Close modal button
-        console.log('Setting up close modal button listener');
         document.getElementById('btn-close-modal').addEventListener('click', () => {
             this.hideModal(document.getElementById('widget-selector-modal'));
         });
 
         // Modal overlay click
-        console.log('Setting up modal overlay listener');
         document.getElementById('modal-overlay').addEventListener('click', () => {
             this.hideModal(document.getElementById('widget-selector-modal'));
         });
@@ -819,7 +796,6 @@ const DashboardManager = {
     },
 
     showWidgetSelector() {
-        console.log('showWidgetSelector called');
         const modal = document.getElementById('widget-selector-modal');
         const container = document.getElementById('widget-selector-list');
         
@@ -828,7 +804,6 @@ const DashboardManager = {
             return;
         }
         
-        console.log('Modal and container found');
         container.innerHTML = '';
 
         // Get currently visible widgets
@@ -839,8 +814,6 @@ const DashboardManager = {
                 visibleWidgets.add(item.gridstackNode.id);
             }
         });
-        
-        console.log('Visible widgets:', Array.from(visibleWidgets));
 
         // Show all available widgets
         this.defaultWidgets.forEach(widget => {
@@ -858,7 +831,6 @@ const DashboardManager = {
             
             if (!isVisible) {
                 item.addEventListener('click', () => {
-                    console.log('Adding widget:', widget.id);
                     this.addWidget(widget);
                     this.loadWidgetData(widget.id);
                     this.hideModal(modal);
@@ -868,7 +840,6 @@ const DashboardManager = {
             container.appendChild(item);
         });
 
-        console.log('Showing modal');
         this.showModal(modal);
     },
 
@@ -1630,7 +1601,6 @@ const maxAttempts = 50; // 5 seconds max
 function initDashboard() {
     initAttempts++;
     if (typeof GridStack === 'undefined') {
-        console.log(`GridStack not loaded yet, waiting... (attempt ${initAttempts}/${maxAttempts})`);
         if (initAttempts >= maxAttempts) {
             console.error('GridStack failed to load after 5 seconds');
             alert('Dashboard initialization timeout. GridStack library did not load. Please check:\n\n1. Network tab in Developer Tools (F12)\n2. Your internet connection\n3. Firewall/antivirus blocking CDNs');
@@ -1639,12 +1609,10 @@ function initDashboard() {
         setTimeout(initDashboard, 100);
         return;
     }
-    console.log('GridStack detected, initializing dashboard...');
     DashboardManager.init();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM loaded, checking for GridStack...');
     initDashboard();
 });
 </script>
