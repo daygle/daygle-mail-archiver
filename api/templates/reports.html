@@ -320,6 +320,52 @@ function initializeCharts() {
         console.error('avStatsCtx not found');
     }
 
+// Load all reports
+function loadAllReports() {
+    loadEmailVolumeReport();
+    loadAccountActivityReport();
+    loadSystemHealthReport();
+    loadAVStatsReport();
+}
+
+// Email Volume Report
+function loadEmailVolumeReport() {
+    const startDate = document.getElementById('emailVolumeStartDate').value;
+    const endDate = document.getElementById('emailVolumeEndDate').value;
+
+    if (!startDate || !endDate) {
+        console.warn('Start and end dates are required for email volume report');
+        return;
+    }
+
+    fetch(`/api/reports/email-volume?start_date=${startDate}&end_date=${endDate}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Defensive programming: ensure data structure exists
+            if (!data || typeof data !== 'object') {
+                console.error('Invalid response data:', data);
+                return;
+            }
+
+            // Update chart with safe defaults
+            const labels = Array.isArray(data.labels) ? data.labels : [];
+            const emailCounts = Array.isArray(data.email_counts) ? data.email_counts : [];
+
+            emailVolumeChart.data.labels = labels;
+            emailVolumeChart.data.datasets[0].data = emailCounts;
+            emailVolumeChart.update();
+        })
+        .catch(error => {
+            console.error('Error loading email volume report:', error);
+            // Could add user notification here if needed
+        });
+}
+
 // Account Activity Report
 function loadAccountActivityReport() {
     const startDate = document.getElementById('accountActivityStartDate').value;
