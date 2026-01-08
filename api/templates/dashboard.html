@@ -1178,7 +1178,7 @@ For more options, run: ./update.sh --help`;
 
     async loadEmailsPerDay() {
         try {
-            const days = this.widgetSettings['emails-per-day']?.days || 30;
+            const days = (this.widgetSettings && this.widgetSettings['emails-per-day'] && this.widgetSettings['emails-per-day'].days) || 30;
             const response = await fetch(`/api/dashboard/emails-per-day?days=${days}`);
             const data = await response.json();
             
@@ -1285,7 +1285,7 @@ For more options, run: ./update.sh --help`;
 
     async loadDeletionStats() {
         try {
-            const days = this.widgetSettings['deletion-stats']?.days || 30;
+            const days = (this.widgetSettings && this.widgetSettings['deletion-stats'] && this.widgetSettings['deletion-stats'].days) || 30;
             const response = await fetch(`/api/dashboard/deletion-stats?days=${days}`);
             const data = await response.json();
             
@@ -1362,7 +1362,7 @@ For more options, run: ./update.sh --help`;
 
     async loadStorageTrends() {
         try {
-            const days = this.widgetSettings['storage-trends']?.days || 7;
+            const days = (this.widgetSettings && this.widgetSettings['storage-trends'] && this.widgetSettings['storage-trends'].days) || 7;
             const response = await fetch(`/api/dashboard/storage-trends?days=${days}`);
             const data = await response.json();
             
