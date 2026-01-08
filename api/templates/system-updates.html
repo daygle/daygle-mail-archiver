@@ -47,121 +47,131 @@
                 <i class="fas fa-times"></i>
                 <span>Cancel</span>
             </a>
-            <button id="check-updates-btn" class="btn btn-primary">
-                <i class="fas fa-sync"></i>
-                <span>Check Now</span>
+            <button id="check-updates-btn" type="button" class="btn btn-primary">
+                <i class="fas fa-sync" id="check-icon"></i>
+                <span id="check-text">Check Now</span>
             </button>
         </div>
     </div>
 </div>
 
 <script>
-document.getElementById('check-updates-btn').addEventListener('click', async function() {
-    const btn = this;
-    btn.disabled = true;
-    const statusEl = document.getElementById('current-status');
-    const resultEl = document.getElementById('update-result');
-    const messageEl = document.getElementById('update-message');
-    const jsonEl = document.getElementById('update-json');
-    const disabledEl = document.getElementById('update-disabled');
-    const unavailableEl = document.getElementById('update-unavailable');
-    const toggleBtn = document.getElementById('toggle-details-btn');
-
-    // Reset UI
-    statusEl.textContent = 'Checking...';
-    resultEl.style.display = 'none';
-    jsonEl.style.display = 'none';
-    disabledEl.style.display = 'none';
-    unavailableEl.style.display = 'none';
-    toggleBtn.style.display = 'none';
-    toggleBtn.textContent = 'Show details';
-
-    try {
-        // Force a manual check regardless of automatic check setting
-        const resp = await fetch('/api/dashboard/check-updates?force=true');
-        if (!resp.ok) {
-            statusEl.textContent = 'Error';
-            messageEl.textContent = `Update check failed (HTTP ${resp.status})`;
-            resultEl.style.display = 'block';
-            return;
-        }
-
-        const data = await resp.json();
-        if (!data) {
-            statusEl.textContent = 'Error';
-            messageEl.textContent = 'Empty response from update check';
-            resultEl.style.display = 'block';
-            btn.disabled = false;
-            return;
-        }
-
-        // Defensive: ensure data is an object
-        if (typeof data !== 'object') {
-            statusEl.textContent = 'Error';
-            messageEl.textContent = 'Unexpected response format from update check';
-            resultEl.style.display = 'block';
-            btn.disabled = false;
-            return;
-        }
-
-        // If we received a timestamp for the manual check, update the status badge on the page
-        try {
-            if (data && data.current_commit !== undefined) {
-                // nothing extra here; last manual check time is persisted on server and visible on Global Settings
-            }
-        } catch (e) {
-            // ignore
-        }
-
-        if (data.disabled) {
-            statusEl.textContent = 'Disabled';
-            disabledEl.style.display = 'block';
-            btn.disabled = false;
-            return;
-        }
-
-        if (data.unavailable) {
-            statusEl.textContent = 'Unavailable';
-            messageEl.innerHTML = '';
-            unavailableEl.style.display = 'block';
-            // Show toggle to reveal raw details if admin wants to inspect
-            toggleBtn.style.display = 'inline-block';
-            toggleBtn.onclick = function() {
-                if (jsonEl.style.display === 'block') {
-                    jsonEl.style.display = 'none';
-                    toggleBtn.textContent = 'Show details';
-                } else {
-                    jsonEl.textContent = JSON.stringify(data, null, 2);
-                    jsonEl.style.display = 'block';
-                    toggleBtn.textContent = 'Hide details';
-                }
-            };
-            btn.disabled = false;
-            return;
-        }
-
-        if (data.updates_available && !data.error) {
-            statusEl.textContent = 'Update Available';
-            messageEl.innerHTML = `<strong>Update available:</strong> Version ${data.latest_commit}` + (data.commits_behind ? ` (${data.commits_behind} commits behind)` : '') + (data.latest_message ? `: ${data.latest_message}` : '');
-        } else if (data.error) {
-            statusEl.textContent = 'Error';
-            messageEl.innerHTML = `Error checking updates: ${data.error}`;
-        } else {
-            statusEl.textContent = 'Up to date';
-            messageEl.innerHTML = `Your installation is up to date (commit ${data.current_commit || 'unknown'}).`;
-        }
-
-        jsonEl.textContent = JSON.stringify(data, null, 2);
-        jsonEl.style.display = 'block';
-        resultEl.style.display = 'block';
-
-    } catch (err) {
-        statusEl.textContent = 'Error';
-        messageEl.textContent = `Error checking updates: ${err}`;
-        resultEl.style.display = 'block';
-    } finally {
-        btn.disabled = false;
+document.addEventListener('DOMContentLoaded', function () {
+    const btn = document.getElementById('check-updates-btn');
+    if (!btn) {
+        console.warn('Check updates button not found');
+        return;
     }
+
+    btn.addEventListener('click', async function() {
+        const statusEl = document.getElementById('current-status');
+        const resultEl = document.getElementById('update-result');
+        const messageEl = document.getElementById('update-message');
+        const jsonEl = document.getElementById('update-json');
+        const disabledEl = document.getElementById('update-disabled');
+        const unavailableEl = document.getElementById('update-unavailable');
+        const toggleBtn = document.getElementById('toggle-details-btn');
+        const checkIcon = document.getElementById('check-icon');
+        const checkText = document.getElementById('check-text');
+
+        // Reset UI and show spinner
+        btn.disabled = true;
+        if (checkIcon) checkIcon.classList.add('fa-spin');
+        if (checkText) checkText.textContent = 'Checking...';
+
+        statusEl.textContent = 'Checking...';
+        resultEl.style.display = 'none';
+        jsonEl.style.display = 'none';
+        disabledEl.style.display = 'none';
+        unavailableEl.style.display = 'none';
+        if (toggleBtn) {
+            toggleBtn.style.display = 'none';
+            toggleBtn.textContent = 'Show details';
+        }
+
+        try {
+            console.log('Requesting update check...');
+            // Force a manual check regardless of automatic check setting
+            const resp = await fetch('/api/dashboard/check-updates?force=true');
+            console.log('Update check response status:', resp.status);
+
+            if (!resp.ok) {
+                statusEl.textContent = 'Error';
+                messageEl.textContent = `Update check failed (HTTP ${resp.status})`;
+                resultEl.style.display = 'block';
+                return;
+            }
+
+            const data = await resp.json();
+            console.log('Update check data:', data);
+
+            if (!data) {
+                statusEl.textContent = 'Error';
+                messageEl.textContent = 'Empty response from update check';
+                resultEl.style.display = 'block';
+                return;
+            }
+
+            // Defensive: ensure data is an object
+            if (typeof data !== 'object') {
+                statusEl.textContent = 'Error';
+                messageEl.textContent = 'Unexpected response format from update check';
+                resultEl.style.display = 'block';
+                return;
+            }
+
+            if (data.disabled) {
+                statusEl.textContent = 'Disabled';
+                disabledEl.style.display = 'block';
+                return;
+            }
+
+            if (data.unavailable) {
+                statusEl.textContent = 'Unavailable';
+                messageEl.innerHTML = '';
+                unavailableEl.style.display = 'block';
+                if (toggleBtn) {
+                    toggleBtn.style.display = 'inline-block';
+                    toggleBtn.onclick = function() {
+                        if (jsonEl.style.display === 'block') {
+                            jsonEl.style.display = 'none';
+                            toggleBtn.textContent = 'Show details';
+                        } else {
+                            jsonEl.textContent = JSON.stringify(data, null, 2);
+                            jsonEl.style.display = 'block';
+                            toggleBtn.textContent = 'Hide details';
+                        }
+                    };
+                }
+                return;
+            }
+
+            if (data.updates_available && !data.error) {
+                statusEl.textContent = 'Update Available';
+                messageEl.innerHTML = `<strong>Update available:</strong> Version ${data.latest_commit}` + (data.commits_behind ? ` (${data.commits_behind} commits behind)` : '') + (data.latest_message ? `: ${data.latest_message}` : '');
+            } else if (data.error) {
+                statusEl.textContent = 'Error';
+                messageEl.innerHTML = `Error checking updates: ${data.error}`;
+            } else {
+                statusEl.textContent = 'Up to date';
+                messageEl.innerHTML = `Your installation is up to date (commit ${data.current_commit || 'unknown'}).`;
+            }
+
+            jsonEl.textContent = JSON.stringify(data, null, 2);
+            jsonEl.style.display = 'block';
+            resultEl.style.display = 'block';
+
+        } catch (err) {
+            console.error('Update check failed:', err);
+            statusEl.textContent = 'Error';
+            messageEl.textContent = `Error checking updates: ${err}`;
+            resultEl.style.display = 'block';
+        } finally {
+            btn.disabled = false;
+            if (checkIcon) checkIcon.classList.remove('fa-spin');
+            if (checkText) checkText.textContent = 'Check Now';
+        }
+    });
 });
 </script>
 {% endblock %}

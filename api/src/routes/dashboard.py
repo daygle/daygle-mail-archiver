@@ -655,6 +655,9 @@ def check_updates(request: Request, force: bool = False):
                 pass
 
         # Perform the actual update check
+        if force:
+            username = getattr(request, "session", {}).get("username", "unknown")
+            log("info", "Dashboard", f"User '{username}' triggered manual update check", "")
         update_info = check_for_updates()
 
         # Store result and timestamp
