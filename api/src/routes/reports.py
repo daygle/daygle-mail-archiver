@@ -68,30 +68,39 @@ def reports_page(request: Request):
     )
 
 @router.get("/api/reports/email-volume")
-def email_volume_report(request: Request, period: str = "daily", days: int = 30):
+def email_volume_report(request: Request, start_date: str = None, end_date: str = None):
     """Get email volume report data"""
     if not require_login(request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
     try:
-        # Validate parameters
-        if period not in ["daily", "weekly", "monthly"]:
-            period = "daily"
-        if days not in [7, 14, 30, 60, 90, 180, 365]:
-            days = 30
+        # Validate date parameters
+        if not start_date or not end_date:
+            return JSONResponse({"error": "start_date and end_date are required"}, status_code=400)
+
+        try:
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+            end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+        except ValueError:
+            return JSONResponse({"error": "Invalid date format. Use YYYY-MM-DD"}, status_code=400)
+
+        if start_dt > end_dt:
+            return JSONResponse({"error": "start_date must be before end_date"}, status_code=400)
 
         user_id = request.session.get("user_id")
         date_format = get_user_date_format(request, date_only=True)
 
-        if period == "daily":
+        # Calculate period based on date range
+        days_diff = (end_dt - start_dt).days
+        if days_diff <= 7:
+            period = "daily"
             group_by = "DATE(created_at)"
-            interval = f"make_interval(days => {days})"
-        elif period == "weekly":
+        elif days_diff <= 90:
+            period = "weekly"
             group_by = "DATE_TRUNC('week', created_at)"
-            interval = f"make_interval(days => {days})"
-        elif period == "monthly":
+        else:
+            period = "monthly"
             group_by = "DATE_TRUNC('month', created_at)"
-            interval = f"make_interval(days => {days})"
 
         results = query(f"""
             SELECT
@@ -100,10 +109,10 @@ def email_volume_report(request: Request, period: str = "daily", days: int = 30)
                 COUNT(CASE WHEN virus_detected THEN 1 END) as virus_count,
                 COUNT(DISTINCT source) as sources_count
             FROM emails
-            WHERE created_at >= NOW() - {interval}
+            WHERE created_at >= :start_date AND created_at <= :end_date
             GROUP BY {group_by}
             ORDER BY period_start
-        """).mappings().all()
+        """, {"start_date": start_dt, "end_date": end_dt}).mappings().all()
 
         labels = []
         email_counts = []
@@ -137,14 +146,24 @@ def email_volume_report(request: Request, period: str = "daily", days: int = 30)
         return JSONResponse({"error": "Failed to load data"}, status_code=500)
 
 @router.get("/api/reports/account-activity")
-def account_activity_report(request: Request, days: int = 30):
+def account_activity_report(request: Request, start_date: str = None, end_date: str = None):
     """Get account activity report data"""
     if not require_login(request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
     try:
-        if days not in [7, 14, 30, 60, 90]:
-            days = 30
+        # Validate date parameters
+        if not start_date or not end_date:
+            return JSONResponse({"error": "start_date and end_date are required"}, status_code=400)
+
+        try:
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+            end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+        except ValueError:
+            return JSONResponse({"error": "Invalid date format. Use YYYY-MM-DD"}, status_code=400)
+
+        if start_dt > end_dt:
+            return JSONResponse({"error": "start_date must be before end_date"}, status_code=400)
 
         user_id = request.session.get("user_id")
         date_format = get_user_date_format(request, date_only=True)
@@ -306,14 +325,24 @@ def user_activity_report(request: Request, days: int = 30):
         return JSONResponse({"error": "Failed to load data"}, status_code=500)
 
 @router.get("/api/reports/system-health")
-def system_health_report(request: Request, days: int = 30):
+def system_health_report(request: Request, start_date: str = None, end_date: str = None):
     """Get system health report data"""
     if not require_login(request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
     try:
-        if days not in [7, 14, 30, 60, 90]:
-            days = 30
+        # Validate date parameters
+        if not start_date or not end_date:
+            return JSONResponse({"error": "start_date and end_date are required"}, status_code=400)
+
+        try:
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+            end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+        except ValueError:
+            return JSONResponse({"error": "Invalid date format. Use YYYY-MM-DD"}, status_code=400)
+
+        if start_dt > end_dt:
+            return JSONResponse({"error": "start_date must be before end_date"}, status_code=400)
 
         user_id = request.session.get("user_id")
         date_format = get_user_date_format(request, date_only=True)
@@ -331,10 +360,10 @@ def system_health_report(request: Request, days: int = 30):
                 DATE(timestamp) as error_date,
                 COUNT(*) as error_count
             FROM logs
-            WHERE level = 'error' AND timestamp >= NOW() - make_interval(days => :days)
+            WHERE level = 'error' AND timestamp >= :start_date AND timestamp <= :end_date
             GROUP BY DATE(timestamp)
             ORDER BY error_date
-        """, {"days": days}).mappings().all()
+        """, {"start_date": start_dt, "end_date": end_dt}).mappings().all()
 
         error_labels = []
         error_counts = []
@@ -370,4 +399,93 @@ def system_health_report(request: Request, days: int = 30):
     except Exception as e:
         username = request.session.get("username", "unknown")
         log("error", "Reports", f"Failed to fetch system health report for user '{username}': {str(e)}", "")
+        return JSONResponse({"error": "Failed to load data"}, status_code=500)
+
+
+@router.get("/api/reports/av-stats")
+def av_stats_report(request: Request, start_date: str = None, end_date: str = None):
+    """Get anti-virus statistics report data"""
+    if not require_login(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    try:
+        # Validate date parameters
+        if not start_date or not end_date:
+            return JSONResponse({"error": "start_date and end_date are required"}, status_code=400)
+
+        try:
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+            end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+        except ValueError:
+            return JSONResponse({"error": "Invalid date format. Use YYYY-MM-DD"}, status_code=400)
+
+        if start_dt > end_dt:
+            return JSONResponse({"error": "start_date must be before end_date"}, status_code=400)
+
+        user_id = request.session.get("user_id")
+        date_format = get_user_date_format(request, date_only=True)
+
+        # Calculate period based on date range for grouping
+        days_diff = (end_dt - start_dt).days
+        if days_diff <= 7:
+            group_by = "DATE(created_at)"
+        elif days_diff <= 90:
+            group_by = "DATE_TRUNC('week', created_at)"
+        else:
+            group_by = "DATE_TRUNC('month', created_at)"
+
+        # Get AV statistics
+        av_results = query(f"""
+            SELECT
+                {group_by} as period_start,
+                COUNT(CASE WHEN virus_detected = false THEN 1 END) as clean_count,
+                COUNT(CASE WHEN virus_detected = true AND quarantined = true THEN 1 END) as quarantined_count,
+                COUNT(CASE WHEN virus_detected = true AND quarantined = false THEN 1 END) as rejected_count
+            FROM emails
+            WHERE created_at >= :start_date AND created_at <= :end_date
+            GROUP BY {group_by}
+            ORDER BY period_start
+        """, {"start_date": start_dt, "end_date": end_dt}).mappings().all()
+
+        # Get total counts for the period
+        total_results = query("""
+            SELECT
+                COUNT(CASE WHEN virus_detected = false THEN 1 END) as total_clean,
+                COUNT(CASE WHEN virus_detected = true AND quarantined = true THEN 1 END) as total_quarantined,
+                COUNT(CASE WHEN virus_detected = true AND quarantined = false THEN 1 END) as total_rejected
+            FROM emails
+            WHERE created_at >= :start_date AND created_at <= :end_date
+        """, {"start_date": start_dt, "end_date": end_dt}).mappings().first()
+
+        labels = []
+        clean_counts = []
+        quarantined_counts = []
+        rejected_counts = []
+
+        for row in av_results:
+            if row["period_start"]:
+                local_dt = convert_utc_to_user_timezone(row["period_start"], user_id)
+                if days_diff <= 7:
+                    labels.append(local_dt.strftime(date_format))
+                elif days_diff <= 90:
+                    week_end = local_dt + timedelta(days=6)
+                    labels.append(f"{local_dt.strftime(date_format)} - {week_end.strftime(date_format)}")
+                else:
+                    labels.append(local_dt.strftime("%B %Y"))
+            clean_counts.append(row["clean_count"])
+            quarantined_counts.append(row["quarantined_count"])
+            rejected_counts.append(row["rejected_count"])
+
+        return {
+            "clean_emails": total_results["total_clean"] if total_results else 0,
+            "quarantined_emails": total_results["total_quarantined"] if total_results else 0,
+            "rejected_emails": total_results["total_rejected"] if total_results else 0,
+            "labels": labels,
+            "clean_counts": clean_counts,
+            "quarantined_counts": quarantined_counts,
+            "rejected_counts": rejected_counts
+        }
+    except Exception as e:
+        username = request.session.get("username", "unknown")
+        log("error", "Reports", f"Failed to fetch AV statistics report for user '{username}': {str(e)}", "")
         return JSONResponse({"error": "Failed to load data"}, status_code=500)

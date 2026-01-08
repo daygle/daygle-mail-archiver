@@ -96,23 +96,20 @@
         <div class="report-header">
             <h2 class="report-title">Email Volume Report</h2>
             <div class="report-controls">
-                <select id="emailVolumePeriod" class="form-select form-select-sm">
+                <select id="emailVolumePeriod" class="form-select form-select-sm me-2">
                     <option value="daily">Daily</option>
                     <option value="weekly">Weekly</option>
                     <option value="monthly">Monthly</option>
                 </select>
-                <select id="emailVolumeDays" class="form-select form-select-sm">
-                    <option value="7">7 days</option>
-                    <option value="14">14 days</option>
-                    <option value="30" selected>30 days</option>
-                    <option value="60">60 days</option>
-                    <option value="90">90 days</option>
-                    <option value="180">180 days</option>
-                    <option value="365">365 days</option>
-                </select>
-                <button id="refreshEmailVolume" class="btn btn-outline-primary btn-sm">
-                    <i class="fas fa-sync-alt"></i> Refresh
-                </button>
+                <div class="date-range-controls">
+                    <label for="emailVolumeStartDate" class="form-label me-2">From:</label>
+                    <input type="date" id="emailVolumeStartDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
+                    <label for="emailVolumeEndDate" class="form-label mx-2">To:</label>
+                    <input type="date" id="emailVolumeEndDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
+                    <button id="refreshEmailVolume" class="btn btn-outline-primary btn-sm ms-2">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
             </div>
         </div>
         <div class="report-card">
@@ -127,16 +124,15 @@
         <div class="report-header">
             <h2 class="report-title">Account Activity Report</h2>
             <div class="report-controls">
-                <select id="accountActivityDays" class="form-select form-select-sm">
-                    <option value="7">7 days</option>
-                    <option value="14">14 days</option>
-                    <option value="30" selected>30 days</option>
-                    <option value="60">60 days</option>
-                    <option value="90">90 days</option>
-                </select>
-                <button id="refreshAccountActivity" class="btn btn-outline-primary btn-sm">
-                    <i class="fas fa-sync-alt"></i> Refresh
-                </button>
+                <div class="date-range-controls">
+                    <label for="accountActivityStartDate" class="form-label me-2">From:</label>
+                    <input type="date" id="accountActivityStartDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
+                    <label for="accountActivityEndDate" class="form-label mx-2">To:</label>
+                    <input type="date" id="accountActivityEndDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
+                    <button id="refreshAccountActivity" class="btn btn-outline-primary btn-sm ms-2">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
             </div>
         </div>
         <div class="report-card">
@@ -176,62 +172,57 @@
         </div>
     </div>
 
-    <!-- User Activity Report (Admin Only) -->
-    {% if request.session.role == 'administrator' %}
+    <!-- Anti-Virus Statistics Report -->
     <div class="report-section">
         <div class="report-header">
-            <h2 class="report-title">User Activity Report</h2>
+            <h2 class="report-title">Anti-Virus Statistics</h2>
             <div class="report-controls">
-                <select id="userActivityDays" class="form-select form-select-sm">
-                    <option value="7">7 days</option>
-                    <option value="14">14 days</option>
-                    <option value="30" selected>30 days</option>
-                    <option value="60">60 days</option>
-                    <option value="90">90 days</option>
-                </select>
-                <button id="refreshUserActivity" class="btn btn-outline-primary btn-sm">
-                    <i class="fas fa-sync-alt"></i> Refresh
-                </button>
+                <div class="date-range-controls">
+                    <label for="avStartDate" class="form-label me-2">From:</label>
+                    <input type="date" id="avStartDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
+                    <label for="avEndDate" class="form-label mx-2">To:</label>
+                    <input type="date" id="avEndDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
+                    <button id="refreshAVStats" class="btn btn-outline-primary btn-sm ms-2">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
             </div>
         </div>
         <div class="report-card">
-            <div class="chart-container">
-                <canvas id="userCreationChart"></canvas>
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="cleanEmails">-</div>
+                    <div class="metric-label">Clean Emails</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="quarantinedEmails">-</div>
+                    <div class="metric-label">Quarantined Emails</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="rejectedEmails">-</div>
+                    <div class="metric-label">Rejected Emails</div>
+                </div>
             </div>
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Username</th>
-                            <th>Role</th>
-                            <th>Created</th>
-                            <th>Last Login</th>
-                            <th>Logins Today</th>
-                        </tr>
-                    </thead>
-                    <tbody id="userTableBody">
-                    </tbody>
-                </table>
+            <div class="chart-container">
+                <canvas id="avStatsChart"></canvas>
             </div>
         </div>
     </div>
-    {% endif %}
 
     <!-- System Health Report -->
     <div class="report-section">
         <div class="report-header">
             <h2 class="report-title">System Health Report</h2>
             <div class="report-controls">
-                <select id="systemHealthDays" class="form-select form-select-sm">
-                    <option value="7">7 days</option>
-                    <option value="14">14 days</option>
-                    <option value="30" selected>30 days</option>
-                    <option value="60">60 days</option>
-                    <option value="90">90 days</option>
-                </select>
-                <button id="refreshSystemHealth" class="btn btn-outline-primary btn-sm">
-                    <i class="fas fa-sync-alt"></i> Refresh
-                </button>
+                <div class="date-range-controls">
+                    <label for="systemHealthStartDate" class="form-label me-2">From:</label>
+                    <input type="date" id="systemHealthStartDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
+                    <label for="systemHealthEndDate" class="form-label mx-2">To:</label>
+                    <input type="date" id="systemHealthEndDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
+                    <button id="refreshSystemHealth" class="btn btn-outline-primary btn-sm ms-2">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
             </div>
         </div>
         <div class="report-card">
@@ -261,13 +252,35 @@ Chart = undefined; // Clear any existing Chart
 
 <script>
 // Global chart instances
-let emailVolumeChart, accountActivityChart, userCreationChart, errorTrendsChart;
+let emailVolumeChart, accountActivityChart, userCreationChart, errorTrendsChart, avStatsChart;
 
 // Initialize charts and load data
 document.addEventListener('DOMContentLoaded', function() {
     initializeCharts();
+    setDefaultDateRanges();
     loadAllReports();
 });
+
+// Set default date ranges (last 30 days)
+function setDefaultDateRanges() {
+    const today = new Date();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+
+    const formatDate = (date) => {
+        return date.toISOString().split('T')[0];
+    };
+
+    // Set default dates for all date range inputs
+    document.getElementById('emailVolumeStartDate').value = formatDate(thirtyDaysAgo);
+    document.getElementById('emailVolumeEndDate').value = formatDate(today);
+    document.getElementById('accountActivityStartDate').value = formatDate(thirtyDaysAgo);
+    document.getElementById('accountActivityEndDate').value = formatDate(today);
+    document.getElementById('systemHealthStartDate').value = formatDate(thirtyDaysAgo);
+    document.getElementById('systemHealthEndDate').value = formatDate(today);
+    document.getElementById('avStartDate').value = formatDate(thirtyDaysAgo);
+    document.getElementById('avEndDate').value = formatDate(today);
+}
 
 // Initialize chart instances
 function initializeCharts() {
@@ -372,6 +385,38 @@ function initializeCharts() {
             }
         }
     });
+
+    // AV Statistics Chart
+    const avStatsCtx = document.getElementById('avStatsChart').getContext('2d');
+    avStatsChart = new Chart(avStatsCtx, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Clean',
+                data: [],
+                backgroundColor: '#10b981'
+            }, {
+                label: 'Quarantined',
+                data: [],
+                backgroundColor: '#f59e0b'
+            }, {
+                label: 'Rejected',
+                data: [],
+                backgroundColor: '#ef4444'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top' }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
 }
 
 // Load all reports
@@ -380,14 +425,20 @@ function loadAllReports() {
     loadAccountActivityReport();
     loadUserActivityReport();
     loadSystemHealthReport();
+    loadAVStatsReport();
 }
 
 // Email Volume Report
 function loadEmailVolumeReport() {
-    const period = document.getElementById('emailVolumePeriod').value;
-    const days = document.getElementById('emailVolumeDays').value;
+    const startDate = document.getElementById('emailVolumeStartDate').value;
+    const endDate = document.getElementById('emailVolumeEndDate').value;
 
-    fetch(`/api/reports/email-volume?period=${period}&days=${days}`)
+    if (!startDate || !endDate) {
+        console.warn('Start and end dates are required for email volume report');
+        return;
+    }
+
+    fetch(`/api/reports/email-volume?start_date=${startDate}&end_date=${endDate}`)
         .then(response => response.json())
         .then(data => {
             emailVolumeChart.data.labels = data.labels;
@@ -400,9 +451,15 @@ function loadEmailVolumeReport() {
 
 // Account Activity Report
 function loadAccountActivityReport() {
-    const days = document.getElementById('accountActivityDays').value;
+    const startDate = document.getElementById('accountActivityStartDate').value;
+    const endDate = document.getElementById('accountActivityEndDate').value;
 
-    fetch(`/api/reports/account-activity?days=${days}`)
+    if (!startDate || !endDate) {
+        console.warn('Start and end dates are required for account activity report');
+        return;
+    }
+
+    fetch(`/api/reports/account-activity?start_date=${startDate}&end_date=${endDate}`)
         .then(response => response.json())
         .then(data => {
             // Update metrics
@@ -487,9 +544,15 @@ function loadUserActivityReport() {
 
 // System Health Report
 function loadSystemHealthReport() {
-    const days = document.getElementById('systemHealthDays').value;
+    const startDate = document.getElementById('systemHealthStartDate').value;
+    const endDate = document.getElementById('systemHealthEndDate').value;
 
-    fetch(`/api/reports/system-health?days=${days}`)
+    if (!startDate || !endDate) {
+        console.warn('Start and end dates are required for system health report');
+        return;
+    }
+
+    fetch(`/api/reports/system-health?start_date=${startDate}&end_date=${endDate}`)
         .then(response => response.json())
         .then(data => {
             // Update metrics
@@ -504,17 +567,51 @@ function loadSystemHealthReport() {
         .catch(error => console.error('Error loading system health report:', error));
 }
 
+// Anti-Virus Statistics Report
+function loadAVStatsReport() {
+    const startDate = document.getElementById('avStartDate').value;
+    const endDate = document.getElementById('avEndDate').value;
+
+    if (!startDate || !endDate) {
+        console.warn('Start and end dates are required for AV statistics report');
+        return;
+    }
+
+    fetch(`/api/reports/av-stats?start_date=${startDate}&end_date=${endDate}`)
+        .then(response => response.json())
+        .then(data => {
+            // Update metrics
+            document.getElementById('cleanEmails').textContent = data.clean_emails;
+            document.getElementById('quarantinedEmails').textContent = data.quarantined_emails;
+            document.getElementById('rejectedEmails').textContent = data.rejected_emails;
+
+            // Update chart if it exists
+            if (avStatsChart) {
+                avStatsChart.data.labels = data.labels;
+                avStatsChart.data.datasets[0].data = data.clean_counts;
+                avStatsChart.data.datasets[1].data = data.quarantined_counts;
+                avStatsChart.data.datasets[2].data = data.rejected_counts;
+                avStatsChart.update();
+            }
+        })
+        .catch(error => console.error('Error loading AV statistics report:', error));
+}
+
 // Event listeners for refresh buttons
 document.getElementById('refreshEmailVolume').addEventListener('click', loadEmailVolumeReport);
 document.getElementById('refreshAccountActivity').addEventListener('click', loadAccountActivityReport);
 document.getElementById('refreshUserActivity').addEventListener('click', loadUserActivityReport);
 document.getElementById('refreshSystemHealth').addEventListener('click', loadSystemHealthReport);
+document.getElementById('refreshAVStats').addEventListener('click', loadAVStatsReport);
 
-// Event listeners for period/days changes
-document.getElementById('emailVolumePeriod').addEventListener('change', loadEmailVolumeReport);
-document.getElementById('emailVolumeDays').addEventListener('change', loadEmailVolumeReport);
-document.getElementById('accountActivityDays').addEventListener('change', loadAccountActivityReport);
-document.getElementById('userActivityDays').addEventListener('change', loadUserActivityReport);
-document.getElementById('systemHealthDays').addEventListener('change', loadSystemHealthReport);
+// Event listeners for date changes
+document.getElementById('emailVolumeStartDate').addEventListener('change', loadEmailVolumeReport);
+document.getElementById('emailVolumeEndDate').addEventListener('change', loadEmailVolumeReport);
+document.getElementById('accountActivityStartDate').addEventListener('change', loadAccountActivityReport);
+document.getElementById('accountActivityEndDate').addEventListener('change', loadAccountActivityReport);
+document.getElementById('systemHealthStartDate').addEventListener('change', loadSystemHealthReport);
+document.getElementById('systemHealthEndDate').addEventListener('change', loadSystemHealthReport);
+document.getElementById('avStartDate').addEventListener('change', loadAVStatsReport);
+document.getElementById('avEndDate').addEventListener('change', loadAVStatsReport);
 </script>
 {% endblock %}
