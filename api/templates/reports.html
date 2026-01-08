@@ -252,7 +252,7 @@ Chart = undefined; // Clear any existing Chart
 
 <script>
 // Global chart instances
-let emailVolumeChart, accountActivityChart, userCreationChart, errorTrendsChart, avStatsChart;
+let emailVolumeChart, accountActivityChart, errorTrendsChart, avStatsChart;
 
 // Initialize charts and load data
 document.addEventListener('DOMContentLoaded', function() {
@@ -284,9 +284,18 @@ function setDefaultDateRanges() {
 
 // Initialize chart instances
 function initializeCharts() {
+    // Check if Chart.js is loaded
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js library not loaded - script might be blocked or unavailable');
+        // Try again in 100ms
+        setTimeout(initializeCharts, 100);
+        return;
+    }
+
     // Email Volume Chart
-    const emailVolumeCtx = document.getElementById('emailVolumeChart').getContext('2d');
-    emailVolumeChart = new Chart(emailVolumeCtx, {
+    const emailVolumeCtx = document.getElementById('emailVolumeChart');
+    if (emailVolumeCtx) {
+        emailVolumeChart = new Chart(emailVolumeCtx, {
         type: 'line',
         data: {
             labels: [],
@@ -314,8 +323,6 @@ function initializeCharts() {
                 y: { beginAtZero: true }
             }
         }
-    });
-
     // Account Activity Chart
     const accountActivityCtx = document.getElementById('accountActivityChart').getContext('2d');
     accountActivityChart = new Chart(accountActivityCtx, {
@@ -323,30 +330,6 @@ function initializeCharts() {
         data: {
             labels: [],
             datasets: []
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'top' }
-            },
-            scales: {
-                y: { beginAtZero: true }
-            }
-        }
-    });
-
-    // User Creation Chart
-    const userCreationCtx = document.getElementById('userCreationChart').getContext('2d');
-    userCreationChart = new Chart(userCreationCtx, {
-        type: 'bar',
-        data: {
-            labels: [],
-            datasets: [{
-                label: 'New Users',
-                data: [],
-                backgroundColor: '#10b981'
-            }]
         },
         options: {
             responsive: true,
@@ -417,13 +400,50 @@ function initializeCharts() {
             }
         }
     });
+
+    // AV Stats Chart
+    const avStatsCtx = document.getElementById('avStatsChart').getContext('2d');
+    avStatsChart = new Chart(avStatsCtx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Clean',
+                data: [],
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                tension: 0.4
+            }, {
+                label: 'Quarantined',
+                data: [],
+                borderColor: '#f59e0b',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                tension: 0.4
+            }, {
+                label: 'Rejected',
+                data: [],
+                borderColor: '#ef4444',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top' }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
 }
 
 // Load all reports
 function loadAllReports() {
     loadEmailVolumeReport();
     loadAccountActivityReport();
-    loadUserActivityReport();
     loadSystemHealthReport();
     loadAVStatsReport();
 }
@@ -511,37 +531,6 @@ function loadAccountActivityReport() {
         .catch(error => console.error('Error loading account activity report:', error));
 }
 
-// User Activity Report
-function loadUserActivityReport() {
-    const days = document.getElementById('userActivityDays').value;
-
-    fetch(`/api/reports/user-activity?days=${days}`)
-        .then(response => response.json())
-        .then(data => {
-            // Update chart
-            userCreationChart.data.labels = data.creation_labels;
-            userCreationChart.data.datasets[0].data = data.creation_counts;
-            userCreationChart.update();
-
-            // Update table
-            const tbody = document.getElementById('userTableBody');
-            tbody.innerHTML = data.users.map(user => `
-                <tr>
-                    <td>${user.username}</td>
-                    <td>${user.role}</td>
-                    <td>${user.created_at || 'Unknown'}</td>
-                    <td>${user.last_login || 'Never'}</td>
-                    <td>${user.logins_today}</td>
-                </tr>
-            `).join('');
-        })
-        .catch(error => {
-            if (error.status !== 403) {
-                console.error('Error loading user activity report:', error);
-            }
-        });
-}
-
 // System Health Report
 function loadSystemHealthReport() {
     const startDate = document.getElementById('systemHealthStartDate').value;
@@ -600,7 +589,6 @@ function loadAVStatsReport() {
 // Event listeners for refresh buttons
 document.getElementById('refreshEmailVolume').addEventListener('click', loadEmailVolumeReport);
 document.getElementById('refreshAccountActivity').addEventListener('click', loadAccountActivityReport);
-document.getElementById('refreshUserActivity').addEventListener('click', loadUserActivityReport);
 document.getElementById('refreshSystemHealth').addEventListener('click', loadSystemHealthReport);
 document.getElementById('refreshAVStats').addEventListener('click', loadAVStatsReport);
 

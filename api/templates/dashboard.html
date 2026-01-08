@@ -541,6 +541,14 @@ const DashboardManager = {
         { id: 'system-uptime', x: 9, y: 6, w: 3, h: 3, visible: true }
     ],
 
+    // Helper function to safely format numbers, returns "N/A" for invalid values
+    formatNumber(value) {
+        if (value === null || value === undefined || isNaN(value)) {
+            return 'N/A';
+        }
+        return value.toLocaleString();
+    },
+
     init() {
         // Check if GridStack is loaded
         if (typeof GridStack === 'undefined') {
@@ -1064,9 +1072,9 @@ const DashboardManager = {
             const totalAccountsEl = document.getElementById('overview-accounts');
             const databaseSizeEl = document.getElementById('overview-db-size');
             
-            if (totalEmailsEl) totalEmailsEl.textContent = data.total_emails.toLocaleString();
-            if (emailsTodayEl) emailsTodayEl.textContent = data.emails_today.toLocaleString();
-            if (totalAccountsEl) totalAccountsEl.textContent = data.total_accounts.toLocaleString();
+            if (totalEmailsEl) totalEmailsEl.textContent = this.formatNumber(data.total_emails);
+            if (emailsTodayEl) emailsTodayEl.textContent = this.formatNumber(data.emails_today);
+            if (totalAccountsEl) totalAccountsEl.textContent = this.formatNumber(data.total_accounts);
             if (databaseSizeEl) databaseSizeEl.textContent = data.database_size;
 
             // Load system status data
@@ -1075,7 +1083,7 @@ const DashboardManager = {
             
             const workersEl = document.getElementById('overview-workers');
             
-            if (workersEl) workersEl.textContent = statusData.workers_online;
+            if (workersEl) workersEl.textContent = this.formatNumber(statusData.workers_online);
             
             // Check for system updates
             this.checkForUpdates();
@@ -1452,9 +1460,9 @@ For more options, run: ./update.sh --help`;
             const rejectEl = document.getElementById('clamav-reject');
             const cleanEl = document.getElementById('clamav-clean');
             
-            if (quarantineEl) quarantineEl.textContent = data.quarantined.toLocaleString();
-            if (rejectEl) rejectEl.textContent = data.rejected.toLocaleString();
-            if (cleanEl) cleanEl.textContent = data.clean.toLocaleString();
+            if (quarantineEl) quarantineEl.textContent = this.formatNumber(data.quarantined);
+            if (rejectEl) rejectEl.textContent = this.formatNumber(data.rejected);
+            if (cleanEl) cleanEl.textContent = this.formatNumber(data.clean);
         } catch (error) {
             console.error('Error loading ClamAV stats:', error);
         }
@@ -1466,7 +1474,7 @@ For more options, run: ./update.sh --help`;
             const response = await fetch('/api/dashboard/stats');
             const data = await response.json();
             const el = document.getElementById('stat-total-emails');
-            if (el) el.textContent = data.total_emails.toLocaleString();
+            if (el) el.textContent = this.formatNumber(data.total_emails);
         } catch (error) {
             console.error('Error loading total emails:', error);
         }
@@ -1477,7 +1485,7 @@ For more options, run: ./update.sh --help`;
             const response = await fetch('/api/dashboard/stats');
             const data = await response.json();
             const el = document.getElementById('stat-emails-today');
-            if (el) el.textContent = data.emails_today.toLocaleString();
+            if (el) el.textContent = this.formatNumber(data.emails_today);
         } catch (error) {
             console.error('Error loading emails today:', error);
         }
@@ -1499,7 +1507,7 @@ For more options, run: ./update.sh --help`;
             const response = await fetch('/api/dashboard/stats');
             const data = await response.json();
             const el = document.getElementById('stat-active-accounts');
-            if (el) el.textContent = data.total_accounts.toLocaleString();
+            if (el) el.textContent = this.formatNumber(data.total_accounts);
         } catch (error) {
             console.error('Error loading active accounts:', error);
         }
@@ -1510,7 +1518,7 @@ For more options, run: ./update.sh --help`;
             const response = await fetch('/api/dashboard/system-status');
             const data = await response.json();
             const el = document.getElementById('stat-workers-online');
-            if (el) el.textContent = data.workers_online;
+            if (el) el.textContent = this.formatNumber(data.workers_online);
         } catch (error) {
             console.error('Error loading workers online:', error);
         }
@@ -1521,7 +1529,7 @@ For more options, run: ./update.sh --help`;
             const response = await fetch('/api/dashboard/emails-last-7d');
             const data = await response.json();
             const el = document.getElementById('stat-emails-last-7d');
-            if (el) el.textContent = data.count.toLocaleString();
+            if (el) el.textContent = this.formatNumber(data.count);
         } catch (error) {
             console.error('Error loading emails last 7d:', error);
         }
@@ -1532,7 +1540,7 @@ For more options, run: ./update.sh --help`;
             const response = await fetch('/api/dashboard/emails-last-30d');
             const data = await response.json();
             const el = document.getElementById('stat-emails-last-30d');
-            if (el) el.textContent = data.count.toLocaleString();
+            if (el) el.textContent = this.formatNumber(data.count);
         } catch (error) {
             console.error('Error loading emails last 30d:', error);
         }
@@ -1554,7 +1562,7 @@ For more options, run: ./update.sh --help`;
             const response = await fetch('/api/dashboard/clamav-stats');
             const data = await response.json();
             const el = document.getElementById('stat-clamav-clean');
-            if (el) el.textContent = data.clean.toLocaleString();
+            if (el) el.textContent = this.formatNumber(data.clean);
         } catch (error) {
             console.error('Error loading ClamAV clean:', error);
         }
@@ -1565,7 +1573,7 @@ For more options, run: ./update.sh --help`;
             const response = await fetch('/api/dashboard/clamav-stats');
             const data = await response.json();
             const el = document.getElementById('stat-clamav-quarantined');
-            if (el) el.textContent = data.quarantined.toLocaleString();
+            if (el) el.textContent = this.formatNumber(data.quarantined);
         } catch (error) {
             console.error('Error loading ClamAV quarantined:', error);
         }
@@ -1576,7 +1584,7 @@ For more options, run: ./update.sh --help`;
             const response = await fetch('/api/dashboard/clamav-stats');
             const data = await response.json();
             const el = document.getElementById('stat-clamav-rejected');
-            if (el) el.textContent = data.rejected.toLocaleString();
+            if (el) el.textContent = this.formatNumber(data.rejected);
         } catch (error) {
             console.error('Error loading ClamAV rejected:', error);
         }
