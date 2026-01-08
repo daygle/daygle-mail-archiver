@@ -326,6 +326,12 @@ button:focus-visible,
     color: var(--text-inverse);
 }
 
+/* Dark theme: ensure sidebar active/hover link text stays light for contrast */
+[data-theme="dark"] .nav-link:hover,
+[data-theme="dark"] .nav-link.active {
+    color: var(--text-primary);
+}
+
 .nav-link.active::before {
     content: '';
     position: absolute;
