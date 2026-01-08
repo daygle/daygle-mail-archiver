@@ -108,32 +108,7 @@
     </div>
     <div class="card-body">
 
-    <div class="table-responsive mb-3">
-        <table class="table table-bordered">
-            <tbody>
-                <tr>
-                    <td width="15%"><strong>From:</strong></td>
-                    <td>{{ email.sender }}</td>
-                </tr>
-                <tr>
-                    <td><strong>To:</strong></td>
-                    <td>{{ email.recipients }}</td>
-                </tr>
-                <tr>
-                    <td><strong>Date:</strong></td>
-                    <td>{{ email.date }}</td>
-                </tr>
-                <tr>
-                    <td><strong>Account:</strong></td>
-                    <td>{{ email.source }}</td>
-                </tr>
-                <tr>
-                    <td><strong>Folder:</strong></td>
-                    <td>{{ email.folder }}</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+
 
         {% if body.html %}
             <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; background: white;">
