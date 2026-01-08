@@ -2,6 +2,15 @@
 
 {% block page_title %}Fetch Accounts{% endblock %}
 
+{% block extra_css %}
+<style>
+/* Hide main content initially to prevent flash of unstyled content */
+.main-content {
+    display: none;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 
 <!-- Form Section (Initially Hidden) -->
@@ -502,6 +511,8 @@
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
         toggleAccountFields();
+        // Show main content after page loads to prevent flash of unstyled content
+        document.querySelector('.main-content').style.display = 'block';
     });
 </script>
 

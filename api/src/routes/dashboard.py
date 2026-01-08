@@ -748,28 +748,51 @@ def get_system_uptime(request: Request):
         # Try to get Docker container uptime first
         uptime_str = "Unknown"
         try:
-            # Method 1: Get container start time from ps
-            result = subprocess.run(['ps', '-o', 'etimes', '-p', '1', '--no-headers'], capture_output=True, text=True, timeout=5)
+            # Method 1: Get container start time from stat command
+            result = subprocess.run(['stat', '-c', '%Y', '/proc/1'], capture_output=True, text=True, timeout=5)
             if result.returncode == 0:
-                etimes = result.stdout.strip()
-                if etimes.isdigit():
-                    seconds = int(etimes)
-                    # Format uptime
-                    days = seconds // 86400
-                    hours = (seconds % 86400) // 3600
-                    minutes = (seconds % 3600) // 60
+                start_time = int(result.stdout.strip())
+                current_time = int(subprocess.run(['date', '+%s'], capture_output=True, text=True).stdout.strip())
+                seconds = current_time - start_time
+                
+                # Format uptime
+                days = seconds // 86400
+                hours = (seconds % 86400) // 3600
+                minutes = (seconds % 3600) // 60
 
-                    uptime_parts = []
-                    if days > 0:
-                        uptime_parts.append(f"{days} day{'s' if days != 1 else ''}")
-                    if hours > 0:
-                        uptime_parts.append(f"{hours} hour{'s' if hours != 1 else ''}")
-                    if minutes > 0 and days == 0:
-                        uptime_parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
+                uptime_parts = []
+                if days > 0:
+                    uptime_parts.append(f"{days} day{'s' if days != 1 else ''}")
+                if hours > 0:
+                    uptime_parts.append(f"{hours} hour{'s' if hours != 1 else ''}")
+                if minutes > 0 and days == 0:
+                    uptime_parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
 
-                    uptime_str = ", ".join(uptime_parts) if uptime_parts else "Less than 1 minute"
+                uptime_str = ", ".join(uptime_parts) if uptime_parts else "Less than 1 minute"
         except (FileNotFoundError, subprocess.TimeoutExpired, subprocess.SubprocessError, ValueError):
-            pass
+            try:
+                # Method 2: Fallback to ps command
+                result = subprocess.run(['ps', '-o', 'etimes', '-p', '1', '--no-headers'], capture_output=True, text=True, timeout=5)
+                if result.returncode == 0:
+                    etimes = result.stdout.strip()
+                    if etimes.isdigit():
+                        seconds = int(etimes)
+                        # Format uptime
+                        days = seconds // 86400
+                        hours = (seconds % 86400) // 3600
+                        minutes = (seconds % 3600) // 60
+
+                        uptime_parts = []
+                        if days > 0:
+                            uptime_parts.append(f"{days} day{'s' if days != 1 else ''}")
+                        if hours > 0:
+                            uptime_parts.append(f"{hours} hour{'s' if hours != 1 else ''}")
+                        if minutes > 0 and days == 0:
+                            uptime_parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
+
+                        uptime_str = ", ".join(uptime_parts) if uptime_parts else "Less than 1 minute"
+            except (FileNotFoundError, subprocess.TimeoutExpired, subprocess.SubprocessError, ValueError):
+                pass
 
         # If container uptime failed, try system uptime command
         if uptime_str == "Unknown":

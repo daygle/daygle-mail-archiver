@@ -174,6 +174,9 @@ def update_user_settings(request: Request, page_size: int = Form(...), date_form
         return RedirectResponse("/user-settings", status_code=303)
     
     try:
+        # Get current settings for comparison
+        current_settings = query("SELECT page_size, date_format, time_format, timezone, email_notifications FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+        
         # Only update email_notifications for administrators
         if user_role == "administrator":
             execute("UPDATE users SET page_size = :ps, date_format = :df, time_format = :tf, timezone = :tz, email_notifications = :en WHERE id = :id", 
@@ -188,7 +191,23 @@ def update_user_settings(request: Request, page_size: int = Form(...), date_form
         request.session["time_format"] = time_format
         request.session["timezone"] = timezone
         
-        log("info", "Settings", f"User '{username}' updated their settings (page_size={page_size}, date_format={date_format}, time_format={time_format}, timezone={timezone}, email_notifications={email_notifications if user_role == 'administrator' else 'N/A'})", "")
+        # Log only changed values
+        changed_settings = []
+        if current_settings:
+            if current_settings["page_size"] != page_size:
+                changed_settings.append(f"page_size={page_size}")
+            if current_settings["date_format"] != date_format:
+                changed_settings.append(f"date_format={date_format}")
+            if current_settings["time_format"] != time_format:
+                changed_settings.append(f"time_format={time_format}")
+            if current_settings["timezone"] != timezone:
+                changed_settings.append(f"timezone={timezone}")
+            if user_role == "administrator" and current_settings["email_notifications"] != email_notifications:
+                changed_settings.append(f"email_notifications={email_notifications}")
+        
+        if changed_settings:
+            log("info", "Settings", f"User '{username}' updated their settings ({', '.join(changed_settings)})", "")
+        
         flash(request, "User settings updated successfully.")
         return RedirectResponse("/user-settings", status_code=303)
     except Exception as e:
