@@ -1860,10 +1860,20 @@ a:hover {
     color: var(--text-primary);
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    min-width: 0;
+    flex: 1;
 }
 
 .widget-title i {
     color: var(--accent-primary);
+    flex-shrink: 0;
+}
+
+.widget-title span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
 }
 
 .widget-menu-btn {
@@ -1886,9 +1896,11 @@ a:hover {
 
 .widget-body {
     flex: 1;
-    padding: 1.25rem;
-    overflow: auto;
+    padding: 0.75rem;
+    overflow: hidden;
     position: relative;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Mini Stats Grid */
