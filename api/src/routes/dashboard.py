@@ -723,6 +723,100 @@ def clamav_stats(request: Request):
         return JSONResponse({"error": "Failed to load data"}, status_code=500)
 
 
+@router.get("/api/dashboard/emails-last-7d")
+def get_emails_last_7d(request: Request):
+    """Get count of emails from the last 7 days"""
+    if not require_login(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    try:
+        result = query("""
+            SELECT COUNT(*) as count
+            FROM emails
+            WHERE received_date >= datetime('now', '-7 days')
+        """).mappings().first()
+
+        return {"count": result["count"]}
+    except Exception as e:
+        username = request.session.get("username", "unknown")
+        log("error", "Dashboard", f"Failed to fetch emails last 7d for user '{username}': {str(e)}", "")
+        return JSONResponse({"error": "Failed to load data"}, status_code=500)
+
+
+@router.get("/api/dashboard/emails-last-30d")
+def get_emails_last_30d(request: Request):
+    """Get count of emails from the last 30 days"""
+    if not require_login(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    try:
+        result = query("""
+            SELECT COUNT(*) as count
+            FROM emails
+            WHERE received_date >= datetime('now', '-30 days')
+        """).mappings().first()
+
+        return {"count": result["count"]}
+    except Exception as e:
+        username = request.session.get("username", "unknown")
+        log("error", "Dashboard", f"Failed to fetch emails last 30d for user '{username}': {str(e)}", "")
+        return JSONResponse({"error": "Failed to load data"}, status_code=500)
+
+
+@router.get("/api/dashboard/storage-used")
+def get_storage_used(request: Request):
+    """Get total storage used by emails"""
+    if not require_login(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    try:
+        result = query("""
+            SELECT 
+                ROUND(SUM(CASE 
+                    WHEN size IS NOT NULL AND size > 0 THEN size 
+                    ELSE 0 
+                END) / 1024.0 / 1024.0, 2) as size_mb
+            FROM emails
+        """).mappings().first()
+
+        size_mb = result["size_mb"] or 0
+        if size_mb >= 1024:
+            size_gb = round(size_mb / 1024, 2)
+            size = f"{size_gb} GB"
+        else:
+            size = f"{size_mb} MB"
+
+        return {"size": size}
+    except Exception as e:
+        username = request.session.get("username", "unknown")
+        log("error", "Dashboard", f"Failed to fetch storage used for user '{username}': {str(e)}", "")
+        return JSONResponse({"error": "Failed to load data"}, status_code=500)
+
+
+@router.get("/api/dashboard/system-uptime")
+def get_system_uptime(request: Request):
+    """Get system uptime"""
+    if not require_login(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    try:
+        import subprocess
+        result = subprocess.run(['uptime', '-p'], capture_output=True, text=True)
+        if result.returncode == 0:
+            uptime = result.stdout.strip()
+            # Remove "up " prefix if present
+            if uptime.startswith('up '):
+                uptime = uptime[3:]
+        else:
+            uptime = "Unknown"
+
+        return {"uptime": uptime}
+    except Exception as e:
+        username = request.session.get("username", "unknown")
+        log("error", "Dashboard", f"Failed to fetch system uptime for user '{username}': {str(e)}", "")
+        return JSONResponse({"error": "Failed to load data"}, status_code=500)
+
+
 @router.get("/api/dashboard/widget-settings")
 def get_widget_settings(request: Request):
     """Get user's widget settings (e.g., days range for charts)"""

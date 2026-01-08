@@ -40,6 +40,27 @@
     opacity: 1 !important;
     transform: none !important;
 }
+/* Individual stat widget styling */
+.stat-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    padding: 1rem;
+}
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+.stat-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
 /* Modal styles */
 .modal {
     position: fixed;
@@ -226,8 +247,8 @@
 
 <!-- Widget Templates (Hidden) -->
 <div style="display: none;">
-    <!-- Overview Stats Widget Template -->
-    <div id="template-overview" class="grid-stack-item-content widget-card">
+    <!-- Total Emails Widget -->
+    <div id="template-total-emails" class="grid-stack-item-content widget-card">
         <div class="widget-actions">
             <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
                 <i class="fas fa-times"></i>
@@ -235,111 +256,20 @@
         </div>
         <div class="widget-header">
             <div class="widget-title">
-                <i class="fas fa-chart-line"></i>
-                <span>Overview</span>
+                <i class="fas fa-envelope"></i>
+                <span>Total Emails</span>
             </div>
         </div>
         <div class="widget-body">
-            <div class="stats-grid-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
-                <div class="stat-box" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md); min-width: 0;">
-                    <div class="stat-icon" style="width: 40px; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; background: rgba(59, 130, 246, 0.1); border-radius: var(--radius-md); color: #3b82f6; font-size: 1.25rem;">
-                        <i class="fas fa-envelope"></i>
-                    </div>
-                    <div style="flex: 1; min-width: 0; overflow: hidden;">
-                        <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Total Emails</div>
-                        <div style="font-size: 1.25rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="overview-total-emails">-</div>
-                    </div>
-                </div>
-                <div class="stat-box" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md); min-width: 0;">
-                    <div class="stat-icon" style="width: 40px; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-md); color: #10b981; font-size: 1.25rem;">
-                        <i class="fas fa-calendar-day"></i>
-                    </div>
-                    <div style="flex: 1; min-width: 0; overflow: hidden;">
-                        <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Emails Today</div>
-                        <div style="font-size: 1.25rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="overview-emails-today">-</div>
-                    </div>
-                </div>
-                <div class="stat-box" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md); min-width: 0;">
-                    <div class="stat-icon" style="width: 40px; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; background: rgba(245, 158, 11, 0.1); border-radius: var(--radius-md); color: #f59e0b; font-size: 1.25rem;">
-                        <i class="fas fa-database"></i>
-                    </div>
-                    <div style="flex: 1; min-width: 0; overflow: hidden;">
-                        <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Database Size</div>
-                        <div style="font-size: 1.25rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="overview-db-size">-</div>
-                    </div>
-                </div>
-                <div class="stat-box" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md); min-width: 0;">
-                    <div class="stat-icon" style="width: 40px; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; background: rgba(139, 92, 246, 0.1); border-radius: var(--radius-md); color: #8b5cf6; font-size: 1.25rem;">
-                        <i class="fas fa-server"></i>
-                    </div>
-                    <div style="flex: 1; min-width: 0; overflow: hidden;">
-                        <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Active Accounts</div>
-                        <div style="font-size: 1.25rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="overview-accounts">-</div>
-                    </div>
-                </div>
-                <div class="stat-box" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md); min-width: 0;">
-                    <div class="stat-icon" style="width: 40px; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; background: rgba(34, 197, 94, 0.1); border-radius: var(--radius-md); color: #22c55e; font-size: 1.25rem;">
-                        <i class="fas fa-heartbeat"></i>
-                    </div>
-                    <div style="flex: 1; min-width: 0; overflow: hidden;">
-                        <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Workers Online</div>
-                        <div style="font-size: 1.25rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="overview-workers">-</div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- System Update Notification -->
-            <div id="system-update-banner" style="display: none; margin-top: 1rem; padding: 1rem; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1)); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: var(--radius-md); position: relative;">
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: rgba(59, 130, 246, 0.2); border-radius: var(--radius-md); color: #3b82f6; font-size: 1.5rem;">
-                        <i class="fas fa-download"></i>
-                    </div>
-                    <div style="flex: 1; min-width: 0;">
-                        <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">
-                            <i class="fas fa-info-circle" style="color: #3b82f6;"></i>
-                            System Update Available
-                        </div>
-                        <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem;" id="update-details">
-                            Loading update information...
-                        </div>
-                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                            <a href="#" onclick="DashboardManager.showUpdateInstructions(); return false;" class="btn btn-sm btn-primary" style="text-decoration: none;">
-                                <i class="fas fa-book"></i> View Instructions
-                            </a>
-                            <button onclick="DashboardManager.dismissUpdateBanner()" class="btn btn-sm btn-ghost">
-                                <i class="fas fa-times"></i> Dismiss
-                            </button>
-                        </div>
-                    </div>
-                </div>
+            <div class="stat-display">
+                <div class="stat-value" id="stat-total-emails">-</div>
+                <div class="stat-label">Total archived emails</div>
             </div>
         </div>
     </div>
 
-    <!-- Emails Per Day Chart Template -->
-    <div id="template-emails-per-day" class="grid-stack-item-content widget-card">
-        <div class="widget-actions">
-            <button class="widget-action-btn widget-settings-btn" data-action="settings" data-widget="emails-per-day" title="Widget settings">
-                <i class="fas fa-cog"></i>
-            </button>
-            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="widget-header">
-            <div class="widget-title">
-                <i class="fas fa-chart-line"></i>
-                <span id="emails-per-day-title">Emails Per Day (30d)</span>
-            </div>
-            
-        </div>
-        <div class="widget-body">
-            <canvas id="emailsPerDayChart"></canvas>
-        </div>
-    </div>
-
-    <!-- Top Senders Chart Template -->
-    <div id="template-top-senders" class="grid-stack-item-content widget-card">
+    <!-- Emails Today Widget -->
+    <div id="template-emails-today" class="grid-stack-item-content widget-card">
         <div class="widget-actions">
             <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
                 <i class="fas fa-times"></i>
@@ -347,18 +277,20 @@
         </div>
         <div class="widget-header">
             <div class="widget-title">
-                <i class="fas fa-paper-plane"></i>
-                <span>Top 10 Senders</span>
+                <i class="fas fa-calendar-day"></i>
+                <span>Emails Today</span>
             </div>
-            
         </div>
         <div class="widget-body">
-            <canvas id="topSendersChart"></canvas>
+            <div class="stat-display">
+                <div class="stat-value" id="stat-emails-today">-</div>
+                <div class="stat-label">Emails received today</div>
+            </div>
         </div>
     </div>
 
-    <!-- Top Receivers Chart Template -->
-    <div id="template-top-receivers" class="grid-stack-item-content widget-card">
+    <!-- Database Size Widget -->
+    <div id="template-database-size" class="grid-stack-item-content widget-card">
         <div class="widget-actions">
             <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
                 <i class="fas fa-times"></i>
@@ -366,40 +298,20 @@
         </div>
         <div class="widget-header">
             <div class="widget-title">
-                <i class="fas fa-inbox"></i>
-                <span>Top 10 Receivers</span>
+                <i class="fas fa-database"></i>
+                <span>Database Size</span>
             </div>
-            
         </div>
         <div class="widget-body">
-            <canvas id="topReceiversChart"></canvas>
+            <div class="stat-display">
+                <div class="stat-value" id="stat-database-size">-</div>
+                <div class="stat-label">Current database size</div>
+            </div>
         </div>
     </div>
 
-    <!-- Deletion Stats Chart Template -->
-    <div id="template-deletion-stats" class="grid-stack-item-content widget-card">
-        <div class="widget-actions">
-            <button class="widget-action-btn widget-settings-btn" data-action="settings" data-widget="deletion-stats" title="Widget settings">
-                <i class="fas fa-cog"></i>
-            </button>
-            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="widget-header">
-            <div class="widget-title">
-                <i class="fas fa-trash-alt"></i>
-                <span id="deletion-stats-title">Email Deletions (30d)</span>
-            </div>
-            
-        </div>
-        <div class="widget-body">
-            <canvas id="deletionStatsChart"></canvas>
-        </div>
-    </div>
-
-    <!-- Recent Activity Template -->
-    <div id="template-recent-activity" class="grid-stack-item-content widget-card">
+    <!-- Active Accounts Widget -->
+    <div id="template-active-accounts" class="grid-stack-item-content widget-card">
         <div class="widget-actions">
             <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
                 <i class="fas fa-times"></i>
@@ -407,42 +319,20 @@
         </div>
         <div class="widget-header">
             <div class="widget-title">
-                <i class="fas fa-history"></i>
-                <span>Recent Activity</span>
+                <i class="fas fa-server"></i>
+                <span>Active Accounts</span>
             </div>
-            
         </div>
         <div class="widget-body">
-            <div id="recent-activity-list" class="activity-list">
-                <div class="spinner-center"><span class="spinner"></span></div>
+            <div class="stat-display">
+                <div class="stat-value" id="stat-active-accounts">-</div>
+                <div class="stat-label">Configured fetch accounts</div>
             </div>
         </div>
     </div>
 
-    <!-- Storage Trends Template -->
-    <div id="template-storage-trends" class="grid-stack-item-content widget-card">
-        <div class="widget-actions">
-            <button class="widget-action-btn widget-settings-btn" data-action="settings" data-widget="storage-trends" title="Widget settings">
-                <i class="fas fa-cog"></i>
-            </button>
-            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="widget-header">
-            <div class="widget-title">
-                <i class="fas fa-chart-area"></i>
-                <span id="storage-trends-title">Storage Trends (7d)</span>
-            </div>
-            
-        </div>
-        <div class="widget-body">
-            <canvas id="storageTrendsChart"></canvas>
-        </div>
-    </div>
-
-    <!-- Account Health Template -->
-    <div id="template-account-health" class="grid-stack-item-content widget-card">
+    <!-- Workers Online Widget -->
+    <div id="template-workers-online" class="grid-stack-item-content widget-card">
         <div class="widget-actions">
             <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
                 <i class="fas fa-times"></i>
@@ -451,19 +341,19 @@
         <div class="widget-header">
             <div class="widget-title">
                 <i class="fas fa-heartbeat"></i>
-                <span>Account Health</span>
+                <span>Workers Online</span>
             </div>
-            
         </div>
         <div class="widget-body">
-            <div id="account-health-list" class="health-list">
-                <div class="spinner-center"><span class="spinner"></span></div>
+            <div class="stat-display">
+                <div class="stat-value" id="stat-workers-online">-</div>
+                <div class="stat-label">Active worker processes</div>
             </div>
         </div>
     </div>
 
-    <!-- ClamAV Virus Scanning Stats Template -->
-    <div id="template-clamav-stats" class="grid-stack-item-content widget-card">
+    <!-- Emails Last 7 Days Widget -->
+    <div id="template-emails-last-7d" class="grid-stack-item-content widget-card">
         <div class="widget-actions">
             <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
                 <i class="fas fa-times"></i>
@@ -471,33 +361,144 @@
         </div>
         <div class="widget-header">
             <div class="widget-title">
-                <i class="fas fa-shield-virus"></i>
-                <span>ClamAV Virus Scanning</span>
+                <i class="fas fa-calendar-week"></i>
+                <span>Last 7 Days</span>
             </div>
-            
         </div>
         <div class="widget-body">
-            <div class="stats-grid-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem;">
-                <div class="stat-box" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md); min-width: 0;">
-                    <div class="stat-icon" style="width: 40px; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.1); border-radius: var(--radius-md); color: #ef4444; font-size: 1.25rem;">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <div style="flex: 1; min-width: 0; overflow: hidden;">
-                        <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Quarantined</div>
-                        <div style="font-size: 1.25rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="clamav-quarantine">-</div>
-                    </div>
-                </div>
-                <div class="stat-box" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md); min-width: 0;">
-                    <div class="stat-icon" style="width: 40px; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; background: rgba(245, 158, 11, 0.1); border-radius: var(--radius-md); color: #f59e0b; font-size: 1.25rem;">
-                        <i class="fas fa-ban"></i>
-                    </div>
-                    <div style="flex: 1; min-width: 0; overflow: hidden;">
-                        <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Rejected</div>
-                        <div style="font-size: 1.25rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="clamav-reject">-</div>
-                    </div>
-                </div>
-                <div class="stat-box" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md); min-width: 0;">
-                    <div class="stat-icon" style="width: 40px; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; background: rgba(59, 130, 246, 0.1); border-radius: var(--radius-md); color: #3b82f6; font-size: 1.25rem;">
+            <div class="stat-display">
+                <div class="stat-value" id="stat-emails-last-7d">-</div>
+                <div class="stat-label">Emails in past week</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emails Last 30 Days Widget -->
+    <div id="template-emails-last-30d" class="grid-stack-item-content widget-card">
+        <div class="widget-actions">
+            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="widget-header">
+            <div class="widget-title">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Last 30 Days</span>
+            </div>
+        </div>
+        <div class="widget-body">
+            <div class="stat-display">
+                <div class="stat-value" id="stat-emails-last-30d">-</div>
+                <div class="stat-label">Emails in past month</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Storage Used Widget -->
+    <div id="template-storage-used" class="grid-stack-item-content widget-card">
+        <div class="widget-actions">
+            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="widget-header">
+            <div class="widget-title">
+                <i class="fas fa-hdd"></i>
+                <span>Storage Used</span>
+            </div>
+        </div>
+        <div class="widget-body">
+            <div class="stat-display">
+                <div class="stat-value" id="stat-storage-used">-</div>
+                <div class="stat-label">Total storage consumed</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ClamAV Clean Widget -->
+    <div id="template-clamav-clean" class="grid-stack-item-content widget-card">
+        <div class="widget-actions">
+            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="widget-header">
+            <div class="widget-title">
+                <i class="fas fa-shield-alt"></i>
+                <span>Clean Emails</span>
+            </div>
+        </div>
+        <div class="widget-body">
+            <div class="stat-display">
+                <div class="stat-value" id="stat-clamav-clean">-</div>
+                <div class="stat-label">Virus-free emails</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ClamAV Quarantined Widget -->
+    <div id="template-clamav-quarantined" class="grid-stack-item-content widget-card">
+        <div class="widget-actions">
+            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="widget-header">
+            <div class="widget-title">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Quarantined</span>
+            </div>
+        </div>
+        <div class="widget-body">
+            <div class="stat-display">
+                <div class="stat-value" id="stat-clamav-quarantined">-</div>
+                <div class="stat-label">Emails with viruses</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ClamAV Rejected Widget -->
+    <div id="template-clamav-rejected" class="grid-stack-item-content widget-card">
+        <div class="widget-actions">
+            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="widget-header">
+            <div class="widget-title">
+                <i class="fas fa-ban"></i>
+                <span>Rejected</span>
+            </div>
+        </div>
+        <div class="widget-body">
+            <div class="stat-display">
+                <div class="stat-value" id="stat-clamav-rejected">-</div>
+                <div class="stat-label">Emails blocked by antivirus</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Uptime Widget -->
+    <div id="template-system-uptime" class="grid-stack-item-content widget-card">
+        <div class="widget-actions">
+            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="widget-header">
+            <div class="widget-title">
+                <i class="fas fa-clock"></i>
+                <span>System Uptime</span>
+            </div>
+        </div>
+        <div class="widget-body">
+            <div class="stat-display">
+                <div class="stat-value" id="stat-system-uptime">-</div>
+                <div class="stat-label">Time since last restart</div>
+            </div>
+        </div>
+    </div>
+</div>
                         <i class="fas fa-clipboard-list"></i>
                     </div>
                     <div style="flex: 1; min-width: 0; overflow: hidden;">
@@ -543,17 +544,20 @@ const DashboardManager = {
     },
     currentSettingsWidget: null,
     
-    // Default widget layout
+    // Default widget layout - now focused on customizable stat widgets
     defaultWidgets: [
-        { id: 'overview', x: 0, y: 0, w: 12, h: 3, visible: true },
-        { id: 'emails-per-day', x: 0, y: 3, w: 6, h: 3, visible: true },
-        { id: 'deletion-stats', x: 6, y: 3, w: 6, h: 3, visible: true },
-        { id: 'top-senders', x: 0, y: 6, w: 6, h: 4, visible: true },
-        { id: 'top-receivers', x: 6, y: 6, w: 6, h: 4, visible: true },
-        { id: 'clamav-stats', x: 0, y: 10, w: 6, h: 3, visible: true },
-        { id: 'recent-activity', x: 6, y: 10, w: 6, h: 4, visible: true },
-        { id: 'storage-trends', x: 0, y: 13, w: 6, h: 4, visible: true },
-        { id: 'account-health', x: 6, y: 13, w: 6, h: 4, visible: true }
+        { id: 'total-emails', x: 0, y: 0, w: 3, h: 2, visible: true },
+        { id: 'emails-today', x: 3, y: 0, w: 3, h: 2, visible: true },
+        { id: 'database-size', x: 6, y: 0, w: 3, h: 2, visible: true },
+        { id: 'active-accounts', x: 9, y: 0, w: 3, h: 2, visible: true },
+        { id: 'workers-online', x: 0, y: 2, w: 3, h: 2, visible: true },
+        { id: 'emails-last-7d', x: 3, y: 2, w: 3, h: 2, visible: true },
+        { id: 'emails-last-30d', x: 6, y: 2, w: 3, h: 2, visible: true },
+        { id: 'storage-used', x: 9, y: 2, w: 3, h: 2, visible: true },
+        { id: 'clamav-clean', x: 0, y: 4, w: 3, h: 2, visible: true },
+        { id: 'clamav-quarantined', x: 3, y: 4, w: 3, h: 2, visible: true },
+        { id: 'clamav-rejected', x: 6, y: 4, w: 3, h: 2, visible: true },
+        { id: 'system-uptime', x: 9, y: 4, w: 3, h: 2, visible: true }
     ],
 
     init() {
@@ -1059,6 +1063,19 @@ const DashboardManager = {
         this.loadRecentActivity();
         this.loadStorageTrends();
         this.loadAccountHealth();
+        // Load individual stat widgets
+        this.loadTotalEmails();
+        this.loadEmailsToday();
+        this.loadDatabaseSize();
+        this.loadActiveAccounts();
+        this.loadWorkersOnline();
+        this.loadEmailsLast7d();
+        this.loadEmailsLast30d();
+        this.loadStorageUsed();
+        this.loadClamAVClean();
+        this.loadClamAVQuarantined();
+        this.loadClamAVRejected();
+        this.loadSystemUptime();
     },
 
     loadWidgetData(widgetId) {
@@ -1484,6 +1501,139 @@ For more options, run: ./update.sh --help`;
             if (cleanEl) cleanEl.textContent = data.clean.toLocaleString();
         } catch (error) {
             console.error('Error loading ClamAV stats:', error);
+        }
+    },
+
+    // Individual stat widget loading functions
+    async loadTotalEmails() {
+        try {
+            const response = await fetch('/api/dashboard/stats');
+            const data = await response.json();
+            const el = document.getElementById('stat-total-emails');
+            if (el) el.textContent = data.total_emails.toLocaleString();
+        } catch (error) {
+            console.error('Error loading total emails:', error);
+        }
+    },
+
+    async loadEmailsToday() {
+        try {
+            const response = await fetch('/api/dashboard/stats');
+            const data = await response.json();
+            const el = document.getElementById('stat-emails-today');
+            if (el) el.textContent = data.emails_today.toLocaleString();
+        } catch (error) {
+            console.error('Error loading emails today:', error);
+        }
+    },
+
+    async loadDatabaseSize() {
+        try {
+            const response = await fetch('/api/dashboard/stats');
+            const data = await response.json();
+            const el = document.getElementById('stat-database-size');
+            if (el) el.textContent = data.database_size;
+        } catch (error) {
+            console.error('Error loading database size:', error);
+        }
+    },
+
+    async loadActiveAccounts() {
+        try {
+            const response = await fetch('/api/dashboard/stats');
+            const data = await response.json();
+            const el = document.getElementById('stat-active-accounts');
+            if (el) el.textContent = data.total_accounts.toLocaleString();
+        } catch (error) {
+            console.error('Error loading active accounts:', error);
+        }
+    },
+
+    async loadWorkersOnline() {
+        try {
+            const response = await fetch('/api/dashboard/system-status');
+            const data = await response.json();
+            const el = document.getElementById('stat-workers-online');
+            if (el) el.textContent = data.workers_online;
+        } catch (error) {
+            console.error('Error loading workers online:', error);
+        }
+    },
+
+    async loadEmailsLast7d() {
+        try {
+            const response = await fetch('/api/dashboard/emails-last-7d');
+            const data = await response.json();
+            const el = document.getElementById('stat-emails-last-7d');
+            if (el) el.textContent = data.count.toLocaleString();
+        } catch (error) {
+            console.error('Error loading emails last 7d:', error);
+        }
+    },
+
+    async loadEmailsLast30d() {
+        try {
+            const response = await fetch('/api/dashboard/emails-last-30d');
+            const data = await response.json();
+            const el = document.getElementById('stat-emails-last-30d');
+            if (el) el.textContent = data.count.toLocaleString();
+        } catch (error) {
+            console.error('Error loading emails last 30d:', error);
+        }
+    },
+
+    async loadStorageUsed() {
+        try {
+            const response = await fetch('/api/dashboard/storage-used');
+            const data = await response.json();
+            const el = document.getElementById('stat-storage-used');
+            if (el) el.textContent = data.size;
+        } catch (error) {
+            console.error('Error loading storage used:', error);
+        }
+    },
+
+    async loadClamAVClean() {
+        try {
+            const response = await fetch('/api/dashboard/clamav-stats');
+            const data = await response.json();
+            const el = document.getElementById('stat-clamav-clean');
+            if (el) el.textContent = data.clean.toLocaleString();
+        } catch (error) {
+            console.error('Error loading ClamAV clean:', error);
+        }
+    },
+
+    async loadClamAVQuarantined() {
+        try {
+            const response = await fetch('/api/dashboard/clamav-stats');
+            const data = await response.json();
+            const el = document.getElementById('stat-clamav-quarantined');
+            if (el) el.textContent = data.quarantined.toLocaleString();
+        } catch (error) {
+            console.error('Error loading ClamAV quarantined:', error);
+        }
+    },
+
+    async loadClamAVRejected() {
+        try {
+            const response = await fetch('/api/dashboard/clamav-stats');
+            const data = await response.json();
+            const el = document.getElementById('stat-clamav-rejected');
+            if (el) el.textContent = data.rejected.toLocaleString();
+        } catch (error) {
+            console.error('Error loading ClamAV rejected:', error);
+        }
+    },
+
+    async loadSystemUptime() {
+        try {
+            const response = await fetch('/api/dashboard/system-uptime');
+            const data = await response.json();
+            const el = document.getElementById('stat-system-uptime');
+            if (el) el.textContent = data.uptime;
+        } catch (error) {
+            console.error('Error loading system uptime:', error);
         }
     }
 };
