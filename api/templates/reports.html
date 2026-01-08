@@ -218,12 +218,6 @@ function initializeCharts() {
                     borderColor: '#3b82f6',
                     backgroundColor: 'rgba(59, 130, 246, 0.1)',
                     tension: 0.4
-                }, {
-                    label: 'Virus Detected',
-                    data: [],
-                    borderColor: '#ef4444',
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    tension: 0.4
                 }]
             },
             options: {
@@ -285,8 +279,9 @@ function initializeCharts() {
     });
 
     // AV Statistics Chart
-    const avStatsCtx = document.getElementById('avStatsChart').getContext('2d');
-    avStatsChart = new Chart(avStatsCtx, {
+    const avStatsCtx = document.getElementById('avStatsChart');
+    if (avStatsCtx) {
+        avStatsChart = new Chart(avStatsCtx, {
         type: 'line',
         data: {
             labels: [],
@@ -321,48 +316,11 @@ function initializeCharts() {
             }
         }
     });
-}
-
-// Load all reports
-function loadAllReports() {
-    loadEmailVolumeReport();
-    loadAccountActivityReport();
-    loadSystemHealthReport();
-    loadAVStatsReport();
-}
-
-// Email Volume Report
-function loadEmailVolumeReport() {
-    const startDate = document.getElementById('emailVolumeStartDate').value;
-    const endDate = document.getElementById('emailVolumeEndDate').value;
-
-    if (!startDate || !endDate) {
-        console.warn('Start and end dates are required for email volume report');
-        return;
-    }
-
-    fetch(`/api/reports/email-volume?start_date=${startDate}&end_date=${endDate}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            // Defensive programming: ensure data structure exists
-            if (!data || typeof data !== 'object') {
-                console.error('Invalid response data:', data);
-                return;
-            }
-
-            // Update chart with safe defaults
-            const labels = Array.isArray(data.labels) ? data.labels : [];
-            const emailCounts = Array.isArray(data.email_counts) ? data.email_counts : [];
-            const virusCounts = Array.isArray(data.virus_counts) ? data.virus_counts : [];
-
+    console.log('avStatsChart initialized:', avStatsChart);
+    } else {
+        console.error('avStatsCtx not found');
             emailVolumeChart.data.labels = labels;
             emailVolumeChart.data.datasets[0].data = emailCounts;
-            emailVolumeChart.data.datasets[1].data = virusCounts;
             emailVolumeChart.update();
         })
         .catch(error => {
@@ -532,6 +490,8 @@ function loadAVStatsReport() {
             document.getElementById('quarantinedEmails').textContent = typeof data.quarantined_emails === 'number' ? data.quarantined_emails : 0;
             document.getElementById('rejectedEmails').textContent = typeof data.rejected_emails === 'number' ? data.rejected_emails : 0;
 
+            console.log('AV Stats data:', data); // Debug logging
+
             // Update chart if it exists
             if (avStatsChart) {
                 const labels = Array.isArray(data.labels) ? data.labels : [];
@@ -539,11 +499,15 @@ function loadAVStatsReport() {
                 const quarantinedCounts = Array.isArray(data.quarantined_counts) ? data.quarantined_counts : [];
                 const rejectedCounts = Array.isArray(data.rejected_counts) ? data.rejected_counts : [];
 
+                console.log('Chart data - labels:', labels, 'clean:', cleanCounts, 'quarantined:', quarantinedCounts, 'rejected:', rejectedCounts); // Debug logging
+
                 avStatsChart.data.labels = labels;
                 avStatsChart.data.datasets[0].data = cleanCounts;
                 avStatsChart.data.datasets[1].data = quarantinedCounts;
                 avStatsChart.data.datasets[2].data = rejectedCounts;
                 avStatsChart.update();
+            } else {
+                console.error('avStatsChart is not initialized');
             }
         })
         .catch(error => {
