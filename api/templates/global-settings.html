@@ -74,23 +74,9 @@
                 <small class="form-text">Global default theme for users who have not set a personal preference (users' own preference overrides this)</small>
             </div>
 
-            <div class="form-check mt-3">
-                <input class="form-check-input" type="checkbox" id="enable_update_check" name="enable_update_check" {% if settings.enable_update_check != 'false' %}checked{% endif %}>
-                <label class="form-check-label" for="enable_update_check">
-                    <strong>Enable Automatic Update Checks</strong>
-                    <small class="d-block text-secondary">If enabled, the application will periodically check for updates and show administrators when an update is available</small>
-                </label>
-                <div class="mt-2">
-                    <small class="text-muted">Last manual check: <strong>{% if settings.last_manual_update_check_dt %}{{ settings.last_manual_update_check_dt | format_user_datetime(request.session.user_id) }} ({{ settings.last_manual_update_check_dt | time_ago(request.session.user_id) }}){% else %}Never{% endif %}</strong></small>
-                    <a href="/system-updates" class="btn btn-sm btn-outline-secondary ms-2">Run manual check</a>
-                </div>
+            <!-- Update checking has been removed from the web UI -->
+            <!-- Manual and automatic update checks are expected to be performed outside the web interface -->
 
-                <div class="form-group mt-3">
-                    <label for="update_check_ttl" class="form-label">Update Check Cache TTL (seconds)</label>
-                    <input id="update_check_ttl" class="form-control" name="update_check_ttl" type="number" min="60" max="86400" value="{{ settings.update_check_ttl or '600' }}">
-                    <small class="form-text">How long update check results are cached server-side (in seconds). Manual checks bypass the cache.</small>
-                </div>
-            </div>
         </div>
     </div>
 

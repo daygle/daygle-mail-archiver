@@ -148,8 +148,9 @@ INSERT INTO settings (key, value) VALUES ('date_format', '%d/%m/%Y') ON CONFLICT
 INSERT INTO settings (key, value) VALUES ('time_format', '%H:%M') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('timezone', 'Australia/Melbourne') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('default_theme', 'system') ON CONFLICT (key) DO NOTHING;
-INSERT INTO settings (key, value) VALUES ('enable_update_check', 'true') ON CONFLICT (key) DO NOTHING;
-INSERT INTO settings (key, value) VALUES ('update_check_ttl', '600') ON CONFLICT (key) DO NOTHING;
+-- Update checking removed from the web UI; not inserting related settings by default
+-- INSERT INTO settings (key, value) VALUES ('enable_update_check', 'true') ON CONFLICT (key) DO NOTHING;
+-- INSERT INTO settings (key, value) VALUES ('update_check_ttl', '600') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('enable_purge', 'false') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('retention_value', '1') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('retention_unit', 'years') ON CONFLICT (key) DO NOTHING;

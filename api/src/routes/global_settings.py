@@ -50,8 +50,6 @@ def save_settings(
     time_format: str = Form("%H:%M"),
     timezone: str = Form("Australia/Melbourne"),
     default_theme: str = Form("system"),
-    enable_update_check: bool = Form(True),
-    update_check_ttl: int = Form(600),
     enable_purge: bool = Form(False),
     retention_value: int = Form(1),
     retention_unit: str = Form("years"),
@@ -72,14 +70,6 @@ def save_settings(
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    # Validate update_check_ttl
-    try:
-        if update_check_ttl < 60 or update_check_ttl > 86400:
-            flash(request, "Update Check Cache TTL must be between 60 seconds and 86400 seconds (1 day).")
-            return RedirectResponse("/global-settings", status_code=303)
-    except Exception:
-        flash(request, "Invalid Update Check Cache TTL value.")
-        return RedirectResponse("/global-settings", status_code=303)
 
     # Fetch existing settings before updating
     rows = query("SELECT key, value FROM settings").mappings().all()
@@ -96,8 +86,6 @@ def save_settings(
             ('time_format', time_format),
             ('timezone', timezone),
             ('default_theme', default_theme),
-            ('enable_update_check', str(enable_update_check).lower()),
-            ('update_check_ttl', str(update_check_ttl)),
             ('enable_purge', str(enable_purge).lower()),
             ('retention_value', str(retention_value)),
             ('retention_unit', retention_unit),

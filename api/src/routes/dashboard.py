@@ -586,146 +586,27 @@ def system_status(request: Request):
 
 @router.get("/api/dashboard/check-updates")
 def check_updates(request: Request, force: bool = False):
-    """Check for available system updates from git repository (administrators only)
-
-    :param force: when True, perform the git check regardless of global enable flag and ignore cache
-    """
-    import json
-    from datetime import datetime, timezone, timedelta
-
-    CACHE_TTL_SECONDS = 600  # 10 minutes
-
+    """Update checks have been removed from the web UI and are no longer supported by this endpoint."""
     if not require_login(request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
-    
-    # Only administrators can check for updates
+
+    # Only administrators could previously access this; keep same restriction
     if getattr(request, "session", {}).get("role") != "administrator":
         return JSONResponse({"error": "Forbidden - Administrator access required"}, status_code=403)
-    
-    try:
-        # Read global setting for automatic checks
-        try:
-            s = query("SELECT value FROM settings WHERE key = 'enable_update_check'").mappings().first()
-            enable_checks = not (s and s.get('value') == 'false')
-        except Exception:
-            enable_checks = True
 
-        # If not forcing and automatic checks are disabled, return disabled flag
-        if not force and not enable_checks:
-            return {"updates_available": False, "disabled": True, "message": "Update checks are disabled by the administrator"}
-
-        # If not forced, check cache
-        # Load TTL from settings if available
-        try:
-            ttl_row = query("SELECT value FROM settings WHERE key = 'update_check_ttl'").mappings().first()
-            if ttl_row and ttl_row.get('value'):
-                try:
-                    CACHE_TTL_SECONDS = int(ttl_row['value'])
-                except Exception:
-                    CACHE_TTL_SECONDS = CACHE_TTL_SECONDS
-        except Exception:
-            # Ignore and use default
-            pass
-
-        if not force:
-            try:
-                last_check_row = query("SELECT value FROM settings WHERE key = 'last_update_check'").mappings().first()
-                last_result_row = query("SELECT value FROM settings WHERE key = 'last_update_result'").mappings().first()
-                if last_check_row and last_result_row:
-                    last_check = datetime.fromisoformat(last_check_row['value'])
-                    now = datetime.now(timezone.utc)
-                    if (now - last_check) <= timedelta(seconds=CACHE_TTL_SECONDS):
-                        # Return cached result if it's a valid JSON object/dict
-                        try:
-                            cached = json.loads(last_result_row['value'])
-                            # Treat non-dict cache entries (e.g., JSON null) as a cache miss
-                            if not isinstance(cached, dict):
-                                raise ValueError("Cached update result invalid")
-                            cached['_cached'] = True
-                            cached['_cached_at'] = last_check_row['value']
-                            # Ensure required keys exist
-                            if 'updates_available' not in cached:
-                                raise ValueError("Cached update result missing required keys")
-                            return cached
-                        except Exception:
-                            # Parsing failed or cache invalid - ignore and perform fresh check
-                            pass
-            except Exception:
-                # If cache reading fails, proceed to perform check
-                pass
-
-        # Perform the actual update check
-        if force:
-            username = getattr(request, "session", {}).get("username", "unknown")
-            log("info", "Dashboard", f"User '{username}' triggered manual update check", "")
-        update_info = check_for_updates()
-
-        # Store result and timestamp
-        try:
-            now_iso = datetime.now(timezone.utc).isoformat()
-            execute("INSERT INTO settings (key, value) VALUES (:key, :value) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value", {"key": 'last_update_check', "value": now_iso})
-            execute("INSERT INTO settings (key, value) VALUES (:key, :value) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value", {"key": 'last_update_result', "value": json.dumps(update_info)})
-
-            # If this was a manual (forced) check, record that timestamp separately
-            if force:
-                execute("INSERT INTO settings (key, value) VALUES (:key, :value) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value", {"key": 'last_manual_update_check', "value": now_iso})
-        except Exception:
-            # Ignore persistence errors
-            pass
-        # Only log actual errors, not when update checking is unavailable due to deployment method
-        if update_info.get("error") and not update_info.get("unavailable"):
-            username = getattr(request, "session", {}).get("username", "unknown")
-            log("warning", "Dashboard", f"Update check failed for user '{username}': {update_info['error']}", "")
-            return update_info
-
-        # Return the update information in all non-error cases
-        return update_info
-    except Exception as e:
-        username = getattr(request, "session", {}).get("username", "unknown")
-        log("error", "Dashboard", f"Failed to check for updates for user '{username}': {str(e)}", "")
-        # Return a safe response even on error
-        return {
-            "updates_available": False,
-            "error": "Failed to check for updates",
-            "unavailable": False
-        }
+    # Notify caller that update checks are no longer available via the web UI
+    return JSONResponse({"error": "Update checks have been removed from the web UI"}, status_code=410)
 
 @router.get("/system-updates")
 def system_updates(request: Request):
-    """Render a page where administrators can manually check for updates and view status"""
+    """System updates page removed - redirect to Global Settings"""
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
     if getattr(request, "session", {}).get("role") != "administrator":
         return RedirectResponse("/dashboard", status_code=303)
 
-    # Fetch current global setting for update checks
-    rows = query("SELECT key, value FROM settings").mappings().all()
-    settings = {r['key']: r['value'] for r in rows}
-
-    # Parse timestamps for template helpers
-    try:
-        from datetime import datetime
-        if settings.get('last_manual_update_check'):
-            try:
-                settings['last_manual_update_check_dt'] = datetime.fromisoformat(settings['last_manual_update_check'])
-            except Exception:
-                settings['last_manual_update_check_dt'] = None
-        else:
-            settings['last_manual_update_check_dt'] = None
-
-        if settings.get('last_update_check'):
-            try:
-                settings['last_update_check_dt'] = datetime.fromisoformat(settings['last_update_check'])
-            except Exception:
-                settings['last_update_check_dt'] = None
-        else:
-            settings['last_update_check_dt'] = None
-    except Exception:
-        settings['last_manual_update_check_dt'] = None
-        settings['last_update_check_dt'] = None
-
-    msg = request.session.pop("flash", None)
-    return templates.TemplateResponse("system-updates.html", {"request": request, "settings": settings, "flash": msg})
+    # Redirect to Global Settings as the System Updates page has been removed
+    return RedirectResponse("/global-settings", status_code=303)
 
 
 @router.get("/api/dashboard/clamav-stats")

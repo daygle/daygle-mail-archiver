@@ -1143,81 +1143,13 @@ const DashboardManager = {
             
             if (workersEl) workersEl.textContent = this.formatNumber(statusData.workers_online);
             
-            // Check for system updates
-            this.checkForUpdates();
+
         } catch (error) {
             console.error('Error loading overview:', error);
         }
     },
 
-    async checkForUpdates() {
-        try {
-            const response = await fetch('/api/dashboard/check-updates');
-            
-            // Check response status
-            if (!response.ok) {
-                console.warn(`Update check failed with status: ${response.status}`);
-                return;
-            }
-            
-            const data = await response.json();
-            if (!data) {
-                console.warn('Update check returned no data');
-                return;
-            }
-            
-            const banner = document.getElementById('system-update-banner');
-            const detailsEl = document.getElementById('update-details');
-            
-            if (!banner || !detailsEl) return;
-            
-            // Check if user has dismissed this update
-            const dismissedUpdate = localStorage.getItem('dismissedUpdate');
-            if (dismissedUpdate === data.latest_commit) {
-                banner.style.display = 'none';
-                return;
-            }
-            
-            if (data.updates_available && !data.error) {
-                let detailsText = `Version ${data.latest_commit} is available`;
-                if (data.commits_behind > 0) {
-                    detailsText += ` (${data.commits_behind} commit${data.commits_behind > 1 ? 's' : ''} behind)`;
-                }
-                if (data.latest_message) {
-                    detailsText += `: ${data.latest_message}`;
-                }
-                
-                detailsEl.textContent = detailsText;
-                banner.style.display = 'block';
-            } else {
-                banner.style.display = 'none';
-            }
-        } catch (error) {
-            console.error('Error checking for updates:', error);
-            // Silently fail - don't show error to user
-        }
-    },
 
-    dismissUpdateBanner() {
-        const banner = document.getElementById('system-update-banner');
-        if (banner) {
-            banner.style.display = 'none';
-            
-            // Remember dismissal for this specific update
-            fetch('/api/dashboard/check-updates')
-                .then(r => {
-                    if (!r.ok) {
-                        throw new Error(`HTTP ${r.status}`);
-                    }
-                    return r.json();
-                })
-                .then(data => {
-                    if (data.latest_commit) {
-                        localStorage.setItem('dismissedUpdate', data.latest_commit);
-                    }
-                })
-                .catch(err => console.error('Error saving dismissal:', err));
-        }
     },
 
     showUpdateInstructions() {
