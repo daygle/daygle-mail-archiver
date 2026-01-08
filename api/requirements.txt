@@ -10,3 +10,4 @@ bcrypt
 requests
 pytz
 python-dotenv
+psutil

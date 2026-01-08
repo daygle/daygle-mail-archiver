@@ -799,17 +799,82 @@ def get_system_uptime(request: Request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
     try:
+        import platform
         import subprocess
-        result = subprocess.run(['uptime', '-p'], capture_output=True, text=True)
-        if result.returncode == 0:
-            uptime = result.stdout.strip()
-            # Remove "up " prefix if present
-            if uptime.startswith('up '):
-                uptime = uptime[3:]
-        else:
-            uptime = "Unknown"
+        import datetime
 
-        return {"uptime": uptime}
+        system = platform.system().lower()
+
+        if system == "windows":
+            # Use Python's psutil library if available, otherwise fallback to systeminfo
+            try:
+                import psutil
+                boot_time = psutil.boot_time()
+                uptime_seconds = datetime.datetime.now().timestamp() - boot_time
+                uptime = datetime.timedelta(seconds=int(uptime_seconds))
+            except ImportError:
+                # Fallback to systeminfo command
+                try:
+                    result = subprocess.run(['systeminfo'], capture_output=True, text=True, timeout=30)
+                    if result.returncode == 0:
+                        lines = result.stdout.split('\n')
+                        for line in lines:
+                            if 'System Boot Time' in line:
+                                time_str = line.split(':', 1)[1].strip()
+                                # Try different date formats
+                                for fmt in ['%m/%d/%Y, %I:%M:%S %p', '%d/%m/%Y, %I:%M:%S %p', '%Y-%m-%d %H:%M:%S']:
+                                    try:
+                                        boot_time = datetime.datetime.strptime(time_str, fmt)
+                                        now = datetime.datetime.now()
+                                        if boot_time > now:
+                                            # Boot time is in future, might be date format issue
+                                            uptime = datetime.timedelta(seconds=0)
+                                        else:
+                                            uptime = now - boot_time
+                                        break
+                                    except ValueError:
+                                        continue
+                                else:
+                                    uptime = datetime.timedelta(seconds=0)
+                                break
+                        else:
+                            uptime = datetime.timedelta(seconds=0)
+                    else:
+                        uptime = datetime.timedelta(seconds=0)
+                except (subprocess.TimeoutExpired, subprocess.SubprocessError):
+                    uptime = datetime.timedelta(seconds=0)
+        else:
+            # Use uptime command on Linux/Unix systems
+            result = subprocess.run(['uptime', '-p'], capture_output=True, text=True)
+            if result.returncode == 0:
+                uptime_str = result.stdout.strip()
+                # Remove "up " prefix if present
+                if uptime_str.startswith('up '):
+                    uptime_str = uptime_str[3:]
+                # For Linux, return the string as-is since it's already formatted nicely
+                return {"uptime": uptime_str}
+            else:
+                uptime = datetime.timedelta(seconds=0)
+
+        # Format the uptime for Windows
+        if isinstance(uptime, datetime.timedelta):
+            days = uptime.days
+            hours, remainder = divmod(uptime.seconds, 3600)
+            minutes, seconds = divmod(remainder, 60)
+
+            uptime_parts = []
+            if days > 0:
+                uptime_parts.append(f"{days} day{'s' if days != 1 else ''}")
+            if hours > 0:
+                uptime_parts.append(f"{hours} hour{'s' if hours != 1 else ''}")
+            if minutes > 0 and days == 0:  # Only show minutes if less than a day
+                uptime_parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
+
+            uptime_str = ", ".join(uptime_parts) if uptime_parts else "Less than 1 minute"
+        else:
+            uptime_str = str(uptime)
+
+        return {"uptime": uptime_str}
     except Exception as e:
         username = request.session.get("username", "unknown")
         log("error", "Dashboard", f"Failed to fetch system uptime for user '{username}': {str(e)}", "")
