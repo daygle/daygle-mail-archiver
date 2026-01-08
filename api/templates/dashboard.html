@@ -505,26 +505,6 @@
         </div>
     </div>
 </div>
-                        <i class="fas fa-clipboard-list"></i>
-                    </div>
-                    <div style="flex: 1; min-width: 0; overflow: hidden;">
-                        <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Logged Only</div>
-                        <div style="font-size: 1.25rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="clamav-log">-</div>
-                    </div>
-                </div>
-                <div class="stat-box" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius-md); min-width: 0;">
-                    <div class="stat-icon" style="width: 40px; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-md); color: #10b981; font-size: 1.25rem;">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                    <div style="flex: 1; min-width: 0; overflow: hidden;">
-                        <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Clean</div>
-                        <div style="font-size: 1.25rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="clamav-clean">-</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- GridStack JS (Local) -->
 <script>
@@ -1045,27 +1025,35 @@ const DashboardManager = {
 
     getWidgetTitle(id) {
         const titles = {
-            'overview': 'Overview',
             'emails-per-day': 'Emails Per Day',
             'top-senders': 'Top Senders',
             'top-receivers': 'Top Receivers',
             'deletion-stats': 'Deletion Stats',
-            'clamav-stats': 'ClamAV Virus Scanning',
             'recent-activity': 'Recent Activity',
             'storage-trends': 'Storage Trends',
-            'account-health': 'Account Health'
+            'account-health': 'Account Health',
+            'total-emails': 'Total Emails',
+            'emails-today': 'Emails Today',
+            'database-size': 'Database Size',
+            'active-accounts': 'Active Accounts',
+            'workers-online': 'Workers Online',
+            'emails-last-7d': 'Emails Last 7 Days',
+            'emails-last-30d': 'Emails Last 30 Days',
+            'storage-used': 'Storage Used',
+            'clamav-clean': 'ClamAV Clean',
+            'clamav-quarantined': 'ClamAV Quarantined',
+            'clamav-rejected': 'ClamAV Rejected',
+            'system-uptime': 'System Uptime'
         };
         return titles[id] || id;
     },
 
     // Load all widget data
     loadAllData() {
-        this.loadOverview();
         this.loadEmailsPerDay();
         this.loadTopSenders();
         this.loadTopReceivers();
         this.loadDeletionStats();
-        this.loadClamAVStats();
         this.loadRecentActivity();
         this.loadStorageTrends();
         this.loadAccountHealth();
@@ -1086,12 +1074,10 @@ const DashboardManager = {
 
     loadWidgetData(widgetId) {
         const loaders = {
-            'overview': () => this.loadOverview(),
             'emails-per-day': () => this.loadEmailsPerDay(),
             'top-senders': () => this.loadTopSenders(),
             'top-receivers': () => this.loadTopReceivers(),
             'deletion-stats': () => this.loadDeletionStats(),
-            'clamav-stats': () => this.loadClamAVStats(),
             'recent-activity': () => this.loadRecentActivity(),
             'storage-trends': () => this.loadStorageTrends(),
             'account-health': () => this.loadAccountHealth()
@@ -1498,12 +1484,10 @@ For more options, run: ./update.sh --help`;
             
             const quarantineEl = document.getElementById('clamav-quarantine');
             const rejectEl = document.getElementById('clamav-reject');
-            const logEl = document.getElementById('clamav-log');
             const cleanEl = document.getElementById('clamav-clean');
             
             if (quarantineEl) quarantineEl.textContent = data.quarantined.toLocaleString();
             if (rejectEl) rejectEl.textContent = data.rejected.toLocaleString();
-            if (logEl) logEl.textContent = data.logged.toLocaleString();
             if (cleanEl) cleanEl.textContent = data.clean.toLocaleString();
         } catch (error) {
             console.error('Error loading ClamAV stats:', error);

@@ -736,7 +736,8 @@ def get_emails_last_7d(request: Request):
             WHERE received_date >= datetime('now', '-7 days')
         """).mappings().first()
 
-        return {"count": result["count"]}
+        count = result["count"] if result else 0
+        return {"count": count}
     except Exception as e:
         username = request.session.get("username", "unknown")
         log("error", "Dashboard", f"Failed to fetch emails last 7d for user '{username}': {str(e)}", "")
@@ -756,7 +757,8 @@ def get_emails_last_30d(request: Request):
             WHERE received_date >= datetime('now', '-30 days')
         """).mappings().first()
 
-        return {"count": result["count"]}
+        count = result["count"] if result else 0
+        return {"count": count}
     except Exception as e:
         username = request.session.get("username", "unknown")
         log("error", "Dashboard", f"Failed to fetch emails last 30d for user '{username}': {str(e)}", "")
