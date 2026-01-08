@@ -3,84 +3,12 @@
 {% block page_title %}Alerts{% endblock %}
 
 {% block extra_css %}
-<style>
-.alert-item {
-    border-left: 4px solid;
-    margin-bottom: 1rem;
-    transition: all 0.2s ease;
-}
-
-.alert-item.error { border-left-color: #dc3545; }
-.alert-item.warning { border-left-color: #ffc107; }
-.alert-item.info { border-left-color: #17a2b8; }
-.alert-item.success { border-left-color: #28a745; }
-
-.alert-item.acknowledged {
-    opacity: 0.6;
-    background-color: var(--bg-secondary);
-}
-
-.alert-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-}
-
-.alert-title {
-    font-weight: 600;
-    margin: 0;
-}
-
-.alert-meta {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-}
-
-.alert-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.pagination {
-    display: flex;
-    justify-content: center;
-    gap: 0.5rem;
-    margin-top: 2rem;
-}
-
-.page-link {
-    padding: 0.5rem 0.75rem;
-    border: 1px solid var(--border-color);
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    text-decoration: none;
-    border-radius: var(--radius-md);
-    transition: all 0.2s ease;
-}
-
-.page-link:hover, .page-link.active {
-    background: var(--accent-color);
-    color: white;
-}
-
-.alert-badge {
-    display: inline-block;
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    border-radius: var(--radius-sm);
-}
-
-.alert-badge.error { background: #dc3545; color: white; }
-.alert-badge.warning { background: #ffc107; color: black; }
-.alert-badge.info { background: #17a2b8; color: white; }
-.alert-badge.success { background: #28a745; color: white; }
-</style>
 {% endblock %}
 
 {% block content %}
+<!-- Notification Container -->
+<div id="notification-container" style="position: fixed; top: 80px; right: 20px; z-index: 10000; max-width: 400px;"></div>
+
 <!-- Filters Card (Initially Hidden) -->
 <div id="filterCard" class="card mb-4" style="display: none;">
     <div class="card-header" style="display: flex; align-items: center; justify-content: space-between;">
@@ -289,16 +217,16 @@ function acknowledgeAlert(alertId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showInlineNotification('Alert acknowledged successfully!', 'success');
+            showAlert('Alert acknowledged successfully!', 'success');
             // Refresh the alerts list
             setTimeout(() => window.location.reload(), 1500);
         } else {
-            showInlineNotification('Failed to acknowledge alert: ' + (data.error || 'Unknown error'), 'error');
+            showAlert('Failed to acknowledge alert: ' + (data.error || 'Unknown error'), 'error');
         }
     })
     .catch(error => {
         console.error('Error acknowledging alert:', error);
-        showInlineNotification('Error acknowledging alert. Check the console for details.', 'error');
+        showAlert('Error acknowledging alert. Check the console for details.', 'error');
     });
 }
 
@@ -360,15 +288,15 @@ function createTestAlert() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showInlineNotification('Test alert created successfully!', 'success');
+            showAlert('Test alert created successfully!', 'success');
             setTimeout(() => refreshAlerts(), 1500);
         } else {
-            showInlineNotification('Failed to create test alert: ' + (data.error || 'Unknown error'), 'error');
+            showAlert('Failed to create test alert: ' + (data.error || 'Unknown error'), 'error');
         }
     })
     .catch(error => {
         console.error('Error creating test alert:', error);
-        showInlineNotification('Error creating test alert. Check the console for details.', 'error');
+        showAlert('Error creating test alert. Check the console for details.', 'error');
     });
 }
 
@@ -377,44 +305,38 @@ function showInlineConfirmation(message) {
     return confirm(message); // For now, keep using confirm but could be replaced with custom modal
 }
 
-// Show inline notification
-function showInlineNotification(message, type = 'info') {
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = `alert alert-${type === 'error' ? 'danger' : type}`;
-    notification.style.cssText = 'position: fixed; top: 80px; right: 20px; z-index: 10000; max-width: 400px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideIn 0.3s ease;';
-    
+// Show notification using Bootstrap alerts
+function showAlert(message, type = 'info') {
+    const container = document.getElementById('notification-container');
+    const alertClass = type === 'error' ? 'danger' : type;
     const iconMap = {
         'success': 'check-circle',
-        'error': 'exclamation-circle',
+        'error': 'exclamation-circle', 
         'warning': 'exclamation-triangle',
         'info': 'info-circle'
     };
     
-    notification.innerHTML = `
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${alertClass} alert-dismissible fade show`;
+    alert.style.cssText = 'box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 10px;';
+    alert.innerHTML = `
         <i class="fas fa-${iconMap[type] || 'info-circle'}"></i>
         <span>${message}</span>
-        <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
     
-    document.body.appendChild(notification);
+    container.appendChild(alert);
     
     // Auto-remove after 5 seconds
     setTimeout(() => {
-        if (notification.parentElement) {
-            notification.remove();
+        if (alert.parentElement) {
+            alert.remove();
         }
     }, 5000);
 }
 
-// Add slideIn animation
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideIn {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-    }
-`;
-document.head.appendChild(style);
+function showError(message) {
+    showAlert(message, 'error');
+}
 </script>
 {% endblock %}

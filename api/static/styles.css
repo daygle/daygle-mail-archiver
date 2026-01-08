@@ -876,22 +876,96 @@ textarea.form-control {
     color: var(--info);
 }
 
-/* Theme Toggle */
-.theme-toggle {
-    position: relative;
+/* Alert Items */
+.alert-item {
+    border-left: 4px solid;
+    margin-bottom: 1rem;
+    transition: all 0.2s ease;
+}
+
+.alert-item.error { border-left-color: #dc3545; }
+.alert-item.warning { border-left-color: #ffc107; }
+.alert-item.info { border-left-color: #17a2b8; }
+.alert-item.success { border-left-color: #28a745; }
+
+.alert-item.acknowledged {
+    opacity: 0.6;
+    background-color: var(--bg-secondary);
+}
+
+.alert-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.alert-title {
+    font-weight: 600;
+    margin: 0;
+}
+
+.alert-meta {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.alert-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.alert-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    border-radius: var(--radius-sm);
+}
+
+.alert-badge.error { background: #dc3545; color: white; }
+.alert-badge.warning { background: #ffc107; color: black; }
+.alert-badge.info { background: #17a2b8; color: white; }
+.alert-badge.success { background: #28a745; color: white; }
+
+/* Pagination */
+.pagination {
+    display: flex;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    gap: 0.5rem;
+    margin-top: 2rem;
+}
+
+.page-link {
+    padding: 0.5rem 0.75rem;
     border: 1px solid var(--border-color);
     background: var(--bg-primary);
-    border-radius: 50%;
+    color: var(--text-primary);
+    text-decoration: none;
+    border-radius: var(--radius-md);
+    transition: all 0.2s ease;
+}
+
+.page-link:hover, .page-link.active {
+    background: var(--accent-color);
+    color: white;
+}
+
+/* Theme Toggle */
+.theme-toggle {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
     cursor: pointer;
-    transition: all var(--transition-fast);
-    color: var(--text-secondary);
-    font-size: 1rem;
-    margin-right: 12px;
+    padding: 8px;
+    border-radius: var(--radius-md);
+    transition: background-color var(--transition-fast);
+    font-size: 1.25rem;
+}
+
+.theme-toggle:hover {
+    background: var(--bg-hover);
 }
 
 .theme-toggle:hover {
