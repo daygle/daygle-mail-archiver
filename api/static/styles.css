@@ -794,10 +794,16 @@ textarea.form-control {
     border-bottom: 1px solid var(--border-color);
 }
 
+.table {
+    /* Ensure table itself doesn't force a light background so it inherits the card/theme */
+    background: transparent;
+}
+
 .table td {
     padding: 12px 16px;
     border-bottom: 1px solid var(--border-light);
     color: var(--text-primary);
+    background: transparent; /* Prevent cell background from staying white in some browsers */
 }
 
 .table tbody tr {
@@ -809,6 +815,9 @@ textarea.form-control {
 }
 
 /* Striped rows for better readability */
+.table.table-striped tbody tr {
+    background: transparent; /* baseline transparent to avoid white fallback */
+}
 .table.table-striped tbody tr:nth-child(odd) {
     background: var(--table-row-odd);
 }
@@ -2602,6 +2611,24 @@ a:hover {
     border-radius: var(--radius-lg);
     padding: 1.5rem;
     margin-bottom: 1rem;
+}
+
+/* Account Activity table — ensure dark theme background and grey text */
+[data-theme="dark"] .account-activity-table,
+[data-theme="dark"] .account-activity-table th,
+[data-theme="dark"] .account-activity-table td {
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .account-activity-table.table-striped tbody tr:nth-child(odd) {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.account-activity-table th {
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
 }
 
 .report-title {
