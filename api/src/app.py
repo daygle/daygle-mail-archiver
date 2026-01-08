@@ -7,7 +7,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.cors import CORSMiddleware
 import logging
 
-from routes import emails, fetch_accounts, global_settings, auth, users, profile, logs, dashboard, worker_status, oauth, donate, help, reports, alerts, alert_management
+from routes import emails, fetch_accounts, global_settings, login, users, profile, logs, dashboard, worker_status, oauth, donate, help, reports, alerts, alert_management
 from utils.logger import log
 from utils.config import get_config
 
@@ -81,7 +81,7 @@ else:
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 # Routers
-app.include_router(auth.router)
+app.include_router(login.router)
 app.include_router(dashboard.router)
 app.include_router(emails.router)
 app.include_router(fetch_accounts.router)

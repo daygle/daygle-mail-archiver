@@ -40,3 +40,28 @@ daygle_mail_archiver.conf.backup_*
 
 # Update diffs (local changes tracking)
 update_diffs/
+
+# Python bytecode & caches
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+.pycache/
+
+# Testing & coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.cache/
+.mypy_cache/
+
+# Build / packaging
+build/
+dist/
+*.egg-info/
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt

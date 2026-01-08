@@ -26,7 +26,7 @@ def setup_wizard_form(request: Request):
     if is_setup_complete():
         return RedirectResponse("/login", status_code=303)
     
-    return templates.TemplateResponse("setup-wizard.html", {"request": request})
+    return templates.TemplateResponse("setup.html", {"request": request})
 
 @router.post("/setup")
 def setup_wizard_submit(
@@ -45,7 +45,7 @@ def setup_wizard_submit(
     # Validate username
     if not username or len(username) < 3:
         return templates.TemplateResponse(
-            "setup-wizard.html",
+"setup.html",
             {"request": request, "error": "Username must be at least 3 characters long", "username": username, "first_name": first_name, "last_name": last_name, "email": email},
         )
     
@@ -54,45 +54,45 @@ def setup_wizard_submit(
         existing_user = query("SELECT id FROM users WHERE username = :u", {"u": username}).mappings().first()
         if existing_user:
             return templates.TemplateResponse(
-                "setup-wizard.html",
+                "setup.html",
                 {"request": request, "error": "Username already exists", "username": username, "first_name": first_name, "last_name": last_name, "email": email},
             )
     except Exception as e:
         log("error", "Setup", f"Database error checking username: {str(e)}")
         return templates.TemplateResponse(
-            "setup-wizard.html",
+            "setup.html",
             {"request": request, "error": "System error. Please try again.", "username": username, "first_name": first_name, "last_name": last_name, "email": email},
         )
     
     # Validate password matches confirmation
     if password != confirm_password:
         return templates.TemplateResponse(
-            "setup-wizard.html",
+"setup.html",
             {"request": request, "error": "Passwords do not match", "username": username, "first_name": first_name, "last_name": last_name, "email": email},
         )
     
     # Validate password strength
     if len(password) < 8:
         return templates.TemplateResponse(
-            "setup-wizard.html",
+"setup.html",
             {"request": request, "error": "Password must be at least 8 characters long", "username": username, "first_name": first_name, "last_name": last_name, "email": email},
         )
     
     if not re.search(r"[a-z]", password):
         return templates.TemplateResponse(
-            "setup-wizard.html",
+"setup.html",
             {"request": request, "error": "Password must contain at least one lowercase letter", "username": username, "first_name": first_name, "last_name": last_name, "email": email},
         )
     
     if not re.search(r"[A-Z]", password):
         return templates.TemplateResponse(
-            "setup-wizard.html",
+"setup.html",
             {"request": request, "error": "Password must contain at least one uppercase letter", "username": username, "first_name": first_name, "last_name": last_name, "email": email},
         )
     
     if not re.search(r"[0-9]", password):
         return templates.TemplateResponse(
-            "setup-wizard.html",
+"setup.html",
             {"request": request, "error": "Password must contain at least one number", "username": username, "first_name": first_name, "last_name": last_name, "email": email},
         )
     
@@ -123,7 +123,7 @@ def setup_wizard_submit(
     except Exception as e:
         log("error", "Setup", f"Failed to create administrator account: {str(e)}")
         return templates.TemplateResponse(
-            "setup-wizard.html",
+"setup.html",
             {"request": request, "error": "Failed to create account. Please try again.", "username": username, "first_name": first_name, "last_name": last_name, "email": email},
         )
 
@@ -243,32 +243,32 @@ def set_password(request: Request, password: str = Form(...), confirm_password: 
             "set-password.html",
             {"request": request, "error": "Passwords do not match"},
         )
-    
+
     # Validate password strength (same as profile.py)
     if len(password) < 8:
         return templates.TemplateResponse(
             "set-password.html",
             {"request": request, "error": "Password must be at least 8 characters long"},
         )
-    
+
     if not re.search(r"[a-z]", password):
         return templates.TemplateResponse(
             "set-password.html",
             {"request": request, "error": "Password must contain at least one lowercase letter"},
         )
-    
+
     if not re.search(r"[A-Z]", password):
         return templates.TemplateResponse(
             "set-password.html",
             {"request": request, "error": "Password must contain at least one uppercase letter"},
         )
-    
+
     if not re.search(r"[0-9]", password):
         return templates.TemplateResponse(
             "set-password.html",
             {"request": request, "error": "Password must contain at least one number"},
         )
-    
+
     try:
         hash_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         execute("UPDATE users SET password_hash = :h WHERE id = :id", {"h": hash_pw, "id": user_id})
