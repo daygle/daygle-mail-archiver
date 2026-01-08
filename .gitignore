@@ -1,6 +1,7 @@
 # Configuration file (contains sensitive data)
 daygle_mail_archiver.conf
 .env-dev
+.env.dev
 
 # Python
 __pycache__/

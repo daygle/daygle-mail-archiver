@@ -296,33 +296,35 @@ function initializeCharts() {
     const emailVolumeCtx = document.getElementById('emailVolumeChart');
     if (emailVolumeCtx) {
         emailVolumeChart = new Chart(emailVolumeCtx, {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: [{
-                label: 'Emails',
-                data: [],
-                borderColor: '#3b82f6',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                tension: 0.4
-            }, {
-                label: 'Virus Detected',
-                data: [],
-                borderColor: '#ef4444',
-                backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'top' }
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Emails',
+                    data: [],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4
+                }, {
+                    label: 'Virus Detected',
+                    data: [],
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    tension: 0.4
+                }]
             },
-            scales: {
-                y: { beginAtZero: true }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
             }
-        }
+        });
+    }
     // Account Activity Chart
     const accountActivityCtx = document.getElementById('accountActivityChart').getContext('2d');
     accountActivityChart = new Chart(accountActivityCtx, {
@@ -370,38 +372,6 @@ function initializeCharts() {
     });
 
     // AV Statistics Chart
-    const avStatsCtx = document.getElementById('avStatsChart').getContext('2d');
-    avStatsChart = new Chart(avStatsCtx, {
-        type: 'bar',
-        data: {
-            labels: [],
-            datasets: [{
-                label: 'Clean',
-                data: [],
-                backgroundColor: '#10b981'
-            }, {
-                label: 'Quarantined',
-                data: [],
-                backgroundColor: '#f59e0b'
-            }, {
-                label: 'Rejected',
-                data: [],
-                backgroundColor: '#ef4444'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'top' }
-            },
-            scales: {
-                y: { beginAtZero: true }
-            }
-        }
-    });
-
-    // AV Stats Chart
     const avStatsCtx = document.getElementById('avStatsChart').getContext('2d');
     avStatsChart = new Chart(avStatsCtx, {
         type: 'line',
