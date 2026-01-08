@@ -830,14 +830,17 @@ def get_system_uptime(request: Request):
                     uptime_str = "System uptime information unavailable"
         else:
             # Use uptime command on Linux/Unix systems
-            result = subprocess.run(['uptime', '-p'], capture_output=True, text=True, timeout=10)
-            if result.returncode == 0:
-                uptime_str = result.stdout.strip()
-                # Remove "up " prefix if present
-                if uptime_str.startswith('up '):
-                    uptime_str = uptime_str[3:]
-            else:
-                uptime_str = "Unknown"
+            try:
+                result = subprocess.run(['uptime', '-p'], capture_output=True, text=True, timeout=10)
+                if result.returncode == 0:
+                    uptime_str = result.stdout.strip()
+                    # Remove "up " prefix if present
+                    if uptime_str.startswith('up '):
+                        uptime_str = uptime_str[3:]
+                else:
+                    uptime_str = "Unknown"
+            except (FileNotFoundError, subprocess.TimeoutExpired, subprocess.SubprocessError):
+                uptime_str = "System uptime information unavailable"
 
         return {"uptime": uptime_str}
     except Exception as e:
