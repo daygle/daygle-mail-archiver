@@ -178,8 +178,7 @@ def account_activity_report(request: Request, start_date: str = None, end_date: 
                 fa.last_success,
                 fa.last_error,
                 CASE
-                    WHEN fa.last_heartbeat IS NOT NULL THEN 
-                        CAST(EXTRACT(EPOCH FROM (NOW() - fa.last_heartbeat)) / 3600 AS DECIMAL)
+                    WHEN fa.last_heartbeat IS NOT NULL THEN EXTRACT(EPOCH FROM (NOW() - fa.last_heartbeat)) / 3600
                     ELSE 0
                 END as hours_since_heartbeat,
                 COUNT(e.id) as emails_synced_today
@@ -197,14 +196,39 @@ def account_activity_report(request: Request, start_date: str = None, end_date: 
                 last_success_dt = datetime.fromisoformat(row["last_success"].replace('Z', '+00:00'))
                 last_success = convert_utc_to_user_timezone(last_success_dt, user_id).strftime(get_user_date_format(request))
 
+            # Safely convert hours_since_heartbeat to float
+            try:
+                hours_value = row["hours_since_heartbeat"]
+                if hours_value is None:
+                    hours_float = 0.0
+                elif isinstance(hours_value, str):
+                    hours_float = float(hours_value) if hours_value.strip() else 0.0
+                else:
+                    hours_float = float(hours_value)
+                hours_rounded = round(hours_float, 1)
+            except (ValueError, TypeError):
+                hours_rounded = 0.0
+
+            # Safely convert emails_synced_today to int
+            try:
+                emails_value = row["emails_synced_today"]
+                if emails_value is None:
+                    emails_int = 0
+                elif isinstance(emails_value, str):
+                    emails_int = int(emails_value) if emails_value.strip() else 0
+                else:
+                    emails_int = int(emails_value)
+            except (ValueError, TypeError):
+                emails_int = 0
+
             accounts.append({
                 "name": row["name"],
                 "type": row["account_type"],
                 "enabled": bool(row["enabled"]),  # Convert SQLite integer to boolean
                 "last_success": last_success,
                 "last_error": row["last_error"],
-                "hours_since_heartbeat": round(float(row["hours_since_heartbeat"] or 0), 1),
-                "emails_today": int(row["emails_synced_today"] or 0)
+                "hours_since_heartbeat": hours_rounded,
+                "emails_today": emails_int
             })
 
         # Get sync trends over time
@@ -229,7 +253,20 @@ def account_activity_report(request: Request, start_date: str = None, end_date: 
             date_str = convert_utc_to_user_timezone(sync_date, user_id).strftime(date_format)
             source = row["source"]
             sources.add(source)
-            trend_data[date_str][source] = int(row["email_count"] or 0)
+            
+            # Safely convert email_count
+            try:
+                count_value = row["email_count"]
+                if count_value is None:
+                    email_count = 0
+                elif isinstance(count_value, str):
+                    email_count = int(count_value) if count_value.strip() else 0
+                else:
+                    email_count = int(count_value)
+            except (ValueError, TypeError):
+                email_count = 0
+                
+            trend_data[date_str][source] = email_count
 
         # Build chart data
         sorted_dates = sorted(trend_data.keys())
@@ -371,6 +408,22 @@ def system_health_report(request: Request, start_date: str = None, end_date: str
                 pg_database_size(current_database()) as current_size_bytes
         """).mappings().first()
 
+        # Safely extract database size
+        db_size = "Unknown"
+        db_size_bytes = 0
+        if db_size_results:
+            db_size = db_size_results.get("current_size", "Unknown")
+            try:
+                size_value = db_size_results.get("current_size_bytes")
+                if size_value is None:
+                    db_size_bytes = 0
+                elif isinstance(size_value, str):
+                    db_size_bytes = int(size_value) if size_value.strip() else 0
+                else:
+                    db_size_bytes = int(size_value)
+            except (ValueError, TypeError):
+                db_size_bytes = 0
+
         # Error trends
         error_results = query("""
             SELECT
@@ -389,7 +442,20 @@ def system_health_report(request: Request, start_date: str = None, end_date: str
             if row["error_date"]:
                 local_dt = convert_utc_to_user_timezone(row["error_date"], user_id)
                 error_labels.append(local_dt.strftime(date_format))
-            error_counts.append(int(row["error_count"] or 0))
+            
+            # Safely convert error_count
+            try:
+                count_value = row["error_count"]
+                if count_value is None:
+                    error_count = 0
+                elif isinstance(count_value, str):
+                    error_count = int(count_value) if count_value.strip() else 0
+                else:
+                    error_count = int(count_value)
+            except (ValueError, TypeError):
+                error_count = 0
+                
+            error_counts.append(error_count)
 
         # Worker status summary
         worker_results = query("""
@@ -397,21 +463,43 @@ def system_health_report(request: Request, start_date: str = None, end_date: str
                 COUNT(*) as total_accounts,
                 COUNT(CASE WHEN enabled THEN 1 END) as enabled_accounts,
                 COUNT(CASE WHEN last_error IS NOT NULL THEN 1 END) as accounts_with_errors,
-                COALESCE(AVG(CAST(EXTRACT(EPOCH FROM (NOW() - last_heartbeat)) / 3600 AS DECIMAL)), 0) as avg_hours_since_heartbeat
+                AVG(EXTRACT(EPOCH FROM (NOW() - last_heartbeat)) / 3600) as avg_hours_since_heartbeat
             FROM fetch_accounts
         """).mappings().first()
 
+        # Safely extract worker stats
+        worker_stats = {
+            "total_accounts": 0,
+            "enabled_accounts": 0,
+            "accounts_with_errors": 0,
+            "avg_hours_since_heartbeat": 0.0
+        }
+        
+        if worker_results:
+            for key in worker_stats:
+                try:
+                    value = worker_results[key]
+                    if value is None:
+                        continue
+                    elif isinstance(value, str):
+                        if key == "avg_hours_since_heartbeat":
+                            worker_stats[key] = round(float(value) if value.strip() else 0.0, 1)
+                        else:
+                            worker_stats[key] = int(value) if value.strip() else 0
+                    else:
+                        if key == "avg_hours_since_heartbeat":
+                            worker_stats[key] = round(float(value), 1)
+                        else:
+                            worker_stats[key] = int(value)
+                except (ValueError, TypeError):
+                    pass
+
         return {
-            "database_size": db_size_results["current_size"] if db_size_results else "Unknown",
-            "database_size_bytes": int(db_size_results["current_size_bytes"] or 0) if db_size_results else 0,
+            "database_size": db_size,
+            "database_size_bytes": db_size_bytes,
             "error_labels": error_labels,
             "error_counts": error_counts,
-            "worker_stats": {
-                "total_accounts": int(worker_results["total_accounts"] or 0) if worker_results else 0,
-                "enabled_accounts": int(worker_results["enabled_accounts"] or 0) if worker_results else 0,
-                "accounts_with_errors": int(worker_results["accounts_with_errors"] or 0) if worker_results else 0,
-                "avg_hours_since_heartbeat": round(float(worker_results["avg_hours_since_heartbeat"] or 0), 1)
-            }
+            "worker_stats": worker_stats
         }
     except Exception as e:
         username = request.session.get("username", "unknown")
