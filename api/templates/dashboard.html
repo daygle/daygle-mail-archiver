@@ -1150,31 +1150,6 @@ const DashboardManager = {
     },
 
 
-    },
-
-    showUpdateInstructions() {
-        const message = `To update Daygle Mail Archiver:
-
-1. Connect to your server via SSH
-2. Navigate to the installation directory:
-   cd /opt/daygle-mail-archiver
-
-3. Check what will be updated:
-   ./update.sh --check
-
-4. Run the update (with automatic backup):
-   ./update.sh
-
-The update script will:
-• Create an automatic backup
-• Pull the latest code
-• Update Docker images
-• Restart containers
-
-For more options, run: ./update.sh --help`;
-
-        alert(message);
-    },
 
     async loadEmailsPerDay() {
         try {
