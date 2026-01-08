@@ -197,6 +197,12 @@
     </div>
 </div>
 
+<!-- API Unreachable Banner (hidden by default) -->
+<div id="api-unreachable-banner" class="alert alert-warning" style="display: none; margin: 0.5rem 1rem;">
+    <span id="api-unreachable-message">API unreachable — retrying...</span>
+    <button id="api-retry-now" class="btn btn-sm btn-primary" style="margin-left: 1rem;">Retry now</button>
+</div>
+
 <!-- Widget Selector Modal (Hidden by default) -->
 <div id="widget-selector-modal" class="modal" style="display: none;">
     <div class="modal-overlay" id="modal-overlay"></div>
@@ -524,7 +530,55 @@ const DashboardManager = {
         'storage-trends': { days: 7 }
     },
     currentSettingsWidget: null,
-    
+
+    // API connectivity helpers
+    async sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); },
+
+    showApiBanner(message) {
+        const banner = document.getElementById('api-unreachable-banner');
+        const msg = document.getElementById('api-unreachable-message');
+        if (msg && message) msg.textContent = message;
+        if (banner) banner.style.display = 'block';
+    },
+
+    hideApiBanner() {
+        const banner = document.getElementById('api-unreachable-banner');
+        if (banner) banner.style.display = 'none';
+    },
+
+    async retryAll() {
+        // Retry loading all data
+        this.showApiBanner('Retrying API requests...');
+        try {
+            await this.loadAllData();
+        } catch (e) {
+            // keep banner and message
+            this.showApiBanner('API still unreachable — retrying...');
+        }
+    },
+
+    async fetchWithRetry(url, options = {}, retries = 4, initialBackoff = 800) {
+        let attempt = 0;
+        while (true) {
+            try {
+                const response = await fetch(url, options);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                this.hideApiBanner();
+                return data;
+            } catch (err) {
+                attempt += 1;
+                this.showApiBanner(`API unreachable — retrying (attempt ${attempt} of ${retries})`);
+                if (attempt > retries) {
+                    // Keep the banner visible and bubble error
+                    throw err;
+                }
+                const backoff = initialBackoff * Math.pow(2, attempt - 1);
+                await this.sleep(backoff);
+            }
+        }
+    },
+
     // Default widget layout - now focused on customizable stat widgets
     defaultWidgets: [
         { id: 'total-emails', x: 0, y: 0, w: 3, h: 3, visible: true },
@@ -577,6 +631,10 @@ const DashboardManager = {
 
             // Setup event listeners
             this.setupEventListeners();
+
+            // Bind retry button on banner
+            const retryBtn = document.getElementById('api-retry-now');
+            if (retryBtn) retryBtn.addEventListener('click', () => { this.retryAll(); });
         } catch (error) {
             console.error('Error initializing dashboard:', error);
             console.error('Error stack:', error.stack);
@@ -1471,8 +1529,7 @@ For more options, run: ./update.sh --help`;
     // Individual stat widget loading functions
     async loadTotalEmails() {
         try {
-            const response = await fetch('/api/dashboard/stats');
-            const data = await response.json();
+            const data = await this.fetchWithRetry('/api/dashboard/stats');
             const el = document.getElementById('stat-total-emails');
             if (el) el.textContent = this.formatNumber(data.total_emails);
         } catch (error) {
@@ -1482,8 +1539,7 @@ For more options, run: ./update.sh --help`;
 
     async loadEmailsToday() {
         try {
-            const response = await fetch('/api/dashboard/stats');
-            const data = await response.json();
+            const data = await this.fetchWithRetry('/api/dashboard/stats');
             const el = document.getElementById('stat-emails-today');
             if (el) el.textContent = this.formatNumber(data.emails_today);
         } catch (error) {
@@ -1493,8 +1549,7 @@ For more options, run: ./update.sh --help`;
 
     async loadDatabaseSize() {
         try {
-            const response = await fetch('/api/dashboard/stats');
-            const data = await response.json();
+            const data = await this.fetchWithRetry('/api/dashboard/stats');
             const el = document.getElementById('stat-database-size');
             if (el) el.textContent = data.database_size;
         } catch (error) {
@@ -1504,8 +1559,7 @@ For more options, run: ./update.sh --help`;
 
     async loadActiveAccounts() {
         try {
-            const response = await fetch('/api/dashboard/stats');
-            const data = await response.json();
+            const data = await this.fetchWithRetry('/api/dashboard/stats');
             const el = document.getElementById('stat-active-accounts');
             if (el) el.textContent = this.formatNumber(data.total_accounts);
         } catch (error) {
@@ -1515,8 +1569,7 @@ For more options, run: ./update.sh --help`;
 
     async loadWorkersOnline() {
         try {
-            const response = await fetch('/api/dashboard/system-status');
-            const data = await response.json();
+            const data = await this.fetchWithRetry('/api/dashboard/system-status');
             const el = document.getElementById('stat-workers-online');
             if (el) el.textContent = this.formatNumber(data.workers_online);
         } catch (error) {
@@ -1526,8 +1579,7 @@ For more options, run: ./update.sh --help`;
 
     async loadEmailsLast7d() {
         try {
-            const response = await fetch('/api/dashboard/emails-last-7d');
-            const data = await response.json();
+            const data = await this.fetchWithRetry('/api/dashboard/emails-last-7d');
             const el = document.getElementById('stat-emails-last-7d');
             if (el) el.textContent = this.formatNumber(data.count);
         } catch (error) {
@@ -1537,8 +1589,7 @@ For more options, run: ./update.sh --help`;
 
     async loadEmailsLast30d() {
         try {
-            const response = await fetch('/api/dashboard/emails-last-30d');
-            const data = await response.json();
+            const data = await this.fetchWithRetry('/api/dashboard/emails-last-30d');
             const el = document.getElementById('stat-emails-last-30d');
             if (el) el.textContent = this.formatNumber(data.count);
         } catch (error) {
@@ -1548,8 +1599,7 @@ For more options, run: ./update.sh --help`;
 
     async loadStorageUsed() {
         try {
-            const response = await fetch('/api/dashboard/storage-used');
-            const data = await response.json();
+            const data = await this.fetchWithRetry('/api/dashboard/storage-used');
             const el = document.getElementById('stat-storage-used');
             if (el) el.textContent = data.size;
         } catch (error) {
@@ -1559,8 +1609,7 @@ For more options, run: ./update.sh --help`;
 
     async loadClamAVClean() {
         try {
-            const response = await fetch('/api/dashboard/clamav-stats');
-            const data = await response.json();
+            const data = await this.fetchWithRetry('/api/dashboard/clamav-stats');
             const el = document.getElementById('stat-clamav-clean');
             if (el) el.textContent = this.formatNumber(data.clean);
         } catch (error) {
@@ -1570,8 +1619,7 @@ For more options, run: ./update.sh --help`;
 
     async loadClamAVQuarantined() {
         try {
-            const response = await fetch('/api/dashboard/clamav-stats');
-            const data = await response.json();
+            const data = await this.fetchWithRetry('/api/dashboard/clamav-stats');
             const el = document.getElementById('stat-clamav-quarantined');
             if (el) el.textContent = this.formatNumber(data.quarantined);
         } catch (error) {
@@ -1581,8 +1629,7 @@ For more options, run: ./update.sh --help`;
 
     async loadClamAVRejected() {
         try {
-            const response = await fetch('/api/dashboard/clamav-stats');
-            const data = await response.json();
+            const data = await this.fetchWithRetry('/api/dashboard/clamav-stats');
             const el = document.getElementById('stat-clamav-rejected');
             if (el) el.textContent = this.formatNumber(data.rejected);
         } catch (error) {
@@ -1592,8 +1639,7 @@ For more options, run: ./update.sh --help`;
 
     async loadSystemUptime() {
         try {
-            const response = await fetch('/api/dashboard/system-uptime');
-            const data = await response.json();
+            const data = await this.fetchWithRetry('/api/dashboard/system-uptime');
             const el = document.getElementById('stat-system-uptime');
             // Normalize very small uptimes to a compact form for UI
             let uptime = data.uptime || '';
