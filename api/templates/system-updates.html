@@ -24,7 +24,17 @@
 
         <div id="update-result" style="display:none;">
             <div id="update-message" class="mb-2"></div>
-            <pre id="update-json" class="code-block small" style="display:none;"></pre>
+
+            <div id="update-unavailable" class="alert alert-info" style="display:none;">
+                <strong>Update checking is unavailable</strong>
+                <p class="mb-0">This deployment was built without Git metadata (for example, running from a release container or extracted source). Automatic update checks require Git metadata to be present.</p>
+                <div class="mt-2">
+                    <small class="text-muted">If you built from source with Git present, ensure the `.git` directory exists in the application root and the web process has read access.</small>
+                    <button id="toggle-details-btn" class="btn btn-sm btn-outline-secondary ms-2" style="display:none;">Show details</button>
+                </div>
+            </div>
+
+            <pre id="update-json" class="code-block small" style="display:none; white-space: pre-wrap; word-break: break-word;"></pre>
         </div>
 
         <div id="update-disabled" style="display:none;" class="alert alert-warning">
@@ -54,11 +64,17 @@ document.getElementById('check-updates-btn').addEventListener('click', async fun
     const messageEl = document.getElementById('update-message');
     const jsonEl = document.getElementById('update-json');
     const disabledEl = document.getElementById('update-disabled');
+    const unavailableEl = document.getElementById('update-unavailable');
+    const toggleBtn = document.getElementById('toggle-details-btn');
 
+    // Reset UI
     statusEl.textContent = 'Checking...';
     resultEl.style.display = 'none';
     jsonEl.style.display = 'none';
     disabledEl.style.display = 'none';
+    unavailableEl.style.display = 'none';
+    toggleBtn.style.display = 'none';
+    toggleBtn.textContent = 'Show details';
 
     try {
         // Force a manual check regardless of automatic check setting
@@ -78,6 +94,16 @@ document.getElementById('check-updates-btn').addEventListener('click', async fun
             btn.disabled = false;
             return;
         }
+
+        // Defensive: ensure data is an object
+        if (typeof data !== 'object') {
+            statusEl.textContent = 'Error';
+            messageEl.textContent = 'Unexpected response format from update check';
+            resultEl.style.display = 'block';
+            btn.disabled = false;
+            return;
+        }
+
         // If we received a timestamp for the manual check, update the status badge on the page
         try {
             if (data && data.current_commit !== undefined) {
@@ -86,6 +112,7 @@ document.getElementById('check-updates-btn').addEventListener('click', async fun
         } catch (e) {
             // ignore
         }
+
         if (data.disabled) {
             statusEl.textContent = 'Disabled';
             disabledEl.style.display = 'block';
@@ -93,12 +120,29 @@ document.getElementById('check-updates-btn').addEventListener('click', async fun
             return;
         }
 
+        if (data.unavailable) {
+            statusEl.textContent = 'Unavailable';
+            messageEl.innerHTML = '';
+            unavailableEl.style.display = 'block';
+            // Show toggle to reveal raw details if admin wants to inspect
+            toggleBtn.style.display = 'inline-block';
+            toggleBtn.onclick = function() {
+                if (jsonEl.style.display === 'block') {
+                    jsonEl.style.display = 'none';
+                    toggleBtn.textContent = 'Show details';
+                } else {
+                    jsonEl.textContent = JSON.stringify(data, null, 2);
+                    jsonEl.style.display = 'block';
+                    toggleBtn.textContent = 'Hide details';
+                }
+            };
+            btn.disabled = false;
+            return;
+        }
+
         if (data.updates_available && !data.error) {
             statusEl.textContent = 'Update Available';
             messageEl.innerHTML = `<strong>Update available:</strong> Version ${data.latest_commit}` + (data.commits_behind ? ` (${data.commits_behind} commits behind)` : '') + (data.latest_message ? `: ${data.latest_message}` : '');
-        } else if (data.unavailable) {
-            statusEl.textContent = 'Unavailable';
-            messageEl.innerHTML = 'Update checking is unavailable for this deployment (no git metadata).';
         } else if (data.error) {
             statusEl.textContent = 'Error';
             messageEl.innerHTML = `Error checking updates: ${data.error}`;
