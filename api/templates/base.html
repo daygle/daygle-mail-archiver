@@ -173,9 +173,10 @@
             <!-- Page Content -->
             <div class="content-container">
                 {% if flash %}
-                <div class="alert alert-info">
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
                     <i class="fas fa-info-circle"></i>
                     <span>{{ flash }}</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
                 {% endif %}
 
