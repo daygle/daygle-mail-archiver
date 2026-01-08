@@ -2840,3 +2840,22 @@ a:hover {
     font-size: 0.875rem;
     color: var(--text-secondary);
 }
+
+/* Help page responsive grid */
+.help-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+@media (min-width: 960px) {
+    .help-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+.help-grid .card {
+    display: flex;
+    flex-direction: column;
+}
+.help-grid .card .card-body {
+    flex: 1 1 auto;
+}

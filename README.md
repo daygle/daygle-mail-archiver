@@ -247,3 +247,35 @@ This project is licensed under the MIT License. See the LICENSE file for details
 The system provides real-time security alerts for virus detections, authentication failures, and system anomalies. Configure SMTP settings to receive immediate email notifications of security events.
 
 See [Security Notes](https://github.com/daygle/daygle-mail-archiver/wiki/Security-Notes) for complete security guidelines.
+
+---
+
+## 🔐 Quarantine encryption
+
+If you enable **quarantine encryption**, raw quarantined emails will be encrypted at rest using a Fernet key and stored in the `quarantined_emails` table. This prevents accidental exposure of infected email content in database backups or when browsing quarantine entries.
+
+Important notes:
+
+- Do **not** reuse the IMAP password encryption key for quarantine encryption. The system expects a dedicated `CLAMAV_QUARANTINE_KEY` for quarantine data to keep key scopes separate and reduce blast radius.
+- Generate a key using:
+
+```bash
+python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+```
+
+- Configure the key (example):
+
+```bash
+# Set as an environment variable or in your config
+CLAMAV_QUARANTINE_KEY=<paste-base64-fernet-key-here>
+```
+
+- Enable encryption in the database:
+
+```sql
+UPDATE settings SET value='true' WHERE key='clamav_quarantine_encrypt';
+```
+
+- Rotation warning: rotating `CLAMAV_QUARANTINE_KEY` will make previously encrypted quarantined items unreadable unless you re-encrypt them with the new key or maintain the previous key for decryption during migration.
+
+---

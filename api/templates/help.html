@@ -3,6 +3,7 @@
 {% block page_title %}Help & Documentation{% endblock %}
 
 {% block content %}
+<div class="help-grid">
 <!-- Quick Start Guide -->
 <div class="card" style="margin-bottom: 24px;">
     <div class="card-header">
@@ -231,17 +232,7 @@
         </ul>
 
         <p style="margin-bottom: 0;">Each log entry includes a timestamp, username, action type, and details. Use the search and filter features to find specific events.</p>
-    </div>
-</div>
-
-<!-- System Updates section removed; updates are performed outside the web UI -->
-        </ol>
-
-        <div class="alert alert-warning" style="margin-bottom: 0;">
-            <i class="fas fa-exclamation-triangle"></i> <strong>Important:</strong> Always create a backup before updating: <code>./scripts/backup_restore.sh backup</code>. Your configuration file and local customizations are preserved during updates.
-        </div>
-    </div>
-</div>
+    
 
 <!-- Backup and Restore -->
 <div class="card" style="margin-bottom: 24px;">
@@ -291,5 +282,6 @@
             <li style="margin-bottom: 8px;"><strong>Donate:</strong> Support development via the <a href="/donate">Donate</a> page</li>
         </ul>
     </div>
+</div>
 </div>
 {% endblock %}

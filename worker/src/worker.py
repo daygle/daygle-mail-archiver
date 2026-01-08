@@ -154,103 +154,166 @@ def store_email(
 ) -> bool:
     """
     Store email in the database with virus scanning.
-    
+
     Args:
         source: Email source/account name
         folder: Email folder
         uid: Email UID
         email_bytes: Raw email content
-        
+
     Returns:
         True if email was stored, False if rejected due to virus
     """
     # Parse email once for efficiency
     msg = email.message_from_bytes(email_bytes)
     subject = msg.get("Subject", "")
-    
-    # Scan for viruses before storing
-    scanner = get_clamav_scanner()
+    sender = msg.get("From")
+    # Combine To/Cc into recipients string
+    recipients_list = []
+    for h in ("To", "Cc"):
+        vals = msg.get_all(h, [])
+        if vals:
+            recipients_list.extend(vals)
+    recipients = ", ".join(recipients_list) if recipients_list else None
+    date_header = msg.get("Date")
+
+    # Compress the raw email for storage
+    try:
+        compressed_bytes = gzip.compress(email_bytes)
+    except Exception:
+        compressed_bytes = None
+
+    # Default flags
+    virus_scanned = False
     virus_detected = False
     virus_name = None
     scan_timestamp = None
-    virus_scanned = False
-    
+    quarantined = False
+
+    scanner = get_clamav_scanner()
     if scanner.is_enabled():
         virus_detected, virus_name, scan_timestamp = scanner.scan(email_bytes)
         virus_scanned = True
-        
-        # Handle virus detection based on configured action
+
         if virus_detected:
             action = scanner.get_action()
             log_error(
                 source,
                 f"Virus detected in email: {virus_name}",
                 f"Subject: {subject or 'N/A'}, UID: {uid}, Folder: {folder}, Action: {action}",
-                level="warning"
+                level="warning",
             )
-            
-            # Create security alert for virus detection
+
             alert_details = f"""Virus: {virus_name}
 Subject: {subject or 'N/A'}
-From: {msg.get('From', 'Unknown')}
+From: {sender or 'Unknown'}
 Account: {source}
 Folder: {folder}
 UID: {uid}
 Action Taken: {action}"""
-            
+
             create_alert(
                 'error',
                 'Virus Detected in Email',
-                f'Malicious email blocked: {virus_name}',
+                f'Malicious email detected: {virus_name}',
                 alert_details,
-                'virus_detected'
+                'virus_detected',
             )
-            
+
             if action == 'reject':
-                # Don't store the email at all
                 log_error(
                     source,
                     f"Email rejected due to virus: {virus_name}",
                     f"UID: {uid}, Folder: {folder}",
-                    level="info"
+                    level="info",
                 )
                 return False
-    
-    # Compress email for storage
-    compressed_bytes = gzip.compress(email_bytes)
 
-    sender = msg.get("From", "")
-    recipients = ", ".join(
-        filter(None, [msg.get("To"), msg.get("Cc"), msg.get("Bcc")])
-    )
-    date_header = msg.get("Date", "")
+            if action == 'quarantine' and scanner._quarantine_in_db:
+                # Store the compressed bytes (optionally encrypted) in quarantined_emails
+                try:
+                    raw_to_store = compressed_bytes
+                    if scanner._quarantine_encrypt and scanner._quarantine_key and raw_to_store:
+                        try:
+                            raw_to_store = scanner._quarantine_key.encrypt(raw_to_store)
+                        except Exception as e:
+                            log_error(source, f"Failed to encrypt quarantined data: {e}")
+                            # fall through to store unencrypted if encryption fails
+                    expires_at = None
+                    try:
+                        expires_at = datetime.now(timezone.utc) + timedelta(days=int(scanner._quarantine_retention_days))
+                    except Exception:
+                        expires_at = None
 
-    execute(
-        """
-        INSERT INTO emails
-        (source, folder, uid, subject, sender, recipients, date,
-         raw_email, compressed, virus_scanned, virus_detected, virus_name, scan_timestamp)
-        VALUES
-        (:source, :folder, :uid, :subject, :sender, :recipients, :date,
-         :raw_email, TRUE, :virus_scanned, :virus_detected, :virus_name, :scan_timestamp)
-        ON CONFLICT (source, folder, uid) DO NOTHING
-        """,
-        {
-            "source": source,
-            "folder": folder,
-            "uid": uid,
-            "subject": subject,
-            "sender": sender,
-            "recipients": recipients,
-            "date": date_header,
-            "raw_email": compressed_bytes,
-            "virus_scanned": virus_scanned,
-            "virus_detected": virus_detected,
-            "virus_name": virus_name,
-            "scan_timestamp": scan_timestamp,
-        },
-    )
-    
+                    execute(
+                        """
+                        INSERT INTO quarantined_emails
+                        (original_source, original_folder, original_uid, subject, sender, recipients, date, raw_email, compressed, virus_name, reason, quarantined_at, expires_at, quarantined_by)
+                        VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, TRUE, :virus_name, :reason, NOW(), :expires_at, :quarantined_by)
+                        """,
+                        {
+                            "source": source,
+                            "folder": folder,
+                            "uid": uid,
+                            "subject": subject,
+                            "sender": sender,
+                            "recipients": recipients,
+                            "date": date_header,
+                            "raw_email": raw_to_store,
+                            "virus_name": virus_name,
+                            "reason": 'quarantined by ClamAV',
+                            "expires_at": expires_at,
+                            "quarantined_by": 'clamav',
+                        },
+                    )
+                    quarantined = True
+                    # Avoid saving raw email in main table for quarantined messages
+                    compressed_bytes = None
+                except Exception as e:
+                    log_error(source, f"Failed to quarantine email: {e}")
+                    # If quarantine fails, fall back to rejecting the email for safety
+                    return False
+
+    # Insert into emails table (store compressed bytes unless quarantined)
+    try:
+        execute(
+            """
+            INSERT INTO emails (source, folder, uid, subject, sender, recipients, date, raw_email, compressed, virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined)
+            VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, :compressed, :virus_scanned, :virus_detected, :virus_name, :scan_timestamp, :quarantined)
+            ON CONFLICT (source, folder, uid) DO UPDATE SET
+                subject = EXCLUDED.subject,
+                sender = EXCLUDED.sender,
+                recipients = EXCLUDED.recipients,
+                date = EXCLUDED.date,
+                raw_email = EXCLUDED.raw_email,
+                compressed = EXCLUDED.compressed,
+                virus_scanned = EXCLUDED.virus_scanned,
+                virus_detected = EXCLUDED.virus_detected,
+                virus_name = EXCLUDED.virus_name,
+                scan_timestamp = EXCLUDED.scan_timestamp,
+                quarantined = EXCLUDED.quarantined
+            """,
+            {
+                "source": source,
+                "folder": folder,
+                "uid": uid,
+                "subject": subject,
+                "sender": sender,
+                "recipients": recipients,
+                "date": date_header,
+                "raw_email": compressed_bytes,
+                "compressed": bool(compressed_bytes),
+                "virus_scanned": virus_scanned,
+                "virus_detected": virus_detected,
+                "virus_name": virus_name,
+                "scan_timestamp": scan_timestamp,
+                "quarantined": quarantined,
+            },
+        )
+    except Exception as e:
+        log_error(source, f"Failed to store email in database: {e}")
+        return False
+
     return True
 
 def process_account(account):
@@ -690,6 +753,22 @@ def purge_old_emails():
         """,
         {"cutoff": cutoff},
     )
+
+    # Purge expired quarantined emails based on quarantine retention setting
+    try:
+        settings = get_settings()
+        retention_days = int(settings.get('clamav_quarantine_retention_days', '90'))
+        from datetime import timedelta
+        quarantine_cutoff = datetime.now(timezone.utc) - timedelta(days=retention_days)
+        # Delete quarantined emails older than cutoff
+        deleted = query("""
+            DELETE FROM quarantined_emails WHERE quarantined_at < :cutoff RETURNING id
+        """, {"cutoff": quarantine_cutoff}).rowcount
+        if deleted:
+            log_error('Quarantine', f'Purged {deleted} quarantined emails older than {retention_days} days', level='info')
+    except Exception as e:
+        log_error('Quarantine', f'Failed to purge quarantined emails: {e}')
+
 
     # Track deletion statistics
     execute(

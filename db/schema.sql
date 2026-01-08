@@ -20,8 +20,11 @@ CREATE TABLE IF NOT EXISTS emails (
     date TEXT,
 
     -- Raw email storage
-    raw_email BYTEA NOT NULL,
+raw_email BYTEA,
     compressed BOOLEAN NOT NULL DEFAULT TRUE,
+
+    -- Quarantine flag (moves raw emails into a quarantine table when necessary)
+    quarantined BOOLEAN NOT NULL DEFAULT FALSE,
 
     -- Virus scanning results
     virus_scanned BOOLEAN NOT NULL DEFAULT FALSE,
@@ -170,6 +173,12 @@ INSERT INTO settings (key, value) VALUES ('smtp_password', '') ON CONFLICT (key)
 INSERT INTO settings (key, value) VALUES ('smtp_use_tls', 'true') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('smtp_from_email', '') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('smtp_from_name', 'Daygle Mail Archiver') ON CONFLICT (key) DO NOTHING;
+
+-- ClamAV quarantine settings
+INSERT INTO settings (key, value) VALUES ('clamav_quarantine_in_db', 'true') ON CONFLICT (key) DO NOTHING;
+INSERT INTO settings (key, value) VALUES ('clamav_quarantine_retention_days', '90') ON CONFLICT (key) DO NOTHING;
+INSERT INTO settings (key, value) VALUES ('clamav_max_file_size', '10485760') ON CONFLICT (key) DO NOTHING;
+INSERT INTO settings (key, value) VALUES ('clamav_quarantine_encrypt', 'false') ON CONFLICT (key) DO NOTHING;
 
 -- ----------------------------
 -- logs

@@ -107,6 +107,33 @@ class ClamAVScanner:
             self.host = settings_dict.get('clamav_host', self.host)
             self.port = int(settings_dict.get('clamav_port', self.port))
             self._action = settings_dict.get('clamav_action', 'quarantine')
+            self._quarantine_in_db = settings_dict.get('clamav_quarantine_in_db', 'true').lower() == 'true'
+            try:
+                self._quarantine_retention_days = int(settings_dict.get('clamav_quarantine_retention_days', '90'))
+            except Exception:
+                self._quarantine_retention_days = 90
+            try:
+                # Allow overriding max scan size from settings (bytes)
+                self.MAX_SCAN_SIZE = int(settings_dict.get('clamav_max_file_size', self.MAX_SCAN_SIZE))
+            except Exception:
+                pass
+            # Optional application-level encryption for quarantined raw emails
+            self._quarantine_encrypt = settings_dict.get('clamav_quarantine_encrypt', 'false').lower() == 'true'
+            self._quarantine_key = None
+            if self._quarantine_encrypt:
+                try:
+                    from config import get_config
+                    key = get_config('CLAMAV_QUARANTINE_KEY')
+                    if key:
+                        from cryptography.fernet import Fernet
+                        self._quarantine_key = Fernet(key.encode())
+                    else:
+                        # No key provided - disable encryption with warning
+                        log_warning('clamav_quarantine_encrypt set but CLAMAV_QUARANTINE_KEY not found in config')
+                        self._quarantine_encrypt = False
+                except Exception as e:
+                    log_warning('Failed to initialize quarantine encryption', str(e))
+                    self._quarantine_encrypt = False
         except Exception as e:
             # If we can't load settings, use defaults and disable scanning
             log_warning("Could not load ClamAV settings from database", str(e))

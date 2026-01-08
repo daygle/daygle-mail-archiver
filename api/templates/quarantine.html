@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block page_title %}Quarantine{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-biohazard"></i>
+            <span>Quarantined Messages</span>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if items and items|length > 0 %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Subject</th>
+                    <th>Sender</th>
+                    <th>Virus</th>
+                    <th>Quarantined At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in items %}
+                <tr>
+                    <td>{{ i.id }}</td>
+                    <td>{{ i.subject or '(no subject)' }}</td>
+                    <td>{{ i.sender or 'unknown' }}</td>
+                    <td>{{ i.virus_name or '' }}</td>
+                    <td>{{ i.quarantined_at }}</td>
+                    <td>
+                        <a class="btn btn-sm btn-primary" href="/quarantine/{{ i.id }}">View</a>
+                        <form method="post" action="/quarantine/{{ i.id }}/restore" style="display:inline;">
+                            <button class="btn btn-sm btn-success" type="submit">Restore</button>
+                        </form>
+                        <form method="post" action="/quarantine/{{ i.id }}/delete" style="display:inline;" onsubmit="return confirm('Delete this quarantined message permanently?');">
+                            <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted">No quarantined messages</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
