@@ -202,7 +202,7 @@ def account_activity_report(request: Request, start_date: str = None, end_date: 
                 "enabled": bool(row["enabled"]),  # Convert SQLite integer to boolean
                 "last_success": last_success,
                 "last_error": row["last_error"],
-                "hours_since_heartbeat": round(row["hours_since_heartbeat"] or 0, 1),
+                "hours_since_heartbeat": round(float(row["hours_since_heartbeat"] or 0), 1),
                 "emails_today": row["emails_synced_today"]
             })
 
@@ -409,7 +409,7 @@ def system_health_report(request: Request, start_date: str = None, end_date: str
                 "total_accounts": worker_results["total_accounts"] if worker_results else 0,
                 "enabled_accounts": worker_results["enabled_accounts"] if worker_results else 0,
                 "accounts_with_errors": worker_results["accounts_with_errors"] if worker_results else 0,
-                "avg_hours_since_heartbeat": round(worker_results["avg_hours_since_heartbeat"] or 0, 1)
+                "avg_hours_since_heartbeat": round(float(worker_results["avg_hours_since_heartbeat"] or 0), 1)
             }
         }
     except Exception as e:
