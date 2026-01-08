@@ -146,12 +146,12 @@
             {% if request.session.username and request.session.role == 'administrator' %}
             <div id="global-update-banner" style="display: none; margin: 1rem; padding: 1rem; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1)); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; position: relative;">
                 <div style="display: flex; align-items: center; gap: 1rem;">
-                    <div style="display: flex; align-items: center; justify-content: center; color: #3b82f6; font-size: 1.25rem;">
+                    <div style="display: flex; align-items: center; justify-content: center; color: var(--accent-primary); font-size: 1.25rem;">
                         <i class="fas fa-download"></i>
                     </div>
                     <div style="flex: 1; min-width: 0;">
                         <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">
-                            <i class="fas fa-info-circle" style="color: #3b82f6;"></i>
+                            <i class="fas fa-info-circle" style="color: var(--accent-primary);"></i>
                             System Update Available
                         </div>
                         <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem;" id="global-update-details">

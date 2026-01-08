@@ -674,6 +674,12 @@ button:focus-visible,
     margin-bottom: 8px;
 }
 
+.form-text {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
 .form-control {
     width: 100%;
     padding: 10px 14px;
@@ -819,13 +825,13 @@ textarea.form-control {
 
 .badge-primary {
     background: rgba(139, 92, 246, 0.1);
-    color: #8b5cf6;
+    color: var(--accent-primary);
 }
 
 .badge-secondary {
     background: rgba(107, 114, 128, 0.1);
-    color: #6b7280;
-}
+    color: var(--text-secondary);
+} 
 
 .badge-warning {
     background: rgba(245, 158, 11, 0.1);
@@ -883,10 +889,10 @@ textarea.form-control {
     transition: all 0.2s ease;
 }
 
-.alert-item.error { border-left-color: #dc3545; }
-.alert-item.warning { border-left-color: #ffc107; }
-.alert-item.info { border-left-color: #17a2b8; }
-.alert-item.success { border-left-color: #28a745; }
+.alert-item.error { border-left-color: var(--danger); }
+.alert-item.warning { border-left-color: var(--warning); }
+.alert-item.info { border-left-color: var(--info); }
+.alert-item.success { border-left-color: var(--success); }
 
 .alert-item.acknowledged {
     opacity: 0.6;
@@ -930,7 +936,7 @@ textarea.form-control {
 }
 
 .alert-badge.error { background: #dc3545; color: white; }
-.alert-badge.warning { background: #ffc107; color: black; }
+.alert-badge.warning { background: #ffc107; color: var(--text-secondary); }
 .alert-badge.info { background: #17a2b8; color: white; }
 .alert-badge.success { background: #28a745; color: white; }
 
@@ -1615,6 +1621,20 @@ textarea.form-control {
 
 .w-100 { width: 100%; }
 
+/* Code block styling (theme aware) */
+pre.code-block, pre.code-block code {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    padding: 12px;
+    border-radius: var(--radius-md);
+    overflow-x: auto;
+    margin-bottom: 1rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.875rem;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
 /* ========================================
    Print Styles
    ======================================== */
@@ -1921,7 +1941,7 @@ a:hover {
 }
 
 .stat-mini.stat-primary {
-    border-left-color: #3b82f6;
+    border-left-color: var(--accent-primary);
 }
 
 .stat-mini.stat-success {
@@ -2333,7 +2353,7 @@ a:hover {
 .auth-success {
     background: rgba(34, 197, 94, 0.1);
     border: 1px solid rgba(34, 197, 94, 0.3);
-    color: #16a34a;
+    color: var(--success);
     padding: 12px;
     border-radius: var(--radius-md);
     margin-bottom: 20px;
@@ -2588,10 +2608,10 @@ a:hover {
     margin-right: 0.5rem;
 }
 
-.status-online { background-color: #10b981; }
-.status-warning { background-color: #f59e0b; }
-.status-error { background-color: #ef4444; }
-.status-offline { background-color: #6b7280; }
+.status-online { background-color: var(--success); }
+.status-warning { background-color: var(--warning); }
+.status-error { background-color: var(--danger); }
+.status-offline { background-color: var(--text-secondary); }
 
 .metric-grid {
     display: grid;

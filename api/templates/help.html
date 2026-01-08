@@ -246,7 +246,7 @@
         <p style="margin-bottom: 16px;">Daygle Mail Archiver includes an automatic update script similar to mailcow's update system. The script handles checking for updates, pulling the latest code and Docker images, and restarting containers.</p>
         
         <p style="margin-bottom: 12px;"><strong>Command-line usage:</strong></p>
-        <pre style="background-color: #f5f5f5; padding: 12px; border-radius: 4px; overflow-x: auto; margin-bottom: 16px;"><code># Check if updates are available
+        <pre class="code-block"><code># Check if updates are available
 ./update.sh --check
 
 # Update the system (interactive, with confirmation)
@@ -286,19 +286,19 @@
         <p style="margin-bottom: 16px;">Protect your email archive with the built-in command-line backup and restore script. Backups include both the database AND the configuration file with encryption keys.</p>
         
         <p style="margin-bottom: 12px;"><strong>Creating a Backup:</strong></p>
-        <pre style="background-color: #f5f5f5; padding: 12px; border-radius: 4px; overflow-x: auto; margin-bottom: 16px;"><code>cd /opt/daygle-mail-archiver
+        <pre class="code-block"><code>cd /opt/daygle-mail-archiver
 ./scripts/backup_restore.sh backup</code></pre>
         <p style="margin-bottom: 16px;">This creates a timestamped backup file in the <code>./backups/</code> directory (or custom location) containing the complete PostgreSQL database dump and <code>daygle_mail_archiver.conf</code> file with all encryption keys.</p>
 
         <p style="margin-bottom: 12px;"><strong>Listing Available Backups:</strong></p>
-        <pre style="background-color: #f5f5f5; padding: 12px; border-radius: 4px; overflow-x: auto; margin-bottom: 16px;"><code>./scripts/backup_restore.sh list</code></pre>
+        <pre class="code-block"><code>./scripts/backup_restore.sh list</code></pre>
 
         <p style="margin-bottom: 12px;"><strong>Restoring from Backup:</strong></p>
-        <pre style="background-color: #f5f5f5; padding: 12px; border-radius: 4px; overflow-x: auto; margin-bottom: 16px;"><code>./scripts/backup_restore.sh restore daygle_mail_archiver_backup_20240105_120000.tar.gz</code></pre>
+        <pre class="code-block"><code>./scripts/backup_restore.sh restore daygle_mail_archiver_backup_20240105_120000.tar.gz</code></pre>
         <p style="margin-bottom: 16px;">After restore, restart the services with: <code>docker compose restart</code></p>
 
         <p style="margin-bottom: 12px;"><strong>Deleting Old Backups:</strong></p>
-        <pre style="background-color: #f5f5f5; padding: 12px; border-radius: 4px; overflow-x: auto; margin-bottom: 16px;"><code>./scripts/backup_restore.sh delete daygle_mail_archiver_backup_20240105_120000.tar.gz</code></pre>
+        <pre class="code-block"><code>./scripts/backup_restore.sh delete daygle_mail_archiver_backup_20240105_120000.tar.gz</code></pre>
 
         <div class="alert alert-danger" style="margin-bottom: 0;">
             <i class="fas fa-exclamation-circle"></i> <strong>Security Warning:</strong> Store backups securely! They contain all email data, encryption keys (IMAP_PASSWORD_KEY, SESSION_SECRET), and database credentials. The configuration file is required to decrypt stored passwords.

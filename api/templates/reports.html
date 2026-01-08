@@ -450,7 +450,7 @@ function loadAccountActivityReport() {
             console.error('Error loading account activity report:', error);
             // Show user-friendly error message
             const tbody = document.getElementById('accountTableBody');
-            tbody.innerHTML = '<tr><td colspan="6" style="color: red;">Failed to load account activity report. Please try again.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="color: var(--danger);">Failed to load account activity report. Please try again.</td></tr>';
         });
 }
 
