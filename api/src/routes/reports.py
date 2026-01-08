@@ -130,9 +130,9 @@ def email_volume_report(request: Request, start_date: str = None, end_date: str 
                 elif period == "monthly":
                     labels.append(local_dt.strftime("%B %Y"))
 
-            email_counts.append(row["email_count"])
-            virus_counts.append(row["virus_count"])
-            sources_counts.append(row["sources_count"])
+            email_counts.append(int(row["email_count"] or 0))
+            virus_counts.append(int(row["virus_count"] or 0))
+            sources_counts.append(int(row["sources_count"] or 0))
 
         return {
             "labels": labels,
@@ -203,8 +203,8 @@ def account_activity_report(request: Request, start_date: str = None, end_date: 
                 "enabled": bool(row["enabled"]),  # Convert SQLite integer to boolean
                 "last_success": last_success,
                 "last_error": row["last_error"],
-                "hours_since_heartbeat": round(float(row["hours_since_heartbeat"]), 1),
-                "emails_today": int(row["emails_synced_today"])
+                "hours_since_heartbeat": round(float(row["hours_since_heartbeat"] or 0), 1),
+                "emails_today": int(row["emails_synced_today"] or 0)
             })
 
         # Get sync trends over time
@@ -229,7 +229,7 @@ def account_activity_report(request: Request, start_date: str = None, end_date: 
             date_str = convert_utc_to_user_timezone(sync_date, user_id).strftime(date_format)
             source = row["source"]
             sources.add(source)
-            trend_data[date_str][source] = row["email_count"]
+            trend_data[date_str][source] = int(row["email_count"] or 0)
 
         # Build chart data
         sorted_dates = sorted(trend_data.keys())
@@ -308,7 +308,7 @@ def user_activity_report(request: Request, days: int = 30):
                 "role": row["role"],
                 "last_login": last_login,
                 "created_at": created_at,
-                "logins_today": row["login_count_today"]
+                "logins_today": int(row["login_count_today"] or 0)
             })
 
         # User creation trends
@@ -329,7 +329,7 @@ def user_activity_report(request: Request, days: int = 30):
             if row["creation_date"]:
                 local_dt = convert_utc_to_user_timezone(row["creation_date"], user_id)
                 creation_labels.append(local_dt.strftime(date_format))
-            creation_counts.append(row["user_count"])
+            creation_counts.append(int(row["user_count"] or 0))
 
         return {
             "users": users,
@@ -389,7 +389,7 @@ def system_health_report(request: Request, start_date: str = None, end_date: str
             if row["error_date"]:
                 local_dt = convert_utc_to_user_timezone(row["error_date"], user_id)
                 error_labels.append(local_dt.strftime(date_format))
-            error_counts.append(row["error_count"])
+            error_counts.append(int(row["error_count"] or 0))
 
         # Worker status summary
         worker_results = query("""
@@ -403,13 +403,13 @@ def system_health_report(request: Request, start_date: str = None, end_date: str
 
         return {
             "database_size": db_size_results["current_size"] if db_size_results else "Unknown",
-            "database_size_bytes": db_size_results["current_size_bytes"] if db_size_results else 0,
+            "database_size_bytes": int(db_size_results["current_size_bytes"] or 0) if db_size_results else 0,
             "error_labels": error_labels,
             "error_counts": error_counts,
             "worker_stats": {
-                "total_accounts": int(worker_results["total_accounts"]) if worker_results else 0,
-                "enabled_accounts": int(worker_results["enabled_accounts"]) if worker_results else 0,
-                "accounts_with_errors": int(worker_results["accounts_with_errors"]) if worker_results else 0,
+                "total_accounts": int(worker_results["total_accounts"] or 0) if worker_results else 0,
+                "enabled_accounts": int(worker_results["enabled_accounts"] or 0) if worker_results else 0,
+                "accounts_with_errors": int(worker_results["accounts_with_errors"] or 0) if worker_results else 0,
                 "avg_hours_since_heartbeat": round(float(worker_results["avg_hours_since_heartbeat"] or 0), 1)
             }
         }
@@ -494,14 +494,14 @@ def av_stats_report(request: Request, start_date: str = None, end_date: str = No
                 except (ValueError, TypeError):
                     # Fallback to string representation if conversion fails
                     labels.append(str(row["period_start"]))
-            clean_counts.append(row["clean_count"])
-            quarantined_counts.append(row["quarantined_count"])
-            rejected_counts.append(row["rejected_count"])
+            clean_counts.append(int(row["clean_count"] or 0))
+            quarantined_counts.append(int(row["quarantined_count"] or 0))
+            rejected_counts.append(int(row["rejected_count"] or 0))
 
         return {
-            "clean_emails": total_results["total_clean"] if total_results else 0,
-            "quarantined_emails": total_results["total_quarantined"] if total_results else 0,
-            "rejected_emails": total_results["total_rejected"] if total_results else 0,
+            "clean_emails": int(total_results["total_clean"] or 0) if total_results else 0,
+            "quarantined_emails": int(total_results["total_quarantined"] or 0) if total_results else 0,
+            "rejected_emails": int(total_results["total_rejected"] or 0) if total_results else 0,
             "labels": labels,
             "clean_counts": clean_counts,
             "quarantined_counts": quarantined_counts,
