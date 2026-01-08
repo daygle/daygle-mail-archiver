@@ -9,7 +9,6 @@ from utils.db import query, engine
 from utils.logger import log
 from utils.templates import templates
 from utils.timezone import convert_utc_to_user_timezone, get_user_timezone
-from utils.update_checker import check_for_updates
 
 router = APIRouter()
 
