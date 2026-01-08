@@ -13,6 +13,17 @@ import configparser
 from pathlib import Path
 from typing import Optional
 
+try:
+    from dotenv import load_dotenv
+    # Load .env-dev file if it exists (development only)
+    env_dev_file = Path(__file__).parent.parent.parent.parent / ".env-dev"
+    if env_dev_file.exists():
+        load_dotenv(env_dev_file)
+        print(f"Loaded development environment from {env_dev_file}")
+except ImportError:
+    # python-dotenv not installed, continue without it
+    pass
+
 
 class Config:
     """Configuration manager that loads from daygle_mail_archiver.conf file."""

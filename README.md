@@ -83,6 +83,57 @@ See the [Installation Guide](https://github.com/daygle/daygle-mail-archiver/wiki
 
 ---
 
+## 🛠️ Development Setup
+
+For developers who want to contribute or run the application locally without Docker:
+
+### Prerequisites
+
+- Python 3.12 or higher
+- pip (Python package manager)
+- Git
+
+### Local Development Installation
+
+```bash
+# Clone repository
+git clone https://github.com/daygle/daygle-mail-archiver.git
+cd daygle-mail-archiver
+
+# Set up Python virtual environment
+python -m venv .venv
+# On Windows:
+.venv\Scripts\activate
+# On Linux/Mac:
+source .venv/bin/activate
+
+# Install dependencies
+cd api
+pip install -r requirements.txt
+
+# Set up environment variables
+cd ..
+cp .env.example .env
+# Edit .env with your configuration
+
+# Initialize database
+python init_db.py
+
+# Run development server
+python dev.py
+```
+
+The application will be available at `http://localhost:8000`
+
+### Development Features
+
+- **Auto-reload**: Code changes automatically restart the server
+- **SQLite database**: Lightweight database for development
+- **Environment variables**: Configuration via `.env` file
+- **Debug logging**: Detailed logs for troubleshooting
+
+---
+
 ## 🏗️ Architecture
 
 Four main components:

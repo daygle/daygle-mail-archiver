@@ -9,3 +9,4 @@ itsdangerous
 bcrypt
 requests
 pytz
+python-dotenv
