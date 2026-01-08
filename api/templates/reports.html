@@ -282,52 +282,43 @@ function initializeCharts() {
     const avStatsCtx = document.getElementById('avStatsChart');
     if (avStatsCtx) {
         avStatsChart = new Chart(avStatsCtx, {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: [{
-                label: 'Clean',
-                data: [],
-                borderColor: '#10b981',
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                tension: 0.4
-            }, {
-                label: 'Quarantined',
-                data: [],
-                borderColor: '#f59e0b',
-                backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                tension: 0.4
-            }, {
-                label: 'Rejected',
-                data: [],
-                borderColor: '#ef4444',
-                backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'top' }
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Clean',
+                    data: [],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    tension: 0.4
+                }, {
+                    label: 'Quarantined',
+                    data: [],
+                    borderColor: '#f59e0b',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    tension: 0.4
+                }, {
+                    label: 'Rejected',
+                    data: [],
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    tension: 0.4
+                }]
             },
-            scales: {
-                y: { beginAtZero: true }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
             }
-        }
-    });
-    console.log('avStatsChart initialized:', avStatsChart);
+        });
     } else {
         console.error('avStatsCtx not found');
-            emailVolumeChart.data.labels = labels;
-            emailVolumeChart.data.datasets[0].data = emailCounts;
-            emailVolumeChart.update();
-        })
-        .catch(error => {
-            console.error('Error loading email volume report:', error);
-            // Could add user notification here if needed
-        });
-}
+    }
 
 // Account Activity Report
 function loadAccountActivityReport() {
@@ -490,8 +481,6 @@ function loadAVStatsReport() {
             document.getElementById('quarantinedEmails').textContent = typeof data.quarantined_emails === 'number' ? data.quarantined_emails : 0;
             document.getElementById('rejectedEmails').textContent = typeof data.rejected_emails === 'number' ? data.rejected_emails : 0;
 
-            console.log('AV Stats data:', data); // Debug logging
-
             // Update chart if it exists
             if (avStatsChart) {
                 const labels = Array.isArray(data.labels) ? data.labels : [];
@@ -499,15 +488,11 @@ function loadAVStatsReport() {
                 const quarantinedCounts = Array.isArray(data.quarantined_counts) ? data.quarantined_counts : [];
                 const rejectedCounts = Array.isArray(data.rejected_counts) ? data.rejected_counts : [];
 
-                console.log('Chart data - labels:', labels, 'clean:', cleanCounts, 'quarantined:', quarantinedCounts, 'rejected:', rejectedCounts); // Debug logging
-
                 avStatsChart.data.labels = labels;
                 avStatsChart.data.datasets[0].data = cleanCounts;
                 avStatsChart.data.datasets[1].data = quarantinedCounts;
                 avStatsChart.data.datasets[2].data = rejectedCounts;
                 avStatsChart.update();
-            } else {
-                console.error('avStatsChart is not initialized');
             }
         })
         .catch(error => {

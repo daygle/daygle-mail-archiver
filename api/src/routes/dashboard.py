@@ -3,8 +3,9 @@ from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from collections import defaultdict
 from typing import List, Dict
 from pydantic import BaseModel
+from sqlalchemy import text
 
-from utils.db import query
+from utils.db import query, engine
 from utils.logger import log
 from utils.templates import templates
 from utils.timezone import convert_utc_to_user_timezone, get_user_timezone
@@ -716,11 +717,14 @@ def get_storage_used(request: Request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
     try:
-        result = query("""
-            SELECT 
-                ROUND(SUM(octet_length(raw_email)) / 1024.0 / 1024.0, 2) as size_mb
-            FROM emails
-        """).mappings().first()
+        # Execute query and immediately consume the result within transaction
+        with engine.begin() as conn:
+            result_proxy = conn.execute(text("""
+                SELECT
+                    ROUND(SUM(octet_length(raw_email)) / 1024.0 / 1024.0, 2) as size_mb
+                FROM emails
+            """))
+            result = result_proxy.mappings().first()
 
         size_mb = result["size_mb"] or 0
         if size_mb >= 1024:
