@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from collections import defaultdict
 from typing import List, Dict, Any
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import calendar
 
 from utils.db import query
@@ -286,9 +286,32 @@ def account_activity_report(request: Request, start_date: str = None, end_date: 
         trend_data = defaultdict(lambda: defaultdict(int))
 
         for row in trend_results:
-            # Parse SQLite date string back to date object
-            sync_date = datetime.strptime(row["sync_date"], "%Y-%m-%d").date()
-            date_str = convert_utc_to_user_timezone(sync_date, user_id).strftime(date_format)
+            # Parse sync_date which may be a string or a date object
+            sync_val = row.get("sync_date")
+            sync_date = None
+            if isinstance(sync_val, str):
+                try:
+                    sync_date = datetime.strptime(sync_val, "%Y-%m-%d").date()
+                except Exception:
+                    try:
+                        sync_date = datetime.fromisoformat(sync_val).date()
+                    except Exception:
+                        sync_date = None
+            elif isinstance(sync_val, datetime):
+                sync_date = sync_val.date()
+            elif isinstance(sync_val, date):
+                sync_date = sync_val
+            else:
+                try:
+                    sync_date = datetime.fromisoformat(str(sync_val)).date()
+                except Exception:
+                    sync_date = None
+
+            if sync_date:
+                date_str = convert_utc_to_user_timezone(sync_date, user_id).strftime(date_format)
+            else:
+                date_str = str(sync_val)
+
             source = row["source"]
             sources.add(source)
             
