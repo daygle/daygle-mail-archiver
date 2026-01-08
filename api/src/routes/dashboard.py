@@ -733,7 +733,7 @@ def get_emails_last_7d(request: Request):
         result = query("""
             SELECT COUNT(*) as count
             FROM emails
-            WHERE received_date >= datetime('now', '-7 days')
+            WHERE created_at >= CURRENT_DATE - INTERVAL '7 days'
         """).mappings().first()
 
         count = result["count"] if result else 0
@@ -754,7 +754,7 @@ def get_emails_last_30d(request: Request):
         result = query("""
             SELECT COUNT(*) as count
             FROM emails
-            WHERE received_date >= datetime('now', '-30 days')
+            WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
         """).mappings().first()
 
         count = result["count"] if result else 0
@@ -774,10 +774,7 @@ def get_storage_used(request: Request):
     try:
         result = query("""
             SELECT 
-                ROUND(SUM(CASE 
-                    WHEN size IS NOT NULL AND size > 0 THEN size 
-                    ELSE 0 
-                END) / 1024.0 / 1024.0, 2) as size_mb
+                ROUND(SUM(octet_length(raw_email)) / 1024.0 / 1024.0, 2) as size_mb
             FROM emails
         """).mappings().first()
 
