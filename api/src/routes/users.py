@@ -132,7 +132,7 @@ def get_user(request: Request, user_id: int):
             return JSONResponse({"error": "User not found"}, status_code=404)
         
         # Get current user's ID for timezone conversion
-        current_user_id = request.session.get("user_id")
+        current_user_id = int(request.session.get("user_id"))
         
         return {
             "id": user["id"],

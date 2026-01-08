@@ -55,12 +55,22 @@
                 </div>
             </div>
             
-            <div class="form-group">
-                <label for="enabled">Account Status</label>
-                <select id="enabled" class="form-control" name="enabled">
-                    <option value="true" selected>Enabled</option>
-                    <option value="false">Disabled</option>
-                </select>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label for="role">Role</label>
+                    <select id="role" class="form-control" name="role">
+                        <option value="administrator" selected>Administrator</option>
+                        <option value="read_only">Read Only</option>
+                    </select>
+                    <small class="form-text">Administrator has full access, Read Only can only view data</small>
+                </div>
+                <div class="form-group">
+                    <label for="enabled">Account Status</label>
+                    <select id="enabled" class="form-control" name="enabled">
+                        <option value="true" selected>Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
             </div>
             
             <div class="alert alert-info" id="userInfoAlert" style="display: none;">
