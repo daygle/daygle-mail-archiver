@@ -876,7 +876,7 @@ textarea.form-control {
     color: var(--info);
 }
 
-/* Alert Items */
+/* Alert Items - Legacy styles for custom alert items */
 .alert-item {
     border-left: 4px solid;
     margin-bottom: 1rem;
@@ -893,26 +893,9 @@ textarea.form-control {
     background-color: var(--bg-secondary);
 }
 
-.alert-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-}
-
-.alert-title {
-    font-weight: 600;
-    margin: 0;
-}
-
-.alert-meta {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-}
-
-.alert-actions {
-    display: flex;
-    gap: 0.5rem;
+/* Bootstrap alert acknowledged state */
+.alert.acknowledged {
+    opacity: 0.6;
 }
 
 .alert-badge {

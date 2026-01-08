@@ -101,12 +101,12 @@
         {% endif %}
 
         {% for alert in alerts %}
-        <div class="card alert-item {{ alert.alert_type }} {% if alert.acknowledged %}acknowledged{% endif %}">
-            <div class="card-body">
-                <div class="alert-header">
-                    <div class="d-flex align-items-center gap-2">
+        <div class="alert alert-{% if alert.alert_type == 'error' %}danger{% else %}{{ alert.alert_type }}{% endif %} {% if alert.acknowledged %}acknowledged{% endif %}">
+            <div class="d-flex align-items-start gap-3">
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center gap-2 mb-2">
                         <span class="alert-badge {{ alert.alert_type }}">{{ alert.alert_type }}</span>
-                        <h5 class="alert-title mb-0">{{ alert.title }}</h5>
+                        <h6 class="mb-0 fw-bold">{{ alert.title }}</h6>
                         {% if alert.acknowledged %}
                         <i class="fas fa-check-circle text-success" title="Acknowledged"></i>
                         {% endif %}
@@ -114,7 +114,7 @@
                         <i class="fas fa-envelope text-primary" title="Email sent"></i>
                         {% endif %}
                     </div>
-                    <div class="alert-actions">
+                    <div class="ms-auto">
                         {% if not alert.acknowledged %}
                         <button class="btn btn-sm btn-outline-primary" onclick="acknowledgeAlert({{ alert.id }})">
                             <i class="fas fa-check"></i>
@@ -133,8 +133,8 @@
                 </details>
                 {% endif %}
 
-                <div class="alert-meta">
-                    <small>
+                <div class="mt-2">
+                    <small class="text-muted">
                         <i class="fas fa-clock"></i>
                         {{ alert.created_at.strftime(date_format) }}
                         {% if alert.acknowledged and alert.acknowledged_at %}
