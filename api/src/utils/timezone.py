@@ -6,29 +6,38 @@ import pytz
 from utils.db import query
 
 
-def get_user_timezone(user_id: int) -> str:
+def get_user_timezone(user_id) -> str:
     """
     Get the timezone preference for a specific user.
     Falls back to global timezone setting if user hasn't set a preference.
     
     Args:
-        user_id: The ID of the user
+        user_id: The ID of the user (can be int, string, or None)
         
     Returns:
         Timezone string (e.g., 'Australia/Melbourne')
     """
+    # Handle None or invalid user_id
+    if user_id is None:
+        return get_global_timezone()
+    
+    # Convert to int if it's a string
+    if isinstance(user_id, str):
+        try:
+            user_id = int(user_id)
+        except (ValueError, TypeError):
+            return get_global_timezone()
+    
     # Try to get user's timezone preference
-    user = query("SELECT timezone FROM users WHERE id = :id", {"id": user_id}).mappings().first()
-    if user and user["timezone"]:
-        return user["timezone"]
+    try:
+        user = query("SELECT timezone FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+        if user and user["timezone"]:
+            return user["timezone"]
+    except Exception:
+        pass
     
     # Fall back to global timezone setting
-    setting = query("SELECT value FROM settings WHERE key = 'timezone'").mappings().first()
-    if setting and setting["value"]:
-        return setting["value"]
-    
-    # Default fallback
-    return "Australia/Melbourne"
+    return get_global_timezone()
 
 
 def get_global_timezone() -> str:
@@ -82,20 +91,15 @@ def convert_utc_to_user_timezone(utc_datetime, user_id):
     
     Args:
         utc_datetime: A datetime object (can be timezone-aware or naive)
-        user_id: The ID of the user (can be None for default timezone)
+        user_id: The ID of the user (can be int, string, or None)
         
     Returns:
-        Datetime object converted to user's timezone (or default timezone if user_id is None)
+        Datetime object converted to user's timezone (or default timezone if user_id is invalid)
     """
     if utc_datetime is None:
         return None
     
-    if user_id is not None:
-        user_tz = get_user_timezone(user_id)
-    else:
-        # Use default timezone when no user_id provided
-        user_tz = get_global_timezone()
-    
+    user_tz = get_user_timezone(user_id)
     return convert_utc_to_timezone(utc_datetime, user_tz)
 
 

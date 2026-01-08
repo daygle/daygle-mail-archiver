@@ -210,10 +210,18 @@ def account_activity_report(request: Request, start_date: str = None, end_date: 
         for row in results:
             try:
                 last_success = None
-                if row["last_success"]:
-                    # Parse SQLite datetime string back to datetime object
-                    last_success_dt = datetime.fromisoformat(row["last_success"].replace('Z', '+00:00'))
-                    last_success = convert_utc_to_user_timezone(last_success_dt, user_id).strftime(get_user_date_format(request))
+                value = row["last_success"]
+
+                if value:
+                    if isinstance(value, str):
+                        # Normalize Z → +00:00
+                        value = value.replace("Z", "+00:00")
+                        dt = datetime.fromisoformat(value)
+                    else:
+                        # Already a datetime object
+                        dt = value
+
+                    last_success = convert_utc_to_user_timezone(dt, user_id).strftime(get_user_date_format(request))
 
                 # Safely convert hours_since_heartbeat to float
                 try:
