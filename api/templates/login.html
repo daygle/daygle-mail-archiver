@@ -60,5 +60,36 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script>
+        // Global error handler for auth pages
+        function showAuthError(msg){
+            try{
+                let container = document.querySelector('.auth-card');
+                let err = container.querySelector('.auth-error');
+                if(!err){
+                    err = document.createElement('div');
+                    err.className = 'auth-error';
+                    err.innerHTML = '<i class="fas fa-exclamation-circle"></i><span></span>';
+                    container.insertBefore(err, container.querySelector('.auth-form'));
+                }
+                err.querySelector('span').textContent = msg;
+            }catch(e){
+                console.error('Failed to show auth error:', e);
+            }
+        }
+
+        window.addEventListener('error', function(ev){
+            console.error('Global error on login page:', ev.error || ev.message, ev);
+            const message = ev && ev.error && ev.error.message ? ev.error.message : (ev && ev.message) || 'An unexpected error occurred';
+            showAuthError(message);
+        });
+
+        window.addEventListener('unhandledrejection', function(ev){
+            console.error('Unhandled rejection on login page:', ev.reason);
+            const message = (ev.reason && ev.reason.message) || (typeof ev.reason === 'string' ? ev.reason : 'An unexpected error occurred');
+            showAuthError(message);
+        });
+    </script>
 </body>
 </html>
