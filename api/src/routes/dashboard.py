@@ -12,6 +12,8 @@ from utils.update_checker import check_for_updates
 
 router = APIRouter()
 
+def require_login(request: Request):
+    return "user_id" in request.session
 
 class WidgetPreference(BaseModel):
     widget_id: str
