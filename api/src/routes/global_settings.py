@@ -115,7 +115,7 @@ def save_settings(
             ('smtp_from_email', smtp_from_email),
             ('smtp_from_name', smtp_from_name),
         ]
-...
+
         # Update session variables
         request.session["date_format"] = date_format
         request.session["time_format"] = time_format
