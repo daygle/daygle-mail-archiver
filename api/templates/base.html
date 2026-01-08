@@ -8,6 +8,21 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/css/bootstrap.min.css" integrity="sha512-2bBQCjcnw658Lho4nlXJcc6WkV/UxpE/sAokbXPxQNGqmNdQrWqtw26Ns9kFF/yG792pKR1Sx8/Y1Lf1XN4GKA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="/static/styles.css">
+    <script>
+        (function(){
+            // Expose server-side theme preference to client.
+            // If user has chosen 'light' or 'dark', apply it immediately so CSS loads with correct theme.
+            var serverTheme = "{{ request.session.get('theme', '') }}";
+            var serverGlobalTheme = "{{ request.session.get('global_theme', '') }}";
+            window.__serverTheme = serverTheme || '';
+            window.__serverGlobalTheme = serverGlobalTheme || '';
+            if (serverTheme && serverTheme !== 'system') {
+                document.documentElement.setAttribute('data-theme', serverTheme);
+            } else if (serverTheme === 'system' && serverGlobalTheme && serverGlobalTheme !== 'system') {
+                document.documentElement.setAttribute('data-theme', serverGlobalTheme);
+            }
+        })();
+    </script>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -56,6 +71,10 @@
                     <a href="/global-settings" class="nav-link {% if request.url.path == '/global-settings' %}active{% endif %}">
                         <i class="fas fa-sliders"></i>
                         <span>Global Settings</span>
+                    </a>
+                    <a href="/system-updates" class="nav-link {% if request.url.path == '/system-updates' %}active{% endif %}">
+                        <i class="fas fa-download"></i>
+                        <span>System Updates</span>
                     </a>
                     <a href="/users" class="nav-link {% if '/users' in request.url.path %}active{% endif %}">
                         <i class="fas fa-users"></i>
@@ -252,9 +271,19 @@
             }
         }
 
-        // Restore theme from localStorage
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        setTheme(savedTheme);
+        // Restore theme from server preference (if set) or localStorage
+        const serverTheme = window.__serverTheme || '';
+        const serverGlobalTheme = window.__serverGlobalTheme || '';
+        if (serverTheme && serverTheme !== 'system') {
+            // honor explicit user preference stored on server
+            setTheme(serverTheme);
+        } else if (serverTheme === 'system' && serverGlobalTheme && serverGlobalTheme !== 'system') {
+            // user prefers 'system' — use the global default if configured
+            setTheme(serverGlobalTheme);
+        } else {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            setTheme(savedTheme);
+        }
 
         if (themeToggle) {
             themeToggle.addEventListener('click', () => {

@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block page_title %}System Updates{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-download"></i>
+            <span>System Updates</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <p class="section-description">Manually check whether Daygle Mail Archiver is up to date with the upstream repository.</p>
+
+        <div id="update-status" class="mb-3">
+            <div class="small text-secondary">Current Status: <span id="current-status">Unknown</span></div>
+            <div class="small text-secondary mt-1">Last automatic check: <strong>{% if settings.last_update_check_dt %}{{ settings.last_update_check_dt | format_user_datetime(request.session.user_id) }} ({{ settings.last_update_check_dt | time_ago(request.session.user_id) }}){% else %}Never{% endif %}</strong></div>
+            <div class="small text-secondary">Last manual check: <strong>{% if settings.last_manual_update_check_dt %}{{ settings.last_manual_update_check_dt | format_user_datetime(request.session.user_id) }} ({{ settings.last_manual_update_check_dt | time_ago(request.session.user_id) }}){% else %}Never{% endif %}</strong></div>
+            <div class="small text-secondary">Caching TTL: <strong>{{ settings.update_check_ttl or '600' }} seconds</strong></div>
+        </div>
+
+        <div class="mb-3">
+            <button id="check-updates-btn" class="btn btn-primary">
+                <i class="fas fa-sync"></i>
+                <span>Check Now</span>
+            </button>
+        </div>
+
+        <div id="update-result" style="display:none;">
+            <div id="update-message" class="mb-2"></div>
+            <pre id="update-json" class="code-block small" style="display:none;"></pre>
+        </div>
+
+        <div id="update-disabled" style="display:none;" class="alert alert-warning">
+            Automatic update checks are <strong>disabled</strong> by the administrator. Enable "Automatic Update Checks" in Global Settings to allow this feature.
+        </div>
+    </div>
+    <div class="card-footer form-actions">
+        <a href="/global-settings" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i>
+            <span>Back to Global Settings</span>
+        </a>
+    </div>
+</div>
+
+<script>
+document.getElementById('check-updates-btn').addEventListener('click', async function() {
+    const btn = this;
+    btn.disabled = true;
+    const statusEl = document.getElementById('current-status');
+    const resultEl = document.getElementById('update-result');
+    const messageEl = document.getElementById('update-message');
+    const jsonEl = document.getElementById('update-json');
+    const disabledEl = document.getElementById('update-disabled');
+
+    statusEl.textContent = 'Checking...';
+    resultEl.style.display = 'none';
+    jsonEl.style.display = 'none';
+    disabledEl.style.display = 'none';
+
+    try {
+        // Force a manual check regardless of automatic check setting
+        const resp = await fetch('/api/dashboard/check-updates?force=true');
+        if (!resp.ok) {
+            statusEl.textContent = 'Error';
+            messageEl.textContent = `Update check failed (HTTP ${resp.status})`;
+            resultEl.style.display = 'block';
+            return;
+        }
+
+        const data = await resp.json();
+        // If we received a timestamp for the manual check, update the status badge on the page
+        try {
+            if (data && data.current_commit !== undefined) {
+                // nothing extra here; last manual check time is persisted on server and visible on Global Settings
+            }
+        } catch (e) {
+            // ignore
+        }
+        if (data.disabled) {
+            statusEl.textContent = 'Disabled';
+            disabledEl.style.display = 'block';
+            btn.disabled = false;
+            return;
+        }
+
+        if (data.updates_available && !data.error) {
+            statusEl.textContent = 'Update Available';
+            messageEl.innerHTML = `<strong>Update available:</strong> Version ${data.latest_commit}` + (data.commits_behind ? ` (${data.commits_behind} commits behind)` : '') + (data.latest_message ? `: ${data.latest_message}` : '');
+        } else if (data.unavailable) {
+            statusEl.textContent = 'Unavailable';
+            messageEl.innerHTML = 'Update checking is unavailable for this deployment (no git metadata).';
+        } else if (data.error) {
+            statusEl.textContent = 'Error';
+            messageEl.innerHTML = `Error checking updates: ${data.error}`;
+        } else {
+            statusEl.textContent = 'Up to date';
+            messageEl.innerHTML = `Your installation is up to date (commit ${data.current_commit || 'unknown'}).`;
+        }
+
+        jsonEl.textContent = JSON.stringify(data, null, 2);
+        jsonEl.style.display = 'block';
+        resultEl.style.display = 'block';
+
+    } catch (err) {
+        statusEl.textContent = 'Error';
+        messageEl.textContent = `Error checking updates: ${err}`;
+        resultEl.style.display = 'block';
+    } finally {
+        btn.disabled = false;
+    }
+});
+</script>
+{% endblock %}

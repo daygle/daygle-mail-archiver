@@ -28,3 +28,11 @@ def format_user_datetime_filter(utc_datetime, user_id, date_format=None):
 # Register filters
 templates.env.filters['to_user_timezone'] = to_user_timezone_filter
 templates.env.filters['format_user_datetime'] = format_user_datetime_filter
+
+# Register time helper filter (human-friendly relative times)
+try:
+    from utils.time_helpers import time_ago as _time_ago
+    templates.env.filters['time_ago'] = lambda dt, user_id: _time_ago(dt, user_id)
+except Exception:
+    # If import fails, provide a no-op implementation
+    templates.env.filters['time_ago'] = lambda dt, user_id: ''

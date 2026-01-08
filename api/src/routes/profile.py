@@ -136,11 +136,12 @@ def user_settings_form(request: Request):
         return RedirectResponse("/login", status_code=303)
 
     user_id = request.session["user_id"]
-    user = query("SELECT page_size, date_format, time_format, timezone, email_notifications, role FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+    user = query("SELECT page_size, date_format, time_format, timezone, theme_preference, email_notifications, role FROM users WHERE id = :id", {"id": user_id}).mappings().first()
     current_page_size = user["page_size"] if user else 50
     current_date_format = user["date_format"] if user else "%d/%m/%Y"
     current_time_format = user["time_format"] if user else "%H:%M"
     current_timezone = user["timezone"] if user and user["timezone"] else "Australia/Melbourne"
+    current_theme = user["theme_preference"] if user and user.get("theme_preference") else "system"
     current_email_notifications = user["email_notifications"] if user else True
     user_role = user["role"] if user else "administrator"
 
@@ -152,12 +153,13 @@ def user_settings_form(request: Request):
         "date_format": current_date_format,
         "time_format": current_time_format,
         "timezone": current_timezone,
+        "theme": current_theme,
         "email_notifications": current_email_notifications,
         "user_role": user_role
     })
 
 @router.post("/user-settings/update")
-def update_user_settings(request: Request, page_size: int = Form(...), date_format: str = Form(...), time_format: str = Form(...), timezone: str = Form("Australia/Melbourne"), email_notifications: bool = Form(True)):
+def update_user_settings(request: Request, page_size: int = Form(...), date_format: str = Form(...), time_format: str = Form(...), timezone: str = Form("Australia/Melbourne"), theme: str = Form("system"), email_notifications: bool = Form(True)):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
@@ -175,21 +177,22 @@ def update_user_settings(request: Request, page_size: int = Form(...), date_form
     
     try:
         # Get current settings for comparison
-        current_settings = query("SELECT page_size, date_format, time_format, timezone, email_notifications FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+        current_settings = query("SELECT page_size, date_format, time_format, timezone, theme_preference, email_notifications FROM users WHERE id = :id", {"id": user_id}).mappings().first()
         
         # Only update email_notifications for administrators
         if user_role == "administrator":
-            execute("UPDATE users SET page_size = :ps, date_format = :df, time_format = :tf, timezone = :tz, email_notifications = :en WHERE id = :id", 
-                    {"ps": page_size, "df": date_format, "tf": time_format, "tz": timezone, "en": email_notifications, "id": user_id})
+            execute("UPDATE users SET page_size = :ps, date_format = :df, time_format = :tf, timezone = :tz, theme_preference = :theme, email_notifications = :en WHERE id = :id", 
+                    {"ps": page_size, "df": date_format, "tf": time_format, "tz": timezone, "theme": theme, "en": email_notifications, "id": user_id})
         else:
-            execute("UPDATE users SET page_size = :ps, date_format = :df, time_format = :tf, timezone = :tz WHERE id = :id", 
-                    {"ps": page_size, "df": date_format, "tf": time_format, "tz": timezone, "id": user_id})
+            execute("UPDATE users SET page_size = :ps, date_format = :df, time_format = :tf, timezone = :tz, theme_preference = :theme WHERE id = :id", 
+                    {"ps": page_size, "df": date_format, "tf": time_format, "tz": timezone, "theme": theme, "id": user_id})
         
         # Update session variables
         request.session["page_size"] = page_size
         request.session["date_format"] = date_format
         request.session["time_format"] = time_format
         request.session["timezone"] = timezone
+        request.session["theme"] = theme
         
         # Log only changed values
         changed_settings = []
@@ -202,6 +205,8 @@ def update_user_settings(request: Request, page_size: int = Form(...), date_form
                 changed_settings.append(f"time_format={time_format}")
             if current_settings["timezone"] != timezone:
                 changed_settings.append(f"timezone={timezone}")
+            if current_settings.get("theme_preference") != theme:
+                changed_settings.append(f"theme={theme}")
             if user_role == "administrator" and current_settings["email_notifications"] != email_notifications:
                 changed_settings.append(f"email_notifications={email_notifications}")
         

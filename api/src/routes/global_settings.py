@@ -22,6 +22,19 @@ def settings_form(request: Request):
     rows = query("SELECT key, value FROM settings").mappings().all()
     settings = {r["key"]: r["value"] for r in rows}
 
+    # Parse last_manual_update_check into a datetime for template helpers
+    try:
+        from datetime import datetime
+        if settings.get('last_manual_update_check'):
+            try:
+                settings['last_manual_update_check_dt'] = datetime.fromisoformat(settings['last_manual_update_check'])
+            except Exception:
+                settings['last_manual_update_check_dt'] = None
+        else:
+            settings['last_manual_update_check_dt'] = None
+    except Exception:
+        settings['last_manual_update_check_dt'] = None
+
     msg = request.session.pop("flash", None)
 
     return templates.TemplateResponse(
@@ -36,6 +49,9 @@ def save_settings(
     date_format: str = Form("%d/%m/%Y"),
     time_format: str = Form("%H:%M"),
     timezone: str = Form("Australia/Melbourne"),
+    default_theme: str = Form("system"),
+    enable_update_check: bool = Form(True),
+    update_check_ttl: int = Form(600),
     enable_purge: bool = Form(False),
     retention_value: int = Form(1),
     retention_unit: str = Form("years"),
@@ -56,17 +72,32 @@ def save_settings(
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
+    # Validate update_check_ttl
+    try:
+        if update_check_ttl < 60 or update_check_ttl > 86400:
+            flash(request, "Update Check Cache TTL must be between 60 seconds and 86400 seconds (1 day).")
+            return RedirectResponse("/global-settings", status_code=303)
+    except Exception:
+        flash(request, "Invalid Update Check Cache TTL value.")
+        return RedirectResponse("/global-settings", status_code=303)
+
     # Fetch existing settings before updating
     rows = query("SELECT key, value FROM settings").mappings().all()
     old_settings = {r["key"]: r["value"] for r in rows}
 
     try:
         # Batch update all settings in a single query for better performance
+        # Sanitize default_theme
+        default_theme = default_theme if default_theme in ('system', 'light', 'dark') else 'system'
+
         settings_data = [
             ('page_size', str(page_size)),
             ('date_format', date_format),
             ('time_format', time_format),
             ('timezone', timezone),
+            ('default_theme', default_theme),
+            ('enable_update_check', str(enable_update_check).lower()),
+            ('update_check_ttl', str(update_check_ttl)),
             ('enable_purge', str(enable_purge).lower()),
             ('retention_value', str(retention_value)),
             ('retention_unit', retention_unit),
@@ -84,6 +115,13 @@ def save_settings(
             ('smtp_from_email', smtp_from_email),
             ('smtp_from_name', smtp_from_name),
         ]
+...
+        # Update session variables
+        request.session["date_format"] = date_format
+        request.session["time_format"] = time_format
+        request.session["timezone"] = timezone
+        # Update immediate global theme for current session (affects admin who saved settings)
+        request.session["global_theme"] = default_theme
         
         for key, value in settings_data:
             execute(
@@ -99,6 +137,17 @@ def save_settings(
         request.session["date_format"] = date_format
         request.session["time_format"] = time_format
         request.session["timezone"] = timezone
+        # Update immediate global theme for current session (affects admin who saved settings)
+        request.session["global_theme"] = default_theme
+
+        # Log change for default_theme if it changed
+        try:
+            if old_settings.get('default_theme') != default_theme:
+                log("info", "Settings", f"User '{request.session.get('username', 'unknown')}' changed default_theme to {default_theme}", "")
+        except Exception:
+            pass
+
+        # If default_theme changed, optionally inform or update behaviour (no further action required here).
     except Exception as e:
         log("error", "Settings", f"Failed to save settings: {str(e)}", "")
         flash(request, f"Failed to save settings: {str(e)}")

@@ -98,6 +98,13 @@ def init_database():
             VALUES ('admin', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewfLkIwF5zl5ZL2e', 'admin', datetime('now'))
         '''))
 
+        # Ensure theme_preference column exists (idempotent if database already has it)
+        try:
+            conn.execute(text("ALTER TABLE users ADD COLUMN theme_preference TEXT NOT NULL DEFAULT 'system'"))
+        except Exception:
+            # Column likely already exists or DB doesn't support ALTER with IF NOT EXISTS; ignore
+            pass
+
         # Insert some default settings
         default_settings = [
             ('date_format', '%Y-%m-%d'),

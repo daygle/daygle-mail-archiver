@@ -142,7 +142,7 @@ def login_form(request: Request, setup_complete: str = ""):
 def login_submit(request: Request, username: str = Form(...), password: str = Form(...)):
     try:
         user = query(
-            "SELECT id, username, password_hash, date_format, time_format, timezone, role, enabled FROM users WHERE username = :u",
+            "SELECT id, username, password_hash, date_format, time_format, timezone, theme_preference, role, enabled FROM users WHERE username = :u",
             {"u": username}
         ).mappings().first()
     except Exception as e:
@@ -173,6 +173,13 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
         request.session["date_format"] = user["date_format"] or "%d/%m/%Y"
         request.session["time_format"] = user["time_format"] or "%H:%M"
         request.session["timezone"] = user["timezone"] or "Australia/Melbourne"
+        request.session["theme"] = user.get("theme_preference") or "system"
+        # Load global default theme into session for use when user preference == 'system'
+        try:
+            g = query("SELECT value FROM settings WHERE key = 'default_theme'").mappings().first()
+            request.session["global_theme"] = g["value"] if g and g.get("value") else "system"
+        except Exception:
+            request.session["global_theme"] = "system"
         request.session["role"] = user["role"] or "administrator"
         request.session["needs_password"] = True
         log("info", "Login", f"User {username} initiated first login")
@@ -186,6 +193,13 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
             request.session["time_format"] = user["time_format"] or "%H:%M"
             request.session["timezone"] = user["timezone"] or "Australia/Melbourne"
             request.session["role"] = user["role"] or "administrator"
+            request.session["theme"] = user.get("theme_preference") or "system"
+            # Load global default theme into session for use when user preference == 'system'
+            try:
+                g = query("SELECT value FROM settings WHERE key = 'default_theme'").mappings().first()
+                request.session["global_theme"] = g["value"] if g and g.get("value") else "system"
+            except Exception:
+                request.session["global_theme"] = "system"
             
             # Update last_login timestamp
             try:

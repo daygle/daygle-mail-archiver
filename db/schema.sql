@@ -121,6 +121,7 @@ CREATE TABLE IF NOT EXISTS users (
     date_format TEXT NOT NULL DEFAULT '%d/%m/%Y',
     time_format TEXT NOT NULL DEFAULT '%H:%M',
     timezone TEXT NOT NULL DEFAULT 'Australia/Melbourne',
+    theme_preference TEXT NOT NULL DEFAULT 'system',
     email_notifications BOOLEAN NOT NULL DEFAULT TRUE,
     enabled BOOLEAN NOT NULL DEFAULT TRUE,
     last_login TIMESTAMPTZ,
@@ -146,6 +147,9 @@ INSERT INTO settings (key, value) VALUES ('page_size', '50') ON CONFLICT (key) D
 INSERT INTO settings (key, value) VALUES ('date_format', '%d/%m/%Y') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('time_format', '%H:%M') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('timezone', 'Australia/Melbourne') ON CONFLICT (key) DO NOTHING;
+INSERT INTO settings (key, value) VALUES ('default_theme', 'system') ON CONFLICT (key) DO NOTHING;
+INSERT INTO settings (key, value) VALUES ('enable_update_check', 'true') ON CONFLICT (key) DO NOTHING;
+INSERT INTO settings (key, value) VALUES ('update_check_ttl', '600') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('enable_purge', 'false') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('retention_value', '1') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('retention_unit', 'years') ON CONFLICT (key) DO NOTHING;

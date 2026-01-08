@@ -53,6 +53,37 @@
                     <option value="Pacific/Auckland" {% if settings.timezone == 'Pacific/Auckland' %}selected{% endif %}>Pacific/Auckland (New Zealand)</option>
                     <option value="UTC" {% if settings.timezone == 'UTC' %}selected{% endif %}>UTC</option>
                     <option value="America/New_York" {% if settings.timezone == 'America/New_York' %}selected{% endif %}>America/New York (EST)</option>
+                </select>
+                <small class="form-text">Timezone for displaying dates and times throughout the application</small>
+            </div>
+
+            <div class="form-group mt-3">
+                <label for="default_theme" class="form-label">Default Theme</label>
+                <select id="default_theme" class="form-select" name="default_theme">
+                    <option value="system" {% if settings.default_theme == 'system' or not settings.default_theme %}selected{% endif %}>System (use browser / user preference)</option>
+                    <option value="light" {% if settings.default_theme == 'light' %}selected{% endif %}>Light</option>
+                    <option value="dark" {% if settings.default_theme == 'dark' %}selected{% endif %}>Dark</option>
+                </select>
+                <small class="form-text">Global default theme for users who have not set a personal preference (users' own preference overrides this)</small>
+            </div>
+
+            <div class="form-check mt-3">
+                <input class="form-check-input" type="checkbox" id="enable_update_check" name="enable_update_check" {% if settings.enable_update_check != 'false' %}checked{% endif %}>
+                <label class="form-check-label" for="enable_update_check">
+                    <strong>Enable Automatic Update Checks</strong>
+                    <small class="d-block text-secondary">If enabled, the application will periodically check for updates and show administrators when an update is available</small>
+                </label>
+                <div class="mt-2">
+                    <small class="text-muted">Last manual check: <strong>{% if settings.last_manual_update_check_dt %}{{ settings.last_manual_update_check_dt | format_user_datetime(request.session.user_id) }} ({{ settings.last_manual_update_check_dt | time_ago(request.session.user_id) }}){% else %}Never{% endif %}</strong></small>
+                    <a href="/system-updates" class="btn btn-sm btn-outline-secondary ms-2">Run manual check</a>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label for="update_check_ttl" class="form-label">Update Check Cache TTL (seconds)</label>
+                    <input id="update_check_ttl" class="form-control" name="update_check_ttl" type="number" min="60" max="86400" value="{{ settings.update_check_ttl or '600' }}">
+                    <small class="form-text">How long update check results are cached server-side (in seconds). Manual checks bypass the cache.</small>
+                </div>
+            </div>
                     <option value="America/Chicago" {% if settings.timezone == 'America/Chicago' %}selected{% endif %}>America/Chicago (CST)</option>
                     <option value="America/Los_Angeles" {% if settings.timezone == 'America/Los_Angeles' %}selected{% endif %}>America/Los Angeles (PST)</option>
                     <option value="Europe/London" {% if settings.timezone == 'Europe/London' %}selected{% endif %}>Europe/London (GMT)</option>
