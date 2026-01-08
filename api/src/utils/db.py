@@ -9,12 +9,12 @@ engine = create_engine(DB_DSN, future=True)
 class MaterializedResult:
     """A small wrapper for materialized query results.
 
-    This allows existing call sites which do `query(...).mappings().first()`
-    or `.mappings().all()` to continue working even after the DB
-    connection has been closed.
+    Supports `.mappings().first()`, `.mappings().all()`, iteration and exposes
+    `.rowcount` for callers that check it after DML statements.
     """
-    def __init__(self, rows):
+    def __init__(self, rows, rowcount=None):
         self._rows = rows
+        self.rowcount = rowcount
 
     def mappings(self):
         return self
@@ -32,14 +32,18 @@ class MaterializedResult:
 def query(sql: str, params=None):
     """Execute a query and fully materialize results before closing the connection.
 
-    Returns a `MaterializedResult` so callers can safely access the rows
-    after the connection has been released.
+    If the statement returns rows, materialize them. Otherwise return an
+    empty materialized result but preserve `rowcount` so callers can inspect it.
     """
     with engine.begin() as conn:
         result = conn.execute(text(sql), params or {})
-        rows = result.mappings().all()
+        rowcount = result.rowcount
+        if getattr(result, "returns_rows", False):
+            rows = result.mappings().all()
+        else:
+            rows = []
 
-    return MaterializedResult(rows)
+    return MaterializedResult(rows, rowcount=rowcount)
 
 
 def execute(sql: str, params=None):

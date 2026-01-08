@@ -7,8 +7,9 @@ DB_DSN = require_config("DB_DSN")
 engine = create_engine(DB_DSN, future=True)
 
 class MaterializedResult:
-    def __init__(self, rows):
+    def __init__(self, rows, rowcount=None):
         self._rows = rows
+        self.rowcount = rowcount
 
     def mappings(self):
         return self
@@ -26,9 +27,13 @@ class MaterializedResult:
 def query(sql: str, params=None):
     with engine.begin() as conn:
         result = conn.execute(text(sql), params or {})
-        rows = result.mappings().all()
+        rowcount = result.rowcount
+        if getattr(result, "returns_rows", False):
+            rows = result.mappings().all()
+        else:
+            rows = []
 
-    return MaterializedResult(rows)
+    return MaterializedResult(rows, rowcount=rowcount)
 
 
 def execute(sql: str, params=None):
