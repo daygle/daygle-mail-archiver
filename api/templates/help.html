@@ -234,38 +234,7 @@
     </div>
 </div>
 
-<!-- System Updates -->
-<div class="card" style="margin-bottom: 24px;">
-    <div class="card-header">
-        <div class="card-title">
-            <i class="fas fa-sync-alt"></i>
-            <span>System Updates</span>
-        </div>
-    </div>
-    <div class="card-body">
-        <p style="margin-bottom: 16px;">Daygle Mail Archiver includes an automatic update script similar to mailcow's update system. The script handles checking for updates, pulling the latest code and Docker images, and restarting containers.</p>
-        
-        <p style="margin-bottom: 12px;"><strong>Command-line usage:</strong></p>
-        <pre class="code-block"><code># Check if updates are available
-./update.sh --check
-
-# Update the system (interactive, with confirmation)
-./update.sh
-
-# Update without confirmation prompts
-./update.sh --force
-
-# Update but don't restart containers
-./update.sh --skip-start</code></pre>
-
-        <p style="margin-bottom: 16px;"><strong>What happens during an update:</strong></p>
-        <ol style="padding-left: 24px; margin-bottom: 16px;">
-            <li style="margin-bottom: 8px;">Checks for available updates from the git repository</li>
-            <li style="margin-bottom: 8px;">Saves any local changes to <code>update_diffs/</code> directory</li>
-            <li style="margin-bottom: 8px;">Pulls the latest code from git</li>
-            <li style="margin-bottom: 8px;">Pulls updated Docker images</li>
-            <li style="margin-bottom: 8px;">Restarts all containers</li>
-            <li style="margin-bottom: 8px;">Cleans up old Docker resources</li>
+<!-- System Updates section removed; updates are performed outside the web UI -->
         </ol>
 
         <div class="alert alert-warning" style="margin-bottom: 0;">

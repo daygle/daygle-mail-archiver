@@ -22,18 +22,6 @@ def settings_form(request: Request):
     rows = query("SELECT key, value FROM settings").mappings().all()
     settings = {r["key"]: r["value"] for r in rows}
 
-    # Parse last_manual_update_check into a datetime for template helpers
-    try:
-        from datetime import datetime
-        if settings.get('last_manual_update_check'):
-            try:
-                settings['last_manual_update_check_dt'] = datetime.fromisoformat(settings['last_manual_update_check'])
-            except Exception:
-                settings['last_manual_update_check_dt'] = None
-        else:
-            settings['last_manual_update_check_dt'] = None
-    except Exception:
-        settings['last_manual_update_check_dt'] = None
 
     msg = request.session.pop("flash", None)
 
