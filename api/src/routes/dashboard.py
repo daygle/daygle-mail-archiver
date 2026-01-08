@@ -13,7 +13,7 @@ from utils.update_checker import check_for_updates
 router = APIRouter()
 
 def require_login(request: Request):
-    return "user_id" in request.session
+    return "user_id" in getattr(request, 'session', {})
 
 class WidgetPreference(BaseModel):
     widget_id: str
@@ -29,7 +29,8 @@ class DashboardLayout(BaseModel):
 
 
 def flash(request: Request, message: str):
-    request.session["flash"] = message
+    session = getattr(request, 'session', {})
+    session["flash"] = message
 
 
 def get_user_date_format(request: Request, date_only: bool = False) -> str:
@@ -42,7 +43,7 @@ def get_user_date_format(request: Request, date_only: bool = False) -> str:
         date_format = "%d/%m/%Y"
     
     # Override with user's date format if set
-    user_id = request.session.get("user_id")
+    user_id = getattr(request, 'session', {}).get("user_id")
     if user_id:
         try:
             user = query("SELECT date_format FROM users WHERE id = :id", {"id": user_id}).mappings().first()
@@ -83,11 +84,14 @@ def dashboard(request: Request):
     try:
         from utils.alerts import get_unacknowledged_count
         unacknowledged_count = get_unacknowledged_count()
-        request.session["unacknowledged_alerts"] = unacknowledged_count
+        session = getattr(request, 'session', {})
+        session["unacknowledged_alerts"] = unacknowledged_count
     except Exception:
-        request.session["unacknowledged_alerts"] = 0
+        session = getattr(request, 'session', {})
+        session["unacknowledged_alerts"] = 0
 
-    flash = request.session.pop("flash", None)
+    session = getattr(request, 'session', {})
+    flash = session.pop("flash", None)
     return templates.TemplateResponse(
         "dashboard.html",
         {"request": request, "flash": flash}
@@ -105,12 +109,12 @@ def emails_per_day(request: Request, days: int = 30):
         original_days = days
         if days not in [7, 14, 30, 60, 90]:
             days = 30
-            username = request.session.get("username", "unknown")
+            username = getattr(request, 'session', {}).get("username", "unknown")
             log("warning", "Dashboard", f"User '{username}' provided invalid days parameter for emails-per-day: {original_days}, defaulting to 30", "")
             
         date_format = get_user_date_format(request, date_only=True)
 
-        user_id = request.session.get("user_id")
+        user_id = getattr(request, 'session', {}).get("user_id")
         results = query("""
             SELECT 
                 DATE(created_at) as date,
@@ -135,7 +139,7 @@ def emails_per_day(request: Request, days: int = 30):
             "data": [row["count"] for row in results]
         }
     except Exception as e:
-        username = request.session.get("username", "unknown")
+        username = getattr(request, 'session', {}).get("username", "unknown")
         log("error", "Dashboard", f"Failed to fetch emails per day for user '{username}': {str(e)}", "")
         return JSONResponse({"error": "Failed to load data"}, status_code=500)
 
@@ -163,7 +167,7 @@ def top_senders(request: Request):
             "data": [row["count"] for row in results]
         }
     except Exception as e:
-        username = request.session.get("username", "unknown")
+        username = getattr(request, 'session', {}).get("username", "unknown")
         log("error", "Dashboard", f"Failed to fetch top senders for user '{username}': {str(e)}", "")
         return JSONResponse({"error": "Failed to load data"}, status_code=500)
 
@@ -198,7 +202,7 @@ def top_receivers(request: Request):
             "data": [row["count"] for row in results]
         }
     except Exception as e:
-        username = request.session.get("username", "unknown")
+        username = getattr(request, 'session', {}).get("username", "unknown")
         log("error", "Dashboard", f"Failed to fetch top receivers for user '{username}': {str(e)}", "")
         return JSONResponse({"error": "Failed to load data"}, status_code=500)
 
@@ -241,7 +245,7 @@ def dashboard_stats(request: Request):
             "emails_today": emails_today
         }
     except Exception as e:
-        username = request.session.get("username", "unknown")
+        username = getattr(request, 'session', {}).get("username", "unknown")
         log("error", "Dashboard", f"Failed to fetch dashboard stats for user '{username}': {str(e)}", "")
         return JSONResponse({"error": "Failed to load data"}, status_code=500)
 
@@ -257,11 +261,11 @@ def deletion_stats(request: Request, days: int = 30):
         original_days = days
         if days not in [7, 14, 30, 60, 90]:
             days = 30
-            username = request.session.get("username", "unknown")
+            username = getattr(request, 'session', {}).get("username", "unknown")
             log("warning", "Dashboard", f"User '{username}' provided invalid days parameter for deletion-stats: {original_days}, defaulting to 30", "")
             
         date_format = get_user_date_format(request, date_only=True)
-        user_id = request.session.get("user_id")
+        user_id = getattr(request, 'session', {}).get("user_id")
 
         # Get deletion stats grouped by type
         results = query("""
@@ -312,7 +316,7 @@ def deletion_stats(request: Request, days: int = 30):
         
         return data
     except Exception as e:
-        username = request.session.get("username", "unknown")
+        username = getattr(request, 'session', {}).get("username", "unknown")
         log("error", "Dashboard", f"Failed to fetch deletion stats for user '{username}': {str(e)}", "")
         return JSONResponse({"error": "Failed to load data"}, status_code=500)
 
@@ -323,7 +327,7 @@ def get_dashboard_preferences(request: Request):
     if not require_login(request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    user_id = request.session.get("user_id")
+    user_id = getattr(request, 'session', {}).get("user_id")
     
     try:
         results = query("""
@@ -346,7 +350,7 @@ def get_dashboard_preferences(request: Request):
 
         return {"widgets": widgets}
     except Exception as e:
-        username = request.session.get("username", "unknown")
+        username = getattr(request, 'session', {}).get("username", "unknown")
         log("error", "Dashboard", f"Failed to fetch dashboard preferences for user '{username}': {str(e)}", "")
         return JSONResponse({"error": "Failed to load preferences"}, status_code=500)
 
@@ -357,7 +361,7 @@ async def save_dashboard_preferences(request: Request, widgets: str = Form(...))
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    user_id = request.session.get("user_id")
+    user_id = getattr(request, 'session', {}).get("user_id")
 
     try:
         import json
@@ -826,7 +830,7 @@ def get_system_uptime(request: Request):
                     uptime_str = "System uptime information unavailable"
         else:
             # Use uptime command on Linux/Unix systems
-            result = subprocess.run(['uptime', '-p'], capture_output=True, text=True)
+            result = subprocess.run(['uptime', '-p'], capture_output=True, text=True, timeout=10)
             if result.returncode == 0:
                 uptime_str = result.stdout.strip()
                 # Remove "up " prefix if present
@@ -837,8 +841,11 @@ def get_system_uptime(request: Request):
 
         return {"uptime": uptime_str}
     except Exception as e:
-        username = request.session.get("username", "unknown")
-        log("error", "Dashboard", f"Failed to fetch system uptime for user '{username}': {str(e)}", "")
+        try:
+            username = getattr(request, 'session', {}).get("username", "unknown")
+            log("error", "Dashboard", f"Failed to fetch system uptime for user '{username}': {str(e)}", "")
+        except:
+            pass  # Don't fail if logging fails
         return JSONResponse({"error": "Failed to load data"}, status_code=500)
 
 
@@ -848,7 +855,7 @@ def get_widget_settings(request: Request):
     if not require_login(request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    user_id = request.session.get("user_id")
+    user_id = getattr(request, 'session', {}).get("user_id")
     
     try:
         result = query("""
@@ -880,7 +887,7 @@ async def save_widget_settings(request: Request):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    user_id = request.session.get("user_id")
+    user_id = getattr(request, 'session', {}).get("user_id")
     
     try:
         data = await request.json()
