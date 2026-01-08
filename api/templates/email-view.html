@@ -45,7 +45,7 @@
                     </tr>
                     <tr>
                         <td style="background: var(--bg-secondary); font-weight: 600;">Date</td>
-                        <td>{{ email.date }}</td>
+                        <td>{{ email.date_formatted or email.date }}</td>
                     </tr>
                     <tr>
                         <td style="background: var(--bg-secondary); font-weight: 600;">Account</td>
@@ -70,7 +70,7 @@
                             {% endif %}
                             {% if email.scan_timestamp %}
                             <small class="text-secondary" style="margin-left: 8px;">
-                                (Scanned: {{ email.scan_timestamp.strftime('%Y-%m-%d %H:%M:%S UTC') if email.scan_timestamp else 'N/A' }})
+                                (Scanned: {{ email.scan_timestamp_formatted or 'N/A' }})
                             </small>
                             {% endif %}
                         </td>

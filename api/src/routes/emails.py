@@ -9,6 +9,7 @@ from utils.email_parser import decompress, parse_email
 from utils.security import decrypt_password, can_delete
 from utils.logger import log
 from utils.templates import templates
+from utils.timezone import format_datetime
 
 router = APIRouter()
 
@@ -120,6 +121,29 @@ def view_email(request: Request, email_id: int):
 
     if not row:
         return HTMLResponse("Email not found", status_code=404)
+
+    # Get user_id for timezone formatting
+    user_id = request.session.get("user_id")
+    if user_id is not None:
+        try:
+            user_id = int(user_id)
+        except (ValueError, TypeError):
+            user_id = None
+
+    # Format timestamps according to user preferences
+    row = dict(row)  # Convert to dict to make it mutable
+    
+    # Format scan_timestamp
+    if row["scan_timestamp"]:
+        row["scan_timestamp_formatted"] = format_datetime(row["scan_timestamp"], user_id)
+    else:
+        row["scan_timestamp_formatted"] = None
+    
+    # Format email date if it's a datetime object
+    if row["date"] and hasattr(row["date"], 'strftime'):  # Check if it's a datetime object
+        row["date_formatted"] = format_datetime(row["date"], user_id)
+    else:
+        row["date_formatted"] = row["date"]  # Keep as string if already formatted
 
     raw = decompress(row["raw_email"], row["compressed"])
     parsed = parse_email(raw)
