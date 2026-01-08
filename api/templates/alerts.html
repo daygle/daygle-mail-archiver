@@ -42,13 +42,6 @@
     gap: 0.5rem;
 }
 
-.filter-section {
-    background: var(--bg-secondary);
-    padding: 1rem;
-    border-radius: var(--radius-lg);
-    margin-bottom: 1.5rem;
-}
-
 .pagination {
     display: flex;
     justify-content: center;
@@ -88,75 +81,97 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0">System Alerts</h1>
-            <p class="text-secondary">Monitor system notifications and alerts</p>
+<!-- Filters Card (Initially Hidden) -->
+<div id="filterCard" class="card mb-4" style="display: none;">
+    <div class="card-header" style="display: flex; align-items: center; justify-content: space-between;">
+        <div class="card-title">
+            <i class="fas fa-filter"></i>
+            <span>Filter Alerts</span>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="toggleFilters()" title="Close">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="card-body">
+        <form method="get" action="/alerts">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label for="alert_type" class="form-label">Alert Type</label>
+                    <select id="alert_type" name="alert_type" class="form-select">
+                        <option value="">All Types</option>
+                        <option value="error" {% if alert_type == 'error' %}selected{% endif %}>Errors</option>
+                        <option value="warning" {% if alert_type == 'warning' %}selected{% endif %}>Warnings</option>
+                        <option value="info" {% if alert_type == 'info' %}selected{% endif %}>Info</option>
+                        <option value="success" {% if alert_type == 'success' %}selected{% endif %}>Success</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="show_acknowledged" name="show_acknowledged"
+                               {% if show_acknowledged %}checked{% endif %}>
+                        <label class="form-check-label" for="show_acknowledged">
+                            Show Acknowledged Alerts
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-fill">
+                            <i class="fas fa-filter"></i>
+                            <span>Apply Filters</span>
+                        </button>
+                        <a href="/alerts" class="btn btn-secondary">
+                            <i class="fas fa-times"></i>
+                            <span>Clear</span>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-end">
+                        <div class="h5 mb-0">{{ unacknowledged_count }}</div>
+                        <small class="text-secondary">Unacknowledged</small>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Alerts List Card -->
+<div class="card">
+    <div class="card-header" style="display: flex; align-items: center; justify-content: space-between;">
+        <div class="card-title">
+            <i class="fas fa-bell"></i>
+            <span>System Alerts</span>
         </div>
         <div class="d-flex gap-2">
-            <button class="btn btn-outline-secondary" onclick="refreshAlerts()">
+            <button id="toggleFilterBtn" class="btn btn-secondary btn-sm" onclick="toggleFilters()">
+                <i class="fas fa-filter"></i>
+                <span>Filter Alerts</span>
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="refreshAlerts()">
                 <i class="fas fa-sync-alt"></i>
                 <span>Refresh</span>
             </button>
             {% if request.session.role == 'administrator' %}
-            <button class="btn btn-outline-primary" onclick="createTestAlert()">
+            <button class="btn btn-primary btn-sm" onclick="createTestAlert()">
                 <i class="fas fa-plus"></i>
                 <span>Create Test Alert</span>
             </button>
             {% endif %}
         </div>
     </div>
+    <div class="card-body">
+        <!-- Flash Message -->
+        {% if flash %}
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            {{ flash }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
 
-    <!-- Flash Message -->
-    {% if flash %}
-    <div class="alert alert-info alert-dismissible fade show" role="alert">
-        {{ flash }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    {% endif %}
-
-    <!-- Filters -->
-    <div class="filter-section">
-        <form method="get" class="row g-3">
-            <div class="col-md-3">
-                <label for="alert_type" class="form-label">Alert Type</label>
-                <select id="alert_type" name="alert_type" class="form-select">
-                    <option value="">All Types</option>
-                    <option value="error" {% if alert_type == 'error' %}selected{% endif %}>Errors</option>
-                    <option value="warning" {% if alert_type == 'warning' %}selected{% endif %}>Warnings</option>
-                    <option value="info" {% if alert_type == 'info' %}selected{% endif %}>Info</option>
-                    <option value="success" {% if alert_type == 'success' %}selected{% endif %}>Success</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">&nbsp;</label>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="show_acknowledged" name="show_acknowledged"
-                           {% if show_acknowledged %}checked{% endif %}>
-                    <label class="form-check-label" for="show_acknowledged">
-                        Show Acknowledged Alerts
-                    </label>
-                </div>
-            </div>
-            <div class="col-md-3 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-filter"></i>
-                    <span>Filter</span>
-                </button>
-            </div>
-            <div class="col-md-3 d-flex align-items-end justify-content-end">
-                <div class="text-end">
-                    <div class="h5 mb-0">{{ unacknowledged_count }}</div>
-                    <small class="text-secondary">Unacknowledged</small>
-                </div>
-            </div>
-        </form>
-    </div>
-
-    <!-- Alerts List -->
-    <div id="alertsContainer">
         {% for alert in alerts %}
         <div class="card alert-item {{ alert.alert_type }} {% if alert.acknowledged %}acknowledged{% endif %}">
             <div class="card-body">
@@ -193,9 +208,9 @@
                 <div class="alert-meta">
                     <small>
                         <i class="fas fa-clock"></i>
-                        {{ alert.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                        {{ alert.created_at.strftime(date_format) }}
                         {% if alert.acknowledged and alert.acknowledged_at %}
-                        • Acknowledged {{ alert.acknowledged_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                        • Acknowledged {{ alert.acknowledged_at.strftime(date_format) }}
                         {% endif %}
                     </small>
                 </div>
@@ -238,9 +253,30 @@
 </div>
 
 <script>
+// Filter toggle function
+window.toggleFilters = function() {
+  const filterCard = document.getElementById('filterCard');
+  const toggleBtn = document.getElementById('toggleFilterBtn');
+
+  if (filterCard.style.display === 'none') {
+    filterCard.style.display = 'block';
+    toggleBtn.innerHTML = '<i class="fas fa-times"></i><span>Hide Filters</span>';
+  } else {
+    filterCard.style.display = 'none';
+    toggleBtn.innerHTML = '<i class="fas fa-filter"></i><span>Filter Alerts</span>';
+  }
+};
+
+// Show filter card if any filters are active
+const hasFilters = {{ 'true' if alert_type or show_acknowledged else 'false' }};
+if (hasFilters) {
+  toggleFilters();
+}
+
 // Acknowledge an alert
 function acknowledgeAlert(alertId) {
-    if (!confirm('Are you sure you want to acknowledge this alert?')) {
+    // Show inline confirmation instead of browser popup
+    if (!showInlineConfirmation('Are you sure you want to acknowledge this alert?')) {
         return;
     }
 
@@ -253,15 +289,16 @@ function acknowledgeAlert(alertId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Reload the page to show updated state
-            window.location.reload();
+            showInlineNotification('Alert acknowledged successfully!', 'success');
+            // Refresh the alerts list
+            setTimeout(() => window.location.reload(), 1500);
         } else {
-            alert('Failed to acknowledge alert: ' + (data.error || 'Unknown error'));
+            showInlineNotification('Failed to acknowledge alert: ' + (data.error || 'Unknown error'), 'error');
         }
     })
     .catch(error => {
         console.error('Error acknowledging alert:', error);
-        alert('Error acknowledging alert. Check the console for details.');
+        showInlineNotification('Error acknowledging alert. Check the console for details.', 'error');
     });
 }
 
@@ -323,16 +360,61 @@ function createTestAlert() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('Test alert created successfully!');
-            refreshAlerts();
+            showInlineNotification('Test alert created successfully!', 'success');
+            setTimeout(() => refreshAlerts(), 1500);
         } else {
-            alert('Failed to create test alert: ' + (data.error || 'Unknown error'));
+            showInlineNotification('Failed to create test alert: ' + (data.error || 'Unknown error'), 'error');
         }
     })
     .catch(error => {
         console.error('Error creating test alert:', error);
-        alert('Error creating test alert. Check the console for details.');
+        showInlineNotification('Error creating test alert. Check the console for details.', 'error');
     });
 }
+
+// Show inline confirmation dialog
+function showInlineConfirmation(message) {
+    return confirm(message); // For now, keep using confirm but could be replaced with custom modal
+}
+
+// Show inline notification
+function showInlineNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'error' ? 'danger' : type}`;
+    notification.style.cssText = 'position: fixed; top: 80px; right: 20px; z-index: 10000; max-width: 400px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideIn 0.3s ease;';
+    
+    const iconMap = {
+        'success': 'check-circle',
+        'error': 'exclamation-circle',
+        'warning': 'exclamation-triangle',
+        'info': 'info-circle'
+    };
+    
+    notification.innerHTML = `
+        <i class="fas fa-${iconMap[type] || 'info-circle'}"></i>
+        <span>${message}</span>
+        <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+// Add slideIn animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+`;
+document.head.appendChild(style);
 </script>
 {% endblock %}

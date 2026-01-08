@@ -878,18 +878,25 @@ textarea.form-control {
 
 /* Theme Toggle */
 .theme-toggle {
-    background: transparent;
-    border: none;
-    color: var(--text-primary);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    border-radius: 50%;
     cursor: pointer;
-    padding: 8px;
-    border-radius: var(--radius-md);
-    transition: background-color var(--transition-fast);
-    font-size: 1.25rem;
+    transition: all var(--transition-fast);
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin-right: 12px;
 }
 
 .theme-toggle:hover {
     background: var(--bg-hover);
+    border-color: var(--border-hover);
 }
 
 /* Alerts Menu */

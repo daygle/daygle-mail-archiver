@@ -6,6 +6,8 @@ from utils.db import query
 from utils.logger import log
 from utils.templates import templates
 from utils.alerts import create_alert, get_alerts, acknowledge_alert, get_unacknowledged_count
+from utils.timezone import convert_utc_to_user_timezone
+from routes.reports import get_user_date_format
 
 router = APIRouter()
 
@@ -67,6 +69,17 @@ def alerts_page(
 
     flash_msg = request.session.pop("flash", None)
 
+    # Get user's date/time format
+    date_format = get_user_date_format(request)
+
+    # Convert alert timestamps to user timezone
+    user_id = request.session.get("user_id")
+    for alert in alerts:
+        if alert["created_at"]:
+            alert["created_at"] = convert_utc_to_user_timezone(alert["created_at"], user_id)
+        if alert["acknowledged_at"]:
+            alert["acknowledged_at"] = convert_utc_to_user_timezone(alert["acknowledged_at"], user_id)
+
     return templates.TemplateResponse(
         "alerts.html",
         {
@@ -77,7 +90,8 @@ def alerts_page(
             "total_pages": total_pages,
             "alert_type": alert_type,
             "show_acknowledged": show_acknowledged,
-            "unacknowledged_count": unacknowledged_count
+            "unacknowledged_count": unacknowledged_count,
+            "date_format": date_format
         }
     )
 
