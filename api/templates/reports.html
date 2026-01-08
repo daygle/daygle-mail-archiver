@@ -429,14 +429,33 @@ function loadEmailVolumeReport() {
     }
 
     fetch(`/api/reports/email-volume?start_date=${startDate}&end_date=${endDate}`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
         .then(data => {
-            emailVolumeChart.data.labels = data.labels;
-            emailVolumeChart.data.datasets[0].data = data.email_counts;
-            emailVolumeChart.data.datasets[1].data = data.virus_counts;
+            // Defensive programming: ensure data structure exists
+            if (!data || typeof data !== 'object') {
+                console.error('Invalid response data:', data);
+                return;
+            }
+
+            // Update chart with safe defaults
+            const labels = Array.isArray(data.labels) ? data.labels : [];
+            const emailCounts = Array.isArray(data.email_counts) ? data.email_counts : [];
+            const virusCounts = Array.isArray(data.virus_counts) ? data.virus_counts : [];
+
+            emailVolumeChart.data.labels = labels;
+            emailVolumeChart.data.datasets[0].data = emailCounts;
+            emailVolumeChart.data.datasets[1].data = virusCounts;
             emailVolumeChart.update();
         })
-        .catch(error => console.error('Error loading email volume report:', error));
+        .catch(error => {
+            console.error('Error loading email volume report:', error);
+            // Could add user notification here if needed
+        });
 }
 
 // Account Activity Report
@@ -450,34 +469,54 @@ function loadAccountActivityReport() {
     }
 
     fetch(`/api/reports/account-activity?start_date=${startDate}&end_date=${endDate}`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
         .then(data => {
-            // Update metrics
-            document.getElementById('totalAccounts').textContent = data.accounts.length;
-            document.getElementById('enabledAccounts').textContent = data.accounts.filter(a => a.enabled).length;
-            document.getElementById('accountsWithErrors').textContent = data.accounts.filter(a => a.last_error).length;
+            // Defensive programming: ensure data structure exists
+            if (!data || typeof data !== 'object') {
+                console.error('Invalid response data:', data);
+                return;
+            }
 
-            // Update chart
-            accountActivityChart.data.labels = data.trend_labels;
-            accountActivityChart.data.datasets = data.trend_datasets.map((dataset, index) => ({
-                label: dataset.label,
-                data: dataset.data,
+            // Update metrics with safe defaults
+            const accounts = Array.isArray(data.accounts) ? data.accounts : [];
+            document.getElementById('totalAccounts').textContent = accounts.length;
+            document.getElementById('enabledAccounts').textContent = accounts.filter(a => a && a.enabled).length;
+            document.getElementById('accountsWithErrors').textContent = accounts.filter(a => a && a.last_error).length;
+
+            // Update chart with safe defaults
+            const trendLabels = Array.isArray(data.trend_labels) ? data.trend_labels : [];
+            const trendDatasets = Array.isArray(data.trend_datasets) ? data.trend_datasets : [];
+
+            accountActivityChart.data.labels = trendLabels;
+            accountActivityChart.data.datasets = trendDatasets.map((dataset, index) => ({
+                label: dataset && dataset.label ? dataset.label : `Dataset ${index + 1}`,
+                data: Array.isArray(dataset.data) ? dataset.data : [],
                 borderColor: `hsl(${(index * 137) % 360}, 70%, 50%)`,
                 backgroundColor: `hsla(${(index * 137) % 360}, 70%, 50%, 0.1)`,
                 tension: 0.4
             }));
             accountActivityChart.update();
 
-            // Update table
+            // Update table with safe account data
             const tbody = document.getElementById('accountTableBody');
-            tbody.innerHTML = data.accounts.map(account => {
+            tbody.innerHTML = accounts.map(account => {
+                if (!account || typeof account !== 'object') {
+                    return '<tr><td colspan="6">Invalid account data</td></tr>';
+                }
+
                 let statusClass = 'status-offline';
                 let statusText = 'Offline';
                 if (account.enabled) {
-                    if (account.hours_since_heartbeat < 1) {
+                    const hoursSinceHeartbeat = typeof account.hours_since_heartbeat === 'number' ? account.hours_since_heartbeat : 999;
+                    if (hoursSinceHeartbeat < 1) {
                         statusClass = 'status-online';
                         statusText = 'Online';
-                    } else if (account.hours_since_heartbeat < 24) {
+                    } else if (hoursSinceHeartbeat < 24) {
                         statusClass = 'status-warning';
                         statusText = 'Warning';
                     } else {
@@ -488,17 +527,22 @@ function loadAccountActivityReport() {
 
                 return `
                     <tr>
-                        <td>${account.name}</td>
-                        <td>${account.type.toUpperCase()}</td>
+                        <td>${account.name || 'Unknown'}</td>
+                        <td>${account.type ? account.type.toUpperCase() : 'UNKNOWN'}</td>
                         <td><span class="status-indicator ${statusClass}"></span>${statusText}</td>
                         <td>${account.last_success || 'Never'}</td>
-                        <td>${account.emails_today}</td>
-                        <td>${account.hours_since_heartbeat}h ago</td>
+                        <td>${typeof account.emails_today === 'number' ? account.emails_today : 0}</td>
+                        <td>${typeof account.hours_since_heartbeat === 'number' ? account.hours_since_heartbeat + 'h ago' : 'Unknown'}</td>
                     </tr>
                 `;
             }).join('');
         })
-        .catch(error => console.error('Error loading account activity report:', error));
+        .catch(error => {
+            console.error('Error loading account activity report:', error);
+            // Show user-friendly error message
+            const tbody = document.getElementById('accountTableBody');
+            tbody.innerHTML = '<tr><td colspan="6" style="color: red;">Failed to load account activity report. Please try again.</td></tr>';
+        });
 }
 
 // System Health Report
@@ -512,18 +556,38 @@ function loadSystemHealthReport() {
     }
 
     fetch(`/api/reports/system-health?start_date=${startDate}&end_date=${endDate}`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
         .then(data => {
-            // Update metrics
-            document.getElementById('databaseSize').textContent = data.database_size;
-            document.getElementById('avgHeartbeat').textContent = `${data.worker_stats.avg_hours_since_heartbeat}h`;
+            // Defensive programming: ensure data structure exists
+            if (!data || typeof data !== 'object') {
+                console.error('Invalid response data:', data);
+                return;
+            }
 
-            // Update chart
-            errorTrendsChart.data.labels = data.error_labels;
-            errorTrendsChart.data.datasets[0].data = data.error_counts;
+            // Update metrics with safe defaults
+            document.getElementById('databaseSize').textContent = data.database_size || 'Unknown';
+            const avgHeartbeat = data.worker_stats && typeof data.worker_stats.avg_hours_since_heartbeat === 'number'
+                ? data.worker_stats.avg_hours_since_heartbeat
+                : 0;
+            document.getElementById('avgHeartbeat').textContent = `${avgHeartbeat}h`;
+
+            // Update chart with safe defaults
+            const errorLabels = Array.isArray(data.error_labels) ? data.error_labels : [];
+            const errorCounts = Array.isArray(data.error_counts) ? data.error_counts : [];
+
+            errorTrendsChart.data.labels = errorLabels;
+            errorTrendsChart.data.datasets[0].data = errorCounts;
             errorTrendsChart.update();
         })
-        .catch(error => console.error('Error loading system health report:', error));
+        .catch(error => {
+            console.error('Error loading system health report:', error);
+            // Could add user notification here if needed
+        });
 }
 
 // Anti-Virus Statistics Report
@@ -537,23 +601,42 @@ function loadAVStatsReport() {
     }
 
     fetch(`/api/reports/av-stats?start_date=${startDate}&end_date=${endDate}`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
         .then(data => {
-            // Update metrics
-            document.getElementById('cleanEmails').textContent = data.clean_emails;
-            document.getElementById('quarantinedEmails').textContent = data.quarantined_emails;
-            document.getElementById('rejectedEmails').textContent = data.rejected_emails;
+            // Defensive programming: ensure data structure exists
+            if (!data || typeof data !== 'object') {
+                console.error('Invalid response data:', data);
+                return;
+            }
+
+            // Update metrics with safe defaults
+            document.getElementById('cleanEmails').textContent = typeof data.clean_emails === 'number' ? data.clean_emails : 0;
+            document.getElementById('quarantinedEmails').textContent = typeof data.quarantined_emails === 'number' ? data.quarantined_emails : 0;
+            document.getElementById('rejectedEmails').textContent = typeof data.rejected_emails === 'number' ? data.rejected_emails : 0;
 
             // Update chart if it exists
             if (avStatsChart) {
-                avStatsChart.data.labels = data.labels;
-                avStatsChart.data.datasets[0].data = data.clean_counts;
-                avStatsChart.data.datasets[1].data = data.quarantined_counts;
-                avStatsChart.data.datasets[2].data = data.rejected_counts;
+                const labels = Array.isArray(data.labels) ? data.labels : [];
+                const cleanCounts = Array.isArray(data.clean_counts) ? data.clean_counts : [];
+                const quarantinedCounts = Array.isArray(data.quarantined_counts) ? data.quarantined_counts : [];
+                const rejectedCounts = Array.isArray(data.rejected_counts) ? data.rejected_counts : [];
+
+                avStatsChart.data.labels = labels;
+                avStatsChart.data.datasets[0].data = cleanCounts;
+                avStatsChart.data.datasets[1].data = quarantinedCounts;
+                avStatsChart.data.datasets[2].data = rejectedCounts;
                 avStatsChart.update();
             }
         })
-        .catch(error => console.error('Error loading AV statistics report:', error));
+        .catch(error => {
+            console.error('Error loading AV statistics report:', error);
+            // Could add user notification here if needed
+        });
 }
 
 // Event listeners for refresh buttons

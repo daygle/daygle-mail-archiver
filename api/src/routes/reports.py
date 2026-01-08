@@ -28,9 +28,13 @@ def get_user_date_format(request: Request, date_only: bool = False) -> str:
     user_id = request.session.get("user_id")
     if user_id:
         try:
-            user = query("SELECT date_format FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+            # Convert user_id to int for database queries
+            user_id_int = int(user_id)
+            user = query("SELECT date_format FROM users WHERE id = :id", {"id": user_id_int}).mappings().first()
             if user and user["date_format"]:
                 date_format = user["date_format"]
+        except (ValueError, TypeError):
+            pass
         except Exception:
             pass
 
@@ -47,9 +51,13 @@ def get_user_date_format(request: Request, date_only: bool = False) -> str:
 
     if user_id:
         try:
-            user = query("SELECT time_format FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+            # Convert user_id to int for database queries
+            user_id_int = int(user_id)
+            user = query("SELECT time_format FROM users WHERE id = :id", {"id": user_id_int}).mappings().first()
             if user and user["time_format"]:
                 time_format = user["time_format"]
+        except (ValueError, TypeError):
+            pass
         except Exception:
             pass
 
@@ -88,6 +96,11 @@ def email_volume_report(request: Request, start_date: str = None, end_date: str 
             return JSONResponse({"error": "start_date must be before end_date"}, status_code=400)
 
         user_id = request.session.get("user_id")
+        if user_id is not None:
+            try:
+                user_id = int(user_id)
+            except (ValueError, TypeError):
+                user_id = None
         date_format = get_user_date_format(request, date_only=True)
 
         # Calculate period based on date range
@@ -167,6 +180,11 @@ def account_activity_report(request: Request, start_date: str = None, end_date: 
             return JSONResponse({"error": "start_date must be before end_date"}, status_code=400)
 
         user_id = request.session.get("user_id")  # May be None for testing
+        if user_id is not None:
+            try:
+                user_id = int(user_id)
+            except (ValueError, TypeError):
+                user_id = None
         date_format = get_user_date_format(request, date_only=True)
 
         # Get account sync data
@@ -190,46 +208,52 @@ def account_activity_report(request: Request, start_date: str = None, end_date: 
 
         accounts = []
         for row in results:
-            last_success = None
-            if row["last_success"]:
-                # Parse SQLite datetime string back to datetime object
-                last_success_dt = datetime.fromisoformat(row["last_success"].replace('Z', '+00:00'))
-                last_success = convert_utc_to_user_timezone(last_success_dt, user_id).strftime(get_user_date_format(request))
-
-            # Safely convert hours_since_heartbeat to float
             try:
-                hours_value = row["hours_since_heartbeat"]
-                if hours_value is None:
-                    hours_float = 0.0
-                elif isinstance(hours_value, str):
-                    hours_float = float(hours_value) if hours_value.strip() else 0.0
-                else:
-                    hours_float = float(hours_value)
-                hours_rounded = round(hours_float, 1)
-            except (ValueError, TypeError):
-                hours_rounded = 0.0
+                last_success = None
+                if row["last_success"]:
+                    # Parse SQLite datetime string back to datetime object
+                    last_success_dt = datetime.fromisoformat(row["last_success"].replace('Z', '+00:00'))
+                    last_success = convert_utc_to_user_timezone(last_success_dt, user_id).strftime(get_user_date_format(request))
 
-            # Safely convert emails_synced_today to int
-            try:
-                emails_value = row["emails_synced_today"]
-                if emails_value is None:
+                # Safely convert hours_since_heartbeat to float
+                try:
+                    hours_value = row["hours_since_heartbeat"]
+                    if hours_value is None:
+                        hours_float = 0.0
+                    elif isinstance(hours_value, str):
+                        hours_float = float(hours_value) if hours_value.strip() else 0.0
+                    else:
+                        hours_float = float(hours_value)
+                    hours_rounded = round(hours_float, 1)
+                except (ValueError, TypeError) as e:
+                    log("error", "Reports", f"Error converting hours_since_heartbeat: {hours_value}, error: {e}", "")
+                    hours_rounded = 0.0
+
+                # Safely convert emails_synced_today to int
+                try:
+                    emails_value = row["emails_synced_today"]
+                    if emails_value is None:
+                        emails_int = 0
+                    elif isinstance(emails_value, str):
+                        emails_int = int(emails_value) if emails_value.strip() else 0
+                    else:
+                        emails_int = int(emails_value)
+                except (ValueError, TypeError) as e:
+                    log("error", "Reports", f"Error converting emails_synced_today: {emails_value}, error: {e}", "")
                     emails_int = 0
-                elif isinstance(emails_value, str):
-                    emails_int = int(emails_value) if emails_value.strip() else 0
-                else:
-                    emails_int = int(emails_value)
-            except (ValueError, TypeError):
-                emails_int = 0
 
-            accounts.append({
-                "name": row["name"],
-                "type": row["account_type"],
-                "enabled": bool(row["enabled"]),  # Convert SQLite integer to boolean
-                "last_success": last_success,
-                "last_error": row["last_error"],
-                "hours_since_heartbeat": hours_rounded,
-                "emails_today": emails_int
-            })
+                accounts.append({
+                    "name": row["name"],
+                    "type": row["account_type"],
+                    "enabled": bool(row["enabled"]),  # Convert SQLite integer to boolean
+                    "last_success": last_success,
+                    "last_error": row["last_error"],
+                    "hours_since_heartbeat": hours_rounded,
+                    "emails_today": emails_int
+                })
+            except Exception as e:
+                log("error", "Reports", f"Error processing account row: {row}, error: {e}", "")
+                continue
 
         # Get sync trends over time
         trend_results = query("""
@@ -313,6 +337,11 @@ def user_activity_report(request: Request, days: int = 30):
             days = 30
 
         user_id = request.session.get("user_id")
+        if user_id is not None:
+            try:
+                user_id = int(user_id)
+            except (ValueError, TypeError):
+                user_id = None
         date_format = get_user_date_format(request, date_only=True)
         datetime_format = get_user_date_format(request)
 
@@ -399,6 +428,11 @@ def system_health_report(request: Request, start_date: str = None, end_date: str
             return JSONResponse({"error": "start_date must be before end_date"}, status_code=400)
 
         user_id = request.session.get("user_id")
+        if user_id is not None:
+            try:
+                user_id = int(user_id)
+            except (ValueError, TypeError):
+                user_id = None
         date_format = get_user_date_format(request, date_only=True)
 
         # Database growth over time (simplified - would need historical data for accurate growth)
@@ -529,6 +563,11 @@ def av_stats_report(request: Request, start_date: str = None, end_date: str = No
             return JSONResponse({"error": "start_date must be before end_date"}, status_code=400)
 
         user_id = request.session.get("user_id")  # May be None for testing
+        if user_id is not None:
+            try:
+                user_id = int(user_id)
+            except (ValueError, TypeError):
+                user_id = None
         date_format = get_user_date_format(request, date_only=True)
 
         # Calculate period based on date range for grouping (SQLite compatible)
