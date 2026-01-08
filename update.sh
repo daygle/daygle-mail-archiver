@@ -438,9 +438,9 @@ main() {
         # Confirm update
         if [ "$FORCE" = false ]; then
             echo ""
-            read -p "Do you want to update now? (yes/no): " -r
+            read -p "Do you want to update now? (y/n): " -r
             echo ""
-            if [[ ! $REPLY =~ ^[Yy][Ee][Ss]$ ]]; then
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
                 log_info "Update cancelled"
                 exit 0
             fi

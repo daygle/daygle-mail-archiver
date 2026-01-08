@@ -182,13 +182,13 @@
 
             <div class="form-group mt-3">
                 <label for="smtp_username" class="form-label">SMTP Username</label>
-                <input id="smtp_username" class="form-control" name="smtp_username" type="text" value="{{ settings.smtp_username or '' }}" placeholder="your-email@example.com">
+                <input id="smtp_username" class="form-control" name="smtp_username" type="text" value="{{ settings.smtp_username or '' }}" placeholder="your-email@example.com" autocomplete="off">
                 <small class="form-text">Username for SMTP authentication (usually your email address)</small>
             </div>
 
             <div class="form-group mt-3">
                 <label for="smtp_password" class="form-label">SMTP Password</label>
-                <input id="smtp_password" class="form-control" name="smtp_password" type="password" value="{{ settings.smtp_password or '' }}" placeholder="your-password">
+                <input id="smtp_password" class="form-control" name="smtp_password" type="password" value="{{ settings.smtp_password or '' }}" placeholder="your-password" autocomplete="off">
                 <small class="form-text">Password for SMTP authentication (use app passwords for Gmail)</small>
             </div>
 
