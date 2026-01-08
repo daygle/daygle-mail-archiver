@@ -127,9 +127,12 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             if (data.unavailable) {
+                console.log('Update check reports unavailable: no git metadata');
                 statusEl.textContent = 'Unavailable';
                 messageEl.innerHTML = '';
                 unavailableEl.style.display = 'block';
+                // Ensure the result container is visible (it contains the alert)
+                resultEl.style.display = 'block';
                 if (toggleBtn) {
                     toggleBtn.style.display = 'inline-block';
                     toggleBtn.onclick = function() {
