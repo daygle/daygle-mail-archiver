@@ -134,21 +134,21 @@ def save_settings(
     flash(request, "Settings updated successfully.")
     return RedirectResponse("/global-settings", status_code=303)
 
-@router.get("/api/test-smtp")
+@router.post("/api/test-smtp")
 def test_smtp(request: Request):
     """Test SMTP connection"""
     if not require_login(request):
-        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+        flash(request, "You must be logged in to test SMTP.")
+        return RedirectResponse("/login", status_code=303)
 
     try:
         success, message = test_smtp_connection()
-        return JSONResponse({
-            "success": success,
-            "message": message
-        })
+        if success:
+            flash(request, f"SMTP connection successful: {message}")
+        else:
+            flash(request, f"SMTP connection failed: {message}")
     except Exception as e:
         log("error", "Settings", f"SMTP test failed: {str(e)}", "")
-        return JSONResponse({
-            "success": False,
-            "message": f"Test failed: {str(e)}"
-        }, status_code=500)
+        flash(request, f"SMTP test failed: {str(e)}")
+    
+    return RedirectResponse("/global-settings", status_code=303)

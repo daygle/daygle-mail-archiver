@@ -26,8 +26,8 @@ class DashboardLayout(BaseModel):
     widgets: List[WidgetPreference]
 
 
-def require_login(request: Request):
-    return "user_id" in request.session
+def flash(request: Request, message: str):
+    request.session["flash"] = message
 
 
 def get_user_date_format(request: Request, date_only: bool = False) -> str:
@@ -413,21 +413,21 @@ def get_dashboard_preferences(request: Request):
 async def save_dashboard_preferences(request: Request, layout: DashboardLayout):
     """Save user's dashboard widget preferences"""
     if not require_login(request):
-        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+        return RedirectResponse("/login", status_code=303)
 
     user_id = request.session.get("user_id")
-    
+
     try:
         # Delete existing preferences
         query("""
-            DELETE FROM dashboard_preferences 
+            DELETE FROM dashboard_preferences
             WHERE user_id = :user_id
         """, {"user_id": user_id})
 
         # Insert new preferences
         for widget in layout.widgets:
             query("""
-                INSERT INTO dashboard_preferences 
+                INSERT INTO dashboard_preferences
                 (user_id, widget_id, x_position, y_position, width, height, is_visible)
                 VALUES (:user_id, :widget_id, :x, :y, :w, :h, :visible)
             """, {
@@ -442,12 +442,13 @@ async def save_dashboard_preferences(request: Request, layout: DashboardLayout):
 
         username = request.session.get("username", "unknown")
         log("info", "Dashboard", f"User '{username}' saved dashboard preferences", "")
-        
-        return {"success": True, "message": "Dashboard layout saved"}
+        flash(request, "Dashboard layout saved successfully!")
+        return RedirectResponse("/dashboard", status_code=303)
     except Exception as e:
         username = request.session.get("username", "unknown")
         log("error", "Dashboard", f"Failed to save dashboard preferences for user '{username}': {str(e)}", "")
-        return JSONResponse({"error": "Failed to save preferences"}, status_code=500)
+        flash(request, "Failed to save dashboard layout")
+        return RedirectResponse("/dashboard", status_code=303)
 
 
 @router.get("/api/dashboard/recent-activity")
@@ -751,7 +752,7 @@ def get_widget_settings(request: Request):
 async def save_widget_settings(request: Request):
     """Save user's widget settings"""
     if not require_login(request):
-        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+        return RedirectResponse("/login", status_code=303)
 
     user_id = request.session.get("user_id")
     
@@ -773,10 +774,11 @@ async def save_widget_settings(request: Request):
         
         username = request.session.get("username", "unknown")
         log("info", "Dashboard", f"User '{username}' saved widget settings", "")
-        
-        return {"success": True}
+        flash(request, "Widget settings saved successfully!")
+        return RedirectResponse("/dashboard", status_code=303)
     except Exception as e:
         username = request.session.get("username", "unknown")
         log("error", "Dashboard", f"Failed to save widget settings for user '{username}': {str(e)}", "")
-        return JSONResponse({"error": "Failed to save settings"}, status_code=500)
+        flash(request, "Failed to save widget settings")
+        return RedirectResponse("/dashboard", status_code=303)
 

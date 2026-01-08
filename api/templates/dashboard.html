@@ -936,19 +936,20 @@ const DashboardManager = {
     },
 
     async saveWidgetSettingsToPreferences() {
-        try {
-            const response = await fetch('/api/dashboard/widget-settings', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ settings: this.widgetSettings })
-            });
-            
-            if (!response.ok) {
-                console.warn('Failed to save widget settings to server');
-            }
-        } catch (error) {
-            console.error('Error saving widget settings:', error);
-        }
+        // Create and submit a form to save widget settings
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/api/dashboard/widget-settings';
+        form.style.display = 'none';
+
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'settings';
+        input.value = JSON.stringify(this.widgetSettings);
+        form.appendChild(input);
+
+        document.body.appendChild(form);
+        form.submit();
     },
 
     async loadWidgetSettingsFromPreferences() {
@@ -1013,61 +1014,20 @@ const DashboardManager = {
             }
         });
 
-        try {
-            const response = await fetch('/api/dashboard/preferences', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ widgets })
-            });
+        // Create and submit a form to save the layout
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/api/dashboard/preferences';
+        form.style.display = 'none';
 
-            if (response.ok) {
-                this.showFlashMessage('Dashboard layout saved successfully!', 'success');
-                this.toggleEditMode();
-            } else {
-                this.showFlashMessage('Failed to save dashboard layout', 'error');
-            }
-        } catch (error) {
-            console.error('Error saving layout:', error);
-            this.showFlashMessage('Failed to save dashboard layout', 'error');
-        }
-    },
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'widgets';
+        input.value = JSON.stringify(widgets);
+        form.appendChild(input);
 
-    showFlashMessage(message, type = 'success') {
-        // Map type to alert class names
-        const typeMap = {
-            'success': 'alert-success',
-            'error': 'alert-danger',
-            'warning': 'alert-warning',
-            'info': 'alert-info'
-        };
-        
-        const iconMap = {
-            'success': 'check-circle',
-            'error': 'exclamation-circle',
-            'warning': 'exclamation-triangle',
-            'info': 'info-circle'
-        };
-        
-        const alertClass = typeMap[type] || 'alert-info';
-        const iconClass = iconMap[type] || 'info-circle';
-        
-        // Create alert element matching the standard alert style
-        const alert = document.createElement('div');
-        alert.className = `alert ${alertClass}`;
-        alert.style.cssText = 'position: fixed; top: 80px; right: 20px; z-index: 10000; margin: 0; max-width: 400px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideIn 0.3s ease;';
-        
-        alert.innerHTML = `
-            <i class="fas fa-${iconClass}"></i>
-            <span>${message}</span>
-        `;
-        
-        document.body.appendChild(alert);
-        
-        // Remove after 3 seconds
-        setTimeout(() => {
-            alert.style.animation = 'slideOut 0.3s ease';
-            setTimeout(() => alert.remove(), 300);
-        }, 3000);
+        document.body.appendChild(form);
+        form.submit();
     },
 
     getWidgetTitle(id) {

@@ -103,20 +103,20 @@ def acknowledge_alert_api(request: Request, alert_id: int):
 
     user_id = request.session.get("user_id")
     if not user_id:
-        flash(request, "❌ User not found")
+        flash(request, "User not found")
         return RedirectResponse("/alerts", status_code=303)
 
     try:
         success = acknowledge_alert(alert_id, user_id)
         if success:
-            flash(request, "✅ Alert acknowledged successfully!")
+            flash(request, "Alert acknowledged successfully!")
             return RedirectResponse("/alerts", status_code=303)
         else:
-            flash(request, "❌ Alert not found or already acknowledged")
+            flash(request, "Alert not found or already acknowledged")
             return RedirectResponse("/alerts", status_code=303)
     except Exception as e:
         log("error", "Alerts", f"Failed to acknowledge alert {alert_id}: {str(e)}", "")
-        flash(request, "❌ Failed to acknowledge alert")
+        flash(request, "Failed to acknowledge alert")
         return RedirectResponse("/alerts", status_code=303)
 
 @router.get("/api/alerts/unacknowledged-count")
@@ -146,18 +146,18 @@ def create_alert_api(
         return RedirectResponse("/login", status_code=303)
 
     if request.session.get("role") != "administrator":
-        flash(request, "❌ Access denied")
+        flash(request, "Access denied")
         return RedirectResponse("/alerts", status_code=303)
 
     if alert_type not in ['error', 'warning', 'info', 'success']:
-        flash(request, "❌ Invalid alert type")
+        flash(request, "Invalid alert type")
         return RedirectResponse("/alerts", status_code=303)
 
     try:
         alert_id = create_alert(alert_type, title, message, details, send_email)
-        flash(request, "✅ Test alert created successfully!")
+        flash(request, "Test alert created successfully!")
         return RedirectResponse("/alerts", status_code=303)
     except Exception as e:
         log("error", "Alerts", f"Failed to create alert: {str(e)}", "")
-        flash(request, "❌ Failed to create test alert")
+        flash(request, "Failed to create test alert")
         return RedirectResponse("/alerts", status_code=303)

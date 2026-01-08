@@ -89,14 +89,6 @@
         </div>
     </div>
     <div class="card-body">
-        <!-- Flash Message -->
-        {% if flash %}
-        <div class="alert alert-info alert-dismissible fade show" role="alert">
-            {{ flash }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        {% endif %}
-
         {% for alert in alerts %}
         <div class="card alert-item {{ alert.alert_type }} {% if alert.acknowledged %}acknowledged{% endif %}">
             <div class="card-body">
@@ -200,11 +192,6 @@ if (hasFilters) {
 
 // Acknowledge an alert
 function acknowledgeAlert(alertId) {
-    // Show inline confirmation instead of browser popup
-    if (!showInlineConfirmation('Are you sure you want to acknowledge this alert?')) {
-        return;
-    }
-
     // Create and submit a form to acknowledge the alert
     const form = document.createElement('form');
     form.method = 'POST';
@@ -280,11 +267,6 @@ function createTestAlert() {
 
     document.body.appendChild(form);
     form.submit();
-}
-
-// Show inline confirmation dialog
-function showInlineConfirmation(message) {
-    return confirm(message); // For now, keep using confirm but could be replaced with custom modal
 }
 </script>
 {% endblock %}
