@@ -89,6 +89,9 @@ def email_volume_report(request: Request, start_date: str = None, end_date: str 
         try:
             start_dt = datetime.strptime(start_date, "%Y-%m-%d")
             end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+            # Expand to full-day bounds (inclusive) so selecting a date includes that full day of data
+            start_dt = datetime(start_dt.year, start_dt.month, start_dt.day, 0, 0, 0)
+            end_dt = datetime(end_dt.year, end_dt.month, end_dt.day, 23, 59, 59, 999999)
         except ValueError:
             return JSONResponse({"error": "Invalid date format. Use YYYY-MM-DD"}, status_code=400)
 
@@ -173,6 +176,9 @@ def account_activity_report(request: Request, start_date: str = None, end_date: 
         try:
             start_dt = datetime.strptime(start_date, "%Y-%m-%d")
             end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+            # Expand to inclusive day bounds so selecting a date includes that whole day
+            start_dt = datetime(start_dt.year, start_dt.month, start_dt.day, 0, 0, 0)
+            end_dt = datetime(end_dt.year, end_dt.month, end_dt.day, 23, 59, 59, 999999)
         except ValueError:
             return JSONResponse({"error": "Invalid date format. Use YYYY-MM-DD"}, status_code=400)
 
@@ -429,6 +435,9 @@ def system_health_report(request: Request, start_date: str = None, end_date: str
         try:
             start_dt = datetime.strptime(start_date, "%Y-%m-%d")
             end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+            # Expand to inclusive day bounds so the selected day(s) are included in the report
+            start_dt = datetime(start_dt.year, start_dt.month, start_dt.day, 0, 0, 0)
+            end_dt = datetime(end_dt.year, end_dt.month, end_dt.day, 23, 59, 59, 999999)
         except ValueError:
             return JSONResponse({"error": "Invalid date format. Use YYYY-MM-DD"}, status_code=400)
 
@@ -564,6 +573,9 @@ def av_stats_report(request: Request, start_date: str = None, end_date: str = No
         try:
             start_dt = datetime.strptime(start_date, "%Y-%m-%d")
             end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+            # Expand to inclusive day bounds so the selected dates' entire days are included
+            start_dt = datetime(start_dt.year, start_dt.month, start_dt.day, 0, 0, 0)
+            end_dt = datetime(end_dt.year, end_dt.month, end_dt.day, 23, 59, 59, 999999)
         except ValueError:
             return JSONResponse({"error": "Invalid date format. Use YYYY-MM-DD"}, status_code=400)
 
