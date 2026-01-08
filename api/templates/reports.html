@@ -174,6 +174,35 @@ document.addEventListener('DOMContentLoaded', function() {
     loadAllReports();
 });
 
+// Utility: show a report-level message (e.g., validation)
+function showReportMessageForInput(inputEl, message, type = 'warning') {
+    // Find the containing report-card
+    const section = inputEl.closest('.report-section');
+    if (!section) return;
+    const card = section.querySelector('.report-card');
+    if (!card) return;
+
+    // Remove existing message
+    const existing = card.querySelector('.report-message');
+    if (existing) existing.remove();
+
+    const div = document.createElement('div');
+    div.className = `alert alert-${type} report-message`;
+    div.style.margin = '0 0 1rem 0';
+    div.textContent = message;
+
+    card.insertBefore(div, card.firstChild);
+}
+
+function clearReportMessageForInput(inputEl) {
+    const section = inputEl.closest('.report-section');
+    if (!section) return;
+    const card = section.querySelector('.report-card');
+    if (!card) return;
+    const existing = card.querySelector('.report-message');
+    if (existing) existing.remove();
+}
+
 // Set default date ranges (last 30 days)
 function setDefaultDateRanges() {
     const today = new Date();
@@ -339,6 +368,14 @@ function loadEmailVolumeReport() {
         return;
     }
 
+    // Validate date range
+    if (new Date(startDate) > new Date(endDate)) {
+        showReportMessageForInput(document.getElementById('emailVolumeStartDate'), 'Invalid date range: start date must be on or before end date', 'warning');
+        return;
+    } else {
+        clearReportMessageForInput(document.getElementById('emailVolumeStartDate'));
+    }
+
     fetch(`/api/reports/email-volume?start_date=${startDate}&end_date=${endDate}`)
         .then(response => {
             if (!response.ok) {
@@ -347,6 +384,9 @@ function loadEmailVolumeReport() {
             return response.json();
         })
         .then(data => {
+            // Clear any previous validation messages for this section
+            clearReportMessageForInput(document.getElementById('emailVolumeStartDate'));
+
             // Defensive programming: ensure data structure exists
             if (!data || typeof data !== 'object') {
                 console.error('Invalid response data:', data);
@@ -377,6 +417,14 @@ function loadAccountActivityReport() {
         return;
     }
 
+    // Validate date range
+    if (new Date(startDate) > new Date(endDate)) {
+        showReportMessageForInput(document.getElementById('accountActivityStartDate'), 'Invalid date range: start date must be on or before end date', 'warning');
+        return;
+    } else {
+        clearReportMessageForInput(document.getElementById('accountActivityStartDate'));
+    }
+
     fetch(`/api/reports/account-activity?start_date=${startDate}&end_date=${endDate}`)
         .then(response => {
             if (!response.ok) {
@@ -385,6 +433,9 @@ function loadAccountActivityReport() {
             return response.json();
         })
         .then(data => {
+            // Clear any previous validation messages for this section
+            clearReportMessageForInput(document.getElementById('accountActivityStartDate'));
+
             // Defensive programming: ensure data structure exists
             if (!data || typeof data !== 'object') {
                 console.error('Invalid response data:', data);
@@ -464,6 +515,14 @@ function loadSystemHealthReport() {
         return;
     }
 
+    // Validate date range
+    if (new Date(startDate) > new Date(endDate)) {
+        showReportMessageForInput(document.getElementById('systemHealthStartDate'), 'Invalid date range: start date must be on or before end date', 'warning');
+        return;
+    } else {
+        clearReportMessageForInput(document.getElementById('systemHealthStartDate'));
+    }
+
     fetch(`/api/reports/system-health?start_date=${startDate}&end_date=${endDate}`)
         .then(response => {
             if (!response.ok) {
@@ -472,6 +531,9 @@ function loadSystemHealthReport() {
             return response.json();
         })
         .then(data => {
+            // Clear any previous validation messages for this section
+            clearReportMessageForInput(document.getElementById('systemHealthStartDate'));
+
             // Defensive programming: ensure data structure exists
             if (!data || typeof data !== 'object') {
                 console.error('Invalid response data:', data);
@@ -509,6 +571,14 @@ function loadAVStatsReport() {
         return;
     }
 
+    // Validate date range
+    if (new Date(startDate) > new Date(endDate)) {
+        showReportMessageForInput(document.getElementById('avStartDate'), 'Invalid date range: start date must be on or before end date', 'warning');
+        return;
+    } else {
+        clearReportMessageForInput(document.getElementById('avStartDate'));
+    }
+
     fetch(`/api/reports/av-stats?start_date=${startDate}&end_date=${endDate}`)
         .then(response => {
             if (!response.ok) {
@@ -517,6 +587,9 @@ function loadAVStatsReport() {
             return response.json();
         })
         .then(data => {
+            // Clear any previous validation messages for this section
+            clearReportMessageForInput(document.getElementById('avStartDate'));
+
             // Defensive programming: ensure data structure exists
             if (!data || typeof data !== 'object') {
                 console.error('Invalid response data:', data);
