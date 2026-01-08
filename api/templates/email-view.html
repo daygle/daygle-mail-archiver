@@ -5,7 +5,7 @@
 {% block content %}
 <!-- Email Metadata Card -->
 <div class="card mb-4">
-    <div class="card-header" style="display: flex; align-items: center; justify-content: space-between;">
+    <div class="card-header flex-between">
         <div class="card-title">
             <i class="fas fa-envelope-open"></i>
             <span>Email Details</span>
@@ -32,7 +32,7 @@
             <table class="table">
                 <tbody>
                     <tr>
-                        <td width="120" style="background: var(--bg-secondary); font-weight: 600;">Subject</td>
+                        <td class="col-left" style="background: var(--bg-secondary); font-weight: 600;">Subject</td>
                         <td><strong>{{ email.subject or "(no subject)" }}</strong></td>
                     </tr>
                     <tr>
@@ -111,7 +111,7 @@
 
 
         {% if body.html %}
-            <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; background: white;">
+            <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; background: var(--bg-primary);">
                 {{ body.html | safe }}
             </div>
         {% else %}

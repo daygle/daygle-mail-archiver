@@ -5,7 +5,7 @@
 {% block content %}
 <!-- Filters Card (Initially Hidden) -->
 <div id="filterCard" class="card mb-4" style="display: none;">
-    <div class="card-header" style="display: flex; align-items: center; justify-content: space-between;">
+    <div class="card-header flex-between">
         <div class="card-title">
             <i class="fas fa-filter"></i>
             <span>Search & Filter</span>
@@ -67,7 +67,7 @@
 
 <!-- System Logs Card -->
 <div class="card">
-    <div class="card-header" style="display: flex; align-items: center; justify-content: space-between;">
+    <div class="card-header flex-between">
         <div class="card-title">
             <i class="fas fa-file-alt"></i>
             <span>System Logs</span>
@@ -111,9 +111,9 @@
                 {% endfor %}
                 {% if logs|length == 0 %}
                 <tr>
-                    <td colspan="4" class="text-center" style="padding: 48px 0;">
-                        <div style="color: var(--text-secondary);">
-                            <i class="fas fa-search" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                    <td colspan="4" class="text-center empty-state">
+                        <div>
+                            <i class="fas fa-search empty-icon"></i>
                             <p>No log entries found{% if current_search or current_source or current_date_from or current_date_to %} matching your filters{% endif %}.</p>
                         </div>
                     </td>

@@ -94,8 +94,8 @@
             <div class="form-group">
                 <label for="retention_value" class="form-label">Retention Period</label>
                 <div class="flex gap-3">
-                    <input id="retention_value" class="form-control" name="retention_value" type="number" min="1" value="{{ settings.retention_value or '1' }}" style="max-width: 150px;">
-                    <select id="retention_unit" class="form-select" name="retention_unit" style="max-width: 200px;">
+                    <input id="retention_value" class="form-control responsive-input" name="retention_value" type="number" min="1" value="{{ settings.retention_value or '1' }}">
+                    <select id="retention_unit" class="form-select responsive-fixed" name="retention_unit">
                         <option value="days" {% if settings.retention_unit == 'days' %}selected{% endif %}>Day(s)</option>
                         <option value="months" {% if settings.retention_unit == 'months' %}selected{% endif %}>Month(s)</option>
                         <option value="years" {% if settings.retention_unit == 'years' or not settings.retention_unit %}selected{% endif %}>Year(s)</option>
@@ -222,7 +222,7 @@
                 <small class="form-text d-block mt-1">Test the SMTP configuration without sending an email</small>
             </div>
         </div>
-        <div class="card-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+        <div class="card-footer form-actions">
             <a href="/dashboard" class="btn btn-secondary">
                 <i class="fas fa-times"></i>
                 <span>Cancel</span>

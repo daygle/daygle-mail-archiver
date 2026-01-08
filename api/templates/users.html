@@ -4,8 +4,8 @@
 
 {% block content %}
 <!-- Create/Edit User Form Card (Initially Hidden) -->
-<div class="card" id="userFormCard" style="display: none; margin-bottom: 20px;">
-    <div class="card-header" style="display: flex; align-items: center; justify-content: space-between;">
+<div class="card mb-4" id="userFormCard" style="display: none;">
+    <div class="card-header flex-between">
         <div class="card-title">
             <i class="fas fa-user-plus" id="formIcon"></i>
             <span id="formTitle">Create New User</span>
@@ -18,7 +18,7 @@
         <form method="post" id="userForm" action="/users/create">
             <input type="hidden" id="user_id" name="user_id">
             
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="two-col-grid">
                 <div class="form-group">
                     <label for="username">Username <span style="color: var(--danger);">*</span></label>
                     <input id="username" class="form-control" name="username" autocomplete="username" required>
@@ -29,7 +29,7 @@
                 </div>
             </div>
             
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="two-col-grid">
                 <div class="form-group">
                     <label for="first_name">First Name</label>
                     <input id="first_name" class="form-control" name="first_name" autocomplete="given-name">
@@ -40,7 +40,7 @@
                 </div>
             </div>
             
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="two-col-grid">
                 <div class="form-group">
                     <label for="email">Email</label>
                     <input id="email" class="form-control" name="email" type="email" autocomplete="email">
@@ -55,7 +55,7 @@
                 </div>
             </div>
             
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="two-col-grid">
                 <div class="form-group">
                     <label for="role">Role</label>
                     <select id="role" class="form-control" name="role">
@@ -81,7 +81,7 @@
                 </small>
             </div>
             
-            <div style="display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end;">
+            <div class="form-actions">
                 <button type="button" class="btn btn-secondary" onclick="hideUserForm()">
                     <i class="fas fa-times"></i>
                     <span>Cancel</span>
@@ -97,7 +97,7 @@
 
 <!-- Users Table Card -->
 <div class="card" id="usersListCard">
-    <div class="card-header" style="display: flex; align-items: center; justify-content: space-between;">
+    <div class="card-header flex-between">
         <div class="card-title">
             <i class="fas fa-users"></i>
             <span>User Accounts</span>
@@ -157,7 +157,7 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <div style="display: flex; gap: 8px;">
+                                <div class="flex-gap-8">
                                     <button type="button" class="btn btn-secondary btn-sm" title="Edit" onclick="editUser({{ user.id }})">
                                         <i class="fas fa-edit"></i>
                                     </button>
@@ -177,9 +177,9 @@
                         {% endfor %}
                         {% if users|length == 0 %}
                         <tr>
-                            <td colspan="8" style="text-align: center; padding: 48px 0;">
-                                <div style="color: var(--text-secondary);">
-                                    <i class="fas fa-users" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                            <td colspan="8" class="text-center empty-state">
+                                <div>
+                                    <i class="fas fa-users empty-icon"></i>
                                     <p>No users found.</p>
                                 </div>
                             </td>

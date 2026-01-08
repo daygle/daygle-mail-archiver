@@ -34,7 +34,7 @@
                         <td>
                             <form method="post" action="/alert-management/triggers/update-severity" style="display: inline-block;">
                                 <input type="hidden" name="trigger_id" value="{{ trigger.id }}">
-                                <select name="alert_type" class="form-select form-select-sm" style="width: 120px;" onchange="this.form.submit()">
+                                <select name="alert_type" class="form-select form-select-sm responsive-fixed" onchange="this.form.submit()">
                                     <option value="error" {% if trigger.alert_type == 'error' %}selected{% endif %}>Error</option>
                                     <option value="warning" {% if trigger.alert_type == 'warning' %}selected{% endif %}>Warning</option>
                                     <option value="info" {% if trigger.alert_type == 'info' %}selected{% endif %}>Info</option>
@@ -78,7 +78,7 @@
         </div>
         {% endif %}
     </div>
-    <div class="card-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+    <div class="card-footer form-actions">
         <a href="/dashboard" class="btn btn-secondary">
             <i class="fas fa-times"></i>
             <span>Cancel</span>

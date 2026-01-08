@@ -19,7 +19,7 @@
         <input type="hidden" name="account_id" id="form-account-id" value="">
         
         <!-- Account Details Card -->
-        <div class="card" style="margin-bottom: 24px;">
+        <div class="card mb-4">
             <div class="card-header">
                 <div class="card-title">
                     <i class="fas fa-server"></i>
@@ -46,7 +46,7 @@
         </div>
 
         <!-- IMAP Configuration Card -->
-        <div id="imap_fields" class="card" style="display: none; margin-bottom: 24px;">
+        <div id="imap_fields" class="card mb-4" style="display: none;">
             <div class="card-header">
                 <div class="card-title">
                     <i class="fas fa-envelope"></i>
@@ -54,7 +54,7 @@
                 </div>
             </div>
             <div class="card-body">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="two-col-grid">
                     <div class="form-group">
                         <label for="host" class="form-label">Host <span class="text-danger">*</span></label>
                         <input id="host" class="form-control" name="host" placeholder="imap.example.com">
@@ -66,12 +66,12 @@
                     </div>
                 </div>
 
-                <div class="form-group" style="margin-top: 16px;">
+                <div class="form-group mt-3">
                     <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
                     <input id="username" class="form-control" name="username" placeholder="user@example.com" autocomplete="off">
                 </div>
 
-                <div class="form-group" style="margin-top: 16px;">
+                <div class="form-group mt-3">
                     <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
                     <input id="password" class="form-control" name="password" type="password" placeholder="Enter password" autocomplete="off">
                     <small class="form-text" id="password-help" style="display: none;">Leave blank to keep the existing password</small>
@@ -79,7 +79,7 @@
 
                 <div style="margin-top: 16px;">
                     <div style="margin-bottom: 12px;">
-                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <label class="checkbox-label">
                             <input type="checkbox" id="use_ssl" name="use_ssl">
                             <div>
                                 <strong>Use SSL/TLS</strong>
@@ -89,7 +89,7 @@
                     </div>
 
                     <div>
-                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <label class="checkbox-label">
                             <input type="checkbox" id="require_starttls" name="require_starttls">
                             <div>
                                 <strong>Require STARTTLS</strong>
@@ -102,7 +102,7 @@
         </div>
 
         <!-- OAuth Configuration Card -->
-        <div id="oauth_fields" class="card" style="display: none; margin-bottom: 24px;">
+        <div id="oauth_fields" class="card mb-4" style="display: none;">
             <div class="card-header">
                 <div class="card-title">
                     <i class="fas fa-key"></i>
@@ -110,7 +110,7 @@
                 </div>
             </div>
             <div class="card-body">
-                <div class="alert alert-info" style="margin-bottom: 24px;">
+                <div class="alert alert-info mb-4">
                     <i class="fas fa-info-circle"></i>
                     <strong>OAuth Setup Required</strong>
                     <p class="mt-2 mb-2">To use Gmail or Office 365, you need to:</p>
@@ -149,7 +149,7 @@
             <div class="card-body">
                 <div class="form-group">
                     <label for="poll_interval_seconds" class="form-label">Poll Interval (seconds)</label>
-                    <input id="poll_interval_seconds" class="form-control" name="poll_interval_seconds" type="number" value="300" min="60" placeholder="300" style="max-width: 200px;">
+                    <input id="poll_interval_seconds" class="form-control responsive-input" name="poll_interval_seconds" type="number" value="300" min="60" placeholder="300">
                     <small class="form-text">How often to check for new emails (minimum 60 seconds)</small>
                 </div>
 
@@ -167,7 +167,7 @@
                     </div>
 
                     <div id="expunge_deleted_group" style="display: none; margin-bottom: 16px;">
-                        <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer;">
+                        <label class="checkbox-label">
                             <input type="checkbox" id="expunge_deleted" name="expunge_deleted">
                             <div>
                                 <strong>Permanently Expunge Deleted (IMAP only)</strong>
@@ -187,7 +187,7 @@
                     </div>
                 </div>
             </div>
-            <div class="card-footer" style="display: flex; justify-content: flex-end; gap: 12px;">
+            <div class="card-footer form-actions">
                 <button type="button" class="btn btn-secondary" onclick="cancelForm()">
                     <i class="fas fa-times"></i>
                     <span>Cancel</span>
@@ -204,7 +204,7 @@
 <!-- Table Section -->
 <div id="table-section">
     <div class="card">
-        <div class="card-header" style="display: flex; align-items: center; justify-content: space-between;">
+        <div class="card-header flex-between">
             <div class="card-title">
                 <i class="fas fa-server"></i>
                 <span>Fetch Accounts</span>
@@ -285,8 +285,8 @@
                         {% if accounts|length == 0 %}
                         <tr>
                             <td colspan="8" class="text-center" style="padding: 48px 0;">
-                                <div style="color: var(--text-secondary);">
-                                    <i class="fas fa-server" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                                <div>
+                                    <i class="fas fa-server empty-icon"></i>
                                     <p>No fetch accounts configured.</p>
                                     <button class="btn btn-primary mt-3" onclick="showCreateForm()">
                                         <i class="fas fa-plus"></i>

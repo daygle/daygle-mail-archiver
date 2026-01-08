@@ -766,6 +766,11 @@ textarea.form-control {
     margin-top: 6px;
 }
 
+/* Muted text helper - theme aware */
+.text-muted {
+    color: var(--text-secondary) !important;
+}
+
 /* Tables */
 .table-container {
     background: var(--bg-primary);
@@ -1652,6 +1657,22 @@ textarea.form-control {
 
 .w-100 { width: 100%; }
 
+/* Layout utilities */
+.two-col-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; }
+.form-actions { display: flex; gap: 12px; margin-top: 1.5rem; justify-content: flex-end; }
+.flex-gap-8 { display: flex; gap: 8px; }
+.checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.responsive-input { max-width: 200px; width: 100%; }
+.responsive-fixed { max-width: 220px; width: 100%; }
+.col-small { width: 40px; }
+.col-center { width: 60px; text-align: center; }
+.col-left { width: 120px; min-width: 80px; }
+
+.empty-state { padding: 48px 0; text-align: center; color: var(--text-secondary); }
+.empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+.p-0 { padding: 0; }
+
 /* Code block styling (theme aware) */
 pre.code-block, pre.code-block code {
     background: var(--bg-tertiary);
@@ -1669,6 +1690,75 @@ pre.code-block, pre.code-block code {
 /* ========================================
    Print Styles
    ======================================== */
+
+/* Mobile styles (up to 576px) */
+@media (max-width: 576px) {
+    /* Compact card spacing */
+    .report-card {
+        padding: 1rem;
+    }
+
+    /* Smaller charts on small screens */
+    .chart-container {
+        height: 200px;
+    }
+
+    /* Stack date controls and make inputs full width */
+    .date-range-controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+
+    .date-range-controls input[type="date"],
+    .date-range-controls .btn {
+        width: 100%;
+    }
+
+    /* Make tables wrap and avoid forcing horizontal min-widths */
+    .table {
+        min-width: auto !important;
+        width: 100% !important;
+    }
+
+    .table th,
+    .table td {
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Stack footer buttons */
+    .card-footer {
+        flex-direction: column-reverse;
+        gap: 0.5rem;
+    }
+
+    .card-footer .btn {
+        width: 100%;
+    }
+
+    /* Metrics stack vertically */
+    .metric-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Slightly tighter table container border radius */
+    .table-container {
+        border-radius: var(--radius-md);
+    }
+
+    /* Grid helpers: collapse 4-column grids to single column */
+    .grid-cols-4 { grid-template-columns: 1fr; }
+
+    /* Empty state smaller padding and icon sizes on small screens */
+    .empty-state { padding: 24px 0; }
+    .empty-icon { font-size: 36px; }
+}
 
 @media print {
     body {
@@ -2690,6 +2780,24 @@ a:hover {
     border-radius: var(--radius-md);
     padding: 1rem;
     text-align: center;
+}
+
+/* Worker Status - legend styling */
+.worker-legend .legend-title {
+    font-size: 0.9375rem;
+    display: block;
+    color: var(--text-primary);
+}
+
+.worker-legend .legend-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.worker-legend .legend-grid div {
+    color: var(--text-secondary);
 }
 
 .metric-value {

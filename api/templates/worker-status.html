@@ -106,13 +106,15 @@
     </div>
     <div class="card-footer">
         <div class="mb-3">
-            <strong style="font-size: 0.9375rem;">Status Legend:</strong>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; margin-top: 12px;">
-                <div><span class="badge badge-success">Healthy</span> Worker is active and fetching successfully</div>
-                <div><span class="badge badge-warning">Stale</span> No heartbeat in 3x the poll interval</div>
-                <div><span class="badge badge-danger">Error</span> Last fetch attempt encountered an error</div>
-                <div><span class="badge badge-info">Pending</span> Never been run yet</div>
-                <div><span class="badge badge-secondary">Disabled</span> Account is disabled and not being fetched</div>
+            <div class="worker-legend">
+                <strong class="legend-title">Status Legend:</strong>
+                <div class="legend-grid">
+                    <div><span class="badge badge-success">Healthy</span> Worker is active and fetching successfully</div>
+                    <div><span class="badge badge-warning">Stale</span> No heartbeat in 3x the poll interval</div>
+                    <div><span class="badge badge-danger">Error</span> Last fetch attempt encountered an error</div>
+                    <div><span class="badge badge-info">Pending</span> Never been run yet</div>
+                    <div><span class="badge badge-secondary">Disabled</span> Account is disabled and not being fetched</div>
+                </div>
             </div>
         </div>
     </div>
