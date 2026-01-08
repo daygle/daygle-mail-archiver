@@ -95,12 +95,10 @@ def email_volume_report(request: Request, start_date: str = None, end_date: str 
         if days_diff <= 7:
             period = "daily"
             group_by = "DATE(created_at)"
-        elif days_diff <= 90:
-            period = "weekly"
-            group_by = "DATE_TRUNC('week', created_at)"
         else:
-            period = "monthly"
-            group_by = "DATE_TRUNC('month', created_at)"
+            # For longer periods, still use daily grouping to avoid SQLite date function complexity
+            period = "daily"
+            group_by = "DATE(created_at)"
 
         results = query(f"""
             SELECT
@@ -177,10 +175,13 @@ def account_activity_report(request: Request, start_date: str = None, end_date: 
                 fa.enabled,
                 fa.last_success,
                 fa.last_error,
-                EXTRACT(EPOCH FROM (NOW() - fa.last_heartbeat)) / 3600 as hours_since_heartbeat,
+                CASE
+                    WHEN fa.last_heartbeat IS NOT NULL THEN (julianday('now') - julianday(fa.last_heartbeat)) * 24
+                    ELSE NULL
+                END as hours_since_heartbeat,
                 COUNT(e.id) as emails_synced_today
             FROM fetch_accounts fa
-            LEFT JOIN emails e ON e.source = fa.name AND DATE(e.created_at) = CURRENT_DATE
+            LEFT JOIN emails e ON e.source = fa.name AND DATE(e.created_at) = date('now')
             GROUP BY fa.id, fa.name, fa.account_type, fa.enabled, fa.last_success, fa.last_error, fa.last_heartbeat
             ORDER BY fa.name
         """).mappings().all()
@@ -189,12 +190,14 @@ def account_activity_report(request: Request, start_date: str = None, end_date: 
         for row in results:
             last_success = None
             if row["last_success"]:
-                last_success = convert_utc_to_user_timezone(row["last_success"], user_id).strftime(get_user_date_format(request))
+                # Parse SQLite datetime string back to datetime object
+                last_success_dt = datetime.fromisoformat(row["last_success"].replace('Z', '+00:00'))
+                last_success = convert_utc_to_user_timezone(last_success_dt, user_id).strftime(get_user_date_format(request))
 
             accounts.append({
                 "name": row["name"],
                 "type": row["account_type"],
-                "enabled": row["enabled"],
+                "enabled": bool(row["enabled"]),  # Convert SQLite integer to boolean
                 "last_success": last_success,
                 "last_error": row["last_error"],
                 "hours_since_heartbeat": round(row["hours_since_heartbeat"] or 0, 1),
@@ -218,7 +221,9 @@ def account_activity_report(request: Request, start_date: str = None, end_date: 
         trend_data = defaultdict(lambda: defaultdict(int))
 
         for row in trend_results:
-            date_str = convert_utc_to_user_timezone(row["sync_date"], user_id).strftime(date_format)
+            # Parse SQLite date string back to date object
+            sync_date = datetime.strptime(row["sync_date"], "%Y-%m-%d").date()
+            date_str = convert_utc_to_user_timezone(sync_date, user_id).strftime(date_format)
             source = row["source"]
             sources.add(source)
             trend_data[date_str][source] = row["email_count"]
@@ -280,7 +285,7 @@ def user_activity_report(request: Request, days: int = 30):
                 u.created_at,
                 COUNT(l.id) as login_count_today
             FROM users u
-            LEFT JOIN logs l ON l.source = 'Auth' AND l.message LIKE '%' || u.username || '%' AND DATE(l.timestamp) = CURRENT_DATE
+            LEFT JOIN logs l ON l.source = 'Auth' AND l.message LIKE '%' || u.username || '%' AND DATE(l.timestamp) = date('now')
             GROUP BY u.id, u.username, u.role, u.last_login, u.created_at
             ORDER BY u.username
         """).mappings().all()
@@ -309,7 +314,7 @@ def user_activity_report(request: Request, days: int = 30):
                 DATE(created_at) as creation_date,
                 COUNT(*) as user_count
             FROM users
-            WHERE created_at >= NOW() - make_interval(days => :days)
+            WHERE created_at >= datetime('now', '-' || :days || ' days')
             GROUP BY DATE(created_at)
             ORDER BY creation_date
         """, {"days": days}).mappings().all()
@@ -356,12 +361,9 @@ def system_health_report(request: Request, start_date: str = None, end_date: str
         user_id = request.session.get("user_id")
         date_format = get_user_date_format(request, date_only=True)
 
-        # Database growth over time (simplified - would need historical data for accurate growth)
-        db_size_results = query("""
-            SELECT
-                pg_size_pretty(pg_database_size(current_database())) as current_size,
-                pg_database_size(current_database()) as current_size_bytes
-        """).mappings().first()
+        # Database growth over time (simplified - SQLite doesn't have pg_database_size)
+        # For SQLite, we'll return a placeholder
+        db_size_results = {"current_size": "SQLite database", "current_size_bytes": 0}
 
         # Error trends
         error_results = query("""
@@ -389,7 +391,7 @@ def system_health_report(request: Request, start_date: str = None, end_date: str
                 COUNT(*) as total_accounts,
                 COUNT(CASE WHEN enabled THEN 1 END) as enabled_accounts,
                 COUNT(CASE WHEN last_error IS NOT NULL THEN 1 END) as accounts_with_errors,
-                AVG(EXTRACT(EPOCH FROM (NOW() - last_heartbeat))) / 3600 as avg_hours_since_heartbeat
+                AVG((julianday('now') - julianday(last_heartbeat)) * 24) as avg_hours_since_heartbeat
             FROM fetch_accounts
         """).mappings().first()
 
@@ -444,9 +446,9 @@ def av_stats_report(request: Request, start_date: str = None, end_date: str = No
         av_results = query(f"""
             SELECT
                 {group_by} as period_start,
-                COUNT(CASE WHEN virus_detected = 0 THEN 1 END) as clean_count,
-                COUNT(CASE WHEN virus_detected = 1 AND quarantined = 1 THEN 1 END) as quarantined_count,
-                COUNT(CASE WHEN virus_detected = 1 AND quarantined = 0 THEN 1 END) as rejected_count
+                COUNT(CASE WHEN NOT virus_detected THEN 1 END) as clean_count,
+                COUNT(CASE WHEN virus_detected AND quarantined THEN 1 END) as quarantined_count,
+                COUNT(CASE WHEN virus_detected AND NOT quarantined THEN 1 END) as rejected_count
             FROM emails
             WHERE created_at >= :start_date AND created_at <= :end_date
             GROUP BY {group_by}
@@ -456,9 +458,9 @@ def av_stats_report(request: Request, start_date: str = None, end_date: str = No
         # Get total counts for the period
         total_results = query("""
             SELECT
-                COUNT(CASE WHEN virus_detected = 0 THEN 1 END) as total_clean,
-                COUNT(CASE WHEN virus_detected = 1 AND quarantined = 1 THEN 1 END) as total_quarantined,
-                COUNT(CASE WHEN virus_detected = 1 AND quarantined = 0 THEN 1 END) as total_rejected
+                COUNT(CASE WHEN NOT virus_detected THEN 1 END) as total_clean,
+                COUNT(CASE WHEN virus_detected AND quarantined THEN 1 END) as total_quarantined,
+                COUNT(CASE WHEN virus_detected AND NOT quarantined THEN 1 END) as total_rejected
             FROM emails
             WHERE created_at >= :start_date AND created_at <= :end_date
         """, {"start_date": start_dt, "end_date": end_dt}).mappings().first()
@@ -470,16 +472,22 @@ def av_stats_report(request: Request, start_date: str = None, end_date: str = No
 
         for row in av_results:
             if row["period_start"]:
-                # Handle timezone conversion for None user_id
-                if user_id:
-                    local_dt = convert_utc_to_user_timezone(row["period_start"], user_id)
-                else:
-                    # Use default timezone for testing
-                    from utils.timezone import convert_utc_to_timezone
-                    local_dt = convert_utc_to_timezone(row["period_start"], "Australia/Melbourne")
-                
-                # For now, just use the date string directly
-                labels.append(str(row["period_start"]))
+                # Convert string date back to datetime for timezone conversion
+                try:
+                    period_dt = datetime.strptime(str(row["period_start"]), "%Y-%m-%d").date()
+                    # Handle timezone conversion for authenticated user
+                    if user_id:
+                        local_dt = convert_utc_to_user_timezone(period_dt, user_id)
+                    else:
+                        # Use default timezone for testing
+                        from utils.timezone import convert_utc_to_timezone
+                        local_dt = convert_utc_to_timezone(period_dt, "Australia/Melbourne")
+                    
+                    # Format the date according to user preferences
+                    labels.append(local_dt.strftime(date_format))
+                except (ValueError, TypeError):
+                    # Fallback to string representation if conversion fails
+                    labels.append(str(row["period_start"]))
             clean_counts.append(row["clean_count"])
             quarantined_counts.append(row["quarantined_count"])
             rejected_counts.append(row["rejected_count"])
