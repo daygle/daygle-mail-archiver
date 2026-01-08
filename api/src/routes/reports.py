@@ -95,10 +95,12 @@ def email_volume_report(request: Request, start_date: str = None, end_date: str 
         if days_diff <= 7:
             period = "daily"
             group_by = "DATE(created_at)"
+        elif days_diff <= 90:
+            period = "weekly"
+            group_by = "DATE_TRUNC('week', created_at)"
         else:
-            # For longer periods, still use daily grouping to avoid SQLite date function complexity
-            period = "daily"
-            group_by = "DATE(created_at)"
+            period = "monthly"
+            group_by = "DATE_TRUNC('month', created_at)"
 
         results = query(f"""
             SELECT
@@ -176,12 +178,12 @@ def account_activity_report(request: Request, start_date: str = None, end_date: 
                 fa.last_success,
                 fa.last_error,
                 CASE
-                    WHEN fa.last_heartbeat IS NOT NULL THEN (julianday('now') - julianday(fa.last_heartbeat)) * 24
+                    WHEN fa.last_heartbeat IS NOT NULL THEN EXTRACT(EPOCH FROM (NOW() - fa.last_heartbeat)) / 3600
                     ELSE NULL
                 END as hours_since_heartbeat,
                 COUNT(e.id) as emails_synced_today
             FROM fetch_accounts fa
-            LEFT JOIN emails e ON e.source = fa.name AND DATE(e.created_at) = date('now')
+            LEFT JOIN emails e ON e.source = fa.name AND DATE(e.created_at) = CURRENT_DATE
             GROUP BY fa.id, fa.name, fa.account_type, fa.enabled, fa.last_success, fa.last_error, fa.last_heartbeat
             ORDER BY fa.name
         """).mappings().all()
@@ -285,7 +287,7 @@ def user_activity_report(request: Request, days: int = 30):
                 u.created_at,
                 COUNT(l.id) as login_count_today
             FROM users u
-            LEFT JOIN logs l ON l.source = 'Auth' AND l.message LIKE '%' || u.username || '%' AND DATE(l.timestamp) = date('now')
+            LEFT JOIN logs l ON l.source = 'Auth' AND l.message LIKE '%' || u.username || '%' AND DATE(l.timestamp) = CURRENT_DATE
             GROUP BY u.id, u.username, u.role, u.last_login, u.created_at
             ORDER BY u.username
         """).mappings().all()
@@ -314,7 +316,7 @@ def user_activity_report(request: Request, days: int = 30):
                 DATE(created_at) as creation_date,
                 COUNT(*) as user_count
             FROM users
-            WHERE created_at >= datetime('now', '-' || :days || ' days')
+            WHERE created_at >= NOW() - INTERVAL '1 day' * :days
             GROUP BY DATE(created_at)
             ORDER BY creation_date
         """, {"days": days}).mappings().all()
@@ -361,9 +363,12 @@ def system_health_report(request: Request, start_date: str = None, end_date: str
         user_id = request.session.get("user_id")
         date_format = get_user_date_format(request, date_only=True)
 
-        # Database growth over time (simplified - SQLite doesn't have pg_database_size)
-        # For SQLite, we'll return a placeholder
-        db_size_results = {"current_size": "SQLite database", "current_size_bytes": 0}
+        # Database growth over time (simplified - would need historical data for accurate growth)
+        db_size_results = query("""
+            SELECT
+                pg_size_pretty(pg_database_size(current_database())) as current_size,
+                pg_database_size(current_database()) as current_size_bytes
+        """).mappings().first()
 
         # Error trends
         error_results = query("""
@@ -391,7 +396,7 @@ def system_health_report(request: Request, start_date: str = None, end_date: str
                 COUNT(*) as total_accounts,
                 COUNT(CASE WHEN enabled THEN 1 END) as enabled_accounts,
                 COUNT(CASE WHEN last_error IS NOT NULL THEN 1 END) as accounts_with_errors,
-                AVG((julianday('now') - julianday(last_heartbeat)) * 24) as avg_hours_since_heartbeat
+                AVG(EXTRACT(EPOCH FROM (NOW() - last_heartbeat)) / 3600) as avg_hours_since_heartbeat
             FROM fetch_accounts
         """).mappings().first()
 
@@ -447,8 +452,8 @@ def av_stats_report(request: Request, start_date: str = None, end_date: str = No
             SELECT
                 {group_by} as period_start,
                 COUNT(CASE WHEN NOT virus_detected THEN 1 END) as clean_count,
-                COUNT(CASE WHEN virus_detected AND quarantined THEN 1 END) as quarantined_count,
-                COUNT(CASE WHEN virus_detected AND NOT quarantined THEN 1 END) as rejected_count
+                COUNT(CASE WHEN virus_detected THEN 1 END) as quarantined_count,
+                0 as rejected_count
             FROM emails
             WHERE created_at >= :start_date AND created_at <= :end_date
             GROUP BY {group_by}
@@ -459,8 +464,8 @@ def av_stats_report(request: Request, start_date: str = None, end_date: str = No
         total_results = query("""
             SELECT
                 COUNT(CASE WHEN NOT virus_detected THEN 1 END) as total_clean,
-                COUNT(CASE WHEN virus_detected AND quarantined THEN 1 END) as total_quarantined,
-                COUNT(CASE WHEN virus_detected AND NOT quarantined THEN 1 END) as total_rejected
+                COUNT(CASE WHEN virus_detected THEN 1 END) as total_quarantined,
+                0 as total_rejected
             FROM emails
             WHERE created_at >= :start_date AND created_at <= :end_date
         """, {"start_date": start_dt, "end_date": end_dt}).mappings().first()
