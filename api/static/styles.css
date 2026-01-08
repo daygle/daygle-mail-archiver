@@ -1001,23 +1001,28 @@ textarea.form-control {
 
 /* Theme Toggle */
 .theme-toggle {
-    background: transparent;
-    border: none;
-    color: var(--text-primary);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    border-radius: 50%;
     cursor: pointer;
-    padding: 8px;
-    border-radius: var(--radius-md);
-    transition: background-color var(--transition-fast);
-    font-size: 1.25rem;
-}
-
-.theme-toggle:hover {
-    background: var(--bg-hover);
+    transition: all var(--transition-fast);
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 1rem;
+    margin-right: 12px;
 }
 
 .theme-toggle:hover {
     background: var(--bg-hover);
     border-color: var(--border-hover);
+    color: var(--text-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 /* Alerts Menu */
@@ -2797,6 +2802,22 @@ a:hover {
 }
 
 .worker-legend .legend-grid div {
+    color: var(--text-secondary);
+}
+
+/* Card body text - ensure theme friendly colors for paragraphs, small text, and helper descriptions */
+.card-body,
+.card-body p,
+.card-body ul,
+.card-body ol,
+.card-body li {
+    color: var(--text-primary);
+}
+
+.card-body .section-description,
+.card-body .form-text,
+.card-body small,
+.card-body .text-muted {
     color: var(--text-secondary);
 }
 
