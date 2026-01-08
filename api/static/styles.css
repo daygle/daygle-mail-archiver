@@ -2655,6 +2655,13 @@ a:hover {
     height: 8px;
     border-radius: 50%;
     margin-right: 0.5rem;
+    box-shadow: none; /* remove inset ring so dot is solid */
+    border: 1px solid rgba(0,0,0,0.06); /* subtle border for contrast on light theme */
+}
+
+/* Dark theme: subtle light border so the dot stands out */
+[data-theme="dark"] .status-indicator {
+    border: 1px solid rgba(255,255,255,0.06);
 }
 
 .status-online { background-color: var(--success); }
