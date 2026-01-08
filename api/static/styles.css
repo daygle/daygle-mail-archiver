@@ -2387,18 +2387,15 @@ a:hover {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-lg);
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
+    display: none; /* Hidden by default */
+    transform: translateY(0);
     transition: all var(--transition-fast);
-    z-index: 2000; /* Increased z-index */
+    z-index: 10000; /* Increased z-index to be above modals */
     margin-top: 8px;
 }
 
-.user-menu .dropdown-menu.show {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
+#userMenuDropdown.show {
+    display: block !important; /* Show when has show class */
 }
 
 .dropdown-item {

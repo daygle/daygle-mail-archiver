@@ -270,14 +270,23 @@
         if (userMenuButton && userMenu && userMenuDropdown) {
             userMenuButton.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const isShown = userMenuDropdown.classList.toggle('show');
-                userMenu.classList.toggle('show', isShown);
+                e.preventDefault(); // Prevent any default behavior
+                const isShown = userMenuDropdown.classList.contains('show');
+                if (isShown) {
+                    userMenuDropdown.classList.remove('show');
+                    userMenu.classList.remove('show');
+                } else {
+                    userMenuDropdown.classList.add('show');
+                    userMenu.classList.add('show');
+                }
             });
 
             // Close dropdown when clicking outside
-            document.addEventListener('click', () => {
-                userMenuDropdown.classList.remove('show');
-                userMenu.classList.remove('show');
+            document.addEventListener('click', (e) => {
+                if (!userMenu.contains(e.target)) {
+                    userMenuDropdown.classList.remove('show');
+                    userMenu.classList.remove('show');
+                }
             });
         }
 
