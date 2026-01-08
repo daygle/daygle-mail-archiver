@@ -936,20 +936,23 @@ const DashboardManager = {
     },
 
     async saveWidgetSettingsToPreferences() {
-        // Create and submit a form to save widget settings
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/api/dashboard/widget-settings';
-        form.style.display = 'none';
-
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'settings';
-        input.value = JSON.stringify(this.widgetSettings);
-        form.appendChild(input);
-
-        document.body.appendChild(form);
-        form.submit();
+        try {
+            const response = await fetch('/api/dashboard/widget-settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ settings: this.widgetSettings }),
+            });
+            if (response.ok) {
+                this.showFlashMessage('Widget settings saved successfully!', 'success');
+            } else {
+                this.showFlashMessage('Failed to save widget settings', 'error');
+            }
+        } catch (error) {
+            console.error('Error saving widget settings:', error);
+            this.showFlashMessage('Failed to save widget settings', 'error');
+        }
     },
 
     async loadWidgetSettingsFromPreferences() {

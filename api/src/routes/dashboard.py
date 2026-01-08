@@ -776,11 +776,9 @@ async def save_widget_settings(request: Request):
         
         username = request.session.get("username", "unknown")
         log("info", "Dashboard", f"User '{username}' saved widget settings", "")
-        flash(request, "Widget settings saved successfully!")
-        return RedirectResponse("/dashboard", status_code=303)
+        return JSONResponse({"message": "Widget settings saved successfully!"})
     except Exception as e:
         username = request.session.get("username", "unknown")
         log("error", "Dashboard", f"Failed to save widget settings for user '{username}': {str(e)}", "")
-        flash(request, "Failed to save widget settings")
-        return RedirectResponse("/dashboard", status_code=303)
+        return JSONResponse({"error": "Failed to save widget settings"}, status_code=500)
 
