@@ -2333,13 +2333,19 @@ a:hover {
     align-items: center;
     gap: 8px;
     padding: 8px 12px;
-    border-radius: var(--radius-md);
+    border-radius: 50px;
     color: var(--text-secondary);
     text-decoration: none;
     transition: all var(--transition-fast);
-    border: none;
-    background: none;
+    border: 1px solid var(--border-color);
+    background: var(--bg-primary);
     cursor: pointer;
+}
+
+.user-menu-button:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-hover);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .user-menu-button:hover .fa-chevron-down {
@@ -2350,7 +2356,7 @@ a:hover {
     transition: transform var(--transition-fast);
 }
 
-.user-menu .dropdown-menu.show ~ .user-menu-button .fa-chevron-down {
+.user-menu.show .user-menu-button .fa-chevron-down {
     transform: rotate(180deg);
 }
 
@@ -2389,7 +2395,7 @@ a:hover {
     margin-top: 8px;
 }
 
-.dropdown-menu.show {
+.user-menu .dropdown-menu.show {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
