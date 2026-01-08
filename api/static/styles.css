@@ -2383,11 +2383,11 @@ a:hover {
     top: 100%;
     right: 0;
     min-width: 200px;
-    background-color: var(--bg-primary);
-    border: 1px solid var(--border-color);
+    background-color: red; /* Temporarily red for visibility */
+    border: 2px solid blue; /* Temporarily blue border */
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-lg);
-    display: none; /* Hidden by default */
+    display: block; /* Temporarily visible for debugging */
     transform: translateY(0);
     transition: all var(--transition-fast);
     z-index: 10000; /* Increased z-index to be above modals */
