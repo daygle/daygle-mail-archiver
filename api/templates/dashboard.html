@@ -1161,6 +1161,10 @@ const DashboardManager = {
             }
             
             const data = await response.json();
+            if (!data) {
+                console.warn('Update check returned no data');
+                return;
+            }
             
             const banner = document.getElementById('system-update-banner');
             const detailsEl = document.getElementById('update-details');

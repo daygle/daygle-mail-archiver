@@ -635,13 +635,20 @@ def check_updates(request: Request, force: bool = False):
                     last_check = datetime.fromisoformat(last_check_row['value'])
                     now = datetime.now(timezone.utc)
                     if (now - last_check) <= timedelta(seconds=CACHE_TTL_SECONDS):
-                        # Return cached result
+                        # Return cached result if it's a valid JSON object/dict
                         try:
                             cached = json.loads(last_result_row['value'])
+                            # Treat non-dict cache entries (e.g., JSON null) as a cache miss
+                            if not isinstance(cached, dict):
+                                raise ValueError("Cached update result invalid")
                             cached['_cached'] = True
                             cached['_cached_at'] = last_check_row['value']
+                            # Ensure required keys exist
+                            if 'updates_available' not in cached:
+                                raise ValueError("Cached update result missing required keys")
                             return cached
                         except Exception:
+                            # Parsing failed or cache invalid - ignore and perform fresh check
                             pass
             except Exception:
                 # If cache reading fails, proceed to perform check
@@ -666,8 +673,10 @@ def check_updates(request: Request, force: bool = False):
         if update_info.get("error") and not update_info.get("unavailable"):
             username = getattr(request, "session", {}).get("username", "unknown")
             log("warning", "Dashboard", f"Update check failed for user '{username}': {update_info['error']}", "")
-        
             return update_info
+
+        # Return the update information in all non-error cases
+        return update_info
     except Exception as e:
         username = getattr(request, "session", {}).get("username", "unknown")
         log("error", "Dashboard", f"Failed to check for updates for user '{username}': {str(e)}", "")

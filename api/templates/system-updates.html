@@ -20,12 +20,7 @@
             <div class="small text-secondary">Caching TTL: <strong>{{ settings.update_check_ttl or '600' }} seconds</strong></div>
         </div>
 
-        <div class="mb-3">
-            <button id="check-updates-btn" class="btn btn-primary">
-                <i class="fas fa-sync"></i>
-                <span>Check Now</span>
-            </button>
-        </div>
+
 
         <div id="update-result" style="display:none;">
             <div id="update-message" class="mb-2"></div>
@@ -36,11 +31,15 @@
             Automatic update checks are <strong>disabled</strong> by the administrator. Enable "Automatic Update Checks" in Global Settings to allow this feature.
         </div>
     </div>
-    <div class="card-footer form-actions">
+    <div class="card-footer d-flex">
         <a href="/global-settings" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i>
-            <span>Back to Global Settings</span>
+            <i class="fas fa-times"></i>
+            <span>Cancel</span>
         </a>
+        <button id="check-updates-btn" class="btn btn-primary ms-auto">
+            <i class="fas fa-sync"></i>
+            <span>Check Now</span>
+        </button>
     </div>
 </div>
 
@@ -70,6 +69,13 @@ document.getElementById('check-updates-btn').addEventListener('click', async fun
         }
 
         const data = await resp.json();
+        if (!data) {
+            statusEl.textContent = 'Error';
+            messageEl.textContent = 'Empty response from update check';
+            resultEl.style.display = 'block';
+            btn.disabled = false;
+            return;
+        }
         // If we received a timestamp for the manual check, update the status badge on the page
         try {
             if (data && data.current_commit !== undefined) {

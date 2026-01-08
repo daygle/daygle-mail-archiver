@@ -336,7 +336,7 @@
                         return r.json();
                     })
                     .then(data => {
-                        if (data.latest_commit) {
+                        if (data && data.latest_commit) {
                             localStorage.setItem('dismissedUpdate', data.latest_commit);
                         }
                     })
@@ -360,6 +360,10 @@
                 }
                 
                 const data = await response.json();
+                if (!data) {
+                    console.warn('Update check returned no data');
+                    return;
+                }
                 
                 const banner = document.getElementById('global-update-banner');
                 const detailsEl = document.getElementById('global-update-details');
