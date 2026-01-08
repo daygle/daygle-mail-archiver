@@ -68,8 +68,12 @@ def convert_utc_to_timezone(utc_datetime, target_timezone: str):
         utc_datetime = pytz.utc.localize(utc_datetime)
     
     # Convert to target timezone
-    tz = pytz.timezone(target_timezone)
-    return utc_datetime.astimezone(tz)
+    try:
+        tz = pytz.timezone(target_timezone)
+        return utc_datetime.astimezone(tz)
+    except Exception:
+        # If invalid timezone, fall back to UTC
+        return utc_datetime
 
 
 def convert_utc_to_user_timezone(utc_datetime, user_id: int):

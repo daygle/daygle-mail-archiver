@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from collections import defaultdict
 from typing import List, Dict, Any
@@ -412,7 +412,7 @@ def get_dashboard_preferences(request: Request):
 
 
 @router.post("/api/dashboard/preferences")
-async def save_dashboard_preferences(request: Request, layout: DashboardLayout):
+async def save_dashboard_preferences(request: Request, widgets: str = Form(...)):
     """Save user's dashboard widget preferences"""
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
@@ -420,6 +420,11 @@ async def save_dashboard_preferences(request: Request, layout: DashboardLayout):
     user_id = request.session.get("user_id")
 
     try:
+        import json
+        widgets_data = json.loads(widgets)
+        
+        # Validate with Pydantic
+        layout = DashboardLayout(widgets=widgets_data)
         # Delete existing preferences
         query("""
             DELETE FROM dashboard_preferences
