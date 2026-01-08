@@ -76,25 +76,30 @@ def convert_utc_to_timezone(utc_datetime, target_timezone: str):
         return utc_datetime
 
 
-def convert_utc_to_user_timezone(utc_datetime, user_id: int):
+def convert_utc_to_user_timezone(utc_datetime, user_id):
     """
     Convert a UTC datetime to the user's preferred timezone.
     
     Args:
         utc_datetime: A datetime object (can be timezone-aware or naive)
-        user_id: The ID of the user
+        user_id: The ID of the user (can be None for default timezone)
         
     Returns:
-        Datetime object converted to user's timezone
+        Datetime object converted to user's timezone (or default timezone if user_id is None)
     """
     if utc_datetime is None:
         return None
     
-    user_tz = get_user_timezone(user_id)
+    if user_id is not None:
+        user_tz = get_user_timezone(user_id)
+    else:
+        # Use default timezone when no user_id provided
+        user_tz = get_global_timezone()
+    
     return convert_utc_to_timezone(utc_datetime, user_tz)
 
 
-def format_datetime(utc_datetime, user_id: int, date_format: str = None, time_format: str = None):
+def format_datetime(utc_datetime, user_id, date_format: str = None, time_format: str = None):
     """
     Convert a UTC datetime to user's timezone and format it according to user's preference.
     
