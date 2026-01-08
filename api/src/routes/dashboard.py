@@ -772,7 +772,7 @@ def get_system_uptime(request: Request):
                 if minutes > 0 and days == 0:
                     uptime_parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
 
-                uptime_str = ", ".join(uptime_parts) if uptime_parts else "Less than 1 minute"
+                uptime_str = ", ".join(uptime_parts) if uptime_parts else "< 1 minute"
         except (FileNotFoundError, subprocess.TimeoutExpired, subprocess.SubprocessError, ValueError):
             try:
                 # Method 2: Fallback to ps command
@@ -794,7 +794,7 @@ def get_system_uptime(request: Request):
                         if minutes > 0 and days == 0:
                             uptime_parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
 
-                        uptime_str = ", ".join(uptime_parts) if uptime_parts else "Less than 1 minute"
+                        uptime_str = ", ".join(uptime_parts) if uptime_parts else "< 1 minute"
             except (FileNotFoundError, subprocess.TimeoutExpired, subprocess.SubprocessError, ValueError):
                 pass
 

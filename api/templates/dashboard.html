@@ -1595,7 +1595,10 @@ For more options, run: ./update.sh --help`;
             const response = await fetch('/api/dashboard/system-uptime');
             const data = await response.json();
             const el = document.getElementById('stat-system-uptime');
-            if (el) el.textContent = data.uptime;
+            // Normalize very small uptimes to a compact form for UI
+            let uptime = data.uptime || '';
+            if (uptime === 'Less than 1 minute') uptime = '< 1 minute';
+            if (el) el.textContent = uptime;
         } catch (error) {
             console.error('Error loading system uptime:', error);
         }
