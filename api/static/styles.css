@@ -1605,8 +1605,7 @@ textarea.form-control {
     }
 }
 
-/* Inline critical helpers for auth/setup FOUC reduction */
-.auth-card, .auth-container { visibility: hidden; }
+/* Auth reveal animation (applied after styles load) */
 .auth-card.visible, .auth-container.visible { visibility: visible; animation: fadeIn 0.25s ease-out; }
 
 @keyframes fadeIn {
