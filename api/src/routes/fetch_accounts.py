@@ -364,7 +364,7 @@ def test_account_connection(request: Request, id: int):
                         conn.starttls()
                     conn.login(acc["username"], password)
                 
-                flash(request, f"✓ IMAP connection successful to {acc['host']}")
+                flash(request, f"IMAP connection successful to {acc['host']}")
             finally:
                 if conn:
                     try:
@@ -390,7 +390,7 @@ def test_account_connection(request: Request, id: int):
                 )
                 if response.status_code == 200:
                     email = response.json().get("emailAddress", "unknown")
-                    flash(request, f"✓ Gmail API connection successful ({email})")
+                    flash(request, f"Gmail API connection successful ({email})")
                 else:
                     flash(request, f"✗ Gmail API connection failed: {response.status_code}")
                     
@@ -413,7 +413,7 @@ def test_account_connection(request: Request, id: int):
                 if response.status_code == 200:
                     user = response.json()
                     email = user.get("mail") or user.get("userPrincipalName", "unknown")
-                    flash(request, f"✓ Office 365 API connection successful ({email})")
+                    flash(request, f"Office 365 API connection successful ({email})")
                 else:
                     flash(request, f"✗ Office 365 API connection failed: {response.status_code}")
         else:
