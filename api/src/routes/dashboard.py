@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from collections import defaultdict
-from typing import List, Dict, Any
+from typing import List, Dict
 from pydantic import BaseModel
 
 from utils.db import query
@@ -71,25 +71,6 @@ def get_user_date_format(request: Request, date_only: bool = False) -> str:
             pass
     
     return f"{date_format} {time_format}"
-
-
-def format_user_datetime(request: Request, dt, date_only: bool = False):
-    """Format a datetime in user's timezone and preferred format"""
-    if dt is None:
-        return None
-    
-    user_id = request.session.get("user_id")
-    if not user_id:
-        return dt
-    
-    # Convert to user's timezone
-    local_dt = convert_utc_to_user_timezone(dt, user_id)
-    
-    # Get format string
-    format_str = get_user_date_format(request, date_only)
-    
-    # Return formatted datetime
-    return local_dt.strftime(format_str)
 
 
 @router.get("/dashboard", response_class=HTMLResponse)
@@ -219,47 +200,6 @@ def top_receivers(request: Request):
     except Exception as e:
         username = request.session.get("username", "unknown")
         log("error", "Dashboard", f"Failed to fetch top receivers for user '{username}': {str(e)}", "")
-        return JSONResponse({"error": "Failed to load data"}, status_code=500)
-
-
-@router.get("/api/dashboard/total-emails")
-def total_emails(request: Request):
-    """Get total number of emails"""
-    if not require_login(request):
-        return JSONResponse({"error": "Unauthorized"}, status_code=401)
-
-    try:
-        results = query("SELECT COUNT(*) as count FROM emails").mappings().first()
-        
-        return {
-            "total": results["count"] if results else 0
-        }
-    except Exception as e:
-        username = request.session.get("username", "unknown")
-        log("error", "Dashboard", f"Failed to fetch total emails for user '{username}': {str(e)}", "")
-        return JSONResponse({"error": "Failed to load data"}, status_code=500)
-
-
-@router.get("/api/database-size")
-def database_size(request: Request):
-    """Get database size"""
-    if not require_login(request):
-        return JSONResponse({"error": "Unauthorized"}, status_code=401)
-
-    try:
-        results = query("""
-            SELECT 
-                pg_size_pretty(pg_database_size(current_database())) as size,
-                pg_database_size(current_database()) as size_bytes
-        """).mappings().first()
-        
-        return {
-            "size": results["size"] if results else "0 bytes",
-            "size_bytes": results["size_bytes"] if results else 0
-        }
-    except Exception as e:
-        username = request.session.get("username", "unknown")
-        log("error", "Dashboard", f"Failed to fetch database size for user '{username}': {str(e)}", "")
         return JSONResponse({"error": "Failed to load data"}, status_code=500)
 
 

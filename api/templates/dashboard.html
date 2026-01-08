@@ -3,9 +3,9 @@
 {% block page_title %}Dashboard{% endblock %}
 
 {% block extra_css %}
-<!-- GridStack CSS (Local) -->
-<link rel="stylesheet" href="/static/vendor/gridstack.min.css" />
-<link rel="stylesheet" href="/static/vendor/gridstack-extra.min.css" />
+<!-- GridStack CSS (CDN) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@10.2.0/dist/gridstack.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@10.2.0/dist/gridstack-extra.min.css" />
 <style>
 @keyframes slideIn {
     from {
@@ -506,13 +506,8 @@
     </div>
 </div>
 
-<!-- GridStack JS (Local) -->
-<script>
-console.log('Loading GridStack from local files...');
-</script>
-<script src="/static/vendor/gridstack-all.js" 
-        onload="console.log('GridStack loaded successfully');" 
-        onerror="console.error('Failed to load local GridStack library')"></script>
+<!-- GridStack JS (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/gridstack@10.2.0/dist/gridstack-all.js"></script>
 
 <!-- Chart.js (Local) -->
 <script src="/static/vendor/chart.min.js"></script>
