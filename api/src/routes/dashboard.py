@@ -806,28 +806,55 @@ def get_system_uptime(request: Request):
         system = platform.system().lower()
 
         if system == "windows":
-            # Use Python's psutil library if available, otherwise fallback to systeminfo
+            # Try multiple methods to get uptime on Windows
+            uptime_str = "Unknown"
             try:
-                import psutil
-                boot_time = psutil.boot_time()
-                uptime_seconds = datetime.datetime.now().timestamp() - boot_time
-                uptime = datetime.timedelta(seconds=int(uptime_seconds))
-            except ImportError:
-                # Fallback to systeminfo command
+                # Method 1: Try PowerShell
+                ps_command = "(Get-Date) - (Get-CimInstance -ClassName Win32_OperatingSystem).LastBootUpTime"
+                result = subprocess.run(['powershell.exe', '-Command', ps_command], capture_output=True, text=True, timeout=10)
+                if result.returncode == 0:
+                    output = result.stdout.strip()
+                    lines = output.split('\n')
+                    uptime_info = {}
+                    for line in lines:
+                        if ':' in line and line.strip():
+                            key, value = line.split(':', 1)
+                            key = key.strip()
+                            value = value.strip()
+                            if key in ['Days', 'Hours', 'Minutes']:
+                                try:
+                                    uptime_info[key.lower()] = int(float(value))
+                                except ValueError:
+                                    uptime_info[key.lower()] = 0
+
+                    # Build uptime string
+                    uptime_parts = []
+                    if uptime_info.get('days', 0) > 0:
+                        days = uptime_info['days']
+                        uptime_parts.append(f"{days} day{'s' if days != 1 else ''}")
+                    if uptime_info.get('hours', 0) > 0:
+                        hours = uptime_info['hours']
+                        uptime_parts.append(f"{hours} hour{'s' if hours != 1 else ''}")
+                    if uptime_info.get('minutes', 0) > 0 and uptime_info.get('days', 0) == 0:
+                        minutes = uptime_info['minutes']
+                        uptime_parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
+
+                    uptime_str = ", ".join(uptime_parts) if uptime_parts else "Less than 1 minute"
+            except:
                 try:
+                    # Method 2: Try systeminfo
                     result = subprocess.run(['systeminfo'], capture_output=True, text=True, timeout=30)
                     if result.returncode == 0:
                         lines = result.stdout.split('\n')
                         for line in lines:
-                            if 'System Boot Time' in line:
+                            if 'System Boot Time' in line or 'System Up Time' in line:
                                 time_str = line.split(':', 1)[1].strip()
-                                # Try different date formats
-                                for fmt in ['%m/%d/%Y, %I:%M:%S %p', '%d/%m/%Y, %I:%M:%S %p', '%Y-%m-%d %H:%M:%S']:
+                                # Try different date formats - try DD/MM/YYYY first for international format
+                                for fmt in ['%d/%m/%Y, %I:%M:%S %p', '%m/%d/%Y, %I:%M:%S %p', '%Y-%m-%d %H:%M:%S']:
                                     try:
                                         boot_time = datetime.datetime.strptime(time_str, fmt)
                                         now = datetime.datetime.now()
                                         if boot_time > now:
-                                            # Boot time is in future, might be date format issue
                                             uptime = datetime.timedelta(seconds=0)
                                         else:
                                             uptime = now - boot_time
@@ -839,10 +866,24 @@ def get_system_uptime(request: Request):
                                 break
                         else:
                             uptime = datetime.timedelta(seconds=0)
-                    else:
-                        uptime = datetime.timedelta(seconds=0)
-                except (subprocess.TimeoutExpired, subprocess.SubprocessError):
-                    uptime = datetime.timedelta(seconds=0)
+
+                        # Format uptime
+                        days = uptime.days
+                        hours, remainder = divmod(uptime.seconds, 3600)
+                        minutes, seconds = divmod(remainder, 60)
+
+                        uptime_parts = []
+                        if days > 0:
+                            uptime_parts.append(f"{days} day{'s' if days != 1 else ''}")
+                        if hours > 0:
+                            uptime_parts.append(f"{hours} hour{'s' if hours != 1 else ''}")
+                        if minutes > 0 and days == 0:
+                            uptime_parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
+
+                        uptime_str = ", ".join(uptime_parts) if uptime_parts else "Less than 1 minute"
+                except:
+                    # Method 3: Fallback - return a reasonable default
+                    uptime_str = "System uptime information unavailable"
         else:
             # Use uptime command on Linux/Unix systems
             result = subprocess.run(['uptime', '-p'], capture_output=True, text=True)
@@ -851,28 +892,8 @@ def get_system_uptime(request: Request):
                 # Remove "up " prefix if present
                 if uptime_str.startswith('up '):
                     uptime_str = uptime_str[3:]
-                # For Linux, return the string as-is since it's already formatted nicely
-                return {"uptime": uptime_str}
             else:
-                uptime = datetime.timedelta(seconds=0)
-
-        # Format the uptime for Windows
-        if isinstance(uptime, datetime.timedelta):
-            days = uptime.days
-            hours, remainder = divmod(uptime.seconds, 3600)
-            minutes, seconds = divmod(remainder, 60)
-
-            uptime_parts = []
-            if days > 0:
-                uptime_parts.append(f"{days} day{'s' if days != 1 else ''}")
-            if hours > 0:
-                uptime_parts.append(f"{hours} hour{'s' if hours != 1 else ''}")
-            if minutes > 0 and days == 0:  # Only show minutes if less than a day
-                uptime_parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
-
-            uptime_str = ", ".join(uptime_parts) if uptime_parts else "Less than 1 minute"
-        else:
-            uptime_str = str(uptime)
+                uptime_str = "Unknown"
 
         return {"uptime": uptime_str}
     except Exception as e:
