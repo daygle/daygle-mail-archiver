@@ -391,12 +391,12 @@ async def save_dashboard_preferences(request: Request, widgets: str = Form(...))
                 "visible": widget.visible
             })
 
-        username = request.session.get("username", "unknown")
+        username = getattr(request, "session", {}).get("username", "unknown")
         log("info", "Dashboard", f"User '{username}' saved dashboard preferences", "")
         flash(request, "Dashboard layout saved successfully!")
         return RedirectResponse("/dashboard", status_code=303)
     except Exception as e:
-        username = request.session.get("username", "unknown")
+        username = getattr(request, "session", {}).get("username", "unknown")
         log("error", "Dashboard", f"Failed to save dashboard preferences for user '{username}': {str(e)}", "")
         flash(request, "Failed to save dashboard layout")
         return RedirectResponse("/dashboard", status_code=303)
@@ -422,7 +422,7 @@ def recent_activity(request: Request):
             LIMIT 10
         """).mappings().all()
 
-        user_id = request.session.get("user_id")
+        user_id = getattr(request, "session", {}).get("user_id")
         activities = []
         for row in results:
             date_str = ""
@@ -439,7 +439,7 @@ def recent_activity(request: Request):
 
         return {"activities": activities}
     except Exception as e:
-        username = request.session.get("username", "unknown")
+        username = getattr(request, "session", {}).get("username", "unknown")
         log("error", "Dashboard", f"Failed to fetch recent activity for user '{username}': {str(e)}", "")
         return JSONResponse({"error": "Failed to load data"}, status_code=500)
 
@@ -455,11 +455,11 @@ def storage_trends(request: Request, days: int = 7):
         original_days = days
         if days not in [7, 14, 30, 60, 90]:
             days = 7
-            username = request.session.get("username", "unknown")
+            username = getattr(request, "session", {}).get("username", "unknown")
             log("warning", "Dashboard", f"User '{username}' provided invalid days parameter for storage-trends: {original_days}, defaulting to 7", "")
             
         date_format = get_user_date_format(request, date_only=True)
-        user_id = request.session.get("user_id")
+        user_id = getattr(request, "session", {}).get("user_id")
         
         results = query("""
             SELECT 
@@ -486,7 +486,7 @@ def storage_trends(request: Request, days: int = 7):
             "sizes": [(row["total_size"] or 0) / (1024 * 1024) for row in results]  # Convert to MB
         }
     except Exception as e:
-        username = request.session.get("username", "unknown")
+        username = getattr(request, "session", {}).get("username", "unknown")
         log("error", "Dashboard", f"Failed to fetch storage trends for user '{username}': {str(e)}", "")
         return JSONResponse({"error": "Failed to load data"}, status_code=500)
 
@@ -499,7 +499,7 @@ def account_health(request: Request):
 
     try:
         date_format = get_user_date_format(request)
-        user_id = request.session.get("user_id")
+        user_id = getattr(request, "session", {}).get("user_id")
         
         results = query("""
             SELECT 
@@ -535,7 +535,7 @@ def account_health(request: Request):
 
         return {"accounts": accounts}
     except Exception as e:
-        username = request.session.get("username", "unknown")
+        username = getattr(request, "session", {}).get("username", "unknown")
         log("error", "Dashboard", f"Failed to fetch account health for user '{username}': {str(e)}", "")
         return JSONResponse({"error": "Failed to load data"}, status_code=500)
 
@@ -578,7 +578,7 @@ def system_status(request: Request):
             "pending_jobs": pending_jobs
         }
     except Exception as e:
-        username = request.session.get("username", "unknown")
+        username = getattr(request, "session", {}).get("username", "unknown")
         log("error", "Dashboard", f"Failed to fetch system status for user '{username}': {str(e)}", "")
         return JSONResponse({"error": "Failed to load data"}, status_code=500)
 
@@ -590,7 +590,7 @@ def check_updates(request: Request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
     
     # Only administrators can check for updates
-    if request.session.get("role") != "administrator":
+    if getattr(request, "session", {}).get("role") != "administrator":
         return JSONResponse({"error": "Forbidden - Administrator access required"}, status_code=403)
     
     try:
@@ -598,12 +598,12 @@ def check_updates(request: Request):
         
         # Only log actual errors, not when update checking is unavailable due to deployment method
         if update_info.get("error") and not update_info.get("unavailable"):
-            username = request.session.get("username", "unknown")
+            username = getattr(request, "session", {}).get("username", "unknown")
             log("warning", "Dashboard", f"Update check failed for user '{username}': {update_info['error']}", "")
         
         return update_info
     except Exception as e:
-        username = request.session.get("username", "unknown")
+        username = getattr(request, "session", {}).get("username", "unknown")
         log("error", "Dashboard", f"Failed to check for updates for user '{username}': {str(e)}", "")
         # Return a safe response even on error
         return {
@@ -662,7 +662,7 @@ def clamav_stats(request: Request):
             "clean": clean
         }
     except Exception as e:
-        username = request.session.get("username", "unknown")
+        username = getattr(request, "session", {}).get("username", "unknown")
         log("error", "Dashboard", f"Failed to fetch ClamAV stats for user '{username}': {str(e)}", "")
         return JSONResponse({"error": "Failed to load data"}, status_code=500)
 
@@ -683,7 +683,7 @@ def get_emails_last_7d(request: Request):
         count = result["count"] if result else 0
         return {"count": count}
     except Exception as e:
-        username = request.session.get("username", "unknown")
+        username = getattr(request, "session", {}).get("username", "unknown")
         log("error", "Dashboard", f"Failed to fetch emails last 7d for user '{username}': {str(e)}", "")
         return JSONResponse({"error": "Failed to load data"}, status_code=500)
 
@@ -704,7 +704,7 @@ def get_emails_last_30d(request: Request):
         count = result["count"] if result else 0
         return {"count": count}
     except Exception as e:
-        username = request.session.get("username", "unknown")
+        username = getattr(request, "session", {}).get("username", "unknown")
         log("error", "Dashboard", f"Failed to fetch emails last 30d for user '{username}': {str(e)}", "")
         return JSONResponse({"error": "Failed to load data"}, status_code=500)
 
@@ -731,7 +731,7 @@ def get_storage_used(request: Request):
 
         return {"size": size}
     except Exception as e:
-        username = request.session.get("username", "unknown")
+        username = getattr(request, "session", {}).get("username", "unknown")
         log("error", "Dashboard", f"Failed to fetch storage used for user '{username}': {str(e)}", "")
         return JSONResponse({"error": "Failed to load data"}, status_code=500)
 
@@ -743,93 +743,36 @@ def get_system_uptime(request: Request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
     try:
-        import platform
         import subprocess
-        import datetime
 
-        system = platform.system().lower()
+        # Try to get Docker container uptime first
+        uptime_str = "Unknown"
+        try:
+            # Method 1: Get container start time from ps
+            result = subprocess.run(['ps', '-o', 'etimes', '-p', '1', '--no-headers'], capture_output=True, text=True, timeout=5)
+            if result.returncode == 0:
+                etimes = result.stdout.strip()
+                if etimes.isdigit():
+                    seconds = int(etimes)
+                    # Format uptime
+                    days = seconds // 86400
+                    hours = (seconds % 86400) // 3600
+                    minutes = (seconds % 3600) // 60
 
-        if system == "windows":
-            # Try multiple methods to get uptime on Windows
-            uptime_str = "Unknown"
-            try:
-                # Method 1: Try PowerShell
-                ps_command = "(Get-Date) - (Get-CimInstance -ClassName Win32_OperatingSystem).LastBootUpTime"
-                result = subprocess.run(['powershell.exe', '-Command', ps_command], capture_output=True, text=True, timeout=10)
-                if result.returncode == 0:
-                    output = result.stdout.strip()
-                    lines = output.split('\n')
-                    uptime_info = {}
-                    for line in lines:
-                        if ':' in line and line.strip():
-                            key, value = line.split(':', 1)
-                            key = key.strip()
-                            value = value.strip()
-                            if key in ['Days', 'Hours', 'Minutes']:
-                                try:
-                                    uptime_info[key.lower()] = int(float(value))
-                                except ValueError:
-                                    uptime_info[key.lower()] = 0
-
-                    # Build uptime string
                     uptime_parts = []
-                    if uptime_info.get('days', 0) > 0:
-                        days = uptime_info['days']
+                    if days > 0:
                         uptime_parts.append(f"{days} day{'s' if days != 1 else ''}")
-                    if uptime_info.get('hours', 0) > 0:
-                        hours = uptime_info['hours']
+                    if hours > 0:
                         uptime_parts.append(f"{hours} hour{'s' if hours != 1 else ''}")
-                    if uptime_info.get('minutes', 0) > 0 and uptime_info.get('days', 0) == 0:
-                        minutes = uptime_info['minutes']
+                    if minutes > 0 and days == 0:
                         uptime_parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
 
                     uptime_str = ", ".join(uptime_parts) if uptime_parts else "Less than 1 minute"
-            except:
-                try:
-                    # Method 2: Try systeminfo
-                    result = subprocess.run(['systeminfo'], capture_output=True, text=True, timeout=30)
-                    if result.returncode == 0:
-                        lines = result.stdout.split('\n')
-                        for line in lines:
-                            if 'System Boot Time' in line or 'System Up Time' in line:
-                                time_str = line.split(':', 1)[1].strip()
-                                # Try different date formats - try DD/MM/YYYY first for international format
-                                for fmt in ['%d/%m/%Y, %I:%M:%S %p', '%m/%d/%Y, %I:%M:%S %p', '%Y-%m-%d %H:%M:%S']:
-                                    try:
-                                        boot_time = datetime.datetime.strptime(time_str, fmt)
-                                        now = datetime.datetime.now()
-                                        if boot_time > now:
-                                            uptime = datetime.timedelta(seconds=0)
-                                        else:
-                                            uptime = now - boot_time
-                                        break
-                                    except ValueError:
-                                        continue
-                                else:
-                                    uptime = datetime.timedelta(seconds=0)
-                                break
-                        else:
-                            uptime = datetime.timedelta(seconds=0)
+        except (FileNotFoundError, subprocess.TimeoutExpired, subprocess.SubprocessError, ValueError):
+            pass
 
-                        # Format uptime
-                        days = uptime.days
-                        hours, remainder = divmod(uptime.seconds, 3600)
-                        minutes, seconds = divmod(remainder, 60)
-
-                        uptime_parts = []
-                        if days > 0:
-                            uptime_parts.append(f"{days} day{'s' if days != 1 else ''}")
-                        if hours > 0:
-                            uptime_parts.append(f"{hours} hour{'s' if hours != 1 else ''}")
-                        if minutes > 0 and days == 0:
-                            uptime_parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
-
-                        uptime_str = ", ".join(uptime_parts) if uptime_parts else "Less than 1 minute"
-                except:
-                    # Method 3: Fallback - return a reasonable default
-                    uptime_str = "System uptime information unavailable"
-        else:
-            # Use uptime command on Linux/Unix systems
+        # If container uptime failed, try system uptime command
+        if uptime_str == "Unknown":
             try:
                 result = subprocess.run(['uptime', '-p'], capture_output=True, text=True, timeout=10)
                 if result.returncode == 0:
@@ -879,7 +822,7 @@ def get_widget_settings(request: Request):
                 }
             }
     except Exception as e:
-        username = request.session.get("username", "unknown")
+        username = getattr(request, "session", {}).get("username", "unknown")
         log("error", "Dashboard", f"Failed to fetch widget settings for user '{username}': {str(e)}", "")
         return JSONResponse({"error": "Failed to load data"}, status_code=500)
 
@@ -908,11 +851,11 @@ async def save_widget_settings(request: Request):
             DO UPDATE SET settings = CAST(:settings AS jsonb), updated_at = NOW()
         """, {"user_id": user_id, "settings": settings_json})
         
-        username = request.session.get("username", "unknown")
+        username = getattr(request, "session", {}).get("username", "unknown")
         log("info", "Dashboard", f"User '{username}' saved widget settings", "")
         return JSONResponse({"message": "Widget settings saved successfully!"})
     except Exception as e:
-        username = request.session.get("username", "unknown")
+        username = getattr(request, "session", {}).get("username", "unknown")
         log("error", "Dashboard", f"Failed to save widget settings for user '{username}': {str(e)}", "")
         return JSONResponse({"error": "Failed to save widget settings"}, status_code=500)
 

@@ -253,7 +253,10 @@
 </div>
 
 <!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Disable Chart.js source maps to prevent 404 errors
+Chart = undefined; // Clear any existing Chart
+</script>
 <script src="/static/vendor/chart.min.js"></script>
 
 <script>
