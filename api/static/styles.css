@@ -2631,6 +2631,14 @@ a:hover {
     color: var(--text-secondary);
 }
 
+/* Site-wide: ensure table headers are readable in dark theme */
+[data-theme="dark"] .table thead,
+[data-theme="dark"] .table th {
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+
 .report-title {
     font-size: 1.25rem;
     font-weight: 600;
