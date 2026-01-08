@@ -180,6 +180,31 @@ INSERT INTO settings (key, value) VALUES ('clamav_quarantine_retention_days', '9
 INSERT INTO settings (key, value) VALUES ('clamav_max_file_size', '10485760') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('clamav_quarantine_encrypt', 'false') ON CONFLICT (key) DO NOTHING;
 
+-- Quarantined emails table - stores raw bytes for messages quarantined by ClamAV
+CREATE TABLE IF NOT EXISTS quarantined_emails (
+    id SERIAL PRIMARY KEY,
+    original_source TEXT NOT NULL,
+    original_folder TEXT NOT NULL,
+    original_uid INTEGER,
+    subject TEXT,
+    sender TEXT,
+    recipients TEXT,
+    date TEXT,
+    raw_email BYTEA,
+    compressed BOOLEAN NOT NULL DEFAULT TRUE,
+    virus_name TEXT,
+    reason TEXT,
+    quarantined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    expires_at TIMESTAMPTZ,
+    quarantined_by TEXT
+);
+
+CREATE INDEX IF NOT EXISTS quarantined_emails_quarantined_at_idx ON quarantined_emails(quarantined_at DESC);
+
+-- Add optional foreign key on emails to reference quarantine record (nullable)
+ALTER TABLE emails
+    ADD COLUMN IF NOT EXISTS quarantine_id INTEGER REFERENCES quarantined_emails(id) ON DELETE SET NULL;
+
 -- ----------------------------
 -- logs
 -- ----------------------------

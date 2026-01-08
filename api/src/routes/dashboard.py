@@ -618,8 +618,9 @@ def clamav_stats(request: Request):
         # Get counts of emails by virus scan status
         # Quarantined: count quarantined_emails entries
         quarantined_results = query("""
-            SELECT COUNT(*) as count
-            FROM quarantined_emails
+            SELECT CASE WHEN to_regclass('public.quarantined_emails') IS NOT NULL
+                 THEN (SELECT COUNT(*) FROM quarantined_emails)
+                 ELSE 0 END as count
         """).mappings().first()
         quarantined = quarantined_results["count"] if quarantined_results else 0
 
