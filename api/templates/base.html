@@ -264,17 +264,19 @@
 
         // User menu dropdown
         const userMenuButton = document.getElementById('userMenuButton');
-        const userMenu = userMenuButton.closest('.user-menu');
+        const userMenu = userMenuButton ? userMenuButton.closest('.user-menu') : null;
         const userMenuDropdown = document.getElementById('userMenuDropdown');
 
         if (userMenuButton && userMenu && userMenuDropdown) {
             userMenuButton.addEventListener('click', (e) => {
                 e.stopPropagation();
-                userMenu.classList.toggle('show');
+                const isShown = userMenuDropdown.classList.toggle('show');
+                userMenu.classList.toggle('show', isShown);
             });
 
             // Close dropdown when clicking outside
             document.addEventListener('click', () => {
+                userMenuDropdown.classList.remove('show');
                 userMenu.classList.remove('show');
             });
         }

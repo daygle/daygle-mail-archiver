@@ -2350,7 +2350,7 @@ a:hover {
     transition: transform var(--transition-fast);
 }
 
-.user-menu.show .user-menu-button .fa-chevron-down {
+.user-menu .dropdown-menu.show ~ .user-menu-button .fa-chevron-down {
     transform: rotate(180deg);
 }
 
@@ -2385,11 +2385,11 @@ a:hover {
     visibility: hidden;
     transform: translateY(-10px);
     transition: all var(--transition-fast);
-    z-index: 1000;
+    z-index: 2000; /* Increased z-index */
     margin-top: 8px;
 }
 
-.user-menu.show .dropdown-menu {
+.dropdown-menu.show {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
