@@ -99,21 +99,25 @@ def alerts_page(
 def acknowledge_alert_api(request: Request, alert_id: int):
     """Acknowledge an alert"""
     if not require_login(request):
-        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+        return RedirectResponse("/login", status_code=303)
 
     user_id = request.session.get("user_id")
     if not user_id:
-        return JSONResponse({"error": "User not found"}, status_code=400)
+        flash(request, "❌ User not found")
+        return RedirectResponse("/alerts", status_code=303)
 
     try:
         success = acknowledge_alert(alert_id, user_id)
         if success:
-            return JSONResponse({"success": True, "message": "Alert acknowledged"})
+            flash(request, "✅ Alert acknowledged successfully!")
+            return RedirectResponse("/alerts", status_code=303)
         else:
-            return JSONResponse({"error": "Alert not found or already acknowledged"}, status_code=404)
+            flash(request, "❌ Alert not found or already acknowledged")
+            return RedirectResponse("/alerts", status_code=303)
     except Exception as e:
         log("error", "Alerts", f"Failed to acknowledge alert {alert_id}: {str(e)}", "")
-        return JSONResponse({"error": "Failed to acknowledge alert"}, status_code=500)
+        flash(request, "❌ Failed to acknowledge alert")
+        return RedirectResponse("/alerts", status_code=303)
 
 @router.get("/api/alerts/unacknowledged-count")
 def get_unacknowledged_count_api(request: Request):
@@ -139,17 +143,21 @@ def create_alert_api(
 ):
     """Create a new alert (admin only)"""
     if not require_login(request):
-        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+        return RedirectResponse("/login", status_code=303)
 
     if request.session.get("role") != "administrator":
-        return JSONResponse({"error": "Access denied"}, status_code=403)
+        flash(request, "❌ Access denied")
+        return RedirectResponse("/alerts", status_code=303)
 
     if alert_type not in ['error', 'warning', 'info', 'success']:
-        return JSONResponse({"error": "Invalid alert type"}, status_code=400)
+        flash(request, "❌ Invalid alert type")
+        return RedirectResponse("/alerts", status_code=303)
 
     try:
         alert_id = create_alert(alert_type, title, message, details, send_email)
-        return JSONResponse({"success": True, "alert_id": alert_id})
+        flash(request, "✅ Test alert created successfully!")
+        return RedirectResponse("/alerts", status_code=303)
     except Exception as e:
         log("error", "Alerts", f"Failed to create alert: {str(e)}", "")
-        return JSONResponse({"error": "Failed to create alert"}, status_code=500)
+        flash(request, "❌ Failed to create test alert")
+        return RedirectResponse("/alerts", status_code=303)

@@ -6,9 +6,6 @@
 {% endblock %}
 
 {% block content %}
-<!-- Notification Container -->
-<div id="notification-container" style="position: fixed; top: 80px; right: 20px; z-index: 10000; max-width: 400px;"></div>
-
 <!-- Filters Card (Initially Hidden) -->
 <div id="filterCard" class="card mb-4" style="display: none;">
     <div class="card-header" style="display: flex; align-items: center; justify-content: space-between;">
@@ -101,12 +98,12 @@
         {% endif %}
 
         {% for alert in alerts %}
-        <div class="alert alert-{% if alert.alert_type == 'error' %}danger{% else %}{{ alert.alert_type }}{% endif %} {% if alert.acknowledged %}acknowledged{% endif %}">
-            <div class="d-flex align-items-start gap-3">
-                <div class="flex-grow-1">
-                    <div class="d-flex align-items-center gap-2 mb-2">
+        <div class="card alert-item {{ alert.alert_type }} {% if alert.acknowledged %}acknowledged{% endif %}">
+            <div class="card-body">
+                <div class="alert-header">
+                    <div class="d-flex align-items-center gap-2">
                         <span class="alert-badge {{ alert.alert_type }}">{{ alert.alert_type }}</span>
-                        <h6 class="mb-0 fw-bold">{{ alert.title }}</h6>
+                        <h5 class="alert-title mb-0">{{ alert.title }}</h5>
                         {% if alert.acknowledged %}
                         <i class="fas fa-check-circle text-success" title="Acknowledged"></i>
                         {% endif %}
@@ -114,7 +111,7 @@
                         <i class="fas fa-envelope text-primary" title="Email sent"></i>
                         {% endif %}
                     </div>
-                    <div class="ms-auto">
+                    <div class="alert-actions">
                         {% if not alert.acknowledged %}
                         <button class="btn btn-sm btn-outline-primary" onclick="acknowledgeAlert({{ alert.id }})">
                             <i class="fas fa-check"></i>
@@ -133,8 +130,8 @@
                 </details>
                 {% endif %}
 
-                <div class="mt-2">
-                    <small class="text-muted">
+                <div class="alert-meta">
+                    <small>
                         <i class="fas fa-clock"></i>
                         {{ alert.created_at.strftime(date_format) }}
                         {% if alert.acknowledged and alert.acknowledged_at %}
@@ -208,26 +205,12 @@ function acknowledgeAlert(alertId) {
         return;
     }
 
-    fetch(`/api/alerts/${alertId}/acknowledge`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('Alert acknowledged successfully!', 'success');
-            // Refresh the alerts list
-            setTimeout(() => window.location.reload(), 1500);
-        } else {
-            showAlert('Failed to acknowledge alert: ' + (data.error || 'Unknown error'), 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error acknowledging alert:', error);
-        showAlert('Error acknowledging alert. Check the console for details.', 'error');
-    });
+    // Create and submit a form to acknowledge the alert
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/api/alerts/${alertId}/acknowledge`;
+    document.body.appendChild(form);
+    form.submit();
 }
 
 // Refresh alerts
@@ -275,68 +258,33 @@ function createTestAlert() {
         'success': 'This is a test success alert to demonstrate the alerting system.'
     };
 
-    const formData = new FormData();
-    formData.append('alert_type', randomType);
-    formData.append('title', testTitles[randomType]);
-    formData.append('message', testMessages[randomType]);
-    formData.append('send_email', 'false'); // Don't send email for test alerts
+    // Create and submit a form to create the test alert
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/api/alerts';
 
-    fetch('/api/alerts', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('Test alert created successfully!', 'success');
-            setTimeout(() => refreshAlerts(), 1500);
-        } else {
-            showAlert('Failed to create test alert: ' + (data.error || 'Unknown error'), 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error creating test alert:', error);
-        showAlert('Error creating test alert. Check the console for details.', 'error');
+    const formData = [
+        { name: 'alert_type', value: randomType },
+        { name: 'title', value: testTitles[randomType] },
+        { name: 'message', value: testMessages[randomType] },
+        { name: 'send_email', value: 'false' }
+    ];
+
+    formData.forEach(field => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = field.name;
+        input.value = field.value;
+        form.appendChild(input);
     });
+
+    document.body.appendChild(form);
+    form.submit();
 }
 
 // Show inline confirmation dialog
 function showInlineConfirmation(message) {
     return confirm(message); // For now, keep using confirm but could be replaced with custom modal
-}
-
-// Show notification using Bootstrap alerts
-function showAlert(message, type = 'info') {
-    const container = document.getElementById('notification-container');
-    const alertClass = type === 'error' ? 'danger' : type;
-    const iconMap = {
-        'success': 'check-circle',
-        'error': 'exclamation-circle', 
-        'warning': 'exclamation-triangle',
-        'info': 'info-circle'
-    };
-    
-    const alert = document.createElement('div');
-    alert.className = `alert alert-${alertClass} alert-dismissible fade show`;
-    alert.style.cssText = 'box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 10px;';
-    alert.innerHTML = `
-        <i class="fas fa-${iconMap[type] || 'info-circle'}"></i>
-        <span>${message}</span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    container.appendChild(alert);
-    
-    // Auto-remove after 5 seconds
-    setTimeout(() => {
-        if (alert.parentElement) {
-            alert.remove();
-        }
-    }, 5000);
-}
-
-function showError(message) {
-    showAlert(message, 'error');
 }
 </script>
 {% endblock %}
