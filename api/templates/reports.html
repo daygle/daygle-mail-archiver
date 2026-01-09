@@ -657,12 +657,24 @@ function loadAllReports() {
 
 // Email Volume Report
 function loadEmailVolumeReport() {
-    const startDate = document.getElementById('emailVolumeStartDate').value;
-    const endDate = document.getElementById('emailVolumeEndDate').value;
+    let startDate = document.getElementById('emailVolumeStartDate').value;
+    let endDate = document.getElementById('emailVolumeEndDate').value;
 
+    // Set default dates if not provided
     if (!startDate || !endDate) {
-        console.warn('Start and end dates are required for email volume report');
-        return;
+        const today = new Date();
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+        const formatDate = (date) => date.toISOString().split('T')[0];
+        
+        if (!startDate) {
+            startDate = formatDate(thirtyDaysAgo);
+            document.getElementById('emailVolumeStartDate').value = startDate;
+        }
+        if (!endDate) {
+            endDate = formatDate(today);
+            document.getElementById('emailVolumeEndDate').value = endDate;
+        }
     }
 
     // Validate date range
@@ -706,12 +718,24 @@ function loadEmailVolumeReport() {
 
 // Account Activity Report
 function loadAccountActivityReport() {
-    const startDate = document.getElementById('accountActivityStartDate').value;
-    const endDate = document.getElementById('accountActivityEndDate').value;
+    let startDate = document.getElementById('accountActivityStartDate').value;
+    let endDate = document.getElementById('accountActivityEndDate').value;
 
+    // Set default dates if not provided
     if (!startDate || !endDate) {
-        console.warn('Start and end dates are required for account activity report');
-        return;
+        const today = new Date();
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+        const formatDate = (date) => date.toISOString().split('T')[0];
+        
+        if (!startDate) {
+            startDate = formatDate(thirtyDaysAgo);
+            document.getElementById('accountActivityStartDate').value = startDate;
+        }
+        if (!endDate) {
+            endDate = formatDate(today);
+            document.getElementById('accountActivityEndDate').value = endDate;
+        }
     }
 
     // Validate date range
@@ -804,12 +828,24 @@ function loadAccountActivityReport() {
 
 // System Health Report
 function loadSystemHealthReport() {
-    const startDate = document.getElementById('systemHealthStartDate').value;
-    const endDate = document.getElementById('systemHealthEndDate').value;
+    let startDate = document.getElementById('systemHealthStartDate').value;
+    let endDate = document.getElementById('systemHealthEndDate').value;
 
+    // Set default dates if not provided
     if (!startDate || !endDate) {
-        console.warn('Start and end dates are required for system health report');
-        return;
+        const today = new Date();
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+        const formatDate = (date) => date.toISOString().split('T')[0];
+        
+        if (!startDate) {
+            startDate = formatDate(thirtyDaysAgo);
+            document.getElementById('systemHealthStartDate').value = startDate;
+        }
+        if (!endDate) {
+            endDate = formatDate(today);
+            document.getElementById('systemHealthEndDate').value = endDate;
+        }
     }
 
     // Validate date range
@@ -860,12 +896,24 @@ function loadSystemHealthReport() {
 
 // Anti-Virus Statistics Report
 function loadAVStatsReport() {
-    const startDate = document.getElementById('avStartDate').value;
-    const endDate = document.getElementById('avEndDate').value;
+    let startDate = document.getElementById('avStartDate').value;
+    let endDate = document.getElementById('avEndDate').value;
 
+    // Set default dates if not provided
     if (!startDate || !endDate) {
-        console.warn('Start and end dates are required for AV statistics report');
-        return;
+        const today = new Date();
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+        const formatDate = (date) => date.toISOString().split('T')[0];
+        
+        if (!startDate) {
+            startDate = formatDate(thirtyDaysAgo);
+            document.getElementById('avStartDate').value = startDate;
+        }
+        if (!endDate) {
+            endDate = formatDate(today);
+            document.getElementById('avEndDate').value = endDate;
+        }
     }
 
     // Validate date range
@@ -920,12 +968,24 @@ function loadAVStatsReport() {
 
 // Load Storage Utilization Report
 function loadStorageUtilizationReport() {
-    const startDate = document.getElementById('storageStartDate').value;
-    const endDate = document.getElementById('storageEndDate').value;
+    let startDate = document.getElementById('storageStartDate').value;
+    let endDate = document.getElementById('storageEndDate').value;
     
+    // Set default dates if not provided
     if (!startDate || !endDate) {
-        console.warn('Start and end dates are required for storage utilization report');
-        return;
+        const today = new Date();
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+        const formatDate = (date) => date.toISOString().split('T')[0];
+        
+        if (!startDate) {
+            startDate = formatDate(thirtyDaysAgo);
+            document.getElementById('storageStartDate').value = startDate;
+        }
+        if (!endDate) {
+            endDate = formatDate(today);
+            document.getElementById('storageEndDate').value = endDate;
+        }
     }
     
     // Validate date range
@@ -1003,12 +1063,24 @@ function loadStorageUtilizationReport() {
 
 // Load Retention Policy Report
 function loadRetentionPolicyReport() {
-    const startDate = document.getElementById('retentionStartDate').value;
-    const endDate = document.getElementById('retentionEndDate').value;
+    let startDate = document.getElementById('retentionStartDate').value;
+    let endDate = document.getElementById('retentionEndDate').value;
     
+    // Set default dates if not provided
     if (!startDate || !endDate) {
-        console.warn('Start and end dates are required for retention policy report');
-        return;
+        const today = new Date();
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+        const formatDate = (date) => date.toISOString().split('T')[0];
+        
+        if (!startDate) {
+            startDate = formatDate(thirtyDaysAgo);
+            document.getElementById('retentionStartDate').value = startDate;
+        }
+        if (!endDate) {
+            endDate = formatDate(today);
+            document.getElementById('retentionEndDate').value = endDate;
+        }
     }
     
     // Validate date range
@@ -1092,12 +1164,24 @@ function loadRetentionPolicyReport() {
 
 // Load System Performance Report
 function loadSystemPerformanceReport() {
-    const startDate = document.getElementById('performanceStartDate').value;
-    const endDate = document.getElementById('performanceEndDate').value;
+    let startDate = document.getElementById('performanceStartDate').value;
+    let endDate = document.getElementById('performanceEndDate').value;
     
+    // Set default dates if not provided
     if (!startDate || !endDate) {
-        console.warn('Start and end dates are required for system performance report');
-        return;
+        const today = new Date();
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+        const formatDate = (date) => date.toISOString().split('T')[0];
+        
+        if (!startDate) {
+            startDate = formatDate(thirtyDaysAgo);
+            document.getElementById('performanceStartDate').value = startDate;
+        }
+        if (!endDate) {
+            endDate = formatDate(today);
+            document.getElementById('performanceEndDate').value = endDate;
+        }
     }
     
     // Validate date range
@@ -1184,12 +1268,24 @@ function loadSystemPerformanceReport() {
 
 // Load Security & Access Report
 function loadSecurityAccessReport() {
-    const startDate = document.getElementById('securityStartDate').value;
-    const endDate = document.getElementById('securityEndDate').value;
+    let startDate = document.getElementById('securityStartDate').value;
+    let endDate = document.getElementById('securityEndDate').value;
     
+    // Set default dates if not provided
     if (!startDate || !endDate) {
-        console.warn('Start and end dates are required for security access report');
-        return;
+        const today = new Date();
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+        const formatDate = (date) => date.toISOString().split('T')[0];
+        
+        if (!startDate) {
+            startDate = formatDate(thirtyDaysAgo);
+            document.getElementById('securityStartDate').value = startDate;
+        }
+        if (!endDate) {
+            endDate = formatDate(today);
+            document.getElementById('securityEndDate').value = endDate;
+        }
     }
     
     // Validate date range
