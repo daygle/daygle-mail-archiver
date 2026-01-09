@@ -642,11 +642,6 @@ function loadAllReports() {
     loadAccountActivityReport();
     loadSystemHealthReport();
     loadAVStatsReport();
-    loadStorageUtilizationReport();
-    loadRetentionPolicyReport();
-    loadSystemPerformanceReport();
-    loadSecurityAccessReport();
-    loadDataQualityReport();
 }
 
 // Email Volume Report
@@ -917,6 +912,19 @@ function loadStorageUtilizationReport() {
     const startDate = document.getElementById('storageStartDate').value;
     const endDate = document.getElementById('storageEndDate').value;
     
+    if (!startDate || !endDate) {
+        console.warn('Start and end dates are required for storage utilization report');
+        return;
+    }
+    
+    // Validate date range
+    if (new Date(startDate) > new Date(endDate)) {
+        showReportMessageForInput(document.getElementById('storageStartDate'), 'Invalid date range: start date must be on or before end date', 'warning');
+        return;
+    } else {
+        clearReportMessageForInput(document.getElementById('storageStartDate'));
+    }
+    
     let url = '/api/reports/storage-utilization';
     if (startDate && endDate) {
         url += `?start_date=${startDate}&end_date=${endDate}`;
@@ -925,6 +933,9 @@ function loadStorageUtilizationReport() {
     fetch(url)
         .then(response => response.json())
         .then(data => {
+            // Clear any previous validation messages for this section
+            clearReportMessageForInput(document.getElementById('storageStartDate'));
+            
             // Update metrics
             document.getElementById('totalStorage').textContent = data.total_storage || '-';
             document.getElementById('avgEmailSize').textContent = data.avg_email_size || '-';
@@ -984,6 +995,19 @@ function loadRetentionPolicyReport() {
     const startDate = document.getElementById('retentionStartDate').value;
     const endDate = document.getElementById('retentionEndDate').value;
     
+    if (!startDate || !endDate) {
+        console.warn('Start and end dates are required for retention policy report');
+        return;
+    }
+    
+    // Validate date range
+    if (new Date(startDate) > new Date(endDate)) {
+        showReportMessageForInput(document.getElementById('retentionStartDate'), 'Invalid date range: start date must be on or before end date', 'warning');
+        return;
+    } else {
+        clearReportMessageForInput(document.getElementById('retentionStartDate'));
+    }
+    
     let url = '/api/reports/retention-policy';
     if (startDate && endDate) {
         url += `?start_date=${startDate}&end_date=${endDate}`;
@@ -992,6 +1016,9 @@ function loadRetentionPolicyReport() {
     fetch(url)
         .then(response => response.json())
         .then(data => {
+            // Clear any previous validation messages for this section
+            clearReportMessageForInput(document.getElementById('retentionStartDate'));
+            
             // Update metrics
             document.getElementById('totalManualDeletions').textContent = data.manual_deletions || '-';
             document.getElementById('totalRetentionDeletions').textContent = data.retention_deletions || '-';
@@ -1057,6 +1084,19 @@ function loadSystemPerformanceReport() {
     const startDate = document.getElementById('performanceStartDate').value;
     const endDate = document.getElementById('performanceEndDate').value;
     
+    if (!startDate || !endDate) {
+        console.warn('Start and end dates are required for system performance report');
+        return;
+    }
+    
+    // Validate date range
+    if (new Date(startDate) > new Date(endDate)) {
+        showReportMessageForInput(document.getElementById('performanceStartDate'), 'Invalid date range: start date must be on or before end date', 'warning');
+        return;
+    } else {
+        clearReportMessageForInput(document.getElementById('performanceStartDate'));
+    }
+    
     let url = '/api/reports/system-performance';
     if (startDate && endDate) {
         url += `?start_date=${startDate}&end_date=${endDate}`;
@@ -1065,6 +1105,9 @@ function loadSystemPerformanceReport() {
     fetch(url)
         .then(response => response.json())
         .then(data => {
+            // Clear any previous validation messages for this section
+            clearReportMessageForInput(document.getElementById('performanceStartDate'));
+            
             // Update metrics
             document.getElementById('currentActiveWorkers').textContent = data.active_workers || '-';
             document.getElementById('currentTotalWorkers').textContent = data.total_workers || '-';
@@ -1133,6 +1176,19 @@ function loadSecurityAccessReport() {
     const startDate = document.getElementById('securityStartDate').value;
     const endDate = document.getElementById('securityEndDate').value;
     
+    if (!startDate || !endDate) {
+        console.warn('Start and end dates are required for security access report');
+        return;
+    }
+    
+    // Validate date range
+    if (new Date(startDate) > new Date(endDate)) {
+        showReportMessageForInput(document.getElementById('securityStartDate'), 'Invalid date range: start date must be on or before end date', 'warning');
+        return;
+    } else {
+        clearReportMessageForInput(document.getElementById('securityStartDate'));
+    }
+    
     let url = '/api/reports/security-access';
     if (startDate && endDate) {
         url += `?start_date=${startDate}&end_date=${endDate}`;
@@ -1141,6 +1197,9 @@ function loadSecurityAccessReport() {
     fetch(url)
         .then(response => response.json())
         .then(data => {
+            // Clear any previous validation messages for this section
+            clearReportMessageForInput(document.getElementById('securityStartDate'));
+            
             // Update metrics
             document.getElementById('totalSuccessfulLogins').textContent = data.total_successful_logins || '-';
             document.getElementById('totalFailedLogins').textContent = data.total_failed_logins || '-';

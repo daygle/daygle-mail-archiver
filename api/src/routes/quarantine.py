@@ -120,12 +120,6 @@ def _delete_quarantined_from_mail_server_and_db(ids: List[int]) -> tuple[int, li
 
 @router.get('/quarantine', response_class=HTMLResponse)
 def list_quarantine(request: Request, q: str = None, virus: str = None):
-    # Debug: log session state to diagnose unexpected redirects
-    try:
-        log('info', 'Quarantine', f"Session keys: {list(request.session.keys())}, user_id={request.session.get('user_id')}, role={request.session.get('role')}, username={request.session.get('username')}")
-    except Exception:
-        pass
-
     # Require login first
     if not request.session.get('user_id'):
         request.session['flash'] = 'Please login to access Quarantine'
