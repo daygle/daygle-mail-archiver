@@ -63,7 +63,7 @@ This project is built with explicit, maintainable configuration, modular backend
 ```bash
 # Clone repository
 cd /opt/
-git clone https://gitlab.com/daygle/daygle-mail-archiver.git
+git clone https://github.com/daygle/daygle-mail-archiver.git
 cd daygle-mail-archiver
 
 # Configure
@@ -147,15 +147,19 @@ All components run in Docker containers orchestrated by Docker Compose.
 
 ---
 
-## � Advanced Reporting & Analytics
+## 📊 Advanced Reporting & Analytics
 
 Daygle Mail Archiver includes comprehensive reporting capabilities to monitor system performance and email processing:
 
 ### Report Types
 - **Email Volume Reports**: Daily/weekly/monthly email ingestion trends with virus detection statistics
 - **Account Activity Reports**: Sync performance, success rates, and email processing per account
-- **User Activity Reports**: User login patterns and account management analytics
 - **System Health Reports**: Database growth, error trends, and worker heartbeat monitoring
+- **Storage Utilization Reports**: Email storage usage, compression savings, and largest email tracking
+- **Retention Policy Reports**: Effectiveness of retention policies and email age distribution
+- **System Performance Reports**: Worker activity, processing rates, and system metrics
+- **Security & Access Reports**: Login attempts, security events, and user activity (Administrator only)
+- **Data Quality Reports**: Email completeness, scan coverage, duplicates, and error rates
 
 ### Key Metrics
 - Email processing volumes over time
@@ -163,6 +167,10 @@ Daygle Mail Archiver includes comprehensive reporting capabilities to monitor sy
 - Virus detection rates
 - System performance indicators
 - User activity patterns
+- Storage utilization and trends
+- Retention policy effectiveness
+- Security events and access patterns
+- Data completeness and quality metrics
 
 Reports are accessible via the **Reports** menu and support customizable date ranges and export capabilities.
 
@@ -213,7 +221,7 @@ The update script automatically backs up data before updating.
 
 Contributions are welcome! Please:
 
-1. Fork the repository
+1. Fork the repository on [GitHub](https://github.com/daygle/daygle-mail-archiver)
 2. Create a feature branch
 3. Make your changes
 4. Submit a pull request
