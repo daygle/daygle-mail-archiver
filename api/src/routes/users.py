@@ -27,7 +27,7 @@ def list_users(request: Request):
         SELECT u.id, u.username, u.first_name, u.last_name, u.email,
                COALESCE(u.email_notifications, TRUE) as email_notifications,
                u.enabled, u.last_login, u.created_at,
-               GROUP_CONCAT(r.name SEPARATOR ', ') as roles
+               COALESCE(STRING_AGG(r.name, ', '), '') as roles
         FROM users u
         LEFT JOIN user_roles ur ON u.id = ur.user_id
         LEFT JOIN roles r ON ur.role_id = r.id

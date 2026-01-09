@@ -36,6 +36,23 @@ class PermissionChecker:
             """, {"user_id": user_id}).mappings().all()
 
             self._permissions_cache = [p["name"] for p in permissions]
+
+            # Fallback: if no role assignments exist, check legacy users.role field
+            if not self._permissions_cache:
+                user = query("SELECT role FROM users WHERE id = :user_id", {"user_id": user_id}).first()
+                if user and user.get("role"):
+                    if user["role"] == "administrator":
+                        all_permissions = query("SELECT name FROM permissions").mappings().all()
+                        self._permissions_cache = [p["name"] for p in all_permissions]
+                    elif user["role"] == "read_only":
+                        # Read-only legacy role gets a limited set of view permissions
+                        self._permissions_cache = [
+                            "view_dashboard", "view_emails", "view_reports",
+                            "view_quarantine", "view_fetch_accounts", "view_worker_status",
+                            "view_logs", "view_alerts", "view_users", "view_global_settings",
+                            "manage_own_profile"
+                        ]
+
             return self._permissions_cache
         except Exception as e:
             # Lazy import logger
