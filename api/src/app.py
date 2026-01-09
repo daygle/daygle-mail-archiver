@@ -96,6 +96,7 @@ app.include_router(global_settings.router)
 app.include_router(alert_management.router)
 app.include_router(donate.router)
 app.include_router(help.router)
+app.include_router(quarantine.router)
 
 @app.get("/")
 def root():
