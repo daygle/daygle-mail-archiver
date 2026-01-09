@@ -234,7 +234,7 @@ If you received this email, your SMTP configuration is working correctly.
 
         msg = MIMEText(test_body)
         msg['Subject'] = test_subject
-        msg['From'] = config['from_name'] or config['from_email']
+        msg['From'] = formataddr((config['from_name'], config['from_email']))
         msg['To'] = recipient_email
 
         server.sendmail(config['from_email'], recipient_email, msg.as_string())
