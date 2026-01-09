@@ -159,6 +159,13 @@ def user_settings_form(request: Request):
     current_email_notifications = user["email_notifications"] if user else True
     user_role = user["role"] if user else "administrator"
 
+    # Update session variables to ensure they match database values
+    request.session["page_size"] = current_page_size
+    request.session["date_format"] = current_date_format
+    request.session["time_format"] = current_time_format
+    request.session["timezone"] = current_timezone
+    request.session["theme"] = current_theme
+
     msg = request.session.pop("flash", None)
     return templates.TemplateResponse("user-settings.html", {
         "request": request, 
