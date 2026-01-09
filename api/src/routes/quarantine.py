@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, Form
 from fastapi.responses import RedirectResponse, HTMLResponse, JSONResponse
 from utils.templates import templates
 from utils.db import query, execute
-from utils.security import require_admin
+from utils.logger import log
 from utils.config import get_config
 from cryptography.fernet import Fernet
 
@@ -23,8 +23,14 @@ def list_quarantine(request: Request):
     if not request.session.get('user_id'):
         return RedirectResponse('/login', status_code=303)
 
-    # Require administrator role
-    if request.session.get('role') != 'administrator':
+    # Verify role from DB (more reliable than trusting session role)
+    try:
+        user = query('SELECT role FROM users WHERE id = :id', {'id': request.session.get('user_id')}).mappings().first()
+        if not user or user.get('role') != 'administrator':
+            log('warning', 'Quarantine', f"Unauthorized access attempt to /quarantine by user_id={request.session.get('user_id')} role={request.session.get('role')}")
+            return RedirectResponse('/dashboard', status_code=303)
+    except Exception as e:
+        log('error', 'Quarantine', f"Failed to verify admin role: {e}")
         return RedirectResponse('/dashboard', status_code=303)
 
     rows = query('SELECT id, subject, sender, recipients, virus_name, quarantined_at, expires_at FROM quarantined_emails ORDER BY quarantined_at DESC').mappings().all()
@@ -36,8 +42,14 @@ def view_quarantine(request: Request, qid: int):
     if not request.session.get('user_id'):
         return RedirectResponse('/login', status_code=303)
 
-    # Require administrator role
-    if request.session.get('role') != 'administrator':
+    # Verify role from DB (more reliable than trusting session role)
+    try:
+        user = query('SELECT role FROM users WHERE id = :id', {'id': request.session.get('user_id')}).mappings().first()
+        if not user or user.get('role') != 'administrator':
+            log('warning', 'Quarantine', f"Unauthorized view attempt to /quarantine/{qid} by user_id={request.session.get('user_id')} role={request.session.get('role')}")
+            return RedirectResponse('/dashboard', status_code=303)
+    except Exception as e:
+        log('error', 'Quarantine', f"Failed to verify admin role: {e}")
         return RedirectResponse('/dashboard', status_code=303)
 
     item = query('SELECT * FROM quarantined_emails WHERE id = :id', {'id': qid}).mappings().first()
@@ -72,8 +84,14 @@ def restore_quarantine(request: Request, qid: int):
     if not request.session.get('user_id'):
         return RedirectResponse('/login', status_code=303)
 
-    # Require administrator role
-    if request.session.get('role') != 'administrator':
+    # Verify role from DB (more reliable than trusting session role)
+    try:
+        user = query('SELECT role FROM users WHERE id = :id', {'id': request.session.get('user_id')}).mappings().first()
+        if not user or user.get('role') != 'administrator':
+            log('warning', 'Quarantine', f"Unauthorized restore attempt to /quarantine/{qid}/restore by user_id={request.session.get('user_id')} role={request.session.get('role')}")
+            return RedirectResponse('/dashboard', status_code=303)
+    except Exception as e:
+        log('error', 'Quarantine', f"Failed to verify admin role: {e}")
         return RedirectResponse('/dashboard', status_code=303)
 
     # Fetch quarantined item
@@ -140,8 +158,14 @@ def delete_quarantine(request: Request, qid: int):
     if not request.session.get('user_id'):
         return RedirectResponse('/login', status_code=303)
 
-    # Require administrator role
-    if request.session.get('role') != 'administrator':
+    # Verify role from DB (more reliable than trusting session role)
+    try:
+        user = query('SELECT role FROM users WHERE id = :id', {'id': request.session.get('user_id')}).mappings().first()
+        if not user or user.get('role') != 'administrator':
+            log('warning', 'Quarantine', f"Unauthorized delete attempt to /quarantine/{qid}/delete by user_id={request.session.get('user_id')} role={request.session.get('role')}")
+            return RedirectResponse('/dashboard', status_code=303)
+    except Exception as e:
+        log('error', 'Quarantine', f"Failed to verify admin role: {e}")
         return RedirectResponse('/dashboard', status_code=303)
 
     execute('DELETE FROM quarantined_emails WHERE id = :id', {'id': qid})
