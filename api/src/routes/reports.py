@@ -3,7 +3,6 @@ from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from collections import defaultdict
 from typing import List, Dict, Any
 from datetime import datetime, timedelta, date
-import calendar
 
 from utils.db import query
 from utils.logger import log
@@ -357,91 +356,6 @@ def account_activity_report(request: Request, start_date: str = None, end_date: 
     except Exception as e:
         username = request.session.get("username", "unknown")
         log("error", "Reports", f"Failed to fetch account activity report for user '{username}': {str(e)}", "")
-        return JSONResponse({"error": "Failed to load data"}, status_code=500)
-
-@router.get("/api/reports/user-activity")
-def user_activity_report(request: Request, days: int = 30):
-    """Get user activity report data"""
-    if not require_login(request):
-        return JSONResponse({"error": "Unauthorized"}, status_code=401)
-
-    # Only administrators can view user activity
-    if request.session.get("role") != "administrator":
-        return JSONResponse({"error": "Access denied"}, status_code=403)
-
-    try:
-        if days not in [7, 14, 30, 60, 90]:
-            days = 30
-
-        user_id = request.session.get("user_id")
-        if user_id is not None:
-            try:
-                user_id = int(user_id)
-            except (ValueError, TypeError):
-                user_id = None
-        date_format = get_user_date_format(request, date_only=True)
-        datetime_format = get_user_date_format(request)
-
-        # User login activity
-        login_results = query("""
-            SELECT
-                u.username,
-                u.role,
-                u.last_login,
-                u.created_at,
-                COUNT(l.id) as login_count_today
-            FROM users u
-            LEFT JOIN logs l ON l.source = 'Auth' AND l.message LIKE '%' || u.username || '%' AND DATE(l.timestamp) = CURRENT_DATE
-            GROUP BY u.id, u.username, u.role, u.last_login, u.created_at
-            ORDER BY u.username
-        """).mappings().all()
-
-        users = []
-        for row in login_results:
-            last_login = None
-            if row["last_login"]:
-                last_login = convert_utc_to_user_timezone(row["last_login"], user_id).strftime(get_user_date_format(request))
-
-            created_at = None
-            if row["created_at"]:
-                created_at = convert_utc_to_user_timezone(row["created_at"], user_id).strftime(datetime_format)
-
-            users.append({
-                "username": row["username"],
-                "role": row["role"],
-                "last_login": last_login,
-                "created_at": created_at,
-                "logins_today": int(row["login_count_today"] or 0)
-            })
-
-        # User creation trends
-        creation_results = query("""
-            SELECT
-                DATE(created_at) as creation_date,
-                COUNT(*) as user_count
-            FROM users
-            WHERE created_at >= NOW() - INTERVAL '1 day' * :days
-            GROUP BY DATE(created_at)
-            ORDER BY creation_date
-        """, {"days": days}).mappings().all()
-
-        creation_labels = []
-        creation_counts = []
-
-        for row in creation_results:
-            if row["creation_date"]:
-                local_dt = convert_utc_to_user_timezone(row["creation_date"], user_id)
-                creation_labels.append(local_dt.strftime(date_format))
-            creation_counts.append(int(row["user_count"] or 0))
-
-        return {
-            "users": users,
-            "creation_labels": creation_labels,
-            "creation_counts": creation_counts
-        }
-    except Exception as e:
-        username = request.session.get("username", "unknown")
-        log("error", "Reports", f"Failed to fetch user activity report for user '{username}': {str(e)}", "")
         return JSONResponse({"error": "Failed to load data"}, status_code=500)
 
 @router.get("/api/reports/system-health")
