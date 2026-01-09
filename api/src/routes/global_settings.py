@@ -22,6 +22,9 @@ def settings_form(request: Request):
     rows = query("SELECT key, value FROM settings").mappings().all()
     settings = {r["key"]: r["value"] for r in rows}
 
+    # Update session with current global theme setting
+    current_global_theme = settings.get('default_theme', 'system')
+    request.session["global_theme"] = current_global_theme
 
     msg = request.session.pop("flash", None)
 

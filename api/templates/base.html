@@ -254,15 +254,35 @@
         // Restore theme from server preference (if set) or localStorage
         const serverTheme = window.__serverTheme || '';
         const serverGlobalTheme = window.__serverGlobalTheme || '';
+        
+        function getSystemTheme() {
+            // Detect browser's preferred color scheme
+            return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        
         if (serverTheme && serverTheme !== 'system') {
             // honor explicit user preference stored on server
             setTheme(serverTheme);
         } else if (serverTheme === 'system' && serverGlobalTheme && serverGlobalTheme !== 'system') {
             // user prefers 'system' — use the global default if configured
             setTheme(serverGlobalTheme);
+        } else if (serverTheme === 'system' || (serverTheme === '' && serverGlobalTheme === 'system')) {
+            // user or global setting is 'system' — follow browser preference
+            setTheme(getSystemTheme());
         } else {
             const savedTheme = localStorage.getItem('theme') || 'light';
             setTheme(savedTheme);
+        }
+
+        // Listen for changes in browser color scheme preference
+        if (window.matchMedia) {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                // Only update theme if user preference is 'system' or no explicit preference set
+                if ((serverTheme === 'system' || serverTheme === '') && 
+                    (serverGlobalTheme === 'system' || serverGlobalTheme === '')) {
+                    setTheme(e.matches ? 'dark' : 'light');
+                }
+            });
         }
 
         if (themeToggle) {
