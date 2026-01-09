@@ -3,7 +3,6 @@
 {% block page_title %}Alert Management{% endblock %}
 
 {% block content %}
-<form method="post" action="/alert-management/save">
 <!-- Alert Triggers Card -->
 <div class="card">
     <div class="card-header">
@@ -76,18 +75,7 @@
         </div>
         {% endif %}
     </div>
-    <div class="card-footer form-actions">
-        <a href="/dashboard" class="btn btn-secondary">
-            <i class="fas fa-times"></i>
-            <span>Cancel</span>
-        </a>
-        <button type="submit" class="btn btn-primary">
-            <i class="fas fa-save"></i>
-            <span>Save Settings</span>
-        </button>
-    </div>
 </div>
-</form>
 
 <!-- Alert Logic Explanation -->
 <div class="card mt-4">
