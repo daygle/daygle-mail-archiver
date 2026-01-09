@@ -1,7 +1,7 @@
 from typing import List
 
 from fastapi import APIRouter, Request, Form
-from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
+from fastapi.responses import RedirectResponse, StreamingResponse
 from imaplib import IMAP4, IMAP4_SSL
 
 from utils.db import query, execute
