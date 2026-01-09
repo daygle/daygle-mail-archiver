@@ -285,7 +285,7 @@
 <form method="post" action="/api/test-smtp" id="test-smtp-form" style="display: none;">
     <button type="submit" class="btn btn-info" id="test-smtp-btn" {% if settings.smtp_enabled != 'true' %}disabled{% endif %}>
         <i class="fas fa-paper-plane"></i>
-        <span>Send Test Email</span>
+        <span>Send Test Email to Me</span>
     </button>
 </form>
 
@@ -294,16 +294,11 @@ document.getElementById('smtp_enabled').addEventListener('change', function() {
     updateTestButtonState();
 });
 
-document.getElementById('smtp_from_email').addEventListener('input', function() {
-    updateTestButtonState();
-});
-
 function updateTestButtonState() {
     const testBtn = document.getElementById('test-smtp-btn');
     const smtpEnabled = document.getElementById('smtp_enabled').checked;
-    const fromEmail = document.getElementById('smtp_from_email').value.trim();
     
-    testBtn.disabled = !smtpEnabled || !fromEmail;
+    testBtn.disabled = !smtpEnabled;
 }
 
 // Move the test SMTP form into the header container after page load

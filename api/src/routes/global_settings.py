@@ -169,13 +169,24 @@ def save_settings(
 
 @router.post("/api/test-smtp")
 def test_smtp(request: Request):
-    """Test SMTP connection and send a test email"""
+    """Test SMTP connection and send a test email to the current user"""
     if not require_login(request):
         flash(request, "You must be logged in to test SMTP.")
         return RedirectResponse("/login", status_code=303)
 
     try:
-        success, message = test_smtp_connection()
+        # Get current user's email address
+        user_id = request.session.get("user_id")
+        if not user_id:
+            flash(request, "User session not found.")
+            return RedirectResponse("/global-settings", status_code=303)
+        
+        user = query("SELECT email FROM users WHERE id = :id", {"id": int(user_id)}).mappings().first()
+        if not user or not user.get("email"):
+            flash(request, "Your account does not have an email address configured.")
+            return RedirectResponse("/global-settings", status_code=303)
+
+        success, message = test_smtp_connection(user["email"])
         if success:
             flash(request, f"SMTP test successful: {message}")
         else:

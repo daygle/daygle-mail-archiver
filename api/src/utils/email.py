@@ -173,9 +173,12 @@ def send_alert_email(
     return success_count == len(recipients)
 
 
-def test_smtp_connection() -> tuple[bool, str]:
+def test_smtp_connection(recipient_email: str) -> tuple[bool, str]:
     """
-    Test SMTP connection and send a test email
+    Test SMTP connection and send a test email to the specified recipient
+
+    Args:
+        recipient_email: Email address to send the test email to
 
     Returns:
         tuple: (success: bool, message: str)
@@ -190,6 +193,9 @@ def test_smtp_connection() -> tuple[bool, str]:
 
     if not config['from_email']:
         return False, "From email address is not configured"
+
+    if not recipient_email:
+        return False, "Recipient email address is required"
 
     try:
         # Create SMTP connection
@@ -212,7 +218,7 @@ SMTP Configuration Test Details:
 - Host: {config['host']}
 - Port: {config['port']}
 - From: {config['from_email']}
-- To: {config['from_email']} (sent to self for testing)
+- To: {recipient_email}
 - TLS: {'Yes' if config['use_tls'] else 'No'}
 - Time: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}
 
@@ -222,12 +228,12 @@ If you received this email, your SMTP configuration is working correctly.
         msg = MIMEText(test_body)
         msg['Subject'] = test_subject
         msg['From'] = config['from_name'] or config['from_email']
-        msg['To'] = config['from_email']
+        msg['To'] = recipient_email
 
-        server.sendmail(config['from_email'], config['from_email'], msg.as_string())
+        server.sendmail(config['from_email'], recipient_email, msg.as_string())
         server.quit()
 
-        return True, f"SMTP connection successful - test email sent to {config['from_email']}"
+        return True, f"SMTP connection successful - test email sent to {recipient_email}"
 
     except Exception as e:
         return False, f"SMTP test failed: {str(e)}"
