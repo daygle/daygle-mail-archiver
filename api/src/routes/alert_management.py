@@ -4,6 +4,7 @@ from fastapi.responses import RedirectResponse
 from utils.db import query, execute
 from utils.logger import log
 from utils.templates import templates
+from utils.permissions import PermissionChecker
 
 router = APIRouter()
 
@@ -13,8 +14,8 @@ def require_login(request: Request):
 def require_admin(request: Request):
     if not require_login(request):
         return False
-    user = query("SELECT role FROM users WHERE id = :id", {"id": request.session["user_id"]}).mappings().first()
-    return user and user["role"] == "administrator"
+    checker = PermissionChecker(request)
+    return checker.has_permission("manage_alerts")
 
 def flash(request: Request, message: str):
     request.session["flash"] = message

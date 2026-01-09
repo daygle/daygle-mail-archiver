@@ -52,44 +52,64 @@
                 {% if request.session.role == 'administrator' or request.session.role == 'read_only' %}
                 <div class="nav-section">
                     <div class="nav-section-title">Operations & Monitoring</div>
-                    {% if request.session.role == 'administrator' %}
+                    {% if 'manage_fetch_accounts' in request.session.get('permissions', []) %}
                     <a href="/fetch-accounts" class="nav-link {% if '/fetch-account' in request.url.path %}active{% endif %}">
                         <i class="fas fa-server"></i>
                         <span>Fetch Accounts</span>
                     </a>
+                    {% endif %}
+                    {% if 'view_worker_status' in request.session.get('permissions', []) %}
                     <a href="/worker-status" class="nav-link {% if '/worker-status' in request.url.path %}active{% endif %}">
                         <i class="fas fa-heartbeat"></i>
                         <span>Worker Status</span>
                     </a>
                     {% endif %}
+                    {% if 'view_reports' in request.session.get('permissions', []) %}
                     <a href="/reports" class="nav-link {% if '/reports' in request.url.path %}active{% endif %}">
                         <i class="fas fa-chart-bar"></i>
                         <span>Reports</span>
                     </a>
+                    {% endif %}
+                    {% if 'view_quarantine' in request.session.get('permissions', []) %}
                     <a href="/quarantine" class="nav-link {% if '/quarantine' in request.url.path %}active{% endif %}">
                         <i class="fas fa-shield-virus"></i>
                         <span>Quarantine</span>
                     </a>
+                    {% endif %}
                 </div>
-                {% if request.session.role == 'administrator' %}
+                {% if 'manage_users' in request.session.get('permissions', []) or 'manage_roles' in request.session.get('permissions', []) or 'manage_global_settings' in request.session.get('permissions', []) or 'manage_alerts' in request.session.get('permissions', []) or 'view_logs' in request.session.get('permissions', []) %}
                 <div class="nav-section">
                     <div class="nav-section-title">System Management</div>
+                    {% if 'manage_alerts' in request.session.get('permissions', []) %}
                     <a href="/alert-management" class="nav-link {% if '/alert-management' in request.url.path %}active{% endif %}">
                         <i class="fas fa-cog"></i>
                         <span>Alert Management</span>
                     </a>
+                    {% endif %}
+                    {% if 'manage_global_settings' in request.session.get('permissions', []) %}
                     <a href="/global-settings" class="nav-link {% if request.url.path == '/global-settings' %}active{% endif %}">
                         <i class="fas fa-sliders"></i>
                         <span>Global Settings</span>
                     </a>
+                    {% endif %}
+                    {% if 'manage_users' in request.session.get('permissions', []) %}
                     <a href="/users" class="nav-link {% if '/users' in request.url.path %}active{% endif %}">
                         <i class="fas fa-users"></i>
                         <span>User Management</span>
                     </a>
+                    {% endif %}
+                    {% if 'manage_roles' in request.session.get('permissions', []) %}
+                    <a href="/roles" class="nav-link {% if '/roles' in request.url.path %}active{% endif %}">
+                        <i class="fas fa-user-shield"></i>
+                        <span>Role Management</span>
+                    </a>
+                    {% endif %}
+                    {% if 'view_logs' in request.session.get('permissions', []) %}
                     <a href="/logs" class="nav-link {% if '/logs' in request.url.path %}active{% endif %}">
                         <i class="fas fa-list"></i>
                         <span>Logs</span>
                     </a>
+                    {% endif %}
                 </div>
                 {% endif %}
 

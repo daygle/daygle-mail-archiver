@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+
+{% block page_title %}Role Management{% endblock %}
+
+{% block content %}
+<!-- Create Role Form Card (Initially Hidden) -->
+<div class="card mb-4" id="roleFormCard" style="display: none;">
+    <div class="card-header flex-between">
+        <div class="card-title">
+            <i class="fas fa-user-shield"></i>
+            <span>Create New Role</span>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="hideRoleForm()" title="Cancel">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="card-body">
+        <form method="post" action="/roles/create">
+            <div class="form-group">
+                <label for="name">Role Name <span style="color: var(--danger);">*</span></label>
+                <input id="name" class="form-control" name="name" required>
+                <small class="form-text">A unique name for this role (e.g., "Email Manager", "Auditor")</small>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" class="form-control" name="description" rows="3"></textarea>
+                <small class="form-text">Optional description of what this role is for</small>
+            </div>
+
+            <div class="form-group">
+                <label>Permissions</label>
+                <div class="permissions-grid">
+                    {% for permission in permissions %}
+                    <div class="permission-item">
+                        <label class="permission-checkbox">
+                            <input type="checkbox" name="permission_ids" value="{{ permission.id }}">
+                            <span class="checkmark"></span>
+                            <div class="permission-details">
+                                <strong>{{ permission.name }}</strong>
+                                {% if permission.description %}
+                                <br><small>{{ permission.description }}</small>
+                                {% endif %}
+                            </div>
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+                <small class="form-text">Select the permissions this role should have</small>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="hideRoleForm()">
+                    <i class="fas fa-times"></i>
+                    <span>Cancel</span>
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    <span>Create Role</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Roles Table Card -->
+<div class="card">
+    <div class="card-header flex-between">
+        <div class="card-title">
+            <i class="fas fa-user-shield"></i>
+            <span>Security Roles</span>
+        </div>
+        <button type="button" class="btn btn-primary btn-sm" onclick="showRoleForm()">
+            <i class="fas fa-plus"></i>
+            <span>Create Role</span>
+        </button>
+    </div>
+    <div class="card-body">
+        {% if flash %}
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="fas fa-info-circle"></i>
+            <span>{{ flash }}</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endif %}
+
+        {% if roles %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Role Name</th>
+                        <th>Description</th>
+                        <th>Permissions</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for role in roles %}
+                    <tr>
+                        <td>
+                            <strong>{{ role.name }}</strong>
+                        </td>
+                        <td>
+                            {% if role.description %}
+                                {{ role.description }}
+                            {% else %}
+                                <em class="text-muted">No description</em>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ role.permission_count }} permissions</span>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="/roles/{{ role.id }}/edit" class="btn btn-sm btn-outline-primary" title="Edit Role">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% if role.name not in ['administrator', 'read_only'] %}
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                        onclick="deleteRole({{ role.id }}, '{{ role.name }}')" title="Delete Role">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-user-shield fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No Roles Found</h5>
+            <p class="text-muted">Create your first security role to get started.</p>
+            <button type="button" class="btn btn-primary" onclick="showRoleForm()">
+                <i class="fas fa-plus"></i>
+                <span>Create First Role</span>
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteRoleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-trash text-danger"></i>
+                    Delete Role
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the role "<strong id="deleteRoleName"></strong>"?</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Warning:</strong> This action cannot be undone. Any users assigned to this role will lose their permissions.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash"></i>
+                    Delete Role
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showRoleForm() {
+    document.getElementById('roleFormCard').style.display = 'block';
+    document.getElementById('name').focus();
+}
+
+function hideRoleForm() {
+    document.getElementById('roleFormCard').style.display = 'none';
+    document.getElementById('name').value = '';
+    document.getElementById('description').value = '';
+    // Uncheck all permission checkboxes
+    const checkboxes = document.querySelectorAll('input[name="permission_ids"]');
+    checkboxes.forEach(cb => cb.checked = false);
+}
+
+function deleteRole(roleId, roleName) {
+    document.getElementById('deleteRoleName').textContent = roleName;
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    confirmBtn.onclick = function() {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/roles/${roleId}/delete`;
+        document.body.appendChild(form);
+        form.submit();
+    };
+    new bootstrap.Modal(document.getElementById('deleteRoleModal')).show();
+}
+
+// Auto-hide alerts after 5 seconds
+setTimeout(() => {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        const bsAlert = new bootstrap.Alert(alert);
+        bsAlert.close();
+    });
+}, 5000);
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.permissions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 0.375rem;
+    padding: 1rem;
+    background-color: var(--bg-secondary);
+}
+
+.permission-item {
+    margin: 0;
+}
+
+.permission-checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s;
+}
+
+.permission-checkbox:hover {
+    background-color: var(--bg-hover);
+}
+
+.permission-checkbox input[type="checkbox"] {
+    margin-top: 0.125rem;
+    flex-shrink: 0;
+}
+
+.checkmark {
+    width: 1.2rem;
+    height: 1.2rem;
+    border: 2px solid var(--border);
+    border-radius: 0.25rem;
+    background-color: var(--bg);
+    position: relative;
+    flex-shrink: 0;
+}
+
+.permission-checkbox input[type="checkbox"]:checked + .checkmark {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+.permission-checkbox input[type="checkbox"]:checked + .checkmark::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.permission-details {
+    flex: 1;
+    line-height: 1.4;
+}
+
+.permission-details strong {
+    color: var(--text);
+}
+
+.permission-details small {
+    color: var(--text-secondary);
+}
+</style>
+{% endblock %}

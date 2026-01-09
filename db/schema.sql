@@ -142,6 +142,48 @@ CREATE INDEX IF NOT EXISTS users_role_idx ON users(role);
 -- Default administrator user will be created during initial setup wizard
 
 -- ----------------------------
+-- permissions
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS permissions (
+    id SERIAL PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL,
+    description TEXT,
+    category TEXT NOT NULL DEFAULT 'general', -- 'general', 'emails', 'system', 'reports', etc.
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ----------------------------
+-- roles
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS roles (
+    id SERIAL PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL,
+    description TEXT,
+    is_system_role BOOLEAN NOT NULL DEFAULT FALSE, -- System roles cannot be deleted
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ----------------------------
+-- role_permissions
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS role_permissions (
+    role_id INTEGER NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
+    permission_id INTEGER NOT NULL REFERENCES permissions(id) ON DELETE CASCADE,
+    PRIMARY KEY (role_id, permission_id)
+);
+
+-- ----------------------------
+-- user_roles
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS user_roles (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    role_id INTEGER NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
+    assigned_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    assigned_by INTEGER REFERENCES users(id), -- Who assigned this role
+    PRIMARY KEY (user_id, role_id)
+);
+
+-- ----------------------------
 -- settings
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS settings (
@@ -330,3 +372,109 @@ ON CONFLICT (trigger_key) DO UPDATE SET
     description = EXCLUDED.description,
     alert_type = EXCLUDED.alert_type,
     enabled = EXCLUDED.enabled;
+
+-- ----------------------------
+-- Default Permissions
+-- ----------------------------
+INSERT INTO permissions (name, description, category) VALUES
+    -- Dashboard & Overview
+    ('view_dashboard', 'View dashboard and system overview', 'general'),
+    
+    -- Email Management
+    ('view_emails', 'View and search emails', 'emails'),
+    ('delete_emails', 'Delete emails from archive', 'emails'),
+    ('export_emails', 'Export emails to external formats', 'emails'),
+    
+    -- Quarantine Management
+    ('view_quarantine', 'View quarantined emails', 'emails'),
+    ('manage_quarantine', 'Restore or permanently delete quarantined emails', 'emails'),
+    
+    -- Reports & Analytics
+    ('view_reports', 'View system reports and analytics', 'reports'),
+    ('export_reports', 'Export reports to external formats', 'reports'),
+    
+    -- Account Management
+    ('view_fetch_accounts', 'View email fetch account configurations', 'system'),
+    ('manage_fetch_accounts', 'Create, edit, and delete email fetch accounts', 'system'),
+    
+    -- System Monitoring
+    ('view_worker_status', 'View background worker status and logs', 'system'),
+    ('view_logs', 'View system logs and audit trail', 'system'),
+    
+    -- Alert Management
+    ('view_alerts', 'View system alerts and notifications', 'system'),
+    ('manage_alerts', 'Configure alert rules and notifications', 'system'),
+    
+    -- User Management
+    ('view_users', 'View user accounts and their roles', 'administration'),
+    ('manage_users', 'Create, edit, and delete user accounts', 'administration'),
+    ('manage_roles', 'Create and manage custom roles and permissions', 'administration'),
+    
+    -- System Settings
+    ('view_global_settings', 'View global system settings', 'administration'),
+    ('manage_global_settings', 'Modify global system settings', 'administration'),
+    
+    -- Personal Settings
+    ('manage_own_profile', 'Manage own user profile and preferences', 'general')
+ON CONFLICT (name) DO NOTHING;
+
+-- ----------------------------
+-- Default Roles
+-- ----------------------------
+INSERT INTO roles (name, description, is_system_role) VALUES
+    ('administrator', 'Full system access with all permissions', TRUE),
+    ('read_only', 'Read-only access to view emails and reports', TRUE),
+    ('email_manager', 'Can manage emails, quarantine, and basic reports', TRUE),
+    ('auditor', 'Can view reports, logs, and system status', TRUE),
+    ('user_manager', 'Can manage user accounts and roles', TRUE)
+ON CONFLICT (name) DO NOTHING;
+
+-- ----------------------------
+-- Default Role-Permission Assignments
+-- ----------------------------
+-- Administrator gets all permissions
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r, permissions p
+WHERE r.name = 'administrator'
+ON CONFLICT DO NOTHING;
+
+-- Read-only role permissions
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r, permissions p
+WHERE r.name = 'read_only' AND p.name IN (
+    'view_dashboard', 'view_emails', 'view_quarantine', 'view_reports', 
+    'view_alerts', 'manage_own_profile'
+)
+ON CONFLICT DO NOTHING;
+
+-- Email manager permissions
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r, permissions p
+WHERE r.name = 'email_manager' AND p.name IN (
+    'view_dashboard', 'view_emails', 'delete_emails', 'export_emails',
+    'view_quarantine', 'manage_quarantine', 'view_reports', 'export_reports',
+    'view_fetch_accounts', 'view_worker_status', 'view_alerts', 'manage_own_profile'
+)
+ON CONFLICT DO NOTHING;
+
+-- Auditor permissions
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r, permissions p
+WHERE r.name = 'auditor' AND p.name IN (
+    'view_dashboard', 'view_emails', 'view_quarantine', 'view_reports', 'export_reports',
+    'view_worker_status', 'view_logs', 'view_alerts', 'manage_own_profile'
+)
+ON CONFLICT DO NOTHING;
+
+-- User manager permissions
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r, permissions p
+WHERE r.name = 'user_manager' AND p.name IN (
+    'view_dashboard', 'view_users', 'manage_users', 'manage_roles', 'manage_own_profile'
+)
+ON CONFLICT DO NOTHING;

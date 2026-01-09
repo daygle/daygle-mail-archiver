@@ -56,14 +56,26 @@
             </div>
             
             <div class="two-col-grid">
-                <div class="form-group">
-                    <label for="role">Role</label>
-                    <select id="role" class="form-control" name="role">
-                        <option value="administrator" selected>Administrator</option>
-                        <option value="read_only">Read Only</option>
-                    </select>
-                    <small class="form-text">Administrator has full access, Read Only can only view data</small>
+            <div class="form-group">
+                <label>Roles <span style="color: var(--danger);">*</span></label>
+                <div class="roles-grid">
+                    {% for role in roles %}
+                    <div class="role-item">
+                        <label class="role-checkbox">
+                            <input type="checkbox" name="role_ids" value="{{ role.id }}">
+                            <span class="checkmark"></span>
+                            <div class="role-details">
+                                <strong>{{ role.name }}</strong>
+                                {% if role.description %}
+                                <br><small>{{ role.description }}</small>
+                                {% endif %}
+                            </div>
+                        </label>
+                    </div>
+                    {% endfor %}
                 </div>
+                <small class="form-text">Select one or more roles for this user</small>
+            </div>
                 <div class="form-group">
                     <label for="enabled">Account Status</label>
                     <select id="enabled" class="form-control" name="enabled">
@@ -115,7 +127,7 @@
                             <th>Username</th>
                             <th>Name</th>
                             <th>Email</th>
-                            <th>Role</th>
+                            <th>Roles</th>
                             <th>Status</th>
                             <th>Created</th>
                             <th>Last Login</th>
@@ -129,16 +141,12 @@
                             <td>{{ (user.first_name or '') ~ ' ' ~ (user.last_name or '') if user.first_name or user.last_name else '-' }}</td>
                             <td>{{ user.email or '-' }}</td>
                             <td>
-                                {% if user.role == 'administrator' %}
-                                    <span class="badge badge-primary">
-                                        <i class="fas fa-user-shield"></i> Administrator
-                                    </span>
-                                {% elif user.role == 'read_only' %}
-                                    <span class="badge badge-info">
-                                        <i class="fas fa-eye"></i> Read Only
-                                    </span>
+                                {% if user.roles %}
+                                    {% for role in user.roles.split(', ') %}
+                                        <span class="badge badge-secondary">{{ role }}</span>
+                                    {% endfor %}
                                 {% else %}
-                                    <span class="badge badge-secondary">{{ user.role }}</span>
+                                    <em class="text-muted">No roles assigned</em>
                                 {% endif %}
                             </td>
                             <td>
@@ -281,5 +289,83 @@ async function editUser(userId) {
     }
 }
 </script>
+
+{% block extra_css %}
+<style>
+.roles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 0.75rem;
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 0.375rem;
+    padding: 1rem;
+    background-color: var(--bg-secondary);
+}
+
+.role-item {
+    margin: 0;
+}
+
+.role-checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s;
+}
+
+.role-checkbox:hover {
+    background-color: var(--bg-hover);
+}
+
+.role-checkbox input[type="checkbox"] {
+    margin-top: 0.125rem;
+    flex-shrink: 0;
+}
+
+.checkmark {
+    width: 1.2rem;
+    height: 1.2rem;
+    border: 2px solid var(--border);
+    border-radius: 0.25rem;
+    background-color: var(--bg);
+    position: relative;
+    flex-shrink: 0;
+}
+
+.role-checkbox input[type="checkbox"]:checked + .checkmark {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+.role-checkbox input[type="checkbox"]:checked + .checkmark::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.role-details {
+    flex: 1;
+    line-height: 1.4;
+}
+
+.role-details strong {
+    color: var(--text);
+}
+
+.role-details small {
+    color: var(--text-secondary);
+}
+</style>
+{% endblock %}
 
 {% endblock %}

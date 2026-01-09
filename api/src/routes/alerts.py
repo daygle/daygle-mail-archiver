@@ -7,6 +7,7 @@ from utils.logger import log
 from utils.templates import templates
 from utils.alerts import create_alert, get_alerts, acknowledge_alert, get_unacknowledged_count
 from utils.timezone import convert_utc_to_user_timezone
+from utils.permissions import PermissionChecker
 from routes.reports import get_user_date_format
 
 router = APIRouter()
@@ -147,7 +148,8 @@ def create_alert_api(
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    if request.session.get("role") != "administrator":
+    checker = PermissionChecker(request)
+    if not checker.has_permission("manage_alerts"):
         flash(request, "Access denied")
         return RedirectResponse("/alerts", status_code=303)
 

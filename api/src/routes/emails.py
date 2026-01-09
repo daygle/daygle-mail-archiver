@@ -11,6 +11,7 @@ from utils.logger import log
 from utils.templates import templates
 from utils.timezone import format_datetime
 from utils.alerts import create_alert
+from utils.permissions import PermissionChecker
 
 router = APIRouter()
 
@@ -172,9 +173,10 @@ def download_email(request: Request, email_id: int):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    # Check if user is read_only - they cannot download .eml files
-    if request.session.get("role") == "read_only":
-        return HTMLResponse("Access denied: Read-only users cannot download email files", status_code=403)
+    # Check if user has permission to export emails
+    checker = PermissionChecker(request)
+    if not checker.has_permission("export_emails"):
+        return HTMLResponse("Access denied: Insufficient permissions to download email files", status_code=403)
 
     row = query(
         """

@@ -9,6 +9,7 @@ from utils.db import query, engine
 from utils.logger import log
 from utils.templates import templates
 from utils.timezone import convert_utc_to_user_timezone, get_user_timezone
+from utils.permissions import PermissionChecker
 
 router = APIRouter()
 
@@ -272,7 +273,8 @@ def check_updates(request: Request, force: bool = False):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
     # Only administrators could previously access this; keep same restriction
-    if getattr(request, "session", {}).get("role") != "administrator":
+    checker = PermissionChecker(request)
+    if not checker.has_permission("manage_global_settings"):
         return JSONResponse({"error": "Forbidden - Administrator access required"}, status_code=403)
 
     # Notify caller that update checks are no longer available via the web UI
@@ -283,7 +285,8 @@ def system_updates(request: Request):
     """System updates page removed - redirect to Global Settings"""
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
-    if getattr(request, "session", {}).get("role") != "administrator":
+    checker = PermissionChecker(request)
+    if not checker.has_permission("manage_global_settings"):
         return RedirectResponse("/dashboard", status_code=303)
 
     # Redirect to Global Settings as the System Updates page has been removed

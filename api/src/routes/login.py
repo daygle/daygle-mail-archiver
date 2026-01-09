@@ -5,13 +5,53 @@ import re
 import secrets
 import hashlib
 from datetime import datetime, timedelta
+from typing import List
 
 from utils.db import query, execute
 from utils.logger import log
 from utils.templates import templates
 from utils.email import send_email
+from utils.permissions import PermissionChecker
 
 router = APIRouter()
+
+def load_user_permissions(user_id: int) -> List[str]:
+    """Load all permissions for a user"""
+    try:
+        permissions = query("""
+            SELECT DISTINCT p.name
+            FROM permissions p
+            JOIN role_permissions rp ON p.id = rp.permission_id
+            JOIN user_roles ur ON rp.role_id = ur.role_id
+            WHERE ur.user_id = :user_id
+        """, {"user_id": user_id}).mappings().all()
+
+        user_permissions = [p["name"] for p in permissions]
+
+        # If user has permissions from roles, return them
+        if user_permissions:
+            return user_permissions
+
+        # Fallback: Check old role field for backward compatibility
+        user = query("SELECT role FROM users WHERE id = :user_id", {"user_id": user_id}).first()
+        if user and user["role"]:
+            if user["role"] == "administrator":
+                # Administrator gets all permissions
+                all_permissions = query("SELECT name FROM permissions").mappings().all()
+                return [p["name"] for p in all_permissions]
+            elif user["role"] == "read_only":
+                # Read-only gets basic view permissions
+                return [
+                    "view_dashboard", "view_emails", "view_reports",
+                    "view_quarantine", "view_fetch_accounts", "view_worker_status",
+                    "view_logs", "view_alerts", "view_users", "view_global_settings",
+                    "manage_own_profile"
+                ]
+
+        return []
+    except Exception as e:
+        log("error", "Permissions", f"Failed to load permissions for user {user_id}: {str(e)}")
+        return []
 
 def is_setup_complete():
     """Check if initial setup has been completed"""
@@ -100,8 +140,8 @@ def setup_wizard_submit(
     # Create the administrator account
     try:
         hash_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        execute(
-            "INSERT INTO users (username, password_hash, first_name, last_name, email, role) VALUES (:username, :password_hash, :first_name, :last_name, :email, 'administrator')",
+        user_id = execute(
+            "INSERT INTO users (username, password_hash, first_name, last_name, email) VALUES (:username, :password_hash, :first_name, :last_name, :email)",
             {
                 "username": username, 
                 "password_hash": hash_pw, 
@@ -110,6 +150,17 @@ def setup_wizard_submit(
                 "email": email if email else None
             }
         )
+        
+        # Assign the user to the administrator role
+        try:
+            admin_role = query("SELECT id FROM roles WHERE name = 'administrator'").first()
+            if admin_role:
+                execute(
+                    "INSERT INTO user_roles (user_id, role_id) VALUES (:user_id, :role_id)",
+                    {"user_id": user_id, "role_id": admin_role["id"]}
+                )
+        except Exception as e:
+            log("warning", "Setup", f"Could not assign administrator role to first user: {str(e)}")
         
         # Mark setup as complete
         execute(
@@ -189,7 +240,7 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
             request.session["global_theme"] = g["value"] if g and g.get("value") else "system"
         except Exception:
             request.session["global_theme"] = "system"
-        request.session["role"] = user["role"] or "administrator"
+        request.session["permissions"] = load_user_permissions(user["id"])
         request.session["needs_password"] = True
         log("info", "Login", f"User {username} initiated first login")
         return RedirectResponse("/set-password", status_code=303)
@@ -212,6 +263,7 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
                 request.session["global_theme"] = g["value"] if g and g.get("value") else "system"
             except Exception:
                 request.session["global_theme"] = "system"
+            request.session["permissions"] = load_user_permissions(user["id"])
             
             # Update last_login timestamp
             try:

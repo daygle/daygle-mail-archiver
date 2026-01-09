@@ -6,6 +6,7 @@ import re
 from utils.db import query, execute
 from utils.logger import log
 from utils.templates import templates
+from utils.permissions import PermissionChecker
 
 router = APIRouter()
 
@@ -22,11 +23,12 @@ def get_user_profile(request: Request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
     
     user_id = request.session.get("user_id")
-    role = request.session.get("role", "user")
+    checker = PermissionChecker(request)
+    permissions = checker.get_user_permissions()
     
     return {
         "user_id": user_id,
-        "role": role
+        "permissions": permissions
     }
 
 @router.get("/profile")
@@ -167,6 +169,9 @@ def user_settings_form(request: Request):
     request.session["theme"] = current_theme
 
     msg = request.session.pop("flash", None)
+    checker = PermissionChecker(request)
+    permissions = checker.get_user_permissions()
+    
     return templates.TemplateResponse("user-settings.html", {
         "request": request, 
         "flash": msg,
@@ -176,7 +181,7 @@ def user_settings_form(request: Request):
         "timezone": current_timezone,
         "theme": current_theme,
         "email_notifications": current_email_notifications,
-        "user_role": user_role
+        "permissions": permissions
     })
 
 @router.post("/user-settings/update")

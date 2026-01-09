@@ -1,0 +1,248 @@
+from fastapi import APIRouter, Request, Form
+from fastapi.responses import RedirectResponse, JSONResponse
+from typing import List
+
+from utils.db import query, execute
+from utils.logger import log
+from utils.templates import templates
+from utils.permissions import PermissionChecker
+
+router = APIRouter()
+
+def require_login(request: Request):
+    return "user_id" in request.session
+
+def require_admin(request: Request):
+    if not require_login(request):
+        return False
+    checker = PermissionChecker(request)
+    return checker.has_permission("manage_roles")
+
+def flash(request: Request, message: str):
+    request.session["flash"] = message
+
+@router.get("/roles")
+def list_roles(request: Request):
+    """Display roles management page"""
+    if not require_admin(request):
+        return RedirectResponse("/login", status_code=303)
+
+    # Get all roles with their permissions
+    roles = query("""
+        SELECT r.id, r.name, r.description,
+               COUNT(rp.permission_id) as permission_count
+        FROM roles r
+        LEFT JOIN role_permissions rp ON r.id = rp.role_id
+        GROUP BY r.id, r.name, r.description
+        ORDER BY r.name
+    """).mappings().all()
+
+    # Get all permissions for the form
+    permissions = query("""
+        SELECT id, name, description
+        FROM permissions
+        ORDER BY name
+    """).mappings().all()
+
+    msg = request.session.pop("flash", None)
+
+    return templates.TemplateResponse(
+        "roles.html",
+        {
+            "request": request,
+            "roles": roles,
+            "permissions": permissions,
+            "flash": msg
+        },
+    )
+
+@router.post("/roles/create")
+def create_role(
+    request: Request,
+    name: str = Form(...),
+    description: str = Form(""),
+    permission_ids: List[str] = Form([])
+):
+    """Create a new role with selected permissions"""
+    if not require_admin(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=403)
+
+    try:
+        # Validate role name
+        if not name or len(name.strip()) < 2:
+            flash(request, "Role name must be at least 2 characters long")
+            return RedirectResponse("/roles", status_code=303)
+
+        # Check if role name already exists
+        existing = query("SELECT id FROM roles WHERE name = :name", {"name": name.strip()}).first()
+        if existing:
+            flash(request, f"Role '{name}' already exists")
+            return RedirectResponse("/roles", status_code=303)
+
+        # Create the role
+        role_id = execute("""
+            INSERT INTO roles (name, description)
+            VALUES (:name, :description)
+        """, {"name": name.strip(), "description": description.strip() or None})
+
+        # Add permissions to the role
+        if permission_ids:
+            for perm_id in permission_ids:
+                try:
+                    execute("""
+                        INSERT INTO role_permissions (role_id, permission_id)
+                        VALUES (:role_id, :permission_id)
+                    """, {"role_id": role_id, "permission_id": int(perm_id)})
+                except Exception as e:
+                    log("error", "Roles", f"Failed to add permission {perm_id} to role {role_id}: {str(e)}")
+
+        log("info", "Roles", f"Created new role '{name}' with {len(permission_ids)} permissions")
+        flash(request, f"Role '{name}' created successfully")
+        return RedirectResponse("/roles", status_code=303)
+
+    except Exception as e:
+        log("error", "Roles", f"Failed to create role '{name}': {str(e)}")
+        flash(request, "Failed to create role")
+        return RedirectResponse("/roles", status_code=303)
+
+@router.get("/roles/{role_id}/edit")
+def edit_role_form(request: Request, role_id: int):
+    """Display edit role form"""
+    if not require_admin(request):
+        return RedirectResponse("/login", status_code=303)
+
+    # Get role details
+    role = query("""
+        SELECT id, name, description
+        FROM roles
+        WHERE id = :role_id
+    """, {"role_id": role_id}).mappings().first()
+
+    if not role:
+        flash(request, "Role not found")
+        return RedirectResponse("/roles", status_code=303)
+
+    # Get role's current permissions
+    role_permissions = query("""
+        SELECT permission_id
+        FROM role_permissions
+        WHERE role_id = :role_id
+    """, {"role_id": role_id}).mappings().all()
+
+    current_perm_ids = [rp["permission_id"] for rp in role_permissions]
+
+    # Get all permissions
+    permissions = query("""
+        SELECT id, name, description
+        FROM permissions
+        ORDER BY name
+    """).mappings().all()
+
+    return templates.TemplateResponse(
+        "role-edit.html",
+        {
+            "request": request,
+            "role": role,
+            "permissions": permissions,
+            "current_perm_ids": current_perm_ids
+        },
+    )
+
+@router.post("/roles/{role_id}/update")
+def update_role(
+    request: Request,
+    role_id: int,
+    name: str = Form(...),
+    description: str = Form(""),
+    permission_ids: List[str] = Form([])
+):
+    """Update an existing role"""
+    if not require_admin(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=403)
+
+    try:
+        # Validate role name
+        if not name or len(name.strip()) < 2:
+            flash(request, "Role name must be at least 2 characters long")
+            return RedirectResponse(f"/roles/{role_id}/edit", status_code=303)
+
+        # Check if role name already exists (excluding current role)
+        existing = query("""
+            SELECT id FROM roles
+            WHERE name = :name AND id != :role_id
+        """, {"name": name.strip(), "role_id": role_id}).first()
+
+        if existing:
+            flash(request, f"Role '{name}' already exists")
+            return RedirectResponse(f"/roles/{role_id}/edit", status_code=303)
+
+        # Update the role
+        execute("""
+            UPDATE roles
+            SET name = :name, description = :description
+            WHERE id = :role_id
+        """, {
+            "name": name.strip(),
+            "description": description.strip() or None,
+            "role_id": role_id
+        })
+
+        # Remove existing permissions
+        execute("DELETE FROM role_permissions WHERE role_id = :role_id", {"role_id": role_id})
+
+        # Add new permissions
+        if permission_ids:
+            for perm_id in permission_ids:
+                try:
+                    execute("""
+                        INSERT INTO role_permissions (role_id, permission_id)
+                        VALUES (:role_id, :permission_id)
+                    """, {"role_id": role_id, "permission_id": int(perm_id)})
+                except Exception as e:
+                    log("error", "Roles", f"Failed to add permission {perm_id} to role {role_id}: {str(e)}")
+
+        log("info", "Roles", f"Updated role '{name}' with {len(permission_ids)} permissions")
+        flash(request, f"Role '{name}' updated successfully")
+        return RedirectResponse("/roles", status_code=303)
+
+    except Exception as e:
+        log("error", "Roles", f"Failed to update role {role_id}: {str(e)}")
+        flash(request, "Failed to update role")
+        return RedirectResponse(f"/roles/{role_id}/edit", status_code=303)
+
+@router.post("/roles/{role_id}/delete")
+def delete_role(request: Request, role_id: int):
+    """Delete a role"""
+    if not require_admin(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=403)
+
+    try:
+        # Check if role is in use
+        users_with_role = query("""
+            SELECT COUNT(*) as count
+            FROM user_roles
+            WHERE role_id = :role_id
+        """, {"role_id": role_id}).first()
+
+        if users_with_role and users_with_role["count"] > 0:
+            flash(request, "Cannot delete role that is assigned to users")
+            return RedirectResponse("/roles", status_code=303)
+
+        # Get role name for logging
+        role = query("SELECT name FROM roles WHERE id = :role_id", {"role_id": role_id}).first()
+        role_name = role["name"] if role else "Unknown"
+
+        # Delete role permissions first
+        execute("DELETE FROM role_permissions WHERE role_id = :role_id", {"role_id": role_id})
+
+        # Delete the role
+        execute("DELETE FROM roles WHERE id = :role_id", {"role_id": role_id})
+
+        log("info", "Roles", f"Deleted role '{role_name}'")
+        flash(request, f"Role '{role_name}' deleted successfully")
+        return RedirectResponse("/roles", status_code=303)
+
+    except Exception as e:
+        log("error", "Roles", f"Failed to delete role {role_id}: {str(e)}")
+        flash(request, "Failed to delete role")
+        return RedirectResponse("/roles", status_code=303)

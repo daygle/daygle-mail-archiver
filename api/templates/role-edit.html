@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block page_title %}Edit Role - {{ role.name }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header flex-between">
+        <div class="card-title">
+            <i class="fas fa-user-shield"></i>
+            <span>Edit Role: {{ role.name }}</span>
+        </div>
+        <a href="/roles" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i>
+            <span>Back to Roles</span>
+        </a>
+    </div>
+    <div class="card-body">
+        <form method="post" action="/roles/{{ role.id }}/update">
+            <div class="form-group">
+                <label for="name">Role Name <span style="color: var(--danger);">*</span></label>
+                <input id="name" class="form-control" name="name" value="{{ role.name }}" required>
+                <small class="form-text">A unique name for this role</small>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" class="form-control" name="description" rows="3">{{ role.description or '' }}</textarea>
+                <small class="form-text">Optional description of what this role is for</small>
+            </div>
+
+            <div class="form-group">
+                <label>Permissions</label>
+                <div class="permissions-grid">
+                    {% for permission in permissions %}
+                    <div class="permission-item">
+                        <label class="permission-checkbox">
+                            <input type="checkbox" name="permission_ids" value="{{ permission.id }}"
+                                   {% if permission.id in current_perm_ids %}checked{% endif %}>
+                            <span class="checkmark"></span>
+                            <div class="permission-details">
+                                <strong>{{ permission.name }}</strong>
+                                {% if permission.description %}
+                                <br><small>{{ permission.description }}</small>
+                                {% endif %}
+                            </div>
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+                <small class="form-text">Select the permissions this role should have</small>
+            </div>
+
+            <div class="form-actions">
+                <a href="/roles" class="btn btn-secondary">
+                    <i class="fas fa-times"></i>
+                    <span>Cancel</span>
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    <span>Update Role</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.permissions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 0.375rem;
+    padding: 1rem;
+    background-color: var(--bg-secondary);
+}
+
+.permission-item {
+    margin: 0;
+}
+
+.permission-checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s;
+}
+
+.permission-checkbox:hover {
+    background-color: var(--bg-hover);
+}
+
+.permission-checkbox input[type="checkbox"] {
+    margin-top: 0.125rem;
+    flex-shrink: 0;
+}
+
+.checkmark {
+    width: 1.2rem;
+    height: 1.2rem;
+    border: 2px solid var(--border);
+    border-radius: 0.25rem;
+    background-color: var(--bg);
+    position: relative;
+    flex-shrink: 0;
+}
+
+.permission-checkbox input[type="checkbox"]:checked + .checkmark {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+.permission-checkbox input[type="checkbox"]:checked + .checkmark::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.permission-details {
+    flex: 1;
+    line-height: 1.4;
+}
+
+.permission-details strong {
+    color: var(--text);
+}
+
+.permission-details small {
+    color: var(--text-secondary);
+}
+</style>
+{% endblock %}

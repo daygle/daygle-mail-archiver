@@ -2,6 +2,7 @@ from fastapi import APIRouter, Request, Form
 from fastapi.responses import RedirectResponse, JSONResponse
 import bcrypt
 import re
+from typing import List
 
 from utils.db import query, execute
 from utils.logger import log
@@ -21,29 +22,39 @@ def list_users(request: Request):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
+    # Get users with their assigned roles
     users = query("""
-        SELECT id, username, first_name, last_name, email, role, 
-               COALESCE(email_notifications, TRUE) as email_notifications,
-               enabled, last_login, created_at 
-        FROM users 
-        ORDER BY id
+        SELECT u.id, u.username, u.first_name, u.last_name, u.email,
+               COALESCE(u.email_notifications, TRUE) as email_notifications,
+               u.enabled, u.last_login, u.created_at,
+               GROUP_CONCAT(r.name SEPARATOR ', ') as roles
+        FROM users u
+        LEFT JOIN user_roles ur ON u.id = ur.user_id
+        LEFT JOIN roles r ON ur.role_id = r.id
+        GROUP BY u.id, u.username, u.first_name, u.last_name, u.email,
+                 u.email_notifications, u.enabled, u.last_login, u.created_at
+        ORDER BY u.id
     """).mappings().all()
+
+    # Get all available roles for the form
+    roles = query("SELECT id, name, description FROM roles ORDER BY name").mappings().all()
+
     msg = request.session.pop("flash", None)
 
     return templates.TemplateResponse(
         "users.html",
-        {"request": request, "users": users, "flash": msg},
+        {"request": request, "users": users, "roles": roles, "flash": msg},
     )
 
 @router.post("/users/create")
 def create_user(
-    request: Request, 
-    username: str = Form(...), 
+    request: Request,
+    username: str = Form(...),
     password: str = Form(...),
     first_name: str = Form(""),
     last_name: str = Form(""),
     email: str = Form(""),
-    role: str = Form("administrator"),
+    role_ids: List[str] = Form([]),
     email_notifications: bool = Form(True),
     enabled: bool = Form(True)
 ):
@@ -91,23 +102,39 @@ def create_user(
         flash(request, "Invalid email format.")
         return RedirectResponse("/users", status_code=303)
     
+    # Validate that at least one role is selected
+    if not role_ids:
+        flash(request, "At least one role must be assigned to the user.")
+        return RedirectResponse("/users", status_code=303)
+    
     try:
         hash_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        execute("""
-            INSERT INTO users (username, password_hash, first_name, last_name, email, role, email_notifications, enabled) 
-            VALUES (:u, :h, :fn, :ln, :e, :r, :enf, :en)
+        user_id = execute("""
+            INSERT INTO users (username, password_hash, first_name, last_name, email, email_notifications, enabled)
+            VALUES (:u, :h, :fn, :ln, :e, :enf, :en)
         """, {
-            "u": username, 
-            "h": hash_pw, 
-            "fn": first_name,
-            "ln": last_name,
-            "e": email,
-            "r": role,
+            "u": username,
+            "h": hash_pw,
+            "fn": first_name or None,
+            "ln": last_name or None,
+            "e": email or None,
             "enf": email_notifications,
             "en": enabled
         })
-        log("info", "Users", f"Admin '{admin_username}' created new user '{username}' with role '{role}'", "")
-        flash(request, f"User {username} created successfully.")
+
+        # Assign roles to the user
+        for role_id in role_ids:
+            try:
+                execute("""
+                    INSERT INTO user_roles (user_id, role_id)
+                    VALUES (:user_id, :role_id)
+                """, {"user_id": user_id, "role_id": int(role_id)})
+            except Exception as e:
+                log("error", "Users", f"Failed to assign role {role_id} to user {username}: {str(e)}")
+
+        log("info", "Users", f"Admin '{admin_username}' created new user '{username}' with {len(role_ids)} roles")
+        flash(request, f"User '{username}' created successfully")
+        return RedirectResponse("/users", status_code=303)
     except Exception as e:
         log("error", "Users", f"Failed to create user '{username}' by admin '{admin_username}': {str(e)}", "")
         flash(request, "User creation failed. Please try again.")

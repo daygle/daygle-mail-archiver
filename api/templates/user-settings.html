@@ -95,7 +95,7 @@
         <div class="card-body">
             <p class="section-description">Configure your email alert preferences</p>
             
-            {% if user_role == 'administrator' %}
+            {% if 'manage_alerts' in permissions %}
             <div class="form-group">
                 <label for="email_notifications" class="form-label">Email Notifications</label>
                 <select id="email_notifications" class="form-select" name="email_notifications">

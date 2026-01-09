@@ -7,7 +7,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.cors import CORSMiddleware
 import logging
 
-from routes import emails, fetch_accounts, global_settings, login, users, profile, logs, dashboard, worker_status, oauth, donate, help, reports, alerts, alert_management, quarantine
+from routes import emails, fetch_accounts, global_settings, login, users, profile, logs, dashboard, worker_status, oauth, donate, help, reports, alerts, alert_management, quarantine, roles
 from utils.logger import log
 from utils.config import get_config
 
@@ -88,6 +88,7 @@ app.include_router(fetch_accounts.router)
 app.include_router(worker_status.router)
 app.include_router(oauth.router)
 app.include_router(users.router)
+app.include_router(roles.router)
 app.include_router(profile.router)
 app.include_router(logs.router)
 app.include_router(reports.router)
