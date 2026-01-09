@@ -27,12 +27,12 @@ def list_users(request: Request):
         SELECT u.id, u.username, u.first_name, u.last_name, u.email,
                COALESCE(u.email_notifications, TRUE) as email_notifications,
                u.enabled, u.last_login, u.created_at,
-               COALESCE(STRING_AGG(r.display_name, ', '), '') as roles
+               COALESCE(NULLIF(STRING_AGG(r.display_name, ', '), ''), INITCAP(REGEXP_REPLACE(u.role, '[_\-]+', ' ', 'g'))) as roles
         FROM users u
         LEFT JOIN user_roles ur ON u.id = ur.user_id
         LEFT JOIN roles r ON ur.role_id = r.id
         GROUP BY u.id, u.username, u.first_name, u.last_name, u.email,
-                 u.email_notifications, u.enabled, u.last_login, u.created_at
+                 u.email_notifications, u.enabled, u.last_login, u.created_at, u.role
         ORDER BY u.id
     """).mappings().all()
 
@@ -132,6 +132,14 @@ def create_user(
             except Exception as e:
                 log("error", "Users", f"Failed to assign role {role_id} to user {username}: {str(e)}")
 
+        # Keep legacy users.role in sync with the first assigned role slug (helps backward compatibility)
+        try:
+            first_role = query("SELECT name FROM roles WHERE id = :id", {"id": int(role_ids[0])}).mappings().first()
+            if first_role:
+                execute("UPDATE users SET role = :role WHERE id = :id", {"role": first_role["name"], "id": user_id})
+        except Exception as e:
+            log("warning", "Users", f"Failed to sync legacy role for user {user_id}: {str(e)}")
+
         log("info", "Users", f"Admin '{admin_username}' created new user '{username}' with {len(role_ids)} roles")
         flash(request, f"User '{username}' created successfully")
         return RedirectResponse("/users", status_code=303)
@@ -165,6 +173,16 @@ def get_user(request: Request, user_id: int):
         role_rows = query("SELECT role_id FROM user_roles WHERE user_id = :id", {"id": user_id}).mappings().all()
         role_ids = [r["role_id"] for r in role_rows]
 
+        # If no role assignments exist, try to map legacy users.role to new role id if possible
+        if not role_ids and user.get("role"):
+            try:
+                legacy = user["role"]
+                mapped = query("SELECT id FROM roles WHERE name = :name", {"name": legacy}).mappings().first()
+                if mapped:
+                    role_ids = [mapped["id"]]
+            except Exception:
+                pass
+
         return {
             "id": user["id"],
             "username": user["username"],
@@ -192,6 +210,7 @@ def update_user(
     last_name: str = Form(""),
     email: str = Form(""),
     role: str = Form("administrator"),
+    role_ids: List[str] = Form([]),
     email_notifications: bool = Form(True),
     enabled: bool = Form(False),
     password: str = Form("")
@@ -226,6 +245,11 @@ def update_user(
     if email and not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email):
         flash(request, "Invalid email format.")
         return RedirectResponse("/users", status_code=303)
+    
+    # Validate that at least one role is selected
+    if not role_ids:
+        flash(request, "At least one role must be assigned to the user.")
+        return RedirectResponse(f"/users/{user_id}/edit", status_code=303)
     
     try:
         if password:
@@ -283,7 +307,28 @@ def update_user(
                 "id": user_id
             })
             log("info", "Users", f"Admin '{admin_username}' updated user '{username}' (ID: {user_id})", "")
-        flash(request, "User updated successfully.")
+
+            # Update role assignments (user_roles)
+            try:
+                execute("DELETE FROM user_roles WHERE user_id = :id", {"id": user_id})
+                if role_ids:
+                    for rid in role_ids:
+                        try:
+                            execute("INSERT INTO user_roles (user_id, role_id) VALUES (:user_id, :role_id)", {"user_id": user_id, "role_id": int(rid)})
+                        except Exception as e:
+                            log("error", "Users", f"Failed to assign role {rid} to user {username}: {str(e)}")
+                # Sync legacy users.role with the first selected role if provided
+                try:
+                    if role_ids:
+                        first_role = query("SELECT name FROM roles WHERE id = :id", {"id": int(role_ids[0])}).mappings().first()
+                        if first_role:
+                            execute("UPDATE users SET role = :role WHERE id = :id", {"role": first_role["name"], "id": user_id})
+                except Exception as e:
+                    log("warning", "Users", f"Failed to sync legacy role for user {user_id}: {str(e)}")
+            except Exception as e:
+                log("warning", "Users", f"Failed to update role assignments for user {user_id}: {str(e)}")
+
+            flash(request, "User updated successfully.")
     except Exception as e:
         log("error", "Users", f"Failed to update user {user_id} by admin '{admin_username}': {str(e)}", "")
         flash(request, "User update failed. Please try again.")
