@@ -30,13 +30,13 @@ def list_roles(request: Request):
 
     # Get all roles with their permissions (include permission names and display_name)
     roles = query("""
-        SELECT r.id, r.name, r.display_name, r.description,
+        SELECT r.id, r.name, r.display_name, r.description, r.is_system_role,
                COUNT(rp.permission_id) as permission_count,
                COALESCE(STRING_AGG(p.name, ', '), '') as permissions
         FROM roles r
         LEFT JOIN role_permissions rp ON r.id = rp.role_id
         LEFT JOIN permissions p ON rp.permission_id = p.id
-        GROUP BY r.id, r.name, r.display_name, r.description
+        GROUP BY r.id, r.name, r.display_name, r.description, r.is_system_role
         ORDER BY r.name
     """).mappings().all()
 

@@ -85,7 +85,7 @@
         {% endif %}
 
         {% if roles %}
-        <div class="table-responsive">
+        <div class="table-container">
             <table class="table table-striped">
                 <thead>
                     <tr>
@@ -122,8 +122,12 @@
                                 <button type="button" class="btn btn-secondary btn-sm" title="Edit" onclick="location.href='/roles/{{ role.id }}/edit'">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                {% if role.name not in ['administrator', 'read_only'] %}
-                                <button type="button" class="btn btn-danger btn-sm" onclick="deleteRole({{ role.id }}, '{{ role.name | replace('_', ' ') | replace('-', ' ') | title }}')" title="Delete Role">
+                                {% if not role.is_system_role %}
+                                <button type="button" class="btn btn-danger btn-sm" onclick="deleteRole({{ role.id }}, '{{ role.display_name or (role.name | replace('_', ' ') | replace('-', ' ') | title) }}')" title="Delete Role">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                {% else %}
+                                <button type="button" class="btn btn-danger btn-sm disabled" title="System role — cannot be deleted" data-bs-toggle="tooltip" data-bs-placement="top" aria-disabled="true" tabindex="-1">
                                     <i class="fas fa-trash"></i>
                                 </button>
                                 {% endif %}
@@ -216,6 +220,14 @@ setTimeout(() => {
         bsAlert.close();
     });
 }, 5000);
+
+// Initialize Bootstrap tooltips for system-role disabled buttons and other elements
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(function (el) {
+        try { new bootstrap.Tooltip(el); } catch (e) { /* ignore if Bootstrap not loaded yet */ }
+    });
+});
 </script>
 {% endblock %}
 
