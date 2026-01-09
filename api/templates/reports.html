@@ -661,6 +661,11 @@ function loadAllReports() {
     loadAccountActivityReport();
     loadSystemHealthReport();
     loadAVStatsReport();
+    loadStorageUtilizationReport();
+    loadRetentionPolicyReport();
+    loadSystemPerformanceReport();
+    loadSecurityAccessReport();
+    loadDataQualityReport();
 }
 
 // Email Volume Report
@@ -1349,7 +1354,7 @@ function loadSecurityAccessReport() {
             const tbody = document.getElementById('securityEventsTableBody');
             tbody.innerHTML = '';
             if (data.recent_security_events) {
-                data.recent_events.forEach(event => {
+                data.recent_security_events.forEach(event => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td>${event.timestamp || '-'}</td>
