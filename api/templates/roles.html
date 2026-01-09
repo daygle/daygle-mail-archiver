@@ -123,13 +123,15 @@
                                     <i class="fas fa-edit"></i>
                                 </button>
                                 {% if not role.is_system_role %}
-                                <button type="button" class="btn btn-danger btn-sm" onclick="deleteRole({{ role.id }}, '{{ role.display_name or (role.name | replace('_', ' ') | replace('-', ' ') | title) }}')" title="Delete Role">
+                                <button type="button" class="btn btn-danger btn-sm" data-role-id="{{ role.id }}" data-role-name="{{ role.display_name or (role.name | replace('_', ' ') | replace('-', ' ') | title) }}" onclick="deleteRole(this.dataset.roleId, this.dataset.roleName)" title="Delete Role">
                                     <i class="fas fa-trash"></i>
                                 </button>
                                 {% else %}
-                                <button type="button" class="btn btn-danger btn-sm disabled" title="System role — cannot be deleted" data-bs-toggle="tooltip" data-bs-placement="top" aria-disabled="true" tabindex="-1">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                <span class="disabled-tooltip-wrapper" data-bs-toggle="tooltip" data-bs-placement="top" title="System role — cannot be deleted" tabindex="0" role="button" aria-disabled="true">
+                                    <button type="button" class="btn btn-danger btn-sm" disabled aria-disabled="true" tabindex="-1">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </span>
                                 {% endif %}
                             </div>
                         </td>
@@ -222,94 +224,21 @@ setTimeout(() => {
 }, 5000);
 
 // Initialize Bootstrap tooltips for system-role disabled buttons and other elements
-document.addEventListener('DOMContentLoaded', function() {
+function initTooltips() {
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.forEach(function (el) {
-        try { new bootstrap.Tooltip(el); } catch (e) { /* ignore if Bootstrap not loaded yet */ }
+        try { new bootstrap.Tooltip(el); } catch (e) { /* ignore */ }
     });
-});
+}
+// Run immediately (in case DOM already loaded), and also attach to events for reliability
+try { initTooltips(); } catch (e) { /* ignore */ }
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTooltips);
+} else {
+    initTooltips();
+}
+window.addEventListener('load', initTooltips);
 </script>
 {% endblock %}
 
-{% block extra_css %}
-<style>
-.permissions-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1rem;
-    border: 1px solid var(--border);
-    border-radius: 0.375rem;
-    padding: 1rem;
-    background-color: var(--bg-secondary);
-}
-
-.role-permissions {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    align-items: center;
-}
-
-.permission-item {
-    margin: 0;
-}
-
-.permission-checkbox {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
-    cursor: pointer;
-    padding: 0.5rem;
-    border-radius: 0.25rem;
-    transition: background-color 0.2s;
-}
-
-.permission-checkbox:hover {
-    background-color: var(--bg-hover);
-}
-
-.permission-checkbox input[type="checkbox"] {
-    margin-top: 0.125rem;
-    flex-shrink: 0;
-}
-
-.checkmark {
-    width: 1.2rem;
-    height: 1.2rem;
-    border: 2px solid var(--border);
-    border-radius: 0.25rem;
-    background-color: var(--bg);
-    position: relative;
-    flex-shrink: 0;
-}
-
-.permission-checkbox input[type="checkbox"]:checked + .checkmark {
-    background-color: var(--primary);
-    border-color: var(--primary);
-}
-
-.permission-checkbox input[type="checkbox"]:checked + .checkmark::after {
-    content: '✓';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: white;
-    font-size: 0.8rem;
-    font-weight: bold;
-}
-
-.permission-details {
-    flex: 1;
-    line-height: 1.4;
-}
-
-.permission-details strong {
-    color: var(--text);
-}
-
-.permission-details small {
-    color: var(--text-secondary);
-}
-</style>
-{% endblock %}
+{% block extra_css %}{% endblock %}
