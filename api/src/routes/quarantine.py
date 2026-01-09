@@ -19,6 +19,11 @@ def _get_quarantine_fernet():
 
 @router.get('/quarantine', response_class=HTMLResponse)
 def list_quarantine(request: Request):
+    # Require login first
+    if not request.session.get('user_id'):
+        return RedirectResponse('/login', status_code=303)
+
+    # Require administrator role
     if request.session.get('role') != 'administrator':
         return RedirectResponse('/dashboard', status_code=303)
 
@@ -27,6 +32,11 @@ def list_quarantine(request: Request):
 
 @router.get('/quarantine/{qid}', response_class=HTMLResponse)
 def view_quarantine(request: Request, qid: int):
+    # Require login first
+    if not request.session.get('user_id'):
+        return RedirectResponse('/login', status_code=303)
+
+    # Require administrator role
     if request.session.get('role') != 'administrator':
         return RedirectResponse('/dashboard', status_code=303)
 
@@ -58,6 +68,11 @@ def view_quarantine(request: Request, qid: int):
 
 @router.post('/quarantine/{qid}/restore')
 def restore_quarantine(request: Request, qid: int):
+    # Require login first
+    if not request.session.get('user_id'):
+        return RedirectResponse('/login', status_code=303)
+
+    # Require administrator role
     if request.session.get('role') != 'administrator':
         return RedirectResponse('/dashboard', status_code=303)
 
@@ -121,6 +136,11 @@ def restore_quarantine(request: Request, qid: int):
 
 @router.post('/quarantine/{qid}/delete')
 def delete_quarantine(request: Request, qid: int):
+    # Require login first
+    if not request.session.get('user_id'):
+        return RedirectResponse('/login', status_code=303)
+
+    # Require administrator role
     if request.session.get('role') != 'administrator':
         return RedirectResponse('/dashboard', status_code=303)
 
