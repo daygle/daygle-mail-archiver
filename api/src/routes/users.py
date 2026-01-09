@@ -109,9 +109,10 @@ def create_user(
     
     try:
         hash_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        user_id = execute("""
+        # Use RETURNING to obtain the new user's id
+        new_user = query("""
             INSERT INTO users (username, password_hash, first_name, last_name, email, email_notifications, enabled)
-            VALUES (:u, :h, :fn, :ln, :e, :enf, :en)
+            VALUES (:u, :h, :fn, :ln, :e, :enf, :en) RETURNING id
         """, {
             "u": username,
             "h": hash_pw,
@@ -120,7 +121,8 @@ def create_user(
             "e": email or None,
             "enf": email_notifications,
             "en": enabled
-        })
+        }).mappings().first()
+        user_id = new_user["id"] if new_user else None
 
         # Assign roles to the user
         for role_id in role_ids:

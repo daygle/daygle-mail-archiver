@@ -305,6 +305,17 @@ async function editUser(userId) {
         alert('Failed to load user details');
     }
 }
+
+// Reveal users UI only after styles have loaded to reduce FOUC
+function revealUsers(){
+    try{
+        var els = document.querySelectorAll('#userFormCard, #usersListCard');
+        for(var i=0;i<els.length;i++) els[i].classList.add('visible');
+    }catch(e){/* ignore */}
+}
+if (document.readyState === 'complete') { setTimeout(revealUsers, 50); }
+window.addEventListener('load', function(){ setTimeout(revealUsers, 50); });
+
 </script>
 
 {% block extra_css %}

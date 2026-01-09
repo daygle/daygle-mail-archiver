@@ -140,16 +140,18 @@ def setup_wizard_submit(
     # Create the administrator account
     try:
         hash_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        user_id = execute(
-            "INSERT INTO users (username, password_hash, first_name, last_name, email) VALUES (:username, :password_hash, :first_name, :last_name, :email)",
+        # Use RETURNING to get the inserted user id
+        new_user = query(
+            "INSERT INTO users (username, password_hash, first_name, last_name, email) VALUES (:username, :password_hash, :first_name, :last_name, :email) RETURNING id",
             {
-                "username": username, 
-                "password_hash": hash_pw, 
+                "username": username,
+                "password_hash": hash_pw,
                 "first_name": first_name if first_name else None,
                 "last_name": last_name if last_name else None,
                 "email": email if email else None
             }
-        )
+        ).mappings().first()
+        user_id = new_user["id"] if new_user else None
         
         # Assign the user to the administrator role
         try:
