@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS emails (
     date TEXT,
 
     -- Raw email storage
-raw_email BYTEA,
+    raw_email BYTEA,
     compressed BOOLEAN NOT NULL DEFAULT TRUE,
 
     -- Quarantine flag (moves raw emails into a quarantine table when necessary)
@@ -50,7 +50,6 @@ USING GIN (
 );
 
 -- Index for date range queries and filtering
-CREATE INDEX IF NOT EXISTS emails_created_at_idx ON emails(created_at DESC);
 CREATE INDEX IF NOT EXISTS emails_source_idx ON emails(source);
 CREATE INDEX IF NOT EXISTS emails_sender_idx ON emails(sender);
 CREATE INDEX IF NOT EXISTS emails_virus_detected_idx ON emails(virus_detected) WHERE virus_detected = TRUE;
