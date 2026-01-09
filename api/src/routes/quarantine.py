@@ -19,8 +19,15 @@ def _get_quarantine_fernet():
 
 @router.get('/quarantine', response_class=HTMLResponse)
 def list_quarantine(request: Request):
+    # Debug: log session state to diagnose unexpected redirects
+    try:
+        log('info', 'Quarantine', f"Session keys: {list(request.session.keys())}, user_id={request.session.get('user_id')}, role={request.session.get('role')}, username={request.session.get('username')}")
+    except Exception:
+        pass
+
     # Require login first
     if not request.session.get('user_id'):
+        request.session['flash'] = 'Please login to access Quarantine'
         return RedirectResponse('/login', status_code=303)
 
     # Verify role from DB (more reliable than trusting session role)
@@ -28,9 +35,11 @@ def list_quarantine(request: Request):
         user = query('SELECT role FROM users WHERE id = :id', {'id': request.session.get('user_id')}).mappings().first()
         if not user or user.get('role') != 'administrator':
             log('warning', 'Quarantine', f"Unauthorized access attempt to /quarantine by user_id={request.session.get('user_id')} role={request.session.get('role')}")
+            request.session['flash'] = 'Administrator access required'
             return RedirectResponse('/dashboard', status_code=303)
     except Exception as e:
         log('error', 'Quarantine', f"Failed to verify admin role: {e}")
+        request.session['flash'] = 'Administrator access required'
         return RedirectResponse('/dashboard', status_code=303)
 
     rows = query('SELECT id, subject, sender, recipients, virus_name, quarantined_at, expires_at FROM quarantined_emails ORDER BY quarantined_at DESC').mappings().all()
@@ -78,6 +87,17 @@ def view_quarantine(request: Request, qid: int):
 
     return templates.TemplateResponse('quarantine-view.html', {'request': request, 'item': item, 'preview': preview})
 
+
+@router.get('/quarantine/_session')
+def quarantine_session(request: Request):
+    """Debugging endpoint: returns current session keys for troubleshooting auth issues."""
+    try:
+        # Only return a limited set of session keys to avoid leaking secrets
+        keys = {k: request.session.get(k) for k in ('user_id', 'username', 'role')}
+        return JSONResponse({'session': keys})
+    except Exception as e:
+        log('error', 'Quarantine', f'Failed to read session for debug: {e}')
+        return JSONResponse({'error': 'failed to read session'})
 @router.post('/quarantine/{qid}/restore')
 def restore_quarantine(request: Request, qid: int):
     # Require login first
