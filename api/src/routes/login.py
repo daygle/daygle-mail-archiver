@@ -9,9 +9,6 @@ from utils.templates import templates
 
 router = APIRouter()
 
-def logged_in(request: Request):
-    return "user_id" in request.session
-
 def is_setup_complete():
     """Check if initial setup has been completed"""
     try:
