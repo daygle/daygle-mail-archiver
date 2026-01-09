@@ -51,7 +51,7 @@
 
                 {% if request.session.role == 'administrator' %}
                 <div class="nav-section">
-                    <div class="nav-section-title">Administration</div>
+                    <div class="nav-section-title">Operations & Monitoring</div>
                     <a href="/fetch-accounts" class="nav-link {% if '/fetch-account' in request.url.path %}active{% endif %}">
                         <i class="fas fa-server"></i>
                         <span>Fetch Accounts</span>
@@ -68,6 +68,9 @@
                         <i class="fas fa-shield-virus"></i>
                         <span>Quarantine</span>
                     </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">System Management</div>
                     <a href="/alert-management" class="nav-link {% if '/alert-management' in request.url.path %}active{% endif %}">
                         <i class="fas fa-cog"></i>
                         <span>Alert Management</span>
@@ -76,12 +79,10 @@
                         <i class="fas fa-sliders"></i>
                         <span>Global Settings</span>
                     </a>
-
                     <a href="/users" class="nav-link {% if '/users' in request.url.path %}active{% endif %}">
                         <i class="fas fa-users"></i>
                         <span>User Management</span>
                     </a>
-                    
                     <a href="/logs" class="nav-link {% if '/logs' in request.url.path %}active{% endif %}">
                         <i class="fas fa-list"></i>
                         <span>Logs</span>
