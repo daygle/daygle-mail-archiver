@@ -157,7 +157,10 @@ CREATE TABLE IF NOT EXISTS permissions (
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS roles (
     id SERIAL PRIMARY KEY,
+    -- machine-friendly slug used for role checks and lookups (e.g. 'administrator', 'read_only')
     name TEXT UNIQUE NOT NULL,
+    -- human-friendly display label (e.g. 'Administrator', 'Read Only')
+    display_name TEXT,
     description TEXT,
     is_system_role BOOLEAN NOT NULL DEFAULT FALSE, -- System roles cannot be deleted
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -421,12 +424,12 @@ ON CONFLICT (name) DO NOTHING;
 -- ----------------------------
 -- Default Roles
 -- ----------------------------
-INSERT INTO roles (name, description, is_system_role) VALUES
-    ('administrator', 'Full system access with all permissions', TRUE),
-    ('read_only', 'Read-only access to view emails and reports', TRUE),
-    ('email_manager', 'Can manage emails, quarantine, and basic reports', TRUE),
-    ('auditor', 'Can view reports, logs, and system status', TRUE),
-    ('user_manager', 'Can manage user accounts and roles', TRUE)
+INSERT INTO roles (name, display_name, description, is_system_role) VALUES
+    ('administrator', 'Administrator', 'Full system access with all permissions', TRUE),
+    ('read_only', 'Read Only', 'Read-only access to view emails and reports', TRUE),
+    ('email_manager', 'Email Manager', 'Can manage emails, quarantine, and basic reports', TRUE),
+    ('auditor', 'Auditor', 'Can view reports, logs, and system status', TRUE),
+    ('user_manager', 'User Manager', 'Can manage user accounts and roles', TRUE)
 ON CONFLICT (name) DO NOTHING;
 
 -- ----------------------------

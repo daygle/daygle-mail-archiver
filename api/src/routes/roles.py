@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import RedirectResponse, JSONResponse
 from typing import List
+import re
 
 from utils.db import query, execute
 from utils.logger import log
@@ -27,13 +28,15 @@ def list_roles(request: Request):
     if not require_admin(request):
         return RedirectResponse("/login", status_code=303)
 
-    # Get all roles with their permissions
+    # Get all roles with their permissions (include permission names and display_name)
     roles = query("""
-        SELECT r.id, r.name, r.description,
-               COUNT(rp.permission_id) as permission_count
+        SELECT r.id, r.name, r.display_name, r.description,
+               COUNT(rp.permission_id) as permission_count,
+               COALESCE(STRING_AGG(p.name, ', '), '') as permissions
         FROM roles r
         LEFT JOIN role_permissions rp ON r.id = rp.role_id
-        GROUP BY r.id, r.name, r.description
+        LEFT JOIN permissions p ON rp.permission_id = p.id
+        GROUP BY r.id, r.name, r.display_name, r.description
         ORDER BY r.name
     """).mappings().all()
 
@@ -68,22 +71,25 @@ def create_role(
         return JSONResponse({"error": "Unauthorized"}, status_code=403)
 
     try:
-        # Validate role name
-        if not name or len(name.strip()) < 2:
+        # Normalize and validate role name
+        # Store a machine-friendly slug in `name` (lowercase, underscores) and a human label in `display_name`
+        display_name = re.sub(r'[_\-]+', ' ', name.strip()).title()
+        slug = re.sub(r'[\s\-]+', '_', display_name).lower()
+        if not display_name or len(display_name) < 2:
             flash(request, "Role name must be at least 2 characters long")
             return RedirectResponse("/roles", status_code=303)
 
-        # Check if role name already exists
-        existing = query("SELECT id FROM roles WHERE name = :name", {"name": name.strip()}).first()
+        # Check if role slug already exists
+        existing = query("SELECT id FROM roles WHERE name = :name", {"name": slug}).first()
         if existing:
-            flash(request, f"Role '{name}' already exists")
+            flash(request, f"Role '{display_name}' already exists")
             return RedirectResponse("/roles", status_code=303)
 
         # Create the role
         role_id = execute("""
-            INSERT INTO roles (name, description)
-            VALUES (:name, :description)
-        """, {"name": name.strip(), "description": description.strip() or None})
+            INSERT INTO roles (name, display_name, description)
+            VALUES (:name, :display_name, :description)
+        """, {"name": slug, "display_name": display_name, "description": description.strip() or None})
 
         # Add permissions to the role
         if permission_ids:
@@ -113,7 +119,7 @@ def edit_role_form(request: Request, role_id: int):
 
     # Get role details
     role = query("""
-        SELECT id, name, description
+        SELECT id, name, display_name, description
         FROM roles
         WHERE id = :role_id
     """, {"role_id": role_id}).mappings().first()
@@ -161,28 +167,31 @@ def update_role(
         return JSONResponse({"error": "Unauthorized"}, status_code=403)
 
     try:
-        # Validate role name
-        if not name or len(name.strip()) < 2:
+        # Normalize and validate role name
+        display_name = re.sub(r'[_\-]+', ' ', name.strip()).title()
+        slug = re.sub(r'[\s\-]+', '_', display_name).lower()
+        if not display_name or len(display_name) < 2:
             flash(request, "Role name must be at least 2 characters long")
             return RedirectResponse(f"/roles/{role_id}/edit", status_code=303)
 
-        # Check if role name already exists (excluding current role)
+        # Check if role slug already exists (excluding current role)
         existing = query("""
             SELECT id FROM roles
             WHERE name = :name AND id != :role_id
-        """, {"name": name.strip(), "role_id": role_id}).first()
+        """, {"name": slug, "role_id": role_id}).first()
 
         if existing:
-            flash(request, f"Role '{name}' already exists")
+            flash(request, f"Role '{display_name}' already exists")
             return RedirectResponse(f"/roles/{role_id}/edit", status_code=303)
 
         # Update the role
         execute("""
             UPDATE roles
-            SET name = :name, description = :description
+            SET name = :name, display_name = :display_name, description = :description
             WHERE id = :role_id
         """, {
-            "name": name.strip(),
+            "name": slug,
+            "display_name": display_name,
             "description": description.strip() or None,
             "role_id": role_id
         })

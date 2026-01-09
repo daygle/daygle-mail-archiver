@@ -37,7 +37,7 @@
                             <input type="checkbox" name="permission_ids" value="{{ permission.id }}">
                             <span class="checkmark"></span>
                             <div class="permission-details">
-                                <strong>{{ permission.name }}</strong>
+                                <strong>{{ permission.name | replace('_', ' ') | replace('-', ' ') | title }}</strong>
                                 {% if permission.description %}
                                 <br><small>{{ permission.description }}</small>
                                 {% endif %}
@@ -99,7 +99,7 @@
                     {% for role in roles %}
                     <tr>
                         <td>
-                            <strong>{{ role.name }}</strong>
+                            <strong>{{ role.display_name or (role.name | replace('_', ' ') | replace('-', ' ') | title) }}</strong>
                         </td>
                         <td>
                             {% if role.description %}
@@ -108,17 +108,22 @@
                                 <em class="text-muted">No description</em>
                             {% endif %}
                         </td>
-                        <td>
-                            <span class="badge bg-secondary">{{ role.permission_count }} permissions</span>
+                        <td class="role-permissions">
+                            {% if role.permissions %}
+                                {% for perm in role.permissions.split(', ') if perm %}
+                                    <span class="badge bg-secondary">{{ perm | replace('_', ' ') | replace('-', ' ') | title }}</span>
+                                {% endfor %}
+                            {% else %}
+                                <em class="text-muted">No permissions</em>
+                            {% endif %}
                         </td>
                         <td>
-                            <div class="btn-group" role="group">
-                                <a href="/roles/{{ role.id }}/edit" class="btn btn-sm btn-outline-primary" title="Edit Role">
+                            <div class="flex-gap-8">
+                                <button type="button" class="btn btn-secondary btn-sm" title="Edit" onclick="location.href='/roles/{{ role.id }}/edit'">
                                     <i class="fas fa-edit"></i>
-                                </a>
+                                </button>
                                 {% if role.name not in ['administrator', 'read_only'] %}
-                                <button type="button" class="btn btn-sm btn-outline-danger"
-                                        onclick="deleteRole({{ role.id }}, '{{ role.name }}')" title="Delete Role">
+                                <button type="button" class="btn btn-danger btn-sm" onclick="deleteRole({{ role.id }}, '{{ role.name | replace('_', ' ') | replace('-', ' ') | title }}')" title="Delete Role">
                                     <i class="fas fa-trash"></i>
                                 </button>
                                 {% endif %}
@@ -218,14 +223,19 @@ setTimeout(() => {
 <style>
 .permissions-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 1rem;
-    max-height: 400px;
-    overflow-y: auto;
     border: 1px solid var(--border);
     border-radius: 0.375rem;
     padding: 1rem;
     background-color: var(--bg-secondary);
+}
+
+.role-permissions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
 }
 
 .permission-item {
