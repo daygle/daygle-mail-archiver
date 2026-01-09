@@ -892,7 +892,8 @@ textarea.form-control {
     text-transform: uppercase;
     letter-spacing: 0.05em;
     border-bottom: 1px solid var(--border-color);
-}
+    vertical-align: middle;
+} 
 
 .table {
     /* Ensure table itself doesn't force a light background so it inherits the card/theme */
@@ -904,7 +905,8 @@ textarea.form-control {
     border-bottom: 1px solid var(--border-light);
     color: var(--text-primary);
     background: transparent; /* Prevent cell background from staying white in some browsers */
-}
+    vertical-align: middle;
+} 
 
 .table tbody tr {
     transition: background-color var(--transition-fast);
@@ -1803,7 +1805,7 @@ textarea.form-control {
 .two-col-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .flex-between { display: flex; align-items: center; justify-content: space-between; }
 .form-actions { display: flex; gap: 12px; margin-top: 1.5rem; justify-content: flex-end; }
-.flex-gap-8 { display: flex; gap: 8px; }
+.flex-gap-8 { display: flex; gap: 8px; align-items: center; white-space: nowrap; }
 .checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
 .responsive-input { max-width: 200px; width: 100%; }
 .responsive-fixed { max-width: 220px; width: 100%; }
