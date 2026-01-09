@@ -797,18 +797,15 @@ textarea.form-control {
 }
 
 .role-permissions {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    align-items: center;
-
-    /* Ensure permissions cell visually matches other table cells */
-    background: transparent !important;
+    /* Keep normal table-cell behavior so table sizing is calculated correctly */
+    display: table-cell;
+    vertical-align: middle;
+    /* Remove extra vertical padding so it aligns with other cells */
     padding-top: 0 !important;
     padding-bottom: 0 !important;
 }
 
-/* Ensure badges are compact and wrap cleanly */
+/* Badges rendered inline so they don't affect table intrinsic sizing */
 .role-permissions .badge {
     display: inline-block;
     margin: 0.25rem 0.5rem 0.25rem 0; /* vertical then horizontal spacing */
