@@ -10,6 +10,7 @@ import ssl
 
 from utils.db import query
 from utils.logger import log
+from utils.timezone import format_datetime
 
 
 def get_smtp_config() -> dict:
@@ -173,12 +174,13 @@ def send_alert_email(
     return success_count == len(recipients)
 
 
-def test_smtp_connection(recipient_email: str) -> tuple[bool, str]:
+def test_smtp_connection(recipient_email: str, user_id: int = None) -> tuple[bool, str]:
     """
     Test SMTP connection and send a test email to the specified recipient
 
     Args:
         recipient_email: Email address to send the test email to
+        user_id: User ID for timezone/date formatting (optional)
 
     Returns:
         tuple: (success: bool, message: str)
@@ -211,7 +213,12 @@ def test_smtp_connection(recipient_email: str) -> tuple[bool, str]:
 
         # Send a test email
         from datetime import datetime, timezone
-        test_subject = f"Daygle Mail Archiver - SMTP Test {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}"
+        
+        # Format timestamp using user's preferences or global settings
+        current_time = datetime.now(timezone.utc)
+        formatted_time = format_datetime(current_time, user_id) if user_id else current_time.strftime('%Y-%m-%d %H:%M:%S UTC')
+        
+        test_subject = f"Daygle Mail Archiver - SMTP Test"
         test_body = f"""This is a test email from Daygle Mail Archiver.
 
 SMTP Configuration Test Details:
@@ -220,7 +227,7 @@ SMTP Configuration Test Details:
 - From: {config['from_email']}
 - To: {recipient_email}
 - TLS: {'Yes' if config['use_tls'] else 'No'}
-- Time: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}
+- Time: {formatted_time}
 
 If you received this email, your SMTP configuration is working correctly.
 """

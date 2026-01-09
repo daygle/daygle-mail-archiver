@@ -186,7 +186,7 @@ def test_smtp(request: Request):
             flash(request, "Your account does not have an email address configured.")
             return RedirectResponse("/global-settings", status_code=303)
 
-        success, message = test_smtp_connection(user["email"])
+        success, message = test_smtp_connection(user["email"], int(user_id))
         if success:
             flash(request, f"SMTP test successful: {message}")
         else:
