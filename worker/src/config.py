@@ -71,12 +71,13 @@ class Config:
         # Security section
         if parser.has_section('security'):
             self._config['IMAP_PASSWORD_KEY'] = parser.get('security', 'imap_password_key', fallback=None)
+            self._config['CLAMAV_QUARANTINE_KEY'] = parser.get('security', 'clamav_quarantine_key', fallback=None)
     
     def _load_from_environment(self):
         """Load configuration from environment variables (highest priority)."""
         env_vars = [
             'DB_NAME', 'DB_USER', 'DB_PASS', 'DB_DSN',
-            'IMAP_PASSWORD_KEY'
+            'IMAP_PASSWORD_KEY', 'CLAMAV_QUARANTINE_KEY'
         ]
         for var in env_vars:
             env_value = os.getenv(var)
