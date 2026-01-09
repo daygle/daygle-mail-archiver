@@ -3,38 +3,155 @@
 {% block page_title %}Quarantine Message #{{ item.id }}{% endblock %}
 
 {% block content %}
-<div class="card">
-    <div class="card-header">
+<!-- Quarantine Message Details Card -->
+<div class="card mb-4">
+    <div class="card-header flex-between">
         <div class="card-title">
             <i class="fas fa-biohazard"></i>
             <span>Quarantine Message #{{ item.id }}</span>
         </div>
-    </div>
-    <div class="card-body">
-        <dl class="row">
-            <dt class="col-sm-3">Subject</dt><dd class="col-sm-9">{{ item.subject or '(no subject)' }}</dd>
-            <dt class="col-sm-3">Sender</dt><dd class="col-sm-9">{{ item.sender or 'unknown' }}</dd>
-            <dt class="col-sm-3">Virus</dt><dd class="col-sm-9">{{ item.virus_name or '' }}</dd>
-            <dt class="col-sm-3">Quarantined At</dt><dd class="col-sm-9">{{ item.quarantined_at }}</dd>
-            <dt class="col-sm-3">Reason</dt><dd class="col-sm-9">{{ item.reason or '' }}</dd>
-        </dl>
-
-        <h5>Preview</h5>
-        {% if preview %}
-            <pre class="code-block small" style="max-height:400px; overflow:auto;">{{ preview }}</pre>
-        {% else %}
-            <p class="text-muted">No preview available</p>
-        {% endif %}
-
-        <div class="mt-3">
+        <div class="flex gap-2">
+            <a href="/quarantine" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back</span>
+            </a>
             <form method="post" action="/quarantine/{{ item.id }}/restore" style="display:inline;">
-                <button class="btn btn-success">Restore</button>
+                <button class="btn btn-success btn-sm">Restore</button>
             </form>
-            <form method="post" action="/quarantine/{{ item.id }}/delete" style="display:inline; margin-left: 1rem;" onsubmit="return confirm('Delete this quarantined message permanently?');">
-                <button class="btn btn-danger">Delete</button>
-            </form>
-            <a href="/quarantine" class="btn btn-secondary ms-2">Back</a>
+            <button type="button" class="btn btn-danger btn-sm" onclick="showDeleteConfirmation()">
+                <i class="fas fa-trash"></i>
+                <span>Delete</span>
+            </button>
+        </div>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <div class="table-container">
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <td class="col-left" style="background: var(--bg-secondary); font-weight: 600;">Subject</td>
+                        <td><strong>{{ item.subject or "(no subject)" }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td style="background: var(--bg-secondary); font-weight: 600;">Sender</td>
+                        <td>{{ item.sender or 'unknown' }}</td>
+                    </tr>
+                    <tr>
+                        <td style="background: var(--bg-secondary); font-weight: 600;">Virus</td>
+                        <td>{{ item.virus_name or '' }}</td>
+                    </tr>
+                    <tr>
+                        <td style="background: var(--bg-secondary); font-weight: 600;">Quarantined At</td>
+                        <td>{{ item.quarantined_at }}</td>
+                    </tr>
+                    <tr>
+                        <td style="background: var(--bg-secondary); font-weight: 600;">Reason</td>
+                        <td>{{ item.reason or '' }}</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
+
+<!-- Preview Card -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-file-alt"></i>
+            <span>Preview</span>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if preview %}
+            <pre style="background: var(--bg-secondary); padding: 16px; border-radius: var(--radius-md); overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; max-height:400px; overflow:auto;">{{ preview }}</pre>
+        {% else %}
+            <p class="text-muted">No preview available</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Section (Initially Hidden) -->
+<div id="delete-confirmation" class="card" style="display: none;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i>
+            <span>Confirm Deletion</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-warning">
+            <i class="fas fa-info-circle"></i>
+            <span>You are about to delete this quarantined message permanently.</span>
+        </div>
+
+        <p style="margin-top: 20px; margin-bottom: 20px;"><strong>Choose how you want to delete it:</strong></p>
+
+        <div style="display: grid; gap: 12px; margin-bottom: 20px;">
+            <button type="button" class="btn btn-danger w-100" onclick="performDelete('db')">
+                <i class="fas fa-database"></i>
+                <span>Delete from Database Only</span>
+            </button>
+            <button type="button" class="btn btn-warning w-100" onclick="performDelete('imap')">
+                <i class="fas fa-server"></i>
+                <span>Delete from Database and Mail Server</span>
+            </button>
+        </div>
+
+        <div class="text-center">
+            <button type="button" class="btn btn-secondary" onclick="hideDeleteConfirmation()">
+                <i class="fas fa-times"></i>
+                <span>Cancel</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+  function showDeleteConfirmation() {
+    // Hide all cards and show delete confirmation
+    document.querySelectorAll('.card').forEach(function(card) {
+      if (card.id !== 'delete-confirmation') {
+        card.style.display = 'none';
+      }
+    });
+    document.getElementById('delete-confirmation').style.display = 'block';
+    
+    // Scroll to top
+    window.scrollTo(0, 0);
+  }
+
+  function hideDeleteConfirmation() {
+    // Show all cards and hide delete confirmation
+    document.querySelectorAll('.card').forEach(function(card) {
+      if (card.id !== 'delete-confirmation') {
+        card.style.display = 'block';
+      }
+    });
+    document.getElementById('delete-confirmation').style.display = 'none';
+    
+    // Scroll to top
+    window.scrollTo(0, 0);
+  }
+
+  function performDelete(mode) {
+    // Create form with mode
+    const form = document.createElement('form');
+    form.method = 'post';
+    form.action = '/quarantine/{{ item.id }}/delete';
+    form.style.display = 'none';
+
+    // Add mode input
+    const modeInput = document.createElement('input');
+    modeInput.type = 'hidden';
+    modeInput.name = 'mode';
+    modeInput.value = mode;
+    form.appendChild(modeInput);
+
+    // Add form to body and submit
+    document.body.appendChild(form);
+    form.submit();
+  }
+</script>
+
 {% endblock %}

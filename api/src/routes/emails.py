@@ -74,6 +74,7 @@ def list_emails(
         SELECT id, source, folder, uid, subject, sender, recipients, date, created_at,
                virus_scanned, virus_detected, virus_name
         FROM emails
+        WHERE quarantined = FALSE
         {where_sql}
         ORDER BY date DESC
         LIMIT :limit OFFSET :offset
@@ -82,7 +83,7 @@ def list_emails(
     ).mappings().all()
 
     total = query(
-        f"SELECT COUNT(*) AS c FROM emails {where_sql}",
+        f"SELECT COUNT(*) AS c FROM emails WHERE quarantined = FALSE {where_sql}",
         params,
     ).mappings().first()["c"]
 
@@ -112,7 +113,7 @@ def view_email(request: Request, email_id: int):
     row = query(
         """
         SELECT id, source, folder, uid, subject, sender, recipients, date,
-               raw_email, compressed, created_at, virus_scanned, virus_detected, virus_name, scan_timestamp
+               raw_email, compressed, created_at, virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined
         FROM emails
         WHERE id = :id
         """,
@@ -188,6 +189,25 @@ def download_email(request: Request, email_id: int):
     )
 
 
+@router.post("/emails/{email_id}/quarantine")
+def quarantine_single_email(request: Request, email_id: int):
+    if not require_login(request):
+        return RedirectResponse("/login", status_code=303)
+    
+    if not can_delete(request):
+        flash(request, "You don't have permission to quarantine emails.")
+        return RedirectResponse(f"/emails/{email_id}", status_code=303)
+
+    quarantined = _quarantine_emails([email_id], request.session.get("username", "unknown"))
+    
+    if quarantined > 0:
+        flash(request, "Email quarantined successfully.")
+    else:
+        flash(request, "Email could not be quarantined (may already be quarantined).")
+    
+    return RedirectResponse("/emails", status_code=303)
+
+
 @router.post("/emails/delete")
 def perform_delete(
     request: Request,
@@ -239,6 +259,85 @@ def perform_delete(
     else:
         flash(request, "Invalid delete mode selected.")
         return RedirectResponse("/emails", status_code=303)
+
+
+@router.post("/emails/quarantine")
+def perform_quarantine(
+    request: Request,
+    ids: List[int] = Form(...),
+):
+    """
+    Quarantine selected emails.
+    """
+    if not require_login(request):
+        return RedirectResponse("/login", status_code=303)
+    
+    if not can_delete(request):  # Assuming quarantine requires same permission as delete
+        flash(request, "You don't have permission to quarantine emails.")
+        return RedirectResponse("/emails", status_code=303)
+
+    if not isinstance(ids, list):
+        ids = [ids]
+
+    quarantined = _quarantine_emails(ids, request.session.get("username", "unknown"))
+    
+    if quarantined > 0:
+        flash(request, f"Quarantined {quarantined} email(s).")
+    else:
+        flash(request, "No emails were quarantined.")
+    
+    return RedirectResponse("/emails", status_code=303)
+
+
+def _quarantine_emails(ids: List[int], quarantined_by: str) -> int:
+    """Quarantine emails by moving them to quarantined_emails table. Returns number quarantined."""
+    if not ids:
+        return 0
+    
+    quarantined_count = 0
+    
+    for email_id in ids:
+        try:
+            # Get email data
+            email = query("""
+                SELECT id, source, folder, uid, subject, sender, recipients, date, raw_email, compressed
+                FROM emails 
+                WHERE id = :id AND quarantined = FALSE
+            """, {"id": email_id}).mappings().first()
+            
+            if not email:
+                continue  # Already quarantined or doesn't exist
+            
+            # Insert into quarantined_emails
+            quarantine_id = execute("""
+                INSERT INTO quarantined_emails
+                (original_source, original_folder, original_uid, subject, sender, recipients, date, raw_email, compressed, reason, quarantined_by)
+                VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, :compressed, :reason, :quarantined_by)
+            """, {
+                "source": email["source"],
+                "folder": email["folder"],
+                "uid": email["uid"],
+                "subject": email["subject"],
+                "sender": email["sender"],
+                "recipients": email["recipients"],
+                "date": email["date"],
+                "raw_email": email["raw_email"],
+                "compressed": email["compressed"],
+                "reason": "manually quarantined",
+                "quarantined_by": quarantined_by
+            })
+            
+            # Update emails table
+            execute("""
+                DELETE FROM emails WHERE id = :id
+            """, {"id": email_id})
+            
+            quarantined_count += 1
+            
+        except Exception as e:
+            log("error", "Emails", f"Failed to quarantine email ID {email_id}: {str(e)}", "")
+    
+    return quarantined_count
 
 
 def _delete_emails_from_db(ids: List[int]) -> int:

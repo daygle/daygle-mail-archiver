@@ -101,7 +101,7 @@
                 <input class="form-check-input" type="checkbox" id="retention_delete_from_mail_server" name="retention_delete_from_mail_server" {% if settings.retention_delete_from_mail_server == 'true' %}checked{% endif %}>
                 <label class="form-check-label" for="retention_delete_from_mail_server">
                     <strong>Delete from Mail Server During Retention Cleanup</strong>
-                    <small class="d-block text-secondary">When enabled, retention cleanup will also attempt to delete emails from the original IMAP mail servers (only applies to IMAP accounts with delete_after_processing enabled)</small>
+                    <small class="d-block text-secondary">When enabled, retention cleanup will also attempt to delete emails from the original IMAP mail servers for both regular emails and quarantined emails</small>
                 </label>
             </div>
 
@@ -163,8 +163,23 @@
                 </small>
             </div>
 
-            <hr>
+            <div class="form-group mt-3">
+                <label for="clamav_max_file_size" class="form-label">Max File Size to Scan (bytes)</label>
+                <input id="clamav_max_file_size" class="form-control" name="clamav_max_file_size" type="number" min="1024" value="{{ settings.clamav_max_file_size or '10485760' }}">
+                <small class="form-text">Files larger than this size will not be scanned by ClamAV</small>
+            </div>
+        </div>
+    </div>
 
+    <!-- Quarantine Settings Card -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fas fa-shield-virus"></i>
+                <span>Quarantine Settings</span>
+            </div>
+        </div>
+        <div class="card-body">
             <div class="form-check mb-3">
                 <input class="form-check-input" type="checkbox" id="clamav_quarantine_in_db" name="clamav_quarantine_in_db" {% if settings.clamav_quarantine_in_db == 'true' %}checked{% endif %}>
                 <label class="form-check-label" for="clamav_quarantine_in_db">
@@ -177,12 +192,6 @@
                 <label for="clamav_quarantine_retention_days" class="form-label">Quarantine Retention (days)</label>
                 <input id="clamav_quarantine_retention_days" class="form-control" name="clamav_quarantine_retention_days" type="number" min="1" value="{{ settings.clamav_quarantine_retention_days or '90' }}">
                 <small class="form-text">Number of days to retain quarantined messages before automatic purge</small>
-            </div>
-
-            <div class="form-group mt-3">
-                <label for="clamav_max_file_size" class="form-label">Max File Size to Scan (bytes)</label>
-                <input id="clamav_max_file_size" class="form-control" name="clamav_max_file_size" type="number" min="1024" value="{{ settings.clamav_max_file_size or '10485760' }}">
-                <small class="form-text">Files larger than this size will not be scanned by ClamAV</small>
             </div>
 
             <div class="form-check mt-3 mb-0">

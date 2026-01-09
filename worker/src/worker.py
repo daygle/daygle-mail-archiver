@@ -275,19 +275,20 @@ Action Taken: {action}"""
                     return False
 
     # Insert into emails table (store compressed bytes unless quarantined)
-    try:
-        execute(
-            """
-            INSERT INTO emails (source, folder, uid, subject, sender, recipients, date, raw_email, compressed, virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined)
-            VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, :compressed, :virus_scanned, :virus_detected, :virus_name, :scan_timestamp, :quarantined)
-            ON CONFLICT (source, folder, uid) DO UPDATE SET
-                subject = EXCLUDED.subject,
-                sender = EXCLUDED.sender,
-                recipients = EXCLUDED.recipients,
-                date = EXCLUDED.date,
-                raw_email = EXCLUDED.raw_email,
-                compressed = EXCLUDED.compressed,
-                virus_scanned = EXCLUDED.virus_scanned,
+    if not quarantined:
+        try:
+            execute(
+                """
+                INSERT INTO emails (source, folder, uid, subject, sender, recipients, date, raw_email, compressed, virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined)
+                VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, :compressed, :virus_scanned, :virus_detected, :virus_name, :scan_timestamp, :quarantined)
+                ON CONFLICT (source, folder, uid) DO UPDATE SET
+                    subject = EXCLUDED.subject,
+                    sender = EXCLUDED.sender,
+                    recipients = EXCLUDED.recipients,
+                    date = EXCLUDED.date,
+                    raw_email = EXCLUDED.raw_email,
+                    compressed = EXCLUDED.compressed,
+                    virus_scanned = EXCLUDED.virus_scanned,
                 virus_detected = EXCLUDED.virus_detected,
                 virus_name = EXCLUDED.virus_name,
                 scan_timestamp = EXCLUDED.scan_timestamp,
@@ -310,9 +311,9 @@ Action Taken: {action}"""
                 "quarantined": quarantined,
             },
         )
-    except Exception as e:
-        log_error(source, f"Failed to store email in database: {e}")
-        return False
+        except Exception as e:
+            log_error(source, f"Failed to store email in database: {e}")
+            return False
 
     return True
 
@@ -760,26 +761,110 @@ def purge_old_emails():
         retention_days = int(settings.get('clamav_quarantine_retention_days', '90'))
         from datetime import timedelta
         quarantine_cutoff = datetime.now(timezone.utc) - timedelta(days=retention_days)
-        # Delete quarantined emails older than cutoff
-        deleted = query("""
-            DELETE FROM quarantined_emails WHERE quarantined_at < :cutoff RETURNING id
-        """, {"cutoff": quarantine_cutoff}).rowcount
-        if deleted:
-            log_error('Quarantine', f'Purged {deleted} quarantined emails older than {retention_days} days', level='info')
+
+        # Get quarantined emails to delete (with source, folder, uid for mail server deletion)
+        quarantined_to_delete = query(
+            """
+            SELECT id, original_source, original_folder, original_uid
+            FROM quarantined_emails
+            WHERE quarantined_at < :cutoff
+            """,
+            {"cutoff": quarantine_cutoff},
+        ).mappings().all()
+
+        quarantined_count = len(quarantined_to_delete)
+        if quarantined_count > 0:
+            # Delete from mail servers if retention IMAP deletion is enabled
+            if delete_from_mail_server:
+                # Group quarantined emails by source (fetch account)
+                quarantined_by_source = defaultdict(list)
+                for q_email in quarantined_to_delete:
+                    quarantined_by_source[q_email["original_source"]].append(q_email)
+
+                # Try to delete from each source
+                for source, q_emails in quarantined_by_source.items():
+                    if source not in accounts_by_name:
+                        continue
+
+                    account = accounts_by_name[source]
+                    account_type = account.get("account_type", "imap")
+
+                    try:
+                        if account_type == "imap":
+                            # Delete from IMAP server
+                            password = decrypt_password(account["password_encrypted"])
+                            with ImapConnection(
+                                host=account["host"],
+                                port=account["port"],
+                                username=account["username"],
+                                password=password,
+                                use_ssl=account["use_ssl"],
+                                require_starttls=account["require_starttls"],
+                            ) as conn:
+                                # Group by folder
+                                q_emails_by_folder = defaultdict(list)
+                                for q_email in q_emails:
+                                    q_emails_by_folder[q_email["original_folder"]].append(q_email["original_uid"])
+
+                                for folder, uids in q_emails_by_folder.items():
+                                    try:
+                                        conn.select(folder, readonly=False)
+                                        for uid in uids:
+                                            if uid:  # Only try to delete if UID exists
+                                                try:
+                                                    conn.uid("STORE", str(uid), "+FLAGS", "(\\Deleted)")
+                                                except:
+                                                    pass
+                                        # Expunge to permanently remove
+                                        conn.expunge()
+                                    except Exception as e:
+                                        log_error("Retention", f"Failed to delete quarantined emails from IMAP folder {folder}: {e}")
+
+                        elif account_type == "gmail":
+                            # Delete from Gmail (would need OAuth token refresh)
+                            # For now, skip - requires complex token management
+                            pass
+
+                        elif account_type == "o365":
+                            # Delete from Office 365 (would need OAuth token refresh)
+                            # For now, skip - requires complex token management
+                            pass
+
+                    except Exception as e:
+                        log_error("Retention", f"Failed to delete quarantined emails from mail server {source}: {e}")
+
+            # Delete quarantined emails from database
+            deleted = query("""
+                DELETE FROM quarantined_emails WHERE quarantined_at < :cutoff RETURNING id
+            """, {"cutoff": quarantine_cutoff}).rowcount
+
+            if deleted:
+                # Track quarantined email deletions
+                execute(
+                    """
+                    INSERT INTO deletion_stats (deletion_date, deletion_type, count, deleted_from_mail_server)
+                    VALUES (CURRENT_DATE, 'quarantine', :count, :deleted_from_server)
+                    ON CONFLICT (deletion_date, deletion_type, deleted_from_mail_server)
+                    DO UPDATE SET count = deletion_stats.count + EXCLUDED.count
+                    """,
+                    {"count": deleted, "deleted_from_server": delete_from_mail_server},
+                )
+                log_error('Quarantine', f'Purged {deleted} quarantined emails older than {retention_days} days (delete_from_server={delete_from_mail_server})', level='info')
     except Exception as e:
         log_error('Quarantine', f'Failed to purge quarantined emails: {e}')
 
 
     # Track deletion statistics
-    execute(
-        """
-        INSERT INTO deletion_stats (deletion_date, deletion_type, count, deleted_from_mail_server)
-        VALUES (CURRENT_DATE, 'retention', :count, :deleted_from_server)
-        ON CONFLICT (deletion_date, deletion_type, deleted_from_mail_server)
-        DO UPDATE SET count = deletion_stats.count + EXCLUDED.count
-        """,
-        {"count": deletion_count, "deleted_from_server": delete_from_mail_server},
-    )
+    if deletion_count > 0:
+        execute(
+            """
+            INSERT INTO deletion_stats (deletion_date, deletion_type, count, deleted_from_mail_server)
+            VALUES (CURRENT_DATE, 'retention', :count, :deleted_from_server)
+            ON CONFLICT (deletion_date, deletion_type, deleted_from_mail_server)
+            DO UPDATE SET count = deletion_stats.count + EXCLUDED.count
+            """,
+            {"count": deletion_count, "deleted_from_server": delete_from_mail_server},
+        )
     
     log_error("Retention", f"Purged {deletion_count} old emails (delete_from_server={delete_from_mail_server})", level="info")
 

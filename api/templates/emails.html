@@ -54,6 +54,10 @@
                 <span>Search & Filter</span>
             </button>
             {% if request.session.role == 'administrator' %}
+            <button type="button" class="btn btn-warning btn-sm" id="quarantine-selected-btn" disabled onclick="showQuarantineModal()">
+                <i class="fas fa-shield-virus"></i>
+                <span>Quarantine Selected</span>
+            </button>
             <button type="button" class="btn btn-danger btn-sm" id="delete-selected-btn" disabled onclick="showDeleteModal()">
                 <i class="fas fa-trash"></i>
                 <span>Delete Selected</span>
@@ -166,6 +170,37 @@
     {% endif %}
 </div>
 
+<!-- Quarantine Confirmation Section (Initially Hidden) -->
+<div id="quarantine-confirmation" class="card" style="display: none; margin-top: 24px;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-shield-virus" style="color: var(--warning);"></i>
+            <span>Confirm Quarantine</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-warning">
+            <i class="fas fa-info-circle"></i>
+            <span>You are about to quarantine <strong id="quarantine-count">0</strong> email<span id="quarantine-plural">s</span>.</span>
+        </div>
+
+        <p style="margin-top: 20px; margin-bottom: 20px;"><strong>This will move the selected emails to quarantine for review.</strong></p>
+
+        <div class="text-center" style="margin-top: 20px;">
+            <form method="post" action="/emails/quarantine" id="quarantine-form" style="display: inline;">
+                <button type="submit" class="btn btn-warning">
+                    <i class="fas fa-shield-virus"></i>
+                    <span>Quarantine Selected Emails</span>
+                </button>
+            </form>
+            <button type="button" class="btn btn-secondary ms-2" onclick="hideQuarantineConfirmation()">
+                <i class="fas fa-times"></i>
+                <span>Cancel</span>
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Delete Confirmation Section (Initially Hidden) -->
 <div id="delete-confirmation" class="card" style="display: none; margin-top: 24px;">
     <div class="card-header">
@@ -206,26 +241,44 @@
   (function () {
     const selectAll = document.getElementById('select-all');
     const checkboxes = document.querySelectorAll('.email-checkbox');
+    const quarantineBtn = document.getElementById('quarantine-selected-btn');
     const deleteBtn = document.getElementById('delete-selected-btn');
     const bulkForm = document.getElementById('emails-bulk-form');
+    const quarantineForm = document.getElementById('quarantine-form');
 
-    function updateDeleteButton() {
-      const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+    function updateButtons() {
+      const checkedBoxes = Array.from(checkboxes).filter(cb => cb.checked);
+      const anyChecked = checkedBoxes.length > 0;
+      if (quarantineBtn) quarantineBtn.disabled = !anyChecked;
       if (deleteBtn) deleteBtn.disabled = !anyChecked;
+      
+      // Update quarantine form with selected IDs
+      if (quarantineForm) {
+        // Clear existing inputs
+        quarantineForm.querySelectorAll('input[name="ids"]').forEach(input => input.remove());
+        // Add new inputs
+        checkedBoxes.forEach(cb => {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = 'ids';
+          input.value = cb.value;
+          quarantineForm.appendChild(input);
+        });
+      }
     }
 
     if (selectAll) {
       selectAll.addEventListener('change', function () {
         checkboxes.forEach(cb => cb.checked = selectAll.checked);
-        updateDeleteButton();
+        updateButtons();
       });
     }
 
     checkboxes.forEach(cb => {
-      cb.addEventListener('change', updateDeleteButton);
+      cb.addEventListener('change', updateButtons);
     });
 
-    updateDeleteButton();
+    updateButtons();
 
     // Filter toggle function
     window.toggleFilters = function() {
@@ -246,6 +299,34 @@
     if (hasFilters) {
       toggleFilters();
     }
+
+    // Quarantine confirmation functions
+    window.showQuarantineModal = function() {
+      const checkedBoxes = Array.from(checkboxes).filter(cb => cb.checked);
+      const count = checkedBoxes.length;
+      
+      if (count === 0) return;
+      
+      document.getElementById('quarantine-count').textContent = count;
+      document.getElementById('quarantine-plural').textContent = count === 1 ? '' : 's';
+      
+      // Hide table section and show quarantine confirmation
+      document.getElementById('filterCard').style.display = 'none';
+      document.querySelector('.card').style.display = 'none';
+      document.getElementById('quarantine-confirmation').style.display = 'block';
+      
+      // Scroll to top
+      window.scrollTo(0, 0);
+    };
+
+    window.hideQuarantineConfirmation = function() {
+      // Show table section and hide quarantine confirmation
+      document.getElementById('quarantine-confirmation').style.display = 'none';
+      document.querySelector('.card').style.display = 'block';
+      
+      // Scroll to top
+      window.scrollTo(0, 0);
+    };
 
     // Delete confirmation functions
     window.showDeleteModal = function() {
