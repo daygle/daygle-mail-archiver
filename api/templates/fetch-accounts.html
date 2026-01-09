@@ -166,16 +166,7 @@
                             </div>
                         </label>
                     </div>
-
-                    <div>
-                        <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer;">
-                            <input type="checkbox" id="enabled" name="enabled" checked>
-                            <div>
-                                <strong>Enabled</strong>
-                                <small style="display: block; color: var(--text-secondary);">Enable automatic email fetching for this account</small>
-                            </div>
-                        </label>
-                    </div>
+                </div>
                 </div>
             </div>
             <div class="card-footer form-actions">
@@ -418,7 +409,6 @@
         document.getElementById('poll_interval_seconds').value = account.poll_interval_seconds || 300;
         document.getElementById('delete_after_processing').checked = account.delete_after_processing || false;
         document.getElementById('expunge_deleted').checked = account.expunge_deleted || false;
-        document.getElementById('enabled').checked = account.enabled !== false;
         document.getElementById('oauth_client_id').value = account.oauth_client_id || '';
         document.getElementById('oauth_client_secret').value = ''; // Don't expose secret
         
