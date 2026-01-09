@@ -453,6 +453,14 @@ Chart = undefined; // Clear any existing Chart
 // Global chart instances - updated 2026-01-08
 let emailVolumeChart, accountActivityChart, errorTrendsChart, avStatsChart;
 
+// Initialize chart variables on window to prevent undefined errors
+window.storageTrendsChart = null;
+window.retentionChart = null;
+window.performanceChart = null;
+window.workerActivityChart = null;
+window.securityChart = null;
+window.sizeDistributionChart = null;
+
 // Initialize charts and load data
 document.addEventListener('DOMContentLoaded', function() {
     initializeCharts();
@@ -1014,7 +1022,7 @@ function loadStorageUtilizationReport() {
             document.getElementById('totalEmails').textContent = data.total_emails || '-';
             
             // Update storage trends chart
-            if (window.storageTrendsChart) {
+            if (window.storageTrendsChart && typeof window.storageTrendsChart.destroy === 'function') {
                 window.storageTrendsChart.destroy();
             }
             const ctx = document.getElementById('storageTrendsChart').getContext('2d');
@@ -1108,7 +1116,7 @@ function loadRetentionPolicyReport() {
             document.getElementById('totalServerDeletions').textContent = data.server_deletions || '-';
             
             // Update retention chart
-            if (window.retentionChart) {
+            if (window.retentionChart && typeof window.retentionChart.destroy === 'function') {
                 window.retentionChart.destroy();
             }
             const ctx = document.getElementById('retentionChart').getContext('2d');
@@ -1209,7 +1217,7 @@ function loadSystemPerformanceReport() {
             document.getElementById('avgProcessingRate').textContent = data.avg_processing_rate || '-';
             
             // Update performance chart
-            if (window.performanceChart) {
+            if (window.performanceChart && typeof window.performanceChart.destroy === 'function') {
                 window.performanceChart.destroy();
             }
             const ctx = document.getElementById('performanceChart').getContext('2d');
@@ -1236,7 +1244,7 @@ function loadSystemPerformanceReport() {
             });
             
             // Update worker activity chart
-            if (window.workerActivityChart) {
+            if (window.workerActivityChart && typeof window.workerActivityChart.destroy === 'function') {
                 window.workerActivityChart.destroy();
             }
             const ctx2 = document.getElementById('workerActivityChart').getContext('2d');
@@ -1313,7 +1321,7 @@ function loadSecurityAccessReport() {
             document.getElementById('totalPasswordChanges').textContent = data.total_password_changes || '-';
             
             // Update security chart
-            if (window.securityChart) {
+            if (window.securityChart && typeof window.securityChart.destroy === 'function') {
                 window.securityChart.destroy();
             }
             const ctx = document.getElementById('securityChart').getContext('2d');
@@ -1392,7 +1400,7 @@ function loadDataQualityReport() {
             document.getElementById('virusDetectedPercent').textContent = (data.completeness_stats?.virus_detected_percent || 0) + '%';
             
             // Update size distribution chart
-            if (window.sizeDistributionChart) {
+            if (window.sizeDistributionChart && typeof window.sizeDistributionChart.destroy === 'function') {
                 window.sizeDistributionChart.destroy();
             }
             const ctx = document.getElementById('sizeDistributionChart').getContext('2d');
