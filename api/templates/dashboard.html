@@ -220,38 +220,6 @@
     </div>
 </div>
 
-<!-- Widget Settings Modal (Hidden by default) -->
-<div id="widget-settings-modal" class="modal" style="display: none;">
-    <div class="modal-overlay" id="settings-modal-overlay"></div>
-    <div class="modal-content" style="max-width: 500px;">
-        <div class="modal-header">
-            <h3><i class="fas fa-cog"></i> Widget Settings</h3>
-            <button class="btn-icon" id="btn-close-settings-modal">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <div id="widget-settings-content">
-                <div class="form-group">
-                    <label for="widget-days-range" class="form-label">Days to Display</label>
-                    <select id="widget-days-range" class="form-select">
-                        <option value="7">7 days</option>
-                        <option value="14">14 days</option>
-                        <option value="30" selected>30 days</option>
-                        <option value="60">60 days</option>
-                        <option value="90">90 days</option>
-                    </select>
-                    <small class="form-text">Select the number of days to display in the chart</small>
-                </div>
-            </div>
-            <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.5rem;">
-                <button id="btn-cancel-settings" class="btn btn-secondary">Cancel</button>
-                <button id="btn-save-settings" class="btn btn-primary">Save</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- GridStack Dashboard -->
 <div class="grid-stack" id="dashboard-grid">
     <!-- Widgets will be dynamically added here -->
@@ -515,9 +483,6 @@
 <!-- GridStack JS (CDN) -->
 <script src="https://cdn.jsdelivr.net/npm/gridstack@10.2.0/dist/gridstack-all.js"></script>
 
-<!-- Chart.js (Local) -->
-<script src="/static/vendor/chart.min.js"></script>
-
 <script>
 // Dashboard Widget Manager
 const DashboardManager = {
@@ -525,9 +490,7 @@ const DashboardManager = {
     charts: {},
     editMode: false,
     widgetSettings: {
-        'emails-per-day': { days: 30 },
-        'deletion-stats': { days: 30 },
-        'storage-trends': { days: 7 }
+        // No chart widgets currently implemented
     },
     currentSettingsWidget: null,
 
@@ -789,23 +752,6 @@ const DashboardManager = {
             this.hideModal(document.getElementById('widget-selector-modal'));
         });
 
-        // Widget settings modal listeners
-        document.getElementById('btn-close-settings-modal').addEventListener('click', () => {
-            this.hideModal(document.getElementById('widget-settings-modal'));
-        });
-        
-        document.getElementById('settings-modal-overlay').addEventListener('click', () => {
-            this.hideModal(document.getElementById('widget-settings-modal'));
-        });
-        
-        document.getElementById('btn-cancel-settings').addEventListener('click', () => {
-            this.hideModal(document.getElementById('widget-settings-modal'));
-        });
-        
-        document.getElementById('btn-save-settings').addEventListener('click', () => {
-            this.saveWidgetSettings();
-        });
-
         // Widget action buttons (delegated event handling)
         document.addEventListener('click', (e) => {
             const btn = e.target.closest('.widget-action-btn');
@@ -816,9 +762,6 @@ const DashboardManager = {
             
             if (action === 'remove' && widgetElement) {
                 this.grid.removeWidget(widgetElement);
-            } else if (action === 'settings') {
-                const widgetId = btn.getAttribute('data-widget');
-                this.showWidgetSettings(widgetId);
             }
         });
 
@@ -922,91 +865,28 @@ const DashboardManager = {
     },
 
     showWidgetSettings(widgetId) {
-        this.currentSettingsWidget = widgetId;
-        const modal = document.getElementById('widget-settings-modal');
-        const daysSelect = document.getElementById('widget-days-range');
-        
-        // Load current settings
-        const settings = this.widgetSettings[widgetId] || { days: 30 };
-        daysSelect.value = settings.days;
-        
-        this.showModal(modal);
+        // No chart widgets currently implemented
+        return;
     },
 
     saveWidgetSettings() {
-        if (!this.currentSettingsWidget) return;
-        
-        const daysSelect = document.getElementById('widget-days-range');
-        const days = parseInt(daysSelect.value);
-        
-        // Update settings
-        this.widgetSettings[this.currentSettingsWidget] = { days };
-        
-        // Save to preferences
-        this.saveWidgetSettingsToPreferences();
-        
-        // Update widget title
-        this.updateWidgetTitle(this.currentSettingsWidget, days);
-        
-        // Reload widget data with new settings
-        this.loadWidgetData(this.currentSettingsWidget);
-        
-        // Hide modal
-        this.hideModal(document.getElementById('widget-settings-modal'));
-        
-        this.showFlashMessage('Widget settings saved successfully!', 'success');
+        // No chart widgets currently implemented
+        return;
     },
 
     async saveWidgetSettingsToPreferences() {
-        try {
-            const response = await fetch('/api/dashboard/widget-settings', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ settings: this.widgetSettings }),
-            });
-            if (response.ok) {
-                this.showFlashMessage('Widget settings saved successfully!', 'success');
-            } else {
-                this.showFlashMessage('Failed to save widget settings', 'error');
-            }
-        } catch (error) {
-            console.error('Error saving widget settings:', error);
-            this.showFlashMessage('Failed to save widget settings', 'error');
-        }
+        // No chart widgets currently implemented
+        return;
     },
 
     async loadWidgetSettingsFromPreferences() {
-        try {
-            const response = await fetch('/api/dashboard/widget-settings');
-            if (response.ok) {
-                const data = await response.json();
-                if (data.settings) {
-                    this.widgetSettings = { ...this.widgetSettings, ...data.settings };
-                    
-                    // Update titles for all widgets with custom settings
-                    Object.keys(this.widgetSettings).forEach(widgetId => {
-                        this.updateWidgetTitle(widgetId, this.widgetSettings[widgetId].days);
-                    });
-                }
-            }
-        } catch (error) {
-            console.error('Error loading widget settings:', error);
-        }
+        // No chart widgets currently implemented
+        return;
     },
 
     updateWidgetTitle(widgetId, days) {
-        const titleElement = document.getElementById(`${widgetId}-title`);
-        if (titleElement) {
-            const widgetNames = {
-                'emails-per-day': 'Emails Per Day',
-                'deletion-stats': 'Email Deletions',
-                'storage-trends': 'Storage Trends'
-            };
-            const name = widgetNames[widgetId] || widgetId;
-            titleElement.textContent = `${name} (${days}d)`;
-        }
+        // No chart widgets currently implemented
+        return;
     },
 
     async saveLayout() {
@@ -1057,13 +937,6 @@ const DashboardManager = {
 
     getWidgetTitle(id) {
         const titles = {
-            'emails-per-day': 'Emails Per Day',
-            'top-senders': 'Top Senders',
-            'top-receivers': 'Top Receivers',
-            'deletion-stats': 'Deletion Stats',
-            'recent-activity': 'Recent Activity',
-            'storage-trends': 'Storage Trends',
-            'account-health': 'Account Health',
             'total-emails': 'Total Emails',
             'emails-today': 'Emails Today',
             'database-size': 'Database Size',
@@ -1082,13 +955,6 @@ const DashboardManager = {
 
     // Load all widget data
     loadAllData() {
-        this.loadEmailsPerDay();
-        this.loadTopSenders();
-        this.loadTopReceivers();
-        this.loadDeletionStats();
-        this.loadRecentActivity();
-        this.loadStorageTrends();
-        this.loadAccountHealth();
         // Load individual stat widgets
         this.loadTotalEmails();
         this.loadEmailsToday();
@@ -1105,19 +971,8 @@ const DashboardManager = {
     },
 
     loadWidgetData(widgetId) {
-        const loaders = {
-            'emails-per-day': () => this.loadEmailsPerDay(),
-            'top-senders': () => this.loadTopSenders(),
-            'top-receivers': () => this.loadTopReceivers(),
-            'deletion-stats': () => this.loadDeletionStats(),
-            'recent-activity': () => this.loadRecentActivity(),
-            'storage-trends': () => this.loadStorageTrends(),
-            'account-health': () => this.loadAccountHealth()
-        };
-
-        if (loaders[widgetId]) {
-            loaders[widgetId]();
-        }
+        // No chart widgets currently implemented
+        return;
     },
 
     async loadOverview() {
@@ -1146,294 +1001,6 @@ const DashboardManager = {
 
         } catch (error) {
             console.error('Error loading overview:', error);
-        }
-    },
-
-
-
-    async loadEmailsPerDay() {
-        try {
-            const days = (this.widgetSettings && this.widgetSettings['emails-per-day'] && this.widgetSettings['emails-per-day'].days) || 30;
-            const response = await fetch(`/api/dashboard/emails-per-day?days=${days}`);
-            const data = await response.json();
-            
-            const ctx = document.getElementById('emailsPerDayChart');
-            if (!ctx) return;
-
-            if (this.charts.emailsPerDay) {
-                this.charts.emailsPerDay.destroy();
-            }
-
-            this.charts.emailsPerDay = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.labels,
-                    datasets: [{
-                        label: 'Emails',
-                        data: data.data,
-                        borderColor: '#36A2EB',
-                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } }
-                }
-            });
-        } catch (error) {
-            console.error('Error loading emails per day:', error);
-        }
-    },
-
-    async loadTopSenders() {
-        try {
-            const response = await fetch('/api/dashboard/top-senders');
-            const data = await response.json();
-            
-            const ctx = document.getElementById('topSendersChart');
-            if (!ctx) return;
-
-            if (this.charts.topSenders) {
-                this.charts.topSenders.destroy();
-            }
-
-            this.charts.topSenders = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: data.labels,
-                    datasets: [{
-                        label: 'Emails Sent',
-                        data: data.data,
-                        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
-                                        '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF6384']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    indexAxis: 'y',
-                    plugins: { legend: { display: false } }
-                }
-            });
-        } catch (error) {
-            console.error('Error loading top senders:', error);
-        }
-    },
-
-    async loadTopReceivers() {
-        try {
-            const response = await fetch('/api/dashboard/top-receivers');
-            const data = await response.json();
-            
-            const ctx = document.getElementById('topReceiversChart');
-            if (!ctx) return;
-
-            if (this.charts.topReceivers) {
-                this.charts.topReceivers.destroy();
-            }
-
-            this.charts.topReceivers = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: data.labels,
-                    datasets: [{
-                        label: 'Emails Received',
-                        data: data.data,
-                        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
-                                        '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF6384']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    indexAxis: 'y',
-                    plugins: { legend: { display: false } }
-                }
-            });
-        } catch (error) {
-            console.error('Error loading top receivers:', error);
-        }
-    },
-
-    async loadDeletionStats() {
-        try {
-            const days = (this.widgetSettings && this.widgetSettings['deletion-stats'] && this.widgetSettings['deletion-stats'].days) || 30;
-            const response = await fetch(`/api/dashboard/deletion-stats?days=${days}`);
-            const data = await response.json();
-            
-            const ctx = document.getElementById('deletionStatsChart');
-            if (!ctx) return;
-
-            if (this.charts.deletionStats) {
-                this.charts.deletionStats.destroy();
-            }
-
-            this.charts.deletionStats = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: data.labels,
-                    datasets: [
-                        {
-                            label: 'Manual',
-                            data: data.manual,
-                            backgroundColor: 'rgba(255, 99, 132, 0.6)'
-                        },
-                        {
-                            label: 'Retention',
-                            data: data.retention,
-                            backgroundColor: 'rgba(54, 162, 235, 0.6)'
-                        },
-                        {
-                            label: 'From Server',
-                            data: data.deleted_from_server,
-                            backgroundColor: 'rgba(255, 206, 86, 0.6)',
-                            type: 'line'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: { x: { stacked: true }, y: { stacked: true } }
-                }
-            });
-        } catch (error) {
-            console.error('Error loading deletion stats:', error);
-        }
-    },
-
-    async loadRecentActivity() {
-        try {
-            const response = await fetch('/api/dashboard/recent-activity');
-            const data = await response.json();
-            
-            const container = document.getElementById('recent-activity-list');
-            if (!container) return;
-
-            if (data.activities.length === 0) {
-                container.innerHTML = '<p class="text-muted text-center">No recent activity</p>';
-                return;
-            }
-
-            container.innerHTML = data.activities.map(activity => `
-                <div class="activity-item">
-                    <div class="activity-icon"><i class="fas fa-envelope"></i></div>
-                    <div class="activity-content">
-                        <div class="activity-title">${activity.subject}</div>
-                        <div class="activity-meta">
-                            <span><i class="fas fa-user"></i> ${activity.sender}</span>
-                            <span><i class="fas fa-clock"></i> ${activity.date}</span>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        } catch (error) {
-            console.error('Error loading recent activity:', error);
-        }
-    },
-
-    async loadStorageTrends() {
-        try {
-            const days = (this.widgetSettings && this.widgetSettings['storage-trends'] && this.widgetSettings['storage-trends'].days) || 7;
-            const response = await fetch(`/api/dashboard/storage-trends?days=${days}`);
-            const data = await response.json();
-            
-            const ctx = document.getElementById('storageTrendsChart');
-            if (!ctx) return;
-
-            if (this.charts.storageTrends) {
-                this.charts.storageTrends.destroy();
-            }
-
-            this.charts.storageTrends = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.labels,
-                    datasets: [{
-                        label: 'Storage (MB)',
-                        data: data.sizes,
-                        borderColor: '#9966FF',
-                        backgroundColor: 'rgba(153, 102, 255, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } }
-                }
-            });
-        } catch (error) {
-            console.error('Error loading storage trends:', error);
-        }
-    },
-
-    async loadAccountHealth() {
-        try {
-            const response = await fetch('/api/dashboard/account-health');
-            const data = await response.json();
-            
-            const container = document.getElementById('account-health-list');
-            if (!container) return;
-
-            if (!data.accounts || data.accounts.length === 0) {
-                container.innerHTML = '<p class="text-muted text-center">No accounts configured</p>';
-                return;
-            }
-
-            const statusColors = {
-                'healthy': 'success',
-                'disabled': 'secondary',
-                'error': 'danger',
-                'never_fetched': 'warning'
-            };
-
-            const statusIcons = {
-                'healthy': 'check-circle',
-                'disabled': 'ban',
-                'error': 'exclamation-circle',
-                'never_fetched': 'clock'
-            };
-
-            container.innerHTML = data.accounts.map(account => `
-                <div class="health-item">
-                    <div class="health-icon health-${statusColors[account.status]}">
-                        <i class="fas fa-${statusIcons[account.status]}"></i>
-                    </div>
-                    <div class="health-content">
-                        <div class="health-email">${account.email}</div>
-                        <div class="health-meta">Last fetch: ${account.last_fetch}</div>
-                        ${account.error ? `<div class="health-error">${account.error}</div>` : ''}
-                    </div>
-                </div>
-            `).join('');
-        } catch (error) {
-            console.error('Error loading account health:', error);
-            const container = document.getElementById('account-health-list');
-            if (container) {
-                container.innerHTML = '<p class="text-muted text-center">Error loading account health</p>';
-            }
-        }
-    },
-
-    async loadClamAVStats() {
-        try {
-            const response = await fetch('/api/dashboard/clamav-stats');
-            const data = await response.json();
-            
-            const quarantineEl = document.getElementById('clamav-quarantine');
-            const rejectEl = document.getElementById('clamav-reject');
-            const cleanEl = document.getElementById('clamav-clean');
-            
-            if (quarantineEl) quarantineEl.textContent = this.formatNumber(data.quarantined);
-            if (rejectEl) rejectEl.textContent = this.formatNumber(data.rejected);
-            if (cleanEl) cleanEl.textContent = this.formatNumber(data.clean);
-        } catch (error) {
-            console.error('Error loading ClamAV stats:', error);
         }
     },
 
