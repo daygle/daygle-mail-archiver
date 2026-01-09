@@ -457,7 +457,8 @@ let emailVolumeChart, accountActivityChart, errorTrendsChart, avStatsChart;
 document.addEventListener('DOMContentLoaded', function() {
     initializeCharts();
     setDefaultDateRanges();
-    loadAllReports();
+    // Small delay to ensure dates are set before loading reports
+    setTimeout(loadAllReports, 100);
 });
 
 // Utility: show a report-level message (e.g., validation)
@@ -508,6 +509,16 @@ function setDefaultDateRanges() {
     document.getElementById('systemHealthEndDate').value = formatDate(today);
     document.getElementById('avStartDate').value = formatDate(thirtyDaysAgo);
     document.getElementById('avEndDate').value = formatDate(today);
+    
+    // Set default dates for new reports
+    document.getElementById('storageStartDate').value = formatDate(thirtyDaysAgo);
+    document.getElementById('storageEndDate').value = formatDate(today);
+    document.getElementById('retentionStartDate').value = formatDate(thirtyDaysAgo);
+    document.getElementById('retentionEndDate').value = formatDate(today);
+    document.getElementById('performanceStartDate').value = formatDate(thirtyDaysAgo);
+    document.getElementById('performanceEndDate').value = formatDate(today);
+    document.getElementById('securityStartDate').value = formatDate(thirtyDaysAgo);
+    document.getElementById('securityEndDate').value = formatDate(today);
 }
 
 // Initialize chart instances
