@@ -664,7 +664,6 @@ function loadAllReports() {
     loadStorageUtilizationReport();
     loadRetentionPolicyReport();
     loadSystemPerformanceReport();
-    loadSecurityAccessReport();
     loadDataQualityReport();
 }
 
@@ -1487,6 +1486,7 @@ fetch('/api/user/profile')
     .then(data => {
         if (data.role === 'administrator') {
             document.getElementById('securityReportSection').style.display = 'block';
+            loadSecurityAccessReport(); // Load security report for admins
         }
     })
     .catch(error => {
