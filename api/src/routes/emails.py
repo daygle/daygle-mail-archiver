@@ -10,6 +10,7 @@ from utils.security import decrypt_password, can_delete
 from utils.logger import log
 from utils.templates import templates
 from utils.timezone import format_datetime
+from utils.alerts import create_alert
 
 router = APIRouter()
 
@@ -149,6 +150,9 @@ def view_email(request: Request, email_id: int):
     raw = decompress(row["raw_email"], row["compressed"])
     parsed = parse_email(raw)
 
+    username = request.session.get("username", "unknown")
+    log("info", "Emails", f"User '{username}' viewed email ID {email_id}", "")
+
     msg = request.session.pop("flash", None)
 
     return templates.TemplateResponse(
@@ -182,6 +186,9 @@ def download_email(request: Request, email_id: int):
 
     raw = decompress(row["raw_email"], row["compressed"])
 
+    username = request.session.get("username", "unknown")
+    log("info", "Emails", f"User '{username}' downloaded email ID {email_id}", "")
+
     return StreamingResponse(
         iter([raw]),
         media_type="message/rfc822",
@@ -199,6 +206,21 @@ def quarantine_single_email(request: Request, email_id: int):
         return RedirectResponse(f"/emails/{email_id}", status_code=303)
 
     quarantined = _quarantine_emails([email_id], request.session.get("username", "unknown"))
+    
+    username = request.session.get("username", "unknown")
+    log("warning", "Emails", f"User '{username}' quarantined 1 email (ID: {email_id})", "")
+    
+    # Create alert for security monitoring
+    try:
+        create_alert(
+            'warning',
+            'Email Quarantined',
+            f'User {username} quarantined an email',
+            f'Email ID: {email_id}',
+            'email_quarantined'
+        )
+    except Exception as e:
+        log("error", "Emails", f"Failed to create quarantine alert: {str(e)}", "")
     
     if quarantined > 0:
         flash(request, "Email quarantined successfully.")
@@ -280,6 +302,21 @@ def perform_quarantine(
         ids = [ids]
 
     quarantined = _quarantine_emails(ids, request.session.get("username", "unknown"))
+    
+    username = request.session.get("username", "unknown")
+    log("warning", "Emails", f"User '{username}' quarantined {quarantined} email(s) (IDs: {ids})", "")
+    
+    # Create alert for security monitoring
+    try:
+        create_alert(
+            'warning',
+            'Emails Quarantined',
+            f'User {username} quarantined {quarantined} email(s)',
+            f'Email IDs: {ids}',
+            'email_quarantined'
+        )
+    except Exception as e:
+        log("error", "Emails", f"Failed to create quarantine alert: {str(e)}", "")
     
     if quarantined > 0:
         flash(request, f"Quarantined {quarantined} email(s).")

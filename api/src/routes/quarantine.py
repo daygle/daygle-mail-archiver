@@ -8,6 +8,7 @@ from utils.logger import log
 from utils.config import get_config
 from utils.security import decrypt_password, can_delete
 from cryptography.fernet import Fernet
+from utils.alerts import create_alert
 
 router = APIRouter()
 
@@ -229,56 +230,73 @@ def restore_quarantine(request: Request, qid: int):
     item = query('SELECT * FROM quarantined_emails WHERE id = :id', {'id': qid}).mappings().first()
     if not item:
         return RedirectResponse('/quarantine', status_code=303)
-        raw = item.get('raw_email')
-        f = _get_quarantine_fernet()
-        if raw:
-            try:
-                data = raw
-                if f:
-                    data = f.decrypt(data)
-                # Insert or update email in emails table
-                execute(
-                    """
-                    UPDATE emails SET raw_email = :raw, compressed = TRUE, quarantined = FALSE, quarantine_id = NULL, virus_scanned = TRUE, virus_detected = TRUE, virus_name = :vname, scan_timestamp = :qtime
-                    WHERE source = :source AND folder = :folder AND uid = :uid
-                    """,
-                    {
-                        'raw': data,
-                        'vname': item.get('virus_name'),
-                        'qtime': item.get('quarantined_at'),
-                        'source': item.get('original_source'),
-                        'folder': item.get('original_folder'),
-                        'uid': item.get('original_uid')
-                    }
-                )
-                # If no row updated, insert a new row
-                execute(
-                    """
-                    INSERT INTO emails (source, folder, uid, subject, sender, recipients, date, raw_email, compressed, virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined)
-                    VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, TRUE, TRUE, TRUE, :vname, :qtime, TRUE)
-                    ON CONFLICT (source, folder, uid) DO NOTHING
-                    """,
-                    {
-                        'source': item.get('original_source'),
-                        'folder': item.get('original_folder'),
-                        'uid': item.get('original_uid'),
-                        'subject': item.get('subject'),
-                        'sender': item.get('sender'),
-                        'recipients': item.get('recipients'),
-                        'date': item.get('date'),
-                        'raw_email': data,
-                        'vname': item.get('virus_name'),
-                        'qtime': item.get('quarantined_at')
-                    }
-                )
-            except Exception:
-                # If restore fails, do not delete quarantine
-                return RedirectResponse(f'/quarantine/{qid}', status_code=303)
 
-        # Delete quarantine record
-        execute('DELETE FROM quarantined_emails WHERE id = :id', {'id': qid})
-        # Clear quarantine flag on emails table
-        execute('UPDATE emails SET quarantined = FALSE, quarantine_id = NULL WHERE source = :source AND folder = :folder AND uid = :uid', {'source': item.get('original_source'), 'folder': item.get('original_folder'), 'uid': item.get('original_uid')})
+    # Restore the email
+    raw = item.get('raw_email')
+    f = _get_quarantine_fernet()
+    if raw:
+        try:
+            data = raw
+            if f:
+                data = f.decrypt(data)
+            # Insert or update email in emails table
+            execute(
+                """
+                UPDATE emails SET raw_email = :raw, compressed = TRUE, quarantined = FALSE, quarantine_id = NULL, virus_scanned = TRUE, virus_detected = TRUE, virus_name = :vname, scan_timestamp = :qtime
+                WHERE source = :source AND folder = :folder AND uid = :uid
+                """,
+                {
+                    'raw': data,
+                    'vname': item.get('virus_name'),
+                    'qtime': item.get('quarantined_at'),
+                    'source': item.get('original_source'),
+                    'folder': item.get('original_folder'),
+                    'uid': item.get('original_uid')
+                }
+            )
+            # If no row updated, insert a new row
+            execute(
+                """
+                INSERT INTO emails (source, folder, uid, subject, sender, recipients, date, raw_email, compressed, virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined)
+                VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, TRUE, TRUE, TRUE, :vname, :qtime, TRUE)
+                ON CONFLICT (source, folder, uid) DO NOTHING
+                """,
+                {
+                    'source': item.get('original_source'),
+                    'folder': item.get('original_folder'),
+                    'uid': item.get('original_uid'),
+                    'subject': item.get('subject'),
+                    'sender': item.get('sender'),
+                    'recipients': item.get('recipients'),
+                    'date': item.get('date'),
+                    'raw_email': data,
+                    'vname': item.get('virus_name'),
+                    'qtime': item.get('quarantined_at')
+                }
+            )
+        except Exception as e:
+            log('error', 'Quarantine', f"Failed to restore quarantined email {qid}: {str(e)}", "")
+            return RedirectResponse(f'/quarantine/{qid}', status_code=303)
+
+    # Delete quarantine record
+    execute('DELETE FROM quarantined_emails WHERE id = :id', {'id': qid})
+    # Clear quarantine flag on emails table
+    execute('UPDATE emails SET quarantined = FALSE, quarantine_id = NULL WHERE source = :source AND folder = :folder AND uid = :uid', {'source': item.get('original_source'), 'folder': item.get('original_folder'), 'uid': item.get('original_uid')})
+
+    username = request.session.get("username", "unknown")
+    log('info', 'Quarantine', f"User '{username}' restored quarantined email {qid}", "")
+    
+    # Create alert for security monitoring
+    try:
+        create_alert(
+            'warning',
+            'Quarantined Email Restored',
+            f'User {username} restored a quarantined email',
+            f'Quarantine ID: {qid}, Original email from {item.get("original_source")}',
+            'quarantine_restored'
+        )
+    except Exception as e:
+        log('error', 'Quarantine', f"Failed to create restore alert: {str(e)}", "")
 
     return RedirectResponse('/quarantine', status_code=303)
 
@@ -416,6 +434,21 @@ def perform_bulk_restore(
             continue
 
     if restored > 0:
+        username = request.session.get("username", "unknown")
+        log('info', 'Quarantine', f"User '{username}' restored {restored} quarantined email(s) (IDs: {ids})", "")
+        
+        # Create alert for security monitoring
+        try:
+            create_alert(
+                'warning',
+                'Quarantined Emails Restored',
+                f'User {username} restored {restored} quarantined email(s)',
+                f'Quarantine IDs: {ids}',
+                'quarantine_restored'
+            )
+        except Exception as e:
+            log('error', 'Quarantine', f"Failed to create restore alert: {str(e)}", "")
+        
         request.session['flash'] = f"Restored {restored} quarantined email(s)."
     else:
         request.session['flash'] = "No emails were restored."

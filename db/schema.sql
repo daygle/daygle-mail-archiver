@@ -151,9 +151,6 @@ INSERT INTO settings (key, value) VALUES ('date_format', '%d/%m/%Y') ON CONFLICT
 INSERT INTO settings (key, value) VALUES ('time_format', '%H:%M') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('timezone', 'Australia/Melbourne') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('default_theme', 'system') ON CONFLICT (key) DO NOTHING;
--- Update checking removed from the web UI; not inserting related settings by default
--- INSERT INTO settings (key, value) VALUES ('enable_update_check', 'true') ON CONFLICT (key) DO NOTHING;
--- INSERT INTO settings (key, value) VALUES ('update_check_ttl', '600') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('enable_purge', 'false') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('retention_value', '1') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('retention_unit', 'years') ON CONFLICT (key) DO NOTHING;
@@ -321,7 +318,9 @@ INSERT INTO alert_triggers (trigger_key, name, description, alert_type, enabled)
     ('email_processed', 'Email Processed Successfully', 'Alert when an email is successfully processed and archived', 'success', FALSE),
     ('backup_completed', 'Backup Completed', 'Alert when a system backup completes successfully', 'success', FALSE),
     ('system_startup', 'System Startup', 'Alert when the system starts up successfully', 'info', FALSE),
-    ('maintenance_mode', 'Maintenance Mode', 'Alert when maintenance mode is enabled or disabled', 'info', TRUE)
+    ('maintenance_mode', 'Maintenance Mode', 'Alert when maintenance mode is enabled or disabled', 'info', TRUE),
+    ('email_quarantined', 'Email Quarantined', 'Alert when an email is manually quarantined by a user', 'warning', TRUE),
+    ('quarantine_restored', 'Quarantine Restored', 'Alert when a quarantined email is restored by a user', 'warning', TRUE)
 ON CONFLICT (trigger_key) DO UPDATE SET
     name = EXCLUDED.name,
     description = EXCLUDED.description,

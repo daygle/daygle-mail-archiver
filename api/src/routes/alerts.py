@@ -109,6 +109,8 @@ def acknowledge_alert_api(request: Request, alert_id: int):
     try:
         success = acknowledge_alert(alert_id, user_id)
         if success:
+            username = request.session.get("username", "unknown")
+            log("info", "Alerts", f"User '{username}' acknowledged alert ID {alert_id}", "")
             flash(request, "Alert acknowledged successfully!")
             return RedirectResponse("/alerts", status_code=303)
         else:
@@ -155,6 +157,8 @@ def create_alert_api(
 
     try:
         alert_id = create_alert(alert_type, title, message, details, send_email)
+        username = request.session.get("username", "unknown")
+        log("info", "Alerts", f"Admin '{username}' created {alert_type} alert: {title}", "")
         flash(request, "Test alert created successfully!")
         return RedirectResponse("/alerts", status_code=303)
     except Exception as e:
