@@ -212,12 +212,7 @@
                     <i class="fas fa-envelope"></i>
                     <span>SMTP Email Configuration</span>
                 </div>
-                <form method="post" action="/api/test-smtp" style="display: inline;">
-                    <button type="submit" class="btn btn-info" id="test-smtp-btn" {% if settings.smtp_enabled != 'true' %}disabled{% endif %}>
-                        <i class="fas fa-flask"></i>
-                        <span>Test SMTP Connection</span>
-                    </button>
-                </form>
+                <div id="test-smtp-container"></div>
             </div>
         </div>
         <div class="card-body">
@@ -286,10 +281,28 @@
     </div>
 </form>
 
+<!-- Test SMTP form outside the main form to avoid nesting -->
+<form method="post" action="/api/test-smtp" id="test-smtp-form" style="display: none;">
+    <button type="submit" class="btn btn-info" id="test-smtp-btn" {% if settings.smtp_enabled != 'true' %}disabled{% endif %}>
+        <i class="fas fa-flask"></i>
+        <span>Test SMTP Connection</span>
+    </button>
+</form>
+
 <script>
 document.getElementById('smtp_enabled').addEventListener('change', function() {
     const testBtn = document.getElementById('test-smtp-btn');
     testBtn.disabled = !this.checked;
+});
+
+// Move the test SMTP form into the header container after page load
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('test-smtp-container');
+    const form = document.getElementById('test-smtp-form');
+    if (container && form) {
+        container.appendChild(form);
+        form.style.display = 'inline';
+    }
 });
 </script>
 {% endblock %}
