@@ -36,8 +36,8 @@ def list_users(request: Request):
         ORDER BY u.id
     """).mappings().all()
 
-    # Get all available roles for the form
-    roles = query("SELECT id, name, description FROM roles ORDER BY name").mappings().all()
+    # Get all available roles for the form (include display_name for UI)
+    roles = query("SELECT id, name, display_name, description FROM roles ORDER BY COALESCE(display_name, name)").mappings().all()
 
     msg = request.session.pop("flash", None)
 
@@ -161,6 +161,10 @@ def get_user(request: Request, user_id: int):
         # Get current user's ID for timezone conversion
         current_user_id = int(request.session.get("user_id"))
         
+        # Get assigned role ids for the user
+        role_rows = query("SELECT role_id FROM user_roles WHERE user_id = :id", {"id": user_id}).mappings().all()
+        role_ids = [r["role_id"] for r in role_rows]
+
         return {
             "id": user["id"],
             "username": user["username"],
@@ -168,6 +172,7 @@ def get_user(request: Request, user_id: int):
             "last_name": user["last_name"] or "",
             "email": user["email"] or "",
             "role": user["role"] or "administrator",
+            "role_ids": role_ids,
             "email_notifications": user["email_notifications"],
             "enabled": user["enabled"],
             "last_login": format_datetime(user["last_login"], current_user_id) if user["last_login"] else None,

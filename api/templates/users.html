@@ -56,7 +56,7 @@
             </div>
             
             <div class="two-col-grid">
-            <div class="form-group">
+            <div class="form-group col-span-2">
                 <label>Roles <span style="color: var(--danger);">*</span></label>
                 <div class="roles-grid">
                     {% for role in roles %}
@@ -65,7 +65,7 @@
                             <input type="checkbox" name="role_ids" value="{{ role.id }}">
                             <span class="checkmark"></span>
                             <div class="role-details">
-                                <strong>{{ role.name }}</strong>
+                                <strong>{{ role.display_name or (role.name | replace('_', ' ') | replace('-', ' ') | title) }}</strong>
                                 {% if role.description %}
                                 <br><small>{{ role.description }}</small>
                                 {% endif %}
@@ -75,14 +75,9 @@
                     {% endfor %}
                 </div>
                 <small class="form-text">Select one or more roles for this user</small>
+                <small class="form-text text-muted">New accounts are enabled by default</small>
             </div>
-                <div class="form-group">
-                    <label for="enabled">Account Status</label>
-                    <select id="enabled" class="form-control" name="enabled">
-                        <option value="true" selected>Enabled</option>
-                        <option value="false">Disabled</option>
-                    </select>
-                </div>
+
             </div>
             
             <div class="alert alert-info" id="userInfoAlert" style="display: none;">
@@ -239,6 +234,18 @@ function hideUserForm() {
 async function editUser(userId) {
     try {
         const response = await fetch(`/api/users/${userId}`);
+        if (!response.ok) {
+            let body;
+            try {
+                body = await response.json();
+            } catch (e) {
+                body = await response.text();
+            }
+            const msg = (body && body.error) ? body.error : (typeof body === 'string' ? body : response.statusText);
+            alert('Error loading user: ' + msg);
+            return;
+        }
+
         const user = await response.json();
         
         if (user.error) {
@@ -250,18 +257,29 @@ async function editUser(userId) {
         const usersListCard = document.getElementById('usersListCard');
         const form = document.getElementById('userForm');
         
-        // Populate the form
-        document.getElementById('user_id').value = user.id;
-        document.getElementById('username').value = user.username;
-        document.getElementById('first_name').value = user.first_name || '';
-        document.getElementById('last_name').value = user.last_name || '';
-        document.getElementById('email').value = user.email || '';
-        document.getElementById('email_notifications').value = user.email_notifications ? 'true' : 'false';
-        document.getElementById('role').value = user.role || 'administrator';
-        document.getElementById('enabled').value = user.enabled ? 'true' : 'false';
-        document.getElementById('password').value = '';
-        document.getElementById('password').required = false;
+        // Populate the form (guard against missing elements)
+        const setIfExists = (id, value) => { const el = document.getElementById(id); if (el) el.value = value; };
+        setIfExists('user_id', user.id);
+        setIfExists('username', user.username);
+        setIfExists('first_name', user.first_name || '');
+        setIfExists('last_name', user.last_name || '');
+        setIfExists('email', user.email || '');
+        setIfExists('email_notifications', user.email_notifications ? 'true' : 'false');
+        // Legacy role field (if present) and enabled field may not exist in the form
+        const roleEl = document.getElementById('role');
+        if (roleEl) { roleEl.value = user.role || 'administrator'; }
+        const enabledEl = document.getElementById('enabled');
+        if (enabledEl) { enabledEl.value = user.enabled ? 'true' : 'false'; }
+        setIfExists('password', '');
+        const pwEl = document.getElementById('password'); if (pwEl) pwEl.required = false;
         
+        // Populate role checkboxes
+        const roleIds = user.role_ids || [];
+        const roleCheckboxes = document.querySelectorAll('input[name="role_ids"]');
+        roleCheckboxes.forEach(cb => {
+            cb.checked = roleIds.includes(parseInt(cb.value));
+        });
+
         // Display read-only info
         document.getElementById('last_login').textContent = user.last_login || 'Never';
         document.getElementById('created_at').textContent = user.created_at || '-';
