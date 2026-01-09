@@ -1,7 +1,4 @@
-from fastapi import APIRouter, Request, Form
-from fastapi.responses import RedirectResponse
-import bcrypt
-import re
+from fastapi.responses import JSONResponse
 
 from utils.db import query, execute
 from utils.logger import log
@@ -14,6 +11,20 @@ def require_login(request: Request):
 
 def flash(request: Request, message: str):
     request.session["flash"] = message
+
+@router.get("/api/user/profile")
+def get_user_profile(request: Request):
+    """Get current user profile information"""
+    if not require_login(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+    
+    user_id = request.session.get("user_id")
+    role = request.session.get("role", "user")
+    
+    return {
+        "user_id": user_id,
+        "role": role
+    }
 
 @router.get("/profile")
 def profile_form(request: Request):

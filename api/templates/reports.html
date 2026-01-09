@@ -154,6 +154,292 @@
             </div>
         </div>
     </div>
+
+    <!-- Storage Utilization Report -->
+    <div class="report-section">
+        <div class="report-header">
+            <h2 class="report-title">Storage Utilization Report</h2>
+            <div class="report-controls">
+                <div class="date-range-controls">
+                    <label for="storageStartDate" class="form-label me-2">From:</label>
+                    <input type="date" id="storageStartDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
+                    <label for="storageEndDate" class="form-label mx-2">To:</label>
+                    <input type="date" id="storageEndDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
+                    <button id="refreshStorageUtilization" class="btn btn-outline-primary btn-sm ms-2">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="report-card">
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="totalStorage">-</div>
+                    <div class="metric-label">Total Storage Used</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="avgEmailSize">-</div>
+                    <div class="metric-label">Avg Email Size</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="compressionRatio">-</div>
+                    <div class="metric-label">Compression Savings</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="totalEmails">-</div>
+                    <div class="metric-label">Total Emails</div>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="storageTrendsChart"></canvas>
+            </div>
+            <div class="table-responsive mt-4">
+                <h5>Largest Emails</h5>
+                <table class="table table-striped largest-emails-table">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Sender</th>
+                            <th>Size</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="largestEmailsTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Retention Policy Report -->
+    <div class="report-section">
+        <div class="report-header">
+            <h2 class="report-title">Retention Policy Effectiveness</h2>
+            <div class="report-controls">
+                <div class="date-range-controls">
+                    <label for="retentionStartDate" class="form-label me-2">From:</label>
+                    <input type="date" id="retentionStartDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
+                    <label for="retentionEndDate" class="form-label mx-2">To:</label>
+                    <input type="date" id="retentionEndDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
+                    <button id="refreshRetentionPolicy" class="btn btn-outline-primary btn-sm ms-2">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="report-card">
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="totalManualDeletions">-</div>
+                    <div class="metric-label">Manual Deletions</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="totalRetentionDeletions">-</div>
+                    <div class="metric-label">Retention Deletions</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="totalServerDeletions">-</div>
+                    <div class="metric-label">Deleted from Server</div>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="retentionChart"></canvas>
+            </div>
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h5>Current Email Age Distribution</h5>
+                    <div class="table-responsive">
+                        <table class="table table-striped age-distribution-table">
+                            <thead>
+                                <tr>
+                                    <th>Age Range</th>
+                                    <th>Email Count</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ageDistributionTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h5>Retention Policy Settings</h5>
+                    <div class="settings-display" id="retentionSettingsDisplay">
+                        <p>Loading settings...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Performance Report -->
+    <div class="report-section">
+        <div class="report-header">
+            <h2 class="report-title">System Performance Report</h2>
+            <div class="report-controls">
+                <div class="date-range-controls">
+                    <label for="performanceStartDate" class="form-label me-2">From:</label>
+                    <input type="date" id="performanceStartDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
+                    <label for="performanceEndDate" class="form-label mx-2">To:</label>
+                    <input type="date" id="performanceEndDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
+                    <button id="refreshSystemPerformance" class="btn btn-outline-primary btn-sm ms-2">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="report-card">
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="currentActiveWorkers">-</div>
+                    <div class="metric-label">Active Workers</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="currentTotalWorkers">-</div>
+                    <div class="metric-label">Total Workers</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="avgProcessingRate">-</div>
+                    <div class="metric-label">Avg Emails/Hour</div>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="performanceChart"></canvas>
+            </div>
+            <div class="chart-container mt-4">
+                <canvas id="workerActivityChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security & Access Report (Admin Only) -->
+    <div class="report-section" id="securityReportSection" style="display: none;">
+        <div class="report-header">
+            <h2 class="report-title">Security & Access Report</h2>
+            <div class="report-controls">
+                <div class="date-range-controls">
+                    <label for="securityStartDate" class="form-label me-2">From:</label>
+                    <input type="date" id="securityStartDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
+                    <label for="securityEndDate" class="form-label mx-2">To:</label>
+                    <input type="date" id="securityEndDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
+                    <button id="refreshSecurityAccess" class="btn btn-outline-primary btn-sm ms-2">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="report-card">
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="totalSuccessfulLogins">-</div>
+                    <div class="metric-label">Successful Logins</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="totalFailedLogins">-</div>
+                    <div class="metric-label">Failed Login Attempts</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="totalPasswordChanges">-</div>
+                    <div class="metric-label">Password Changes</div>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="securityChart"></canvas>
+            </div>
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h5>Recent Security Events (Last 24h)</h5>
+                    <div class="table-responsive">
+                        <table class="table table-striped security-events-table">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Level</th>
+                                    <th>Event</th>
+                                </tr>
+                            </thead>
+                            <tbody id="securityEventsTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h5>User Activity Summary</h5>
+                    <div class="table-responsive">
+                        <table class="table table-striped user-activity-table">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Role</th>
+                                    <th>Last Login</th>
+                                    <th>Recent Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="userActivityTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Quality Report -->
+    <div class="report-section">
+        <div class="report-header">
+            <h2 class="report-title">Data Quality Report</h2>
+            <button id="refreshDataQuality" class="btn btn-outline-primary btn-sm ms-2">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+        </div>
+        <div class="report-card">
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="dataCompleteness">-</div>
+                    <div class="metric-label">Data Completeness</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="scanCoverage">-</div>
+                    <div class="metric-label">Virus Scan Coverage</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="potentialDuplicates">-</div>
+                    <div class="metric-label">Potential Duplicates</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="errorRate">-</div>
+                    <div class="metric-label">System Error Rate</div>
+                </div>
+            </div>
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h5>Email Size Distribution</h5>
+                    <div class="chart-container">
+                        <canvas id="sizeDistributionChart"></canvas>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h5>Data Completeness Details</h5>
+                    <div class="table-responsive">
+                        <table class="table table-striped completeness-table">
+                            <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    <th>Percentage</th>
+                                </tr>
+                            </thead>
+                            <tbody id="completenessTableBody">
+                                <tr><td>Missing Subjects</td><td id="missingSubjectsPercent">-</td></tr>
+                                <tr><td>Missing Senders</td><td id="missingSendersPercent">-</td></tr>
+                                <tr><td>Missing Recipients</td><td id="missingRecipientsPercent">-</td></tr>
+                                <tr><td>Unscanned Emails</td><td id="unscannedPercent">-</td></tr>
+                                <tr><td>Virus Detected</td><td id="virusDetectedPercent">-</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Chart.js -->
@@ -356,6 +642,11 @@ function loadAllReports() {
     loadAccountActivityReport();
     loadSystemHealthReport();
     loadAVStatsReport();
+    loadStorageUtilizationReport();
+    loadRetentionPolicyReport();
+    loadSystemPerformanceReport();
+    loadSecurityAccessReport();
+    loadDataQualityReport();
 }
 
 // Email Volume Report
@@ -621,11 +912,374 @@ function loadAVStatsReport() {
         });
 }
 
+// Load Storage Utilization Report
+function loadStorageUtilizationReport() {
+    const startDate = document.getElementById('storageStartDate').value;
+    const endDate = document.getElementById('storageEndDate').value;
+    
+    let url = '/api/reports/storage-utilization';
+    if (startDate && endDate) {
+        url += `?start_date=${startDate}&end_date=${endDate}`;
+    }
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            // Update metrics
+            document.getElementById('totalStorage').textContent = data.total_storage || '-';
+            document.getElementById('avgEmailSize').textContent = data.avg_email_size || '-';
+            document.getElementById('compressionRatio').textContent = data.compression_savings || '-';
+            document.getElementById('totalEmails').textContent = data.total_emails || '-';
+            
+            // Update storage trends chart
+            if (window.storageTrendsChart) {
+                window.storageTrendsChart.destroy();
+            }
+            const ctx = document.getElementById('storageTrendsChart').getContext('2d');
+            window.storageTrendsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.storage_trends?.labels || [],
+                    datasets: [{
+                        label: 'Storage Used (MB)',
+                        data: data.storage_trends?.data || [],
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Storage Usage Over Time'
+                        }
+                    }
+                }
+            });
+            
+            // Update largest emails table
+            const tbody = document.getElementById('largestEmailsTableBody');
+            tbody.innerHTML = '';
+            if (data.largest_emails) {
+                data.largest_emails.forEach(email => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${email.subject || 'No Subject'}</td>
+                        <td>${email.sender || 'Unknown'}</td>
+                        <td>${email.size || '-'}</td>
+                        <td>${email.date || '-'}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error loading storage utilization report:', error);
+        });
+}
+
+// Load Retention Policy Report
+function loadRetentionPolicyReport() {
+    const startDate = document.getElementById('retentionStartDate').value;
+    const endDate = document.getElementById('retentionEndDate').value;
+    
+    let url = '/api/reports/retention-policy';
+    if (startDate && endDate) {
+        url += `?start_date=${startDate}&end_date=${endDate}`;
+    }
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            // Update metrics
+            document.getElementById('totalManualDeletions').textContent = data.manual_deletions || '-';
+            document.getElementById('totalRetentionDeletions').textContent = data.retention_deletions || '-';
+            document.getElementById('totalServerDeletions').textContent = data.server_deletions || '-';
+            
+            // Update retention chart
+            if (window.retentionChart) {
+                window.retentionChart.destroy();
+            }
+            const ctx = document.getElementById('retentionChart').getContext('2d');
+            window.retentionChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Manual Deletions', 'Retention Deletions', 'Server Deletions'],
+                    datasets: [{
+                        label: 'Deletions',
+                        data: [data.manual_deletions || 0, data.retention_deletions || 0, data.server_deletions || 0],
+                        backgroundColor: ['rgba(255, 99, 132, 0.8)', 'rgba(54, 162, 235, 0.8)', 'rgba(255, 205, 86, 0.8)']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Deletion Statistics'
+                        }
+                    }
+                }
+            });
+            
+            // Update age distribution table
+            const tbody = document.getElementById('ageDistributionTableBody');
+            tbody.innerHTML = '';
+            if (data.age_distribution) {
+                data.age_distribution.forEach(range => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${range.range}</td>
+                        <td>${range.count}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+            
+            // Update retention settings
+            const settingsDiv = document.getElementById('retentionSettingsDisplay');
+            if (data.retention_settings) {
+                settingsDiv.innerHTML = `
+                    <p><strong>Auto-delete after:</strong> ${data.retention_settings.auto_delete_days || 'Not set'} days</p>
+                    <p><strong>Max emails per account:</strong> ${data.retention_settings.max_emails_per_account || 'Not set'}</p>
+                    <p><strong>Max storage per account:</strong> ${data.retention_settings.max_storage_per_account || 'Not set'}</p>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading retention policy report:', error);
+        });
+}
+
+// Load System Performance Report
+function loadSystemPerformanceReport() {
+    const startDate = document.getElementById('performanceStartDate').value;
+    const endDate = document.getElementById('performanceEndDate').value;
+    
+    let url = '/api/reports/system-performance';
+    if (startDate && endDate) {
+        url += `?start_date=${startDate}&end_date=${endDate}`;
+    }
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            // Update metrics
+            document.getElementById('currentActiveWorkers').textContent = data.active_workers || '-';
+            document.getElementById('currentTotalWorkers').textContent = data.total_workers || '-';
+            document.getElementById('avgProcessingRate').textContent = data.avg_processing_rate || '-';
+            
+            // Update performance chart
+            if (window.performanceChart) {
+                window.performanceChart.destroy();
+            }
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            window.performanceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.processing_rates?.labels || [],
+                    datasets: [{
+                        label: 'Emails Processed per Hour',
+                        data: data.processing_rates?.data || [],
+                        borderColor: 'rgb(153, 102, 255)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Processing Performance Over Time'
+                        }
+                    }
+                }
+            });
+            
+            // Update worker activity chart
+            if (window.workerActivityChart) {
+                window.workerActivityChart.destroy();
+            }
+            const ctx2 = document.getElementById('workerActivityChart').getContext('2d');
+            window.workerActivityChart = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: data.worker_activity?.labels || [],
+                    datasets: [{
+                        label: 'Worker Activity',
+                        data: data.worker_activity?.data || [],
+                        backgroundColor: 'rgba(255, 159, 64, 0.8)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Worker Activity Distribution'
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error loading system performance report:', error);
+        });
+}
+
+// Load Security & Access Report
+function loadSecurityAccessReport() {
+    const startDate = document.getElementById('securityStartDate').value;
+    const endDate = document.getElementById('securityEndDate').value;
+    
+    let url = '/api/reports/security-access';
+    if (startDate && endDate) {
+        url += `?start_date=${startDate}&end_date=${endDate}`;
+    }
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            // Update metrics
+            document.getElementById('totalSuccessfulLogins').textContent = data.total_successful_logins || '-';
+            document.getElementById('totalFailedLogins').textContent = data.total_failed_logins || '-';
+            document.getElementById('totalPasswordChanges').textContent = data.total_password_changes || '-';
+            
+            // Update security chart
+            if (window.securityChart) {
+                window.securityChart.destroy();
+            }
+            const ctx = document.getElementById('securityChart').getContext('2d');
+            window.securityChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Successful Logins', 'Failed Logins', 'Password Changes'],
+                    datasets: [{
+                        data: [data.total_successful_logins || 0, data.total_failed_logins || 0, data.total_password_changes || 0],
+                        backgroundColor: ['rgba(75, 192, 192, 0.8)', 'rgba(255, 99, 132, 0.8)', 'rgba(54, 162, 235, 0.8)']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Security Events Distribution'
+                        }
+                    }
+                }
+            });
+            
+            // Update security events table
+            const tbody = document.getElementById('securityEventsTableBody');
+            tbody.innerHTML = '';
+            if (data.recent_security_events) {
+                data.recent_events.forEach(event => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${event.timestamp || '-'}</td>
+                        <td>${event.level || '-'}</td>
+                        <td>${event.message || '-'}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+            
+            // Update user activity table
+            const tbody2 = document.getElementById('userActivityTableBody');
+            tbody2.innerHTML = '';
+            if (data.user_activity) {
+                data.user_activity.forEach(user => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${user.username || '-'}</td>
+                        <td>${user.role || '-'}</td>
+                        <td>${user.last_login || '-'}</td>
+                        <td>${user.recent_actions || '-'}</td>
+                    `;
+                    tbody2.appendChild(row);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error loading security access report:', error);
+        });
+}
+
+// Load Data Quality Report
+function loadDataQualityReport() {
+    fetch('/api/reports/data-quality')
+        .then(response => response.json())
+        .then(data => {
+            // Update metrics
+            document.getElementById('dataCompleteness').textContent = (100 - (data.completeness_stats?.missing_subjects_percent || 0)) + '%';
+            document.getElementById('scanCoverage').textContent = (100 - (data.completeness_stats?.unscanned_percent || 0)) + '%';
+            document.getElementById('potentialDuplicates').textContent = data.potential_duplicates || '-';
+            document.getElementById('errorRate').textContent = (data.processing_issues?.error_rate_percent || 0) + '%';
+            
+            // Update completeness percentages
+            document.getElementById('missingSubjectsPercent').textContent = (data.completeness_stats?.missing_subjects_percent || 0) + '%';
+            document.getElementById('missingSendersPercent').textContent = (data.completeness_stats?.missing_senders_percent || 0) + '%';
+            document.getElementById('missingRecipientsPercent').textContent = (data.completeness_stats?.missing_recipients_percent || 0) + '%';
+            document.getElementById('unscannedPercent').textContent = (data.completeness_stats?.unscanned_percent || 0) + '%';
+            document.getElementById('virusDetectedPercent').textContent = (data.completeness_stats?.virus_detected_percent || 0) + '%';
+            
+            // Update size distribution chart
+            if (window.sizeDistributionChart) {
+                window.sizeDistributionChart.destroy();
+            }
+            const ctx = document.getElementById('sizeDistributionChart').getContext('2d');
+            window.sizeDistributionChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['< 1KB', '1-10KB', '10-100KB', '100KB-1MB', '> 1MB'],
+                    datasets: [{
+                        label: 'Email Count',
+                        data: [
+                            data.size_distribution?.under_1kb || 0,
+                            data.size_distribution?.kb_1_10 || 0,
+                            data.size_distribution?.kb_10_100 || 0,
+                            data.size_distribution?.kb_100_1024 || 0,
+                            data.size_distribution?.over_1mb || 0
+                        ],
+                        backgroundColor: 'rgba(153, 102, 255, 0.8)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Email Size Distribution'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Size Range'
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error loading data quality report:', error);
+        });
+}
+
 // Event listeners for refresh buttons
 document.getElementById('refreshEmailVolume').addEventListener('click', loadEmailVolumeReport);
 document.getElementById('refreshAccountActivity').addEventListener('click', loadAccountActivityReport);
 document.getElementById('refreshSystemHealth').addEventListener('click', loadSystemHealthReport);
 document.getElementById('refreshAVStats').addEventListener('click', loadAVStatsReport);
+document.getElementById('refreshStorageUtilization').addEventListener('click', loadStorageUtilizationReport);
+document.getElementById('refreshRetentionPolicy').addEventListener('click', loadRetentionPolicyReport);
+document.getElementById('refreshSystemPerformance').addEventListener('click', loadSystemPerformanceReport);
+document.getElementById('refreshSecurityAccess').addEventListener('click', loadSecurityAccessReport);
+document.getElementById('refreshDataQuality').addEventListener('click', loadDataQualityReport);
 
 // Event listeners for date changes
 document.getElementById('emailVolumeStartDate').addEventListener('change', loadEmailVolumeReport);
@@ -636,5 +1290,28 @@ document.getElementById('systemHealthStartDate').addEventListener('change', load
 document.getElementById('systemHealthEndDate').addEventListener('change', loadSystemHealthReport);
 document.getElementById('avStartDate').addEventListener('change', loadAVStatsReport);
 document.getElementById('avEndDate').addEventListener('change', loadAVStatsReport);
+document.getElementById('storageStartDate').addEventListener('change', loadStorageUtilizationReport);
+document.getElementById('storageEndDate').addEventListener('change', loadStorageUtilizationReport);
+document.getElementById('retentionStartDate').addEventListener('change', loadRetentionPolicyReport);
+document.getElementById('retentionEndDate').addEventListener('change', loadRetentionPolicyReport);
+document.getElementById('performanceStartDate').addEventListener('change', loadSystemPerformanceReport);
+document.getElementById('performanceEndDate').addEventListener('change', loadSystemPerformanceReport);
+document.getElementById('securityStartDate').addEventListener('change', loadSecurityAccessReport);
+document.getElementById('securityEndDate').addEventListener('change', loadSecurityAccessReport);
+
+// Load all reports on page load
+loadAllReports();
+
+// Check user role and show/hide admin-only reports
+fetch('/api/user/profile')
+    .then(response => response.json())
+    .then(data => {
+        if (data.role === 'administrator') {
+            document.getElementById('securityReportSection').style.display = 'block';
+        }
+    })
+    .catch(error => {
+        console.error('Error checking user role:', error);
+    });
 </script>
 {% endblock %}

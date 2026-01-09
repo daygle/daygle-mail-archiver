@@ -595,3 +595,650 @@ def av_stats_report(request: Request, start_date: str = None, end_date: str = No
         username = request.session.get("username", "unknown")
         log("error", "Reports", f"Failed to fetch AV statistics report for user '{username}': {str(e)}", "")
         return JSONResponse({"error": "Failed to load data"}, status_code=500)
+
+
+@router.get("/api/reports/storage-utilization")
+def storage_utilization_report(request: Request, start_date: str = None, end_date: str = None):
+    """Get storage utilization report data"""
+    if not require_login(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    try:
+        # Validate date parameters
+        if not start_date or not end_date:
+            return JSONResponse({"error": "start_date and end_date are required"}, status_code=400)
+
+        try:
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+            end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+            # Expand to inclusive day bounds
+            start_dt = datetime(start_dt.year, start_dt.month, start_dt.day, 0, 0, 0)
+            end_dt = datetime(end_dt.year, end_dt.month, end_dt.day, 23, 59, 59, 999999)
+        except ValueError:
+            return JSONResponse({"error": "Invalid date format. Use YYYY-MM-DD"}, status_code=400)
+
+        if start_dt > end_dt:
+            return JSONResponse({"error": "start_date must be before end_date"}, status_code=400)
+
+        user_id = request.session.get("user_id")
+        if user_id is not None:
+            try:
+                user_id = int(user_id)
+            except (ValueError, TypeError):
+                user_id = None
+        date_format = get_user_date_format(request, date_only=True)
+
+        # Calculate period based on date range
+        days_diff = (end_dt - start_dt).days
+        if days_diff <= 7:
+            period = "daily"
+            group_by = "DATE(created_at)"
+        elif days_diff <= 90:
+            period = "weekly"
+            group_by = "DATE_TRUNC('week', created_at)"
+        else:
+            period = "monthly"
+            group_by = "DATE_TRUNC('month', created_at)"
+
+        # Storage growth over time
+        storage_results = query(f"""
+            SELECT
+                {group_by} as period_start,
+                COUNT(*) as email_count,
+                SUM(LENGTH(raw_email)) as total_size_bytes,
+                AVG(LENGTH(raw_email)) as avg_size_bytes
+            FROM emails
+            WHERE created_at >= :start_date AND created_at <= :end_date
+            GROUP BY {group_by}
+            ORDER BY period_start
+        """, {"start_date": start_dt, "end_date": end_dt}).mappings().all()
+
+        storage_labels = []
+        storage_sizes_mb = []
+        email_counts = []
+        avg_sizes_kb = []
+
+        for row in storage_results:
+            if row["period_start"]:
+                local_dt = convert_utc_to_user_timezone(row["period_start"], user_id)
+                if period == "daily":
+                    storage_labels.append(local_dt.strftime(date_format))
+                elif period == "weekly":
+                    week_end = local_dt + timedelta(days=6)
+                    storage_labels.append(f"{local_dt.strftime(date_format)} - {week_end.strftime(date_format)}")
+                elif period == "monthly":
+                    storage_labels.append(local_dt.strftime("%B %Y"))
+
+            total_bytes = int(row["total_size_bytes"] or 0)
+            count = int(row["email_count"] or 0)
+            avg_bytes = float(row["avg_size_bytes"] or 0)
+
+            storage_sizes_mb.append(round(total_bytes / (1024 * 1024), 2))
+            email_counts.append(count)
+            avg_sizes_kb.append(round(avg_bytes / 1024, 2))
+
+        # Overall statistics
+        overall_stats = query("""
+            SELECT
+                COUNT(*) as total_emails,
+                SUM(LENGTH(raw_email)) as total_size_bytes,
+                AVG(LENGTH(raw_email)) as avg_size_bytes,
+                MAX(LENGTH(raw_email)) as max_size_bytes,
+                COUNT(CASE WHEN compressed THEN 1 END) as compressed_count,
+                COUNT(*) as total_count
+            FROM emails
+        """).mappings().first()
+
+        # Largest emails
+        largest_emails = query("""
+            SELECT
+                subject,
+                sender,
+                LENGTH(raw_email) as size_bytes,
+                created_at
+            FROM emails
+            ORDER BY LENGTH(raw_email) DESC
+            LIMIT 10
+        """).mappings().all()
+
+        # Compression ratio (simplified - assumes original size would be ~1.5x compressed size)
+        total_emails = int(overall_stats["total_count"] or 0)
+        compressed_emails = int(overall_stats["compressed_count"] or 0)
+        compression_ratio = 0
+        if total_emails > 0:
+            # Estimate: compressed emails save ~30% space
+            compression_ratio = round((compressed_emails / total_emails) * 30, 1)
+
+        # Format largest emails
+        formatted_largest = []
+        for email in largest_emails:
+            size_mb = round(int(email["size_bytes"] or 0) / (1024 * 1024), 2)
+            created_at = None
+            if email["created_at"]:
+                created_at = convert_utc_to_user_timezone(email["created_at"], user_id).strftime(get_user_date_format(request))
+
+            formatted_largest.append({
+                "subject": email["subject"] or "(No Subject)",
+                "sender": email["sender"] or "Unknown",
+                "size_mb": size_mb,
+                "created_at": created_at
+            })
+
+        return {
+            "total_emails": int(overall_stats["total_emails"] or 0),
+            "total_storage_mb": round(int(overall_stats["total_size_bytes"] or 0) / (1024 * 1024), 2),
+            "avg_email_size_kb": round(float(overall_stats["avg_size_bytes"] or 0) / 1024, 2),
+            "max_email_size_mb": round(int(overall_stats["max_size_bytes"] or 0) / (1024 * 1024), 2),
+            "compression_ratio_percent": compression_ratio,
+            "storage_labels": storage_labels,
+            "storage_sizes_mb": storage_sizes_mb,
+            "email_counts": email_counts,
+            "avg_sizes_kb": avg_sizes_kb,
+            "largest_emails": formatted_largest
+        }
+    except Exception as e:
+        username = request.session.get("username", "unknown")
+        log("error", "Reports", f"Failed to fetch storage utilization report for user '{username}': {str(e)}", "")
+        return JSONResponse({"error": "Failed to load data"}, status_code=500)
+
+
+@router.get("/api/reports/retention-policy")
+def retention_policy_report(request: Request, start_date: str = None, end_date: str = None):
+    """Get retention policy effectiveness report data"""
+    if not require_login(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    try:
+        # Validate date parameters
+        if not start_date or not end_date:
+            return JSONResponse({"error": "start_date and end_date are required"}, status_code=400)
+
+        try:
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+            end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+            # Expand to inclusive day bounds
+            start_dt = datetime(start_dt.year, start_dt.month, start_dt.day, 0, 0, 0)
+            end_dt = datetime(end_dt.year, end_dt.month, end_dt.day, 23, 59, 59, 999999)
+        except ValueError:
+            return JSONResponse({"error": "Invalid date format. Use YYYY-MM-DD"}, status_code=400)
+
+        if start_dt > end_dt:
+            return JSONResponse({"error": "start_date must be before end_date"}, status_code=400)
+
+        user_id = request.session.get("user_id")
+        if user_id is not None:
+            try:
+                user_id = int(user_id)
+            except (ValueError, TypeError):
+                user_id = None
+        date_format = get_user_date_format(request, date_only=True)
+
+        # Deletion statistics
+        deletion_results = query("""
+            SELECT
+                deletion_date,
+                deletion_type,
+                SUM(count) as total_deleted,
+                SUM(CASE WHEN deleted_from_mail_server THEN count ELSE 0 END) as deleted_from_server
+            FROM deletion_stats
+            WHERE deletion_date >= :start_date AND deletion_date <= :end_date
+            GROUP BY deletion_date, deletion_type
+            ORDER BY deletion_date
+        """, {"start_date": start_dt.date(), "end_date": end_dt.date()}).mappings().all()
+
+        # Organize deletion data
+        deletion_labels = []
+        manual_deletions = []
+        retention_deletions = []
+        server_deletions = []
+
+        deletion_by_date = defaultdict(lambda: {"manual": 0, "retention": 0, "server": 0})
+
+        for row in deletion_results:
+            date_str = ""
+            if row["deletion_date"]:
+                local_dt = convert_utc_to_user_timezone(row["deletion_date"], user_id)
+                date_str = local_dt.strftime(date_format)
+
+            if date_str and date_str not in deletion_labels:
+                deletion_labels.append(date_str)
+
+            deletion_type = row["deletion_type"]
+            total_deleted = int(row["total_deleted"] or 0)
+            server_deleted = int(row["deleted_from_server"] or 0)
+
+            if deletion_type == "manual":
+                deletion_by_date[date_str]["manual"] += total_deleted
+            elif deletion_type == "retention":
+                deletion_by_date[date_str]["retention"] += total_deleted
+
+            deletion_by_date[date_str]["server"] += server_deleted
+
+        # Build arrays in date order
+        for label in deletion_labels:
+            manual_deletions.append(deletion_by_date[label]["manual"])
+            retention_deletions.append(deletion_by_date[label]["retention"])
+            server_deletions.append(deletion_by_date[label]["server"])
+
+        # Current email age distribution
+        age_results = query("""
+            SELECT
+                CASE
+                    WHEN created_at >= CURRENT_DATE - INTERVAL '30 days' THEN '0-30 days'
+                    WHEN created_at >= CURRENT_DATE - INTERVAL '90 days' THEN '31-90 days'
+                    WHEN created_at >= CURRENT_DATE - INTERVAL '180 days' THEN '91-180 days'
+                    WHEN created_at >= CURRENT_DATE - INTERVAL '365 days' THEN '181-365 days'
+                    ELSE '1+ years'
+                END as age_range,
+                COUNT(*) as email_count
+            FROM emails
+            GROUP BY
+                CASE
+                    WHEN created_at >= CURRENT_DATE - INTERVAL '30 days' THEN '0-30 days'
+                    WHEN created_at >= CURRENT_DATE - INTERVAL '90 days' THEN '31-90 days'
+                    WHEN created_at >= CURRENT_DATE - INTERVAL '180 days' THEN '91-180 days'
+                    WHEN created_at >= CURRENT_DATE - INTERVAL '365 days' THEN '181-365 days'
+                    ELSE '1+ years'
+                END
+            ORDER BY MIN(created_at)
+        """).mappings().all()
+
+        age_distribution = []
+        for row in age_results:
+            age_distribution.append({
+                "range": row["age_range"],
+                "count": int(row["email_count"] or 0)
+            })
+
+        # Retention policy settings
+        retention_settings = query("""
+            SELECT key, value FROM settings
+            WHERE key IN ('retention_value', 'retention_unit', 'retention_delete_from_mail_server')
+        """).mappings().all()
+
+        settings = {}
+        for setting in retention_settings:
+            settings[setting["key"]] = setting["value"]
+
+        # Calculate totals
+        total_manual = sum(manual_deletions)
+        total_retention = sum(retention_deletions)
+        total_server = sum(server_deletions)
+
+        return {
+            "deletion_labels": deletion_labels,
+            "manual_deletions": manual_deletions,
+            "retention_deletions": retention_deletions,
+            "server_deletions": server_deletions,
+            "total_manual_deletions": total_manual,
+            "total_retention_deletions": total_retention,
+            "total_server_deletions": total_server,
+            "age_distribution": age_distribution,
+            "retention_settings": settings
+        }
+    except Exception as e:
+        username = request.session.get("username", "unknown")
+        log("error", "Reports", f"Failed to fetch retention policy report for user '{username}': {str(e)}", "")
+        return JSONResponse({"error": "Failed to load data"}, status_code=500)
+
+
+@router.get("/api/reports/system-performance")
+def system_performance_report(request: Request, start_date: str = None, end_date: str = None):
+    """Get system performance report data"""
+    if not require_login(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    try:
+        # Validate date parameters
+        if not start_date or not end_date:
+            return JSONResponse({"error": "start_date and end_date are required"}, status_code=400)
+
+        try:
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+            end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+            # Expand to inclusive day bounds
+            start_dt = datetime(start_dt.year, start_dt.month, start_dt.day, 0, 0, 0)
+            end_dt = datetime(end_dt.year, end_dt.month, end_dt.day, 23, 59, 59, 999999)
+        except ValueError:
+            return JSONResponse({"error": "Invalid date format. Use YYYY-MM-DD"}, status_code=400)
+
+        if start_dt > end_dt:
+            return JSONResponse({"error": "start_date must be before end_date"}, status_code=400)
+
+        user_id = request.session.get("user_id")
+        if user_id is not None:
+            try:
+                user_id = int(user_id)
+            except (ValueError, TypeError):
+                user_id = None
+        date_format = get_user_date_format(request, date_only=True)
+
+        # Worker performance metrics
+        worker_results = query("""
+            SELECT
+                DATE(last_heartbeat) as heartbeat_date,
+                COUNT(*) as total_workers,
+                COUNT(CASE WHEN last_heartbeat >= NOW() - INTERVAL '5 minutes' THEN 1 END) as active_workers,
+                AVG(EXTRACT(EPOCH FROM (NOW() - last_heartbeat)) / 3600) as avg_hours_since_heartbeat
+            FROM fetch_accounts
+            WHERE enabled = TRUE
+            AND last_heartbeat >= :start_date AND last_heartbeat <= :end_date
+            GROUP BY DATE(last_heartbeat)
+            ORDER BY heartbeat_date
+        """, {"start_date": start_dt, "end_date": end_dt}).mappings().all()
+
+        worker_labels = []
+        active_workers = []
+        total_workers = []
+        avg_response_times = []
+
+        for row in worker_results:
+            if row["heartbeat_date"]:
+                local_dt = convert_utc_to_user_timezone(row["heartbeat_date"], user_id)
+                worker_labels.append(local_dt.strftime(date_format))
+
+            active_workers.append(int(row["active_workers"] or 0))
+            total_workers.append(int(row["total_workers"] or 0))
+            avg_response_times.append(round(float(row["avg_hours_since_heartbeat"] or 0), 2))
+
+        # Processing performance (emails processed per hour)
+        processing_results = query("""
+            SELECT
+                DATE(created_at) as processing_date,
+                COUNT(*) as emails_processed,
+                EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))) / 3600 as processing_hours
+            FROM emails
+            WHERE created_at >= :start_date AND created_at <= :end_date
+            GROUP BY DATE(created_at)
+            ORDER BY processing_date
+        """, {"start_date": start_dt, "end_date": end_dt}).mappings().all()
+
+        processing_labels = []
+        emails_per_hour = []
+
+        for row in processing_results:
+            if row["processing_date"]:
+                local_dt = convert_utc_to_user_timezone(row["processing_date"], user_id)
+                processing_labels.append(local_dt.strftime(date_format))
+
+            emails_count = int(row["emails_processed"] or 0)
+            hours = float(row["processing_hours"] or 1)  # Avoid division by zero
+            emails_per_hour.append(round(emails_count / max(hours, 0.01), 2))
+
+        # Error rates
+        error_results = query("""
+            SELECT
+                DATE(timestamp) as error_date,
+                COUNT(*) as total_errors
+            FROM logs
+            WHERE level = 'error'
+            AND timestamp >= :start_date AND timestamp <= :end_date
+            GROUP BY DATE(timestamp)
+            ORDER BY error_date
+        """, {"start_date": start_dt, "end_date": end_dt}).mappings().all()
+
+        error_labels = []
+        error_counts = []
+
+        for row in error_results:
+            if row["error_date"]:
+                local_dt = convert_utc_to_user_timezone(row["error_date"], user_id)
+                error_labels.append(local_dt.strftime(date_format))
+
+            error_counts.append(int(row["total_errors"] or 0))
+
+        # Current system status
+        current_workers = query("""
+            SELECT
+                COUNT(*) as total_enabled,
+                COUNT(CASE WHEN last_heartbeat >= NOW() - INTERVAL '5 minutes' THEN 1 END) as currently_active
+            FROM fetch_accounts
+            WHERE enabled = TRUE
+        """).mappings().first()
+
+        return {
+            "worker_labels": worker_labels,
+            "active_workers": active_workers,
+            "total_workers": total_workers,
+            "avg_response_times": avg_response_times,
+            "processing_labels": processing_labels,
+            "emails_per_hour": emails_per_hour,
+            "error_labels": error_labels,
+            "error_counts": error_counts,
+            "current_total_workers": int(current_workers["total_enabled"] or 0),
+            "current_active_workers": int(current_workers["currently_active"] or 0)
+        }
+    except Exception as e:
+        username = request.session.get("username", "unknown")
+        log("error", "Reports", f"Failed to fetch system performance report for user '{username}': {str(e)}", "")
+        return JSONResponse({"error": "Failed to load data"}, status_code=500)
+
+
+@router.get("/api/reports/security-access")
+def security_access_report(request: Request, start_date: str = None, end_date: str = None):
+    """Get security and access report data"""
+    if not require_login(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    # Only administrators can view security reports
+    if request.session.get("role") != "administrator":
+        return JSONResponse({"error": "Access denied"}, status_code=403)
+
+    try:
+        # Validate date parameters
+        if not start_date or not end_date:
+            return JSONResponse({"error": "start_date and end_date are required"}, status_code=400)
+
+        try:
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+            end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+            # Expand to inclusive day bounds
+            start_dt = datetime(start_dt.year, start_dt.month, start_dt.day, 0, 0, 0)
+            end_dt = datetime(end_dt.year, end_dt.month, end_dt.day, 23, 59, 59, 999999)
+        except ValueError:
+            return JSONResponse({"error": "Invalid date format. Use YYYY-MM-DD"}, status_code=400)
+
+        if start_dt > end_dt:
+            return JSONResponse({"error": "start_date must be before end_date"}, status_code=400)
+
+        user_id = request.session.get("user_id")
+        if user_id is not None:
+            try:
+                user_id = int(user_id)
+            except (ValueError, TypeError):
+                user_id = None
+        date_format = get_user_date_format(request, date_only=True)
+        datetime_format = get_user_date_format(request)
+
+        # Authentication events
+        auth_results = query("""
+            SELECT
+                DATE(timestamp) as event_date,
+                COUNT(CASE WHEN message LIKE '%login successful%' THEN 1 END) as successful_logins,
+                COUNT(CASE WHEN message LIKE '%login failed%' THEN 1 END) as failed_logins,
+                COUNT(CASE WHEN message LIKE '%password changed%' THEN 1 END) as password_changes
+            FROM logs
+            WHERE source = 'Auth'
+            AND timestamp >= :start_date AND timestamp <= :end_date
+            GROUP BY DATE(timestamp)
+            ORDER BY event_date
+        """, {"start_date": start_dt, "end_date": end_dt}).mappings().all()
+
+        auth_labels = []
+        successful_logins = []
+        failed_logins = []
+        password_changes = []
+
+        for row in auth_results:
+            if row["event_date"]:
+                local_dt = convert_utc_to_user_timezone(row["event_date"], user_id)
+                auth_labels.append(local_dt.strftime(date_format))
+
+            successful_logins.append(int(row["successful_logins"] or 0))
+            failed_logins.append(int(row["failed_logins"] or 0))
+            password_changes.append(int(row["password_changes"] or 0))
+
+        # Recent security events (last 24 hours)
+        recent_events = query("""
+            SELECT
+                timestamp,
+                level,
+                message,
+                details
+            FROM logs
+            WHERE source = 'Auth'
+            AND timestamp >= NOW() - INTERVAL '24 hours'
+            ORDER BY timestamp DESC
+            LIMIT 50
+        """).mappings().all()
+
+        formatted_events = []
+        for event in recent_events:
+            event_time = None
+            if event["timestamp"]:
+                event_time = convert_utc_to_user_timezone(event["timestamp"], user_id).strftime(datetime_format)
+
+            formatted_events.append({
+                "timestamp": event_time,
+                "level": event["level"],
+                "message": event["message"],
+                "details": event["details"]
+            })
+
+        # User activity summary
+        user_activity = query("""
+            SELECT
+                u.username,
+                u.role,
+                u.last_login,
+                COUNT(l.id) as recent_actions
+            FROM users u
+            LEFT JOIN logs l ON l.source = 'Auth' AND l.message LIKE '%' || u.username || '%'
+                AND l.timestamp >= :start_date AND l.timestamp <= :end_date
+            GROUP BY u.id, u.username, u.role, u.last_login
+            ORDER BY u.last_login DESC NULLS LAST
+        """, {"start_date": start_dt, "end_date": end_dt}).mappings().all()
+
+        formatted_users = []
+        for user in user_activity:
+            last_login = None
+            if user["last_login"]:
+                last_login = convert_utc_to_user_timezone(user["last_login"], user_id).strftime(datetime_format)
+
+            formatted_users.append({
+                "username": user["username"],
+                "role": user["role"],
+                "last_login": last_login,
+                "recent_actions": int(user["recent_actions"] or 0)
+            })
+
+        # Calculate totals
+        total_successful = sum(successful_logins)
+        total_failed = sum(failed_logins)
+        total_changes = sum(password_changes)
+
+        return {
+            "auth_labels": auth_labels,
+            "successful_logins": successful_logins,
+            "failed_logins": failed_logins,
+            "password_changes": password_changes,
+            "total_successful_logins": total_successful,
+            "total_failed_logins": total_failed,
+            "total_password_changes": total_changes,
+            "recent_security_events": formatted_events,
+            "user_activity": formatted_users
+        }
+    except Exception as e:
+        username = request.session.get("username", "unknown")
+        log("error", "Reports", f"Failed to fetch security access report for user '{username}': {str(e)}", "")
+        return JSONResponse({"error": "Failed to load data"}, status_code=500)
+
+
+@router.get("/api/reports/data-quality")
+def data_quality_report(request: Request):
+    """Get data quality report data"""
+    if not require_login(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    try:
+        # Email completeness metrics
+        completeness_results = query("""
+            SELECT
+                COUNT(*) as total_emails,
+                COUNT(CASE WHEN subject IS NULL OR subject = '' THEN 1 END) as missing_subjects,
+                COUNT(CASE WHEN sender IS NULL OR sender = '' THEN 1 END) as missing_senders,
+                COUNT(CASE WHEN recipients IS NULL OR recipients = '' THEN 1 END) as missing_recipients,
+                COUNT(CASE WHEN virus_scanned = FALSE THEN 1 END) as unscanned_emails,
+                COUNT(CASE WHEN virus_detected = TRUE THEN 1 END) as virus_detected
+            FROM emails
+        """).mappings().first()
+
+        # Size distribution
+        size_results = query("""
+            SELECT
+                COUNT(CASE WHEN LENGTH(raw_email) < 1024 THEN 1 END) as under_1kb,
+                COUNT(CASE WHEN LENGTH(raw_email) >= 1024 AND LENGTH(raw_email) < 10240 THEN 1 END) as kb_1_10,
+                COUNT(CASE WHEN LENGTH(raw_email) >= 10240 AND LENGTH(raw_email) < 102400 THEN 1 END) as kb_10_100,
+                COUNT(CASE WHEN LENGTH(raw_email) >= 102400 AND LENGTH(raw_email) < 1048576 THEN 1 END) as kb_100_1024,
+                COUNT(CASE WHEN LENGTH(raw_email) >= 1048576 THEN 1 END) as over_1mb
+            FROM emails
+        """).mappings().first()
+
+        # Duplicate detection (simplified - same subject, sender, date within 1 minute)
+        duplicate_results = query("""
+            SELECT COUNT(*) as potential_duplicates
+            FROM (
+                SELECT subject, sender, DATE(created_at), COUNT(*) as dup_count
+                FROM emails
+                WHERE subject IS NOT NULL AND sender IS NOT NULL
+                GROUP BY subject, sender, DATE(created_at)
+                HAVING COUNT(*) > 1
+            ) duplicates
+        """).mappings().first()
+
+        # Processing issues
+        issue_results = query("""
+            SELECT
+                COUNT(CASE WHEN level = 'error' THEN 1 END) as error_count,
+                COUNT(CASE WHEN level = 'warning' THEN 1 END) as warning_count,
+                COUNT(*) as total_logs
+            FROM logs
+            WHERE timestamp >= CURRENT_DATE - INTERVAL '7 days'
+        """).mappings().first()
+
+        # Calculate percentages
+        total_emails = int(completeness_results["total_emails"] or 0)
+        completeness_stats = {
+            "total_emails": total_emails,
+            "missing_subjects_percent": round((int(completeness_results["missing_subjects"] or 0) / max(total_emails, 1)) * 100, 2),
+            "missing_senders_percent": round((int(completeness_results["missing_senders"] or 0) / max(total_emails, 1)) * 100, 2),
+            "missing_recipients_percent": round((int(completeness_results["missing_recipients"] or 0) / max(total_emails, 1)) * 100, 2),
+            "unscanned_percent": round((int(completeness_results["unscanned_emails"] or 0) / max(total_emails, 1)) * 100, 2),
+            "virus_detected_percent": round((int(completeness_results["virus_detected"] or 0) / max(total_emails, 1)) * 100, 2)
+        }
+
+        size_distribution = {
+            "under_1kb": int(size_results["under_1kb"] or 0),
+            "kb_1_10": int(size_results["kb_1_10"] or 0),
+            "kb_10_100": int(size_results["kb_10_100"] or 0),
+            "kb_100_1024": int(size_results["kb_100_1024"] or 0),
+            "over_1mb": int(size_results["over_1mb"] or 0)
+        }
+
+        processing_issues = {
+            "error_count": int(issue_results["error_count"] or 0),
+            "warning_count": int(issue_results["warning_count"] or 0),
+            "total_logs": int(issue_results["total_logs"] or 0),
+            "error_rate_percent": round((int(issue_results["error_count"] or 0) / max(int(issue_results["total_logs"] or 1), 1)) * 100, 2)
+        }
+
+        return {
+            "completeness_stats": completeness_stats,
+            "size_distribution": size_distribution,
+            "potential_duplicates": int(duplicate_results["potential_duplicates"] or 0),
+            "processing_issues": processing_issues
+        }
+    except Exception as e:
+        username = request.session.get("username", "unknown")
+        log("error", "Reports", f"Failed to fetch data quality report for user '{username}': {str(e)}", "")
+        return JSONResponse({"error": "Failed to load data"}, status_code=500)
