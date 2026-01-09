@@ -15,6 +15,7 @@
                 <i class="fas fa-arrow-left"></i>
                 <span>Back</span>
             </a>
+            {% if request.session.role == 'administrator' %}
             <form method="post" action="/quarantine/{{ item.id }}/restore" style="display:inline;">
                 <button class="btn btn-success btn-sm">Restore</button>
             </form>
@@ -22,6 +23,7 @@
                 <i class="fas fa-trash"></i>
                 <span>Delete</span>
             </button>
+            {% endif %}
         </div>
     </div>
     <div class="card-body" style="padding: 0;">

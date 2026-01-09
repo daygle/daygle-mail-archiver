@@ -172,6 +172,10 @@ def download_email(request: Request, email_id: int):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
+    # Check if user is read_only - they cannot download .eml files
+    if request.session.get("role") == "read_only":
+        return HTMLResponse("Access denied: Read-only users cannot download email files", status_code=403)
+
     row = query(
         """
         SELECT raw_email, compressed

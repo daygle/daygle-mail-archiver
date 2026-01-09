@@ -129,13 +129,13 @@ def list_quarantine(request: Request, q: str = None, virus: str = None):
     # Verify role from DB (more reliable than trusting session role)
     try:
         user = query('SELECT role FROM users WHERE id = :id', {'id': request.session.get('user_id')}).mappings().first()
-        if not user or user.get('role') != 'administrator':
+        if not user or user.get('role') not in ['administrator', 'read_only']:
             log('warning', 'Quarantine', f"Unauthorized access attempt to /quarantine by user_id={request.session.get('user_id')} role={request.session.get('role')}")
-            request.session['flash'] = 'Administrator access required'
+            request.session['flash'] = 'Access denied'
             return RedirectResponse('/dashboard', status_code=303)
     except Exception as e:
-        log('error', 'Quarantine', f"Failed to verify admin role: {e}")
-        request.session['flash'] = 'Administrator access required'
+        log('error', 'Quarantine', f"Failed to verify role: {e}")
+        request.session['flash'] = 'Access denied'
         return RedirectResponse('/dashboard', status_code=303)
 
     # Build query with optional filters
@@ -166,11 +166,11 @@ def view_quarantine(request: Request, qid: int):
     # Verify role from DB (more reliable than trusting session role)
     try:
         user = query('SELECT role FROM users WHERE id = :id', {'id': request.session.get('user_id')}).mappings().first()
-        if not user or user.get('role') != 'administrator':
+        if not user or user.get('role') not in ['administrator', 'read_only']:
             log('warning', 'Quarantine', f"Unauthorized view attempt to /quarantine/{qid} by user_id={request.session.get('user_id')} role={request.session.get('role')}")
             return RedirectResponse('/dashboard', status_code=303)
     except Exception as e:
-        log('error', 'Quarantine', f"Failed to verify admin role: {e}")
+        log('error', 'Quarantine', f"Failed to verify role: {e}")
         return RedirectResponse('/dashboard', status_code=303)
 
     item = query('SELECT * FROM quarantined_emails WHERE id = :id', {'id': qid}).mappings().first()

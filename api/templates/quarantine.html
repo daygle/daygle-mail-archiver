@@ -96,12 +96,14 @@
                         <td>{{ i.quarantined_at }}</td>
                         <td>
                             <a class="btn btn-sm btn-primary" href="/quarantine/{{ i.id }}">View</a>
+                            {% if request.session.role == 'administrator' %}
                             <form method="post" action="/quarantine/{{ i.id }}/restore" style="display:inline;">
                                 <button class="btn btn-sm btn-success" type="submit">Restore</button>
                             </form>
                             <form method="post" action="/quarantine/{{ i.id }}/delete" style="display:inline;" onsubmit="return confirm('Delete this quarantined message permanently?');">
                                 <button class="btn btn-sm btn-danger" type="submit">Delete</button>
                             </form>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}

@@ -15,10 +15,12 @@
                 <i class="fas fa-arrow-left"></i>
                 <span>Back</span>
             </a>
+            {% if request.session.role != 'read_only' %}
             <a href="/emails/{{ email.id }}/download" class="btn btn-primary btn-sm">
                 <i class="fas fa-download"></i>
                 <span>Download EML</span>
             </a>
+            {% endif %}
             {% if request.session.role == 'administrator' %}
             {% if not email.quarantined %}
             <form method="post" action="/emails/{{ email.id }}/quarantine" style="display:inline;">
