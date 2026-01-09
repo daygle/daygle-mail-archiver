@@ -175,7 +175,7 @@ def send_alert_email(
 
 def test_smtp_connection() -> tuple[bool, str]:
     """
-    Test SMTP connection and authentication
+    Test SMTP connection and send a test email
 
     Returns:
         tuple: (success: bool, message: str)
@@ -187,6 +187,9 @@ def test_smtp_connection() -> tuple[bool, str]:
 
     if not config['host']:
         return False, "SMTP host is not configured"
+
+    if not config['from_email']:
+        return False, "From email address is not configured"
 
     try:
         # Create SMTP connection
@@ -200,8 +203,31 @@ def test_smtp_connection() -> tuple[bool, str]:
         if config['username'] and config['password']:
             server.login(config['username'], config['password'])
 
+        # Send a test email
+        from datetime import datetime, timezone
+        test_subject = f"Daygle Mail Archiver - SMTP Test {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}"
+        test_body = f"""This is a test email from Daygle Mail Archiver.
+
+SMTP Configuration Test Details:
+- Host: {config['host']}
+- Port: {config['port']}
+- From: {config['from_email']}
+- To: {config['from_email']} (sent to self for testing)
+- TLS: {'Yes' if config['use_tls'] else 'No'}
+- Time: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}
+
+If you received this email, your SMTP configuration is working correctly.
+"""
+
+        msg = MIMEText(test_body)
+        msg['Subject'] = test_subject
+        msg['From'] = config['from_name'] or config['from_email']
+        msg['To'] = config['from_email']
+
+        server.sendmail(config['from_email'], config['from_email'], msg.as_string())
         server.quit()
-        return True, "SMTP connection successful"
+
+        return True, f"SMTP connection successful - test email sent to {config['from_email']}"
 
     except Exception as e:
-        return False, f"SMTP connection failed: {str(e)}"
+        return False, f"SMTP test failed: {str(e)}"

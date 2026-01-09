@@ -284,16 +284,27 @@
 <!-- Test SMTP form outside the main form to avoid nesting -->
 <form method="post" action="/api/test-smtp" id="test-smtp-form" style="display: none;">
     <button type="submit" class="btn btn-info" id="test-smtp-btn" {% if settings.smtp_enabled != 'true' %}disabled{% endif %}>
-        <i class="fas fa-flask"></i>
-        <span>Test SMTP Connection</span>
+        <i class="fas fa-paper-plane"></i>
+        <span>Send Test Email</span>
     </button>
 </form>
 
 <script>
 document.getElementById('smtp_enabled').addEventListener('change', function() {
-    const testBtn = document.getElementById('test-smtp-btn');
-    testBtn.disabled = !this.checked;
+    updateTestButtonState();
 });
+
+document.getElementById('smtp_from_email').addEventListener('input', function() {
+    updateTestButtonState();
+});
+
+function updateTestButtonState() {
+    const testBtn = document.getElementById('test-smtp-btn');
+    const smtpEnabled = document.getElementById('smtp_enabled').checked;
+    const fromEmail = document.getElementById('smtp_from_email').value.trim();
+    
+    testBtn.disabled = !smtpEnabled || !fromEmail;
+}
 
 // Move the test SMTP form into the header container after page load
 document.addEventListener('DOMContentLoaded', function() {
@@ -303,6 +314,9 @@ document.addEventListener('DOMContentLoaded', function() {
         container.appendChild(form);
         form.style.display = 'inline';
     }
+    
+    // Initialize button state
+    updateTestButtonState();
 });
 </script>
 {% endblock %}

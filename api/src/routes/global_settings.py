@@ -169,7 +169,7 @@ def save_settings(
 
 @router.post("/api/test-smtp")
 def test_smtp(request: Request):
-    """Test SMTP connection"""
+    """Test SMTP connection and send a test email"""
     if not require_login(request):
         flash(request, "You must be logged in to test SMTP.")
         return RedirectResponse("/login", status_code=303)
@@ -177,9 +177,9 @@ def test_smtp(request: Request):
     try:
         success, message = test_smtp_connection()
         if success:
-            flash(request, f"SMTP connection successful: {message}")
+            flash(request, f"SMTP test successful: {message}")
         else:
-            flash(request, f"SMTP connection failed: {message}")
+            flash(request, f"SMTP test failed: {message}")
     except Exception as e:
         log("error", "Settings", f"SMTP test failed: {str(e)}", "")
         flash(request, f"SMTP test failed: {str(e)}")
