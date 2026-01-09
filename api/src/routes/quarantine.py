@@ -6,10 +6,13 @@ from utils.templates import templates
 from utils.db import query, execute
 from utils.logger import log
 from utils.config import get_config
-from utils.security import decrypt_password, require_login, can_delete
+from utils.security import decrypt_password, can_delete
 from cryptography.fernet import Fernet
 
 router = APIRouter()
+
+def require_login(request: Request):
+    return "user_id" in request.session
 
 def _get_quarantine_fernet():
     key = get_config('CLAMAV_QUARANTINE_KEY')
