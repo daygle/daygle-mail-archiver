@@ -801,6 +801,24 @@ textarea.form-control {
     gap: 0.5rem;
     flex-wrap: wrap;
     align-items: center;
+
+    /* Ensure permissions cell visually matches other table cells */
+    background: transparent !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* Ensure badges are compact and wrap cleanly */
+.role-permissions .badge {
+    display: inline-block;
+    margin: 0.25rem 0.5rem 0.25rem 0; /* vertical then horizontal spacing */
+}
+
+/* Defensive: if a permissions-grid accidentally appears inside a table, reset its visual background */
+.table .permissions-grid {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
 }
 
 /* Tooltip wrapper for disabled buttons to allow hover/focus tooltips */
