@@ -264,22 +264,18 @@
                 <input id="smtp_from_name" class="form-control" name="smtp_from_name" type="text" value="{{ settings.smtp_from_name or 'Daygle Mail Archiver' }}" placeholder="Daygle Mail Archiver">
                 <small class="form-text">Display name for alert emails</small>
             </div>
-
-            <div class="mt-3">
-                <form method="post" action="/api/test-smtp" style="display: inline;">
-                    <button type="submit" class="btn btn-outline-secondary" id="test-smtp-btn" {% if settings.smtp_enabled != 'true' %}disabled{% endif %}>
-                        <i class="fas fa-flask"></i>
-                        <span>Test SMTP Connection</span>
-                    </button>
-                </form>
-                <small class="form-text d-block mt-1">Test the SMTP configuration without sending an email</small>
-            </div>
         </div>
         <div class="card-footer form-actions">
             <a href="/dashboard" class="btn btn-secondary">
                 <i class="fas fa-times"></i>
                 <span>Cancel</span>
             </a>
+            <form method="post" action="/api/test-smtp" style="display: inline;">
+                <button type="submit" class="btn btn-outline-secondary" id="test-smtp-btn" {% if settings.smtp_enabled != 'true' %}disabled{% endif %}>
+                    <i class="fas fa-flask"></i>
+                    <span>Test SMTP Connection</span>
+                </button>
+            </form>
             <button type="submit" class="btn btn-primary">
                 <i class="fas fa-save"></i>
                 <span>Save Settings</span>

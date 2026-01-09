@@ -15,61 +15,59 @@
     <div class="card-body">
         <p class="section-description">Manage individual alert triggers. Each trigger represents a specific type of event that can generate alerts. You can enable/disable triggers and adjust their severity level.</p>
 
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Trigger Name</th>
-                        <th>Description</th>
-                        <th>Severity</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for trigger in triggers %}
-                    <tr>
-                        <td>{{ trigger.name }}</td>
-                        <td>{{ trigger.description or 'No description available' }}</td>
-                        <td>
-                            <form method="post" action="/alert-management/triggers/update-severity" style="display: inline-block;">
-                                <input type="hidden" name="trigger_id" value="{{ trigger.id }}">
-                                <select name="alert_type" class="form-select form-select-sm responsive-fixed" onchange="this.form.submit()">
-                                    <option value="error" {% if trigger.alert_type == 'error' %}selected{% endif %}>Error</option>
-                                    <option value="warning" {% if trigger.alert_type == 'warning' %}selected{% endif %}>Warning</option>
-                                    <option value="info" {% if trigger.alert_type == 'info' %}selected{% endif %}>Info</option>
-                                    <option value="success" {% if trigger.alert_type == 'success' %}selected{% endif %}>Success</option>
-                                </select>
-                            </form>
-                        </td>
-                        <td>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Trigger Name</th>
+                    <th>Description</th>
+                    <th>Severity</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for trigger in triggers %}
+                <tr>
+                    <td>{{ trigger.name }}</td>
+                    <td>{{ trigger.description or 'No description available' }}</td>
+                    <td>
+                        <form method="post" action="/alert-management/triggers/update-severity" style="display: inline-block;">
+                            <input type="hidden" name="trigger_id" value="{{ trigger.id }}">
+                            <select name="alert_type" class="form-select form-select-sm responsive-fixed" onchange="this.form.submit()">
+                                <option value="error" {% if trigger.alert_type == 'error' %}selected{% endif %}>Error</option>
+                                <option value="warning" {% if trigger.alert_type == 'warning' %}selected{% endif %}>Warning</option>
+                                <option value="info" {% if trigger.alert_type == 'info' %}selected{% endif %}>Info</option>
+                                <option value="success" {% if trigger.alert_type == 'success' %}selected{% endif %}>Success</option>
+                            </select>
+                        </form>
+                    </td>
+                    <td>
+                        {% if trigger.enabled %}
+                            <span class="badge bg-success">Enabled</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Disabled</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="post" action="/alert-management/triggers/update" style="display: inline;">
+                            <input type="hidden" name="trigger_id" value="{{ trigger.id }}">
                             {% if trigger.enabled %}
-                                <span class="badge bg-success">Enabled</span>
+                                <input type="hidden" name="enabled" value="false">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-ban"></i> Disable
+                                </button>
                             {% else %}
-                                <span class="badge bg-secondary">Disabled</span>
+                                <input type="hidden" name="enabled" value="true">
+                                <button type="submit" class="btn btn-sm btn-outline-success">
+                                    <i class="fas fa-check"></i> Enable
+                                </button>
                             {% endif %}
-                        </td>
-                        <td>
-                            <form method="post" action="/alert-management/triggers/update" style="display: inline;">
-                                <input type="hidden" name="trigger_id" value="{{ trigger.id }}">
-                                {% if trigger.enabled %}
-                                    <input type="hidden" name="enabled" value="false">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                                        <i class="fas fa-ban"></i> Disable
-                                    </button>
-                                {% else %}
-                                    <input type="hidden" name="enabled" value="true">
-                                    <button type="submit" class="btn btn-sm btn-outline-success">
-                                        <i class="fas fa-check"></i> Enable
-                                    </button>
-                                {% endif %}
-                            </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
 
         {% if not triggers %}
         <div class="text-center text-muted mt-4">
