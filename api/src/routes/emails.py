@@ -237,7 +237,7 @@ def perform_delete(
         return RedirectResponse("/emails", status_code=303)
 
     elif mode == "imap":
-        deleted, errors = _delete_emails_from_imap_and_db(ids)
+        deleted, errors = _delete_emails_from_mail_server_and_db(ids)
 
         username = request.session.get("username", "unknown")
         if errors:
@@ -370,7 +370,7 @@ def _delete_emails_from_db(ids: List[int]) -> int:
     return deleted
 
 
-def _delete_emails_from_imap_and_db(ids: List[int]) -> tuple[int, list[str]]:
+def _delete_emails_from_mail_server_and_db(ids: List[int]) -> tuple[int, list[str]]:
     """
     Delete emails from mail server (IMAP/Gmail/O365) and then from DB.
     Returns (deleted_count, errors).

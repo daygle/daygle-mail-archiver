@@ -24,7 +24,7 @@ def _get_quarantine_fernet():
         return None
 
 
-def _delete_quarantined_from_imap_and_db(ids: List[int]) -> tuple[int, list[str]]:
+def _delete_quarantined_from_mail_server_and_db(ids: List[int]) -> tuple[int, list[str]]:
     """
     Delete quarantined emails from mail server (IMAP/Gmail/O365) and then from DB.
     Returns (deleted_count, errors).
@@ -321,7 +321,7 @@ def delete_quarantine(request: Request, qid: int, mode: str = Form("db")):
         return RedirectResponse('/quarantine', status_code=303)
 
     elif mode == "imap":
-        deleted, errors = _delete_quarantined_from_imap_and_db([qid])
+        deleted, errors = _delete_quarantined_from_mail_server_and_db([qid])
 
         username = request.session.get("username", "unknown")
         if errors:
@@ -463,7 +463,7 @@ def perform_bulk_delete(
         return RedirectResponse("/quarantine", status_code=303)
 
     elif mode == "imap":
-        deleted, errors = _delete_quarantined_from_imap_and_db(ids)
+        deleted, errors = _delete_quarantined_from_mail_server_and_db(ids)
 
         username = request.session.get("username", "unknown")
         if errors:
