@@ -3,18 +3,76 @@
 {% block page_title %}Quarantine{% endblock %}
 
 {% block content %}
+<!-- Filters Card (Initially Hidden) -->
+<div id="filterCard" class="card mb-4" style="display: none;">
+    <div class="card-header flex-between">
+        <div class="card-title">
+            <i class="fas fa-filter"></i>
+            <span>Search & Filter</span>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="toggleFilters()" title="Close">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="card-body">
+        <form method="get" action="/quarantine">
+            <div class="grid grid-cols-3 gap-3">
+                <div>
+                    <input type="text" name="q" value="{{ q }}" placeholder="Search subject, sender, recipients" class="form-control">
+                </div>
+                <div>
+                    <input type="text" name="virus" value="{{ virus }}" placeholder="Virus name" class="form-control">
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-1">
+                        <i class="fas fa-search"></i>
+                        <span>Search</span>
+                    </button>
+                    <a href="/quarantine" class="btn btn-secondary">
+                        <i class="fas fa-times"></i>
+                        <span>Clear</span>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Quarantined Messages Table Card -->
 <div class="card">
-    <div class="card-header">
+    <div class="card-header flex-between">
         <div class="card-title">
             <i class="fas fa-biohazard"></i>
             <span>Quarantined Messages</span>
         </div>
+        <div class="flex gap-2">
+            <button id="toggleFilterBtn" class="btn btn-secondary btn-sm" onclick="toggleFilters()">
+                <i class="fas fa-filter"></i>
+                <span>Search & Filter</span>
+            </button>
+            {% if request.session.role == 'administrator' %}
+            <button type="button" class="btn btn-success btn-sm" id="restore-selected-btn" disabled onclick="showRestoreModal()">
+                <i class="fas fa-undo"></i>
+                <span>Remove from Quarantine</span>
+            </button>
+            <button type="button" class="btn btn-danger btn-sm" id="delete-selected-btn" disabled onclick="showDeleteModal()">
+                <i class="fas fa-trash"></i>
+                <span>Delete Selected</span>
+            </button>
+            {% endif %}
+        </div>
     </div>
     <div class="card-body" style="padding: 0;">
+        <form method="post" action="/quarantine/delete" id="quarantine-bulk-form">
         <div class="table-container">
             <table class="table">
                 <thead>
                     <tr>
+                        {% if request.session.role == 'administrator' %}
+                        <th class="col-small">
+                            <input type="checkbox" id="select-all" class="form-check-input">
+                        </th>
+                        {% endif %}
                         <th>ID</th>
                         <th>Subject</th>
                         <th>Sender</th>
@@ -26,6 +84,11 @@
                 <tbody>
                     {% for i in items %}
                     <tr>
+                        {% if request.session.role == 'administrator' %}
+                        <td>
+                            <input type="checkbox" name="ids" value="{{ i.id }}" class="form-check-input quarantine-checkbox">
+                        </td>
+                        {% endif %}
                         <td>{{ i.id }}</td>
                         <td>{{ i.subject or '(no subject)' }}</td>
                         <td>{{ i.sender or 'unknown' }}</td>
@@ -44,7 +107,7 @@
                     {% endfor %}
                     {% if items|length == 0 %}
                     <tr>
-                        <td colspan="6" class="text-center empty-state">
+                        <td colspan="{% if request.session.role == 'administrator' %}7{% else %}6{% endif %}" class="text-center empty-state">
                             <div>
                                 <i class="fas fa-shield-virus empty-icon"></i>
                                 <p>No quarantined messages</p>
@@ -57,4 +120,189 @@
         </div>
     </div>
 </div>
+
+<!-- Restore Confirmation Section (Initially Hidden) -->
+<div id="restore-confirmation" class="card" style="display: none; margin-top: 24px;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-undo" style="color: var(--success);"></i>
+            <span>Confirm Restore</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-success">
+            <i class="fas fa-info-circle"></i>
+            <span>You are about to restore <strong id="restore-count">0</strong> quarantined message<span id="restore-plural">s</span> back to the regular email archive.</span>
+        </div>
+
+        <p style="margin-top: 20px; margin-bottom: 20px;"><strong>This will move the selected messages back to the regular email list for normal access.</strong></p>
+
+        <div class="text-center" style="margin-top: 20px;">
+            <form method="post" action="/quarantine/restore" id="restore-form" style="display: inline;">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-undo"></i>
+                    <span>Restore Selected Messages</span>
+                </button>
+            </form>
+            <button type="button" class="btn btn-secondary ms-2" onclick="hideRestoreConfirmation()">
+                <i class="fas fa-times"></i>
+                <span>Cancel</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Section (Initially Hidden) -->
+<div id="delete-confirmation" class="card" style="display: none; margin-top: 24px;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i>
+            <span>Confirm Deletion</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-warning">
+            <i class="fas fa-info-circle"></i>
+            <span>You are about to delete <strong id="delete-count">0</strong> quarantined message<span id="delete-plural">s</span> permanently.</span>
+        </div>
+
+        <p style="margin-top: 20px; margin-bottom: 20px;"><strong>Choose how you want to delete them:</strong></p>
+
+        <div style="display: grid; gap: 12px; margin-bottom: 20px;">
+            <button type="button" class="btn btn-danger w-100" onclick="performDelete('db')">
+                <i class="fas fa-database"></i>
+                <span>Delete from Database Only</span>
+            </button>
+            <button type="button" class="btn btn-warning w-100" onclick="performDelete('imap')">
+                <i class="fas fa-server"></i>
+                <span>Delete from Database and Mail Server</span>
+            </button>
+        </div>
+
+        <div class="text-center">
+            <button type="button" class="btn btn-secondary" onclick="hideDeleteConfirmation()">
+                <i class="fas fa-times"></i>
+                <span>Cancel</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const selectAll = document.getElementById('select-all');
+    const checkboxes = document.querySelectorAll('.quarantine-checkbox');
+    const restoreBtn = document.getElementById('restore-selected-btn');
+    const deleteBtn = document.getElementById('delete-selected-btn');
+    const bulkForm = document.getElementById('quarantine-bulk-form');
+    const restoreForm = document.getElementById('restore-form');
+
+    function updateButtons() {
+        const checkedBoxes = Array.from(checkboxes).filter(cb => cb.checked);
+        const anyChecked = checkedBoxes.length > 0;
+        if (restoreBtn) restoreBtn.disabled = !anyChecked;
+        if (deleteBtn) deleteBtn.disabled = !anyChecked;
+        
+        // Update restore form with selected IDs
+        if (restoreForm) {
+            // Clear existing inputs
+            restoreForm.querySelectorAll('input[name="ids"]').forEach(input => input.remove());
+            // Add new inputs
+            checkedBoxes.forEach(cb => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'ids';
+                input.value = cb.value;
+                restoreForm.appendChild(input);
+            });
+        }
+    }
+
+    if (selectAll) {
+        selectAll.addEventListener('change', function () {
+            checkboxes.forEach(cb => cb.checked = selectAll.checked);
+            updateButtons();
+        });
+    }
+
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', updateButtons);
+    });
+
+    // Filter toggle functions
+    window.toggleFilters = function() {
+        const filterCard = document.getElementById('filterCard');
+        const isVisible = filterCard.style.display !== 'none';
+        filterCard.style.display = isVisible ? 'none' : 'block';
+    };
+
+    // Restore confirmation functions
+    window.showRestoreModal = function() {
+        const checkedBoxes = Array.from(checkboxes).filter(cb => cb.checked);
+        const count = checkedBoxes.length;
+        
+        if (count === 0) return;
+        
+        document.getElementById('restore-count').textContent = count;
+        document.getElementById('restore-plural').textContent = count === 1 ? '' : 's';
+        
+        // Hide table section and show restore confirmation
+        document.getElementById('filterCard').style.display = 'none';
+        document.querySelector('.card').style.display = 'none';
+        document.getElementById('restore-confirmation').style.display = 'block';
+        
+        // Scroll to top
+        window.scrollTo(0, 0);
+    };
+
+    window.hideRestoreConfirmation = function() {
+        // Show table section and hide restore confirmation
+        document.getElementById('restore-confirmation').style.display = 'none';
+        document.querySelector('.card').style.display = 'block';
+        
+        // Scroll to top
+        window.scrollTo(0, 0);
+    };
+
+    // Delete confirmation functions
+    window.showDeleteModal = function() {
+        const checkedBoxes = Array.from(checkboxes).filter(cb => cb.checked);
+        const count = checkedBoxes.length;
+        
+        if (count === 0) return;
+        
+        document.getElementById('delete-count').textContent = count;
+        document.getElementById('delete-plural').textContent = count === 1 ? '' : 's';
+        
+        // Hide table section and show delete confirmation
+        document.getElementById('filterCard').style.display = 'none';
+        document.querySelector('.card').style.display = 'block';
+        document.getElementById('delete-confirmation').style.display = 'block';
+        
+        // Scroll to top
+        window.scrollTo(0, 0);
+    };
+
+    window.hideDeleteConfirmation = function() {
+        // Show table section and hide delete confirmation
+        document.getElementById('delete-confirmation').style.display = 'none';
+        document.querySelector('.card').style.display = 'block';
+        
+        // Scroll to top
+        window.scrollTo(0, 0);
+    };
+
+    window.performDelete = function(mode) {
+        // Add hidden input for mode
+        const modeInput = document.createElement('input');
+        modeInput.type = 'hidden';
+        modeInput.name = 'mode';
+        modeInput.value = mode;
+        bulkForm.appendChild(modeInput);
+        
+        // Submit the form
+        bulkForm.submit();
+    };
+})();
+</script>
 {% endblock %}

@@ -6,7 +6,7 @@ from utils.templates import templates
 from utils.db import query, execute
 from utils.logger import log
 from utils.config import get_config
-from utils.security import decrypt_password
+from utils.security import decrypt_password, require_login, can_delete
 from cryptography.fernet import Fernet
 
 router = APIRouter()
@@ -116,7 +116,7 @@ def _delete_quarantined_from_imap_and_db(ids: List[int]) -> tuple[int, list[str]
 
 
 @router.get('/quarantine', response_class=HTMLResponse)
-def list_quarantine(request: Request):
+def list_quarantine(request: Request, q: str = None, virus: str = None):
     # Debug: log session state to diagnose unexpected redirects
     try:
         log('info', 'Quarantine', f"Session keys: {list(request.session.keys())}, user_id={request.session.get('user_id')}, role={request.session.get('role')}, username={request.session.get('username')}")
@@ -140,8 +140,24 @@ def list_quarantine(request: Request):
         request.session['flash'] = 'Administrator access required'
         return RedirectResponse('/dashboard', status_code=303)
 
-    rows = query('SELECT id, subject, sender, recipients, virus_name, quarantined_at, expires_at FROM quarantined_emails ORDER BY quarantined_at DESC').mappings().all()
-    return templates.TemplateResponse('quarantine.html', {'request': request, 'items': rows})
+    # Build query with optional filters
+    where_clauses = []
+    params = {}
+    
+    if q:
+        where_clauses.append("(subject ILIKE :q OR sender ILIKE :q OR recipients ILIKE :q)")
+        params['q'] = f'%{q}%'
+    
+    if virus:
+        where_clauses.append("virus_name ILIKE :virus")
+        params['virus'] = f'%{virus}%'
+    
+    where_sql = " AND ".join(where_clauses) if where_clauses else ""
+    if where_sql:
+        where_sql = f"WHERE {where_sql}"
+    
+    rows = query(f'SELECT id, subject, sender, recipients, virus_name, quarantined_at, expires_at FROM quarantined_emails {where_sql} ORDER BY quarantined_at DESC', params).mappings().all()
+    return templates.TemplateResponse('quarantine.html', {'request': request, 'items': rows, 'q': q or '', 'virus': virus or ''})
 
 @router.get('/quarantine/{qid}', response_class=HTMLResponse)
 def view_quarantine(request: Request, qid: int):
@@ -318,3 +334,145 @@ def delete_quarantine(request: Request, qid: int, mode: str = Form("db")):
     else:
         request.session['flash'] = "Invalid delete mode selected."
         return RedirectResponse('/quarantine', status_code=303)
+
+
+@router.post("/quarantine/restore")
+def perform_bulk_restore(
+    request: Request,
+    ids: List[int] = Form(...),
+):
+    """
+    Bulk restore selected quarantined emails.
+    """
+    if not require_login(request):
+        return RedirectResponse("/login", status_code=303)
+
+    if not can_delete(request):
+        request.session['flash'] = "You don't have permission to restore quarantined emails."
+        return RedirectResponse("/quarantine", status_code=303)
+
+    if not isinstance(ids, list):
+        ids = [ids]
+
+    restored = 0
+    for qid in ids:
+        try:
+            # Fetch quarantined item
+            item = query('SELECT * FROM quarantined_emails WHERE id = :id', {'id': qid}).mappings().first()
+            if not item:
+                continue
+
+            raw = item.get('raw_email')
+            f = _get_quarantine_fernet()
+            if raw:
+                try:
+                    data = raw
+                    if f:
+                        data = f.decrypt(data)
+                    # Insert or update email in emails table
+                    execute(
+                        """
+                        UPDATE emails SET raw_email = :raw, compressed = TRUE, quarantined = FALSE, quarantine_id = NULL, virus_scanned = TRUE, virus_detected = TRUE, virus_name = :vname, scan_timestamp = :qtime
+                        WHERE source = :source AND folder = :folder AND uid = :uid
+                        """,
+                        {
+                            'raw': data,
+                            'vname': item.get('virus_name'),
+                            'qtime': item.get('quarantined_at'),
+                            'source': item.get('original_source'),
+                            'folder': item.get('original_folder'),
+                            'uid': item.get('original_uid')
+                        }
+                    )
+                    # If no row updated, insert a new row
+                    execute(
+                        """
+                        INSERT INTO emails (source, folder, uid, subject, sender, recipients, date, raw_email, compressed, virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined)
+                        VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, TRUE, TRUE, TRUE, :vname, :qtime, TRUE)
+                        ON CONFLICT (source, folder, uid) DO NOTHING
+                        """,
+                        {
+                            'source': item.get('original_source'),
+                            'folder': item.get('original_folder'),
+                            'uid': item.get('original_uid'),
+                            'subject': item.get('subject'),
+                            'sender': item.get('sender'),
+                            'recipients': item.get('recipients'),
+                            'date': item.get('date'),
+                            'raw_email': data,
+                            'vname': item.get('virus_name'),
+                            'qtime': item.get('quarantined_at')
+                        }
+                    )
+                except Exception:
+                    # If restore fails, do not delete quarantine
+                    continue
+
+            # Delete quarantine record
+            execute('DELETE FROM quarantined_emails WHERE id = :id', {'id': qid})
+            # Clear quarantine flag on emails table
+            execute('UPDATE emails SET quarantined = FALSE, quarantine_id = NULL WHERE source = :source AND folder = :folder AND uid = :uid', {'source': item.get('original_source'), 'folder': item.get('original_folder'), 'uid': item.get('original_uid')})
+
+            restored += 1
+        except Exception as e:
+            log('error', 'Quarantine', f'Failed to restore quarantined email {qid}: {e}')
+            continue
+
+    if restored > 0:
+        request.session['flash'] = f"Restored {restored} quarantined email(s)."
+    else:
+        request.session['flash'] = "No emails were restored."
+    
+    return RedirectResponse("/quarantine", status_code=303)
+
+
+@router.post("/quarantine/delete")
+def perform_bulk_delete(
+    request: Request,
+    ids: List[int] = Form(...),
+    mode: str = Form("db"),  # "db" or "imap"
+):
+    """
+    Bulk delete selected quarantined emails.
+    """
+    if not require_login(request):
+        return RedirectResponse("/login", status_code=303)
+
+    if not can_delete(request):
+        request.session['flash'] = "You don't have permission to delete quarantined emails."
+        return RedirectResponse("/quarantine", status_code=303)
+
+    if not isinstance(ids, list):
+        ids = [ids]
+
+    if mode == "db":
+        deleted = 0
+        for qid in ids:
+            try:
+                execute('DELETE FROM quarantined_emails WHERE id = :id', {'id': qid})
+                deleted += 1
+            except Exception:
+                continue
+        
+        username = request.session.get("username", "unknown")
+        log("warning", "Quarantine", f"User '{username}' bulk deleted {deleted} quarantined email(s) from database (IDs: {ids})", "")
+        request.session['flash'] = f"Deleted {deleted} quarantined email(s) from the database."
+        return RedirectResponse("/quarantine", status_code=303)
+
+    elif mode == "imap":
+        deleted, errors = _delete_quarantined_from_imap_and_db(ids)
+
+        username = request.session.get("username", "unknown")
+        if errors:
+            error_text = " | ".join(errors)
+            log("warning", "Quarantine", f"User '{username}' bulk deleted {deleted} quarantined email(s) from IMAP and database with errors (IDs: {ids})", error_text)
+            request.session['flash'] = f"Deleted {deleted} quarantined email(s) from database and mail server. Some errors occurred: {error_text}"
+        else:
+            log("warning", "Quarantine", f"User '{username}' bulk deleted {deleted} quarantined email(s) from IMAP and database (IDs: {ids})", "")
+            request.session['flash'] = f"Deleted {deleted} quarantined email(s) from database and mail server."
+
+        return RedirectResponse("/quarantine", status_code=303)
+
+    else:
+        request.session['flash'] = "Invalid delete mode selected."
+        return RedirectResponse("/quarantine", status_code=303)
