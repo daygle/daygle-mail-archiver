@@ -1751,8 +1751,37 @@ textarea.form-control {
     }
 }
 
+/* Auth initial hidden state to prevent FOUC */
+.auth-card, .auth-container { visibility: hidden; }
+
 /* Auth reveal animation (applied after styles load) */
 .auth-card.visible, .auth-container.visible { visibility: visible; animation: fadeIn 0.25s ease-out; }
+
+/* Auth page theme toggle (top-right of page) */
+.auth-page-theme-toggle {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 12000;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 50%; /* make circular */
+    width: 40px;
+    height: 40px;
+    padding: 0; /* use width/height for sizing */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: background-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+.auth-page-theme-toggle i { font-size: 1rem; color: var(--text-primary); }
+.auth-page-theme-toggle:hover { background: var(--bg-secondary); transform: translateY(-1px); }
+.auth-page-theme-toggle:focus { outline: 2px solid var(--primary); outline-offset: 2px; box-shadow: 0 0 0 4px var(--accent-focus); }
+/* remove accidental label styling; keep markup simple for circular button */
+
+
 
 @keyframes fadeIn {
     from {

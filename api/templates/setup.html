@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/png" href="/static/daygle.png">
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-    <style>/* Critical inline to prevent FOUC */ .auth-card, .auth-container{visibility:hidden}</style>
+
     <link fetchpriority="high" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link fetchpriority="high" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/css/bootstrap.min.css" integrity="sha512-2bBQCjcnw658Lho4nlXJcc6WkV/UxpE/sAokbXPxQNGqmNdQrWqtw26Ns9kFF/yG792pKR1Sx8/Y1Lf1XN4GKA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link fetchpriority="high" rel="stylesheet" href="/static/styles.css">
@@ -21,6 +21,11 @@
     </script>
 </head>
 <body>
+    <button type="button" class="auth-page-theme-toggle" id="authThemeToggle" title="Toggle theme">
+        <i class="fas fa-sun" id="authThemeIconLight"></i>
+        <i class="fas fa-moon" id="authThemeIconDark" style="display:none;"></i>
+    </button>
+
     <div class="auth-container">
         <div class="auth-card wide">
             <div class="auth-header">
@@ -28,10 +33,6 @@
                 <img src="/static/daygle-light.png" alt="Daygle" class="auth-logo logo-light">
                 <h1 class="auth-title large">Welcome to Daygle Mail Archiver</h1>
                 <p class="auth-subtitle large">Let's set up your administrator account to get started</p>
-                <button type="button" class="auth-theme-toggle" id="authThemeToggle" title="Toggle theme">
-                    <i class="fas fa-sun" id="authThemeIconLight"></i>
-                    <i class="fas fa-moon" id="authThemeIconDark" style="display:none;"></i>
-                </button>
             </div>
             
             <div class="auth-info">

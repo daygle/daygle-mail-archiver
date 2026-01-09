@@ -1,18 +1,17 @@
 {% extends "base.html" %}
 
-{% block page_title %}Edit Role - {{ role.name }}{% endblock %}
+{% block page_title %}Edit Role - {{ role.display_name or (role.name | replace('_', ' ') | replace('-', ' ') | title) }}{% endblock %}
 
 {% block content %}
 <div class="card">
     <div class="card-header flex-between">
         <div class="card-title">
             <i class="fas fa-user-shield"></i>
-            <span>Edit Role: {{ role.name | replace('_', ' ') | replace('-', ' ') | title }}</span>
+            <span>Edit Role: {{ role.display_name or (role.name | replace('_', ' ') | replace('-', ' ') | title) }}</span>
         </div>
-        <a href="/roles" class="btn btn-secondary btn-sm">
-            <i class="fas fa-arrow-left"></i>
-            <span>Back to Roles</span>
-        </a>
+        <button type="button" class="btn btn-secondary btn-sm" title="Close" onclick="location.href='/roles'">
+            <i class="fas fa-times"></i>
+        </button>
     </div>
     <div class="card-body">
         <form method="post" action="/roles/{{ role.id }}/update">
