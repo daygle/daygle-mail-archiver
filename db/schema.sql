@@ -127,7 +127,12 @@ CREATE TABLE IF NOT EXISTS users (
     email_notifications BOOLEAN NOT NULL DEFAULT TRUE,
     enabled BOOLEAN NOT NULL DEFAULT TRUE,
     last_login TIMESTAMPTZ,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    -- Security fields
+    failed_login_attempts INTEGER NOT NULL DEFAULT 0,
+    locked_until TIMESTAMPTZ,
+    password_reset_token TEXT,
+    password_reset_expires TIMESTAMPTZ
 );
 
 -- Index on email for lookups
@@ -278,7 +283,7 @@ CREATE TABLE IF NOT EXISTS alerts (
     email_sent BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     acknowledged_at TIMESTAMPTZ,
-    acknowledged_by INTEGER REFERENCES users(id)
+    acknowledged_by INTEGER REFERENCES users(id) ON DELETE SET NULL
 );
 
 -- Index for filtering by type and status

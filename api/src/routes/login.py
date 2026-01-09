@@ -2,10 +2,14 @@ from fastapi import APIRouter, Request, Form
 from fastapi.responses import RedirectResponse
 import bcrypt
 import re
+import secrets
+import hashlib
+from datetime import datetime, timedelta
 
 from utils.db import query, execute
 from utils.logger import log
 from utils.templates import templates
+from utils.email import send_email
 
 router = APIRouter()
 
@@ -139,7 +143,7 @@ def login_form(request: Request, setup_complete: str = ""):
 def login_submit(request: Request, username: str = Form(...), password: str = Form(...)):
     try:
         user = query(
-            "SELECT id, username, password_hash, date_format, time_format, timezone, theme_preference, role, enabled FROM users WHERE username = :u",
+            "SELECT id, username, password_hash, date_format, time_format, timezone, theme_preference, role, enabled, failed_login_attempts, locked_until FROM users WHERE username = :u",
             {"u": username}
         ).mappings().first()
     except Exception as e:
@@ -154,6 +158,14 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
         return templates.TemplateResponse(
             "login.html",
             {"request": request, "error": "Invalid credentials"},
+        )
+
+    # Check if account is locked
+    if user["locked_until"] and user["locked_until"] > query("SELECT NOW()").scalar():
+        log("warning", "Login", f"Login attempt for locked account: {username}")
+        return templates.TemplateResponse(
+            "login.html",
+            {"request": request, "error": "Account is temporarily locked due to too many failed login attempts. Use 'Forgot Password' to unlock your account."},
         )
 
     if not user["enabled"]:
@@ -184,6 +196,9 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
 
     try:
         if bcrypt.checkpw(password.encode('utf-8'), user["password_hash"].encode('utf-8')):
+            # Successful login - reset failed attempts and unlock account
+            execute("UPDATE users SET failed_login_attempts = 0, locked_until = NULL WHERE id = :id", {"id": user["id"]})
+            
             request.session["user_id"] = user["id"]
             request.session["username"] = user["username"]
             request.session["date_format"] = user["date_format"] or "%d/%m/%Y"
@@ -213,11 +228,31 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
             {"request": request, "error": "System error. Please try again."},
         )
 
-    log("warning", "Login", f"Failed login attempt for user: {username}")
-    return templates.TemplateResponse(
-        "login.html",
-        {"request": request, "error": "Invalid credentials"},
-    )
+    # Failed login - increment attempts and potentially lock account
+    new_attempts = user["failed_login_attempts"] + 1
+    max_attempts = 5  # Lock after 5 failed attempts
+    lock_duration_minutes = 15  # Lock for 15 minutes
+
+    if new_attempts >= max_attempts:
+        # Lock the account
+        execute(
+            "UPDATE users SET failed_login_attempts = :attempts, locked_until = NOW() + INTERVAL ':minutes minutes' WHERE id = :id",
+            {"attempts": new_attempts, "minutes": lock_duration_minutes, "id": user["id"]}
+        )
+        log("warning", "Login", f"Account locked for user {username} after {new_attempts} failed attempts")
+        return templates.TemplateResponse(
+            "login.html",
+            {"request": request, "error": f"Account locked due to too many failed attempts. Try again in {lock_duration_minutes} minutes."},
+        )
+    else:
+        # Just increment attempts
+        execute("UPDATE users SET failed_login_attempts = :attempts WHERE id = :id", {"attempts": new_attempts, "id": user["id"]})
+        remaining_attempts = max_attempts - new_attempts
+        log("warning", "Login", f"Failed login attempt {new_attempts}/{max_attempts} for user: {username}")
+        return templates.TemplateResponse(
+            "login.html",
+            {"request": request, "error": f"Invalid credentials. {remaining_attempts} attempts remaining before account lockout."},
+        )
 
 @router.get("/set-password")
 def set_password_form(request: Request):
@@ -284,3 +319,198 @@ def set_password(request: Request, password: str = Form(...), confirm_password: 
 def logout(request: Request):
     request.session.clear()
     return RedirectResponse("/login", status_code=303)
+
+@router.get("/forgot-password")
+def forgot_password_form(request: Request):
+    return templates.TemplateResponse("forgot-password.html", {"request": request})
+
+@router.post("/forgot-password")
+def forgot_password_submit(request: Request, email: str = Form(...)):
+    if not email:
+        return templates.TemplateResponse(
+            "forgot-password.html",
+            {"request": request, "error": "Email address is required"},
+        )
+
+    try:
+        user = query("SELECT id, username, email, failed_login_attempts, locked_until FROM users WHERE email = :email AND enabled = TRUE", {"email": email}).mappings().first()
+        
+        if user:
+            # Check if account is currently locked
+            account_locked = user["locked_until"] and user["locked_until"] > query("SELECT NOW()").scalar()
+            
+            # Generate secure reset token
+            token = secrets.token_urlsafe(32)
+            token_hash = hashlib.sha256(token.encode()).hexdigest()
+            expires = datetime.now() + timedelta(hours=1)  # Token expires in 1 hour
+            
+            # Store token in database
+            execute(
+                "UPDATE users SET password_reset_token = :token, password_reset_expires = :expires WHERE id = :id",
+                {"token": token_hash, "expires": expires, "id": user["id"]}
+            )
+            
+            # Send appropriate email based on account status
+            reset_link = f"http://localhost:8000/reset-password?token={token}"
+            
+            if account_locked:
+                email_body = f"""
+Hello {user["username"]},
+
+Your account has been temporarily locked due to too many failed login attempts.
+
+Click the link below to unlock your account and reset your password:
+{reset_link}
+
+This link will expire in 1 hour.
+
+If you did not request this unlock, please ignore this email.
+
+Best regards,
+Daygle Mail Archiver
+"""
+                email_subject = "Account Unlock - Daygle Mail Archiver"
+            else:
+                email_body = f"""
+Hello {user["username"]},
+
+You have requested to reset your password for Daygle Mail Archiver.
+
+Click the link below to reset your password:
+{reset_link}
+
+This link will expire in 1 hour.
+
+If you did not request this password reset, please ignore this email.
+
+Best regards,
+Daygle Mail Archiver
+"""
+                email_subject = "Password Reset - Daygle Mail Archiver"
+            
+            try:
+                send_email(
+                    to_email=user["email"],
+                    subject=email_subject,
+                    body=email_body
+                )
+                if account_locked:
+                    log("info", "Account Unlock", f"Account unlock email sent to {user['email']} for user {user['username']}", "")
+                else:
+                    log("info", "Password Reset", f"Password reset email sent to {user['email']} for user {user['username']}", "")
+            except Exception as e:
+                log("error", "Password Reset", f"Failed to send email to {user['email']}: {str(e)}")
+                return templates.TemplateResponse(
+                    "forgot-password.html",
+                    {"request": request, "error": "Failed to send reset email. Please try again."},
+                )
+        
+        # Always show success message to prevent email enumeration
+        return templates.TemplateResponse(
+            "forgot-password.html",
+            {"request": request, "success": "If an account with that email exists, a password reset/unlock link has been sent."},
+        )
+        
+    except Exception as e:
+        log("error", "Password Reset", f"Database error during password reset request for {email}: {str(e)}")
+        return templates.TemplateResponse(
+            "forgot-password.html",
+            {"request": request, "error": "System error. Please try again."},
+        )
+
+@router.get("/reset-password")
+def reset_password_form(request: Request, token: str = ""):
+    if not token:
+        return templates.TemplateResponse(
+            "login.html",
+            {"request": request, "error": "Invalid reset token"},
+        )
+    
+    # Verify token
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    user = query(
+        "SELECT id, username FROM users WHERE password_reset_token = :token AND password_reset_expires > NOW()",
+        {"token": token_hash}
+    ).mappings().first()
+    
+    if not user:
+        return templates.TemplateResponse(
+            "login.html",
+            {"request": request, "error": "Invalid or expired reset token"},
+        )
+    
+    return templates.TemplateResponse("reset-password.html", {"request": request, "token": token})
+
+@router.post("/reset-password")
+def reset_password_submit(request: Request, token: str = Form(...), password: str = Form(...), confirm_password: str = Form(...)):
+    if not token:
+        return templates.TemplateResponse(
+            "login.html",
+            {"request": request, "error": "Invalid reset token"},
+        )
+    
+    # Verify token
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    user = query(
+        "SELECT id, username FROM users WHERE password_reset_token = :token AND password_reset_expires > NOW()",
+        {"token": token_hash}
+    ).mappings().first()
+    
+    if not user:
+        return templates.TemplateResponse(
+            "login.html",
+            {"request": request, "error": "Invalid or expired reset token"},
+        )
+    
+    # Validate passwords
+    if password != confirm_password:
+        return templates.TemplateResponse(
+            "reset-password.html",
+            {"request": request, "token": token, "error": "Passwords do not match"},
+        )
+
+    # Validate password strength
+    if len(password) < 8:
+        return templates.TemplateResponse(
+            "reset-password.html",
+            {"request": request, "token": token, "error": "Password must be at least 8 characters long"},
+        )
+
+    if not re.search(r"[a-z]", password):
+        return templates.TemplateResponse(
+            "reset-password.html",
+            {"request": request, "token": token, "error": "Password must contain at least one lowercase letter"},
+        )
+
+    if not re.search(r"[A-Z]", password):
+        return templates.TemplateResponse(
+            "reset-password.html",
+            {"request": request, "token": token, "error": "Password must contain at least one uppercase letter"},
+        )
+
+    if not re.search(r"[0-9]", password):
+        return templates.TemplateResponse(
+            "reset-password.html",
+            {"request": request, "token": token, "error": "Password must contain at least one number"},
+        )
+
+    try:
+        # Hash new password and clear reset token
+        hash_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        execute(
+            "UPDATE users SET password_hash = :password, password_reset_token = NULL, password_reset_expires = NULL, failed_login_attempts = 0, locked_until = NULL WHERE id = :id",
+            {"password": hash_pw, "id": user["id"]}
+        )
+        
+        log("info", "Password Reset", f"Password successfully reset for user {user['username']}")
+        return templates.TemplateResponse(
+            "login.html",
+            {"request": request, "success": "Password reset successfully. You can now log in with your new password."},
+        )
+        
+    except Exception as e:
+        log("error", "Password Reset", f"Failed to reset password for user {user['username']}: {str(e)}")
+        return templates.TemplateResponse(
+            "reset-password.html",
+            {"request": request, "token": token, "error": "Failed to reset password. Please try again."},
+        )

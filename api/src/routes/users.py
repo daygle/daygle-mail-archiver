@@ -274,13 +274,17 @@ def delete_user(request: Request, user_id: int):
         # Get username before deletion for logging
         user = query("SELECT username FROM users WHERE id = :id", {"id": user_id}).mappings().first()
         username = user["username"] if user else f"ID {user_id}"
-        
+
         execute("DELETE FROM users WHERE id = :id", {"id": user_id})
         log("info", "Users", f"Admin '{admin_username}' deleted user '{username}' (ID: {user_id})", "")
         flash(request, "User deleted successfully.")
     except Exception as e:
+        error_msg = str(e).lower()
+        if "foreign key" in error_msg:
+            flash(request, "Cannot delete user due to existing references. Please reassign or clear their data first.")
+        else:
+            flash(request, "User deletion failed. Please try again.")
         log("error", "Users", f"Failed to delete user {user_id} by admin '{admin_username}': {str(e)}", "")
-        flash(request, "User deletion failed. Please try again.")
     return RedirectResponse("/users", status_code=303)
 
 @router.post("/users/{user_id}/toggle")
