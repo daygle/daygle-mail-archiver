@@ -194,6 +194,7 @@
 <script>
 function showCreateUserForm() {
     const formCard = document.getElementById('userFormCard');
+    const usersListCard = document.getElementById('usersListCard');
     const form = document.getElementById('userForm');
     
     // Reset form
@@ -210,7 +211,8 @@ function showCreateUserForm() {
     document.getElementById('submitText').textContent = 'Create User';
     document.getElementById('passwordLabel').innerHTML = '<span style="color: var(--danger);">*</span>';
     
-    // Show form
+    // Hide users table and show form
+    usersListCard.style.display = 'none';
     formCard.style.display = 'block';
     
     // Scroll to top
@@ -219,9 +221,11 @@ function showCreateUserForm() {
 
 function hideUserForm() {
     const formCard = document.getElementById('userFormCard');
+    const usersListCard = document.getElementById('usersListCard');
     
-    // Hide form
+    // Hide form and show users table
     formCard.style.display = 'none';
+    usersListCard.style.display = 'block';
 }
 
 async function editUser(userId) {
@@ -235,6 +239,7 @@ async function editUser(userId) {
         }
         
         const formCard = document.getElementById('userFormCard');
+        const usersListCard = document.getElementById('usersListCard');
         const form = document.getElementById('userForm');
         
         // Populate the form
@@ -264,7 +269,8 @@ async function editUser(userId) {
         // Set form action
         form.action = `/users/${userId}/update`;
         
-        // Show form
+        // Hide users table and show form
+        usersListCard.style.display = 'none';
         formCard.style.display = 'block';
         
         // Scroll to top
