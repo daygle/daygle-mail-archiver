@@ -92,10 +92,10 @@
         </div>
     </div>
     <div class="card-body">
-        <p style="margin-bottom: 16px;"><strong>Viewing Emails:</strong> Navigate to the Emails page to see all archived emails. You can search, filter by folder, view full content, and download raw .eml files.</p>
-        <p style="margin-bottom: 16px;"><strong>Deleting Emails:</strong> Click the delete button next to an email for individual deletion, or use "Delete All" with filters for bulk operations.</p>
+        <p style="margin-bottom: 16px;"><strong>Viewing Emails:</strong> Navigate to the Emails page to see all archived emails. You can search, filter by folder, view full content, and download raw .eml files (administrators only).</p>
+        <p style="margin-bottom: 16px;"><strong>Deleting Emails:</strong> Click the delete button next to an email for individual deletion, or use "Delete All" with filters for bulk operations (administrators only).</p>
         <div class="alert alert-warning" style="margin-bottom: 0;">
-            <i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> Deletions are permanent and cannot be undone!
+            <i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> Deletions are permanent and cannot be undone. Read-only users cannot delete emails or download .eml files.
         </div>
     </div>
 </div>
@@ -124,9 +124,10 @@
     </div>
     <div class="card-body">
         <p style="margin-bottom: 16px;"><strong>Retention Policy:</strong> Configure automatic deletion of old emails. Set retention period (days, months, years) and optionally delete from mail servers (IMAP only).</p>
-        <p style="margin-bottom: 16px;"><strong>Page Size & Date Format:</strong> Control items per page in email listings and configure your preferred date/time display format.</p>
+        <p style="margin-bottom: 16px;"><strong>Page Size & Date Format:</strong> Control items per page in email listings and configure global date/time display format.</p>
+        <p style="margin-bottom: 16px;"><strong>Theme Settings:</strong> Set the default theme (Light, Dark, or System) for all users. Individual users can override this in their personal settings.</p>
         <div class="alert alert-info" style="margin-bottom: 0;">
-            <i class="fas fa-info-circle"></i> Retention cleanup runs automatically during worker cycles. All deletions are tracked on the Dashboard.
+            <i class="fas fa-info-circle"></i> Retention cleanup runs automatically during worker cycles. All deletions are tracked on the Dashboard. Individual users can customize their date format, time format, and theme in User Settings.
         </div>
     </div>
 </div>
@@ -157,6 +158,8 @@
         <p style="margin-bottom: 16px;"><strong>Connection Issues:</strong> Use the Test button on fetch accounts, check firewall settings, verify SSL/TLS settings, and use app-specific passwords for Gmail with 2FA.</p>
         <p style="margin-bottom: 16px;"><strong>OAuth Authorization Failed:</strong> Verify Client ID and Secret, ensure redirect URI is properly configured, check API permissions, and try re-authorizing.</p>
         <p style="margin-bottom: 16px;"><strong>No Emails Being Fetched:</strong> Check that the account is Enabled, verify the worker is running, and review error emails in the logs.</p>
+        <p style="margin-bottom: 16px;"><strong>Account Lockout:</strong> If locked out due to failed login attempts, wait 15 minutes or use the forgot password feature to unlock your account.</p>
+        <p style="margin-bottom: 16px;"><strong>Read-Only User Restrictions:</strong> If you cannot download .eml files or perform administrative actions, you may have read-only permissions. Contact an administrator for elevated access.</p>
         <p style="margin-bottom: 0;"><strong>Performance Issues:</strong> Reduce poll interval, enable "Delete after processing" option, or implement retention policies to limit database size.</p>
     </div>
 </div>
@@ -203,8 +206,8 @@
 
         <p style="margin-bottom: 12px;"><strong>User Roles:</strong></p>
         <ul style="padding-left: 24px; margin-bottom: 16px;">
-            <li style="margin-bottom: 8px;"><strong>Administrator:</strong> Full access to all features including settings, user management, and logs</li>
-            <li style="margin-bottom: 8px;"><strong>Viewer:</strong> Read-only access to view and search emails</li>
+            <li style="margin-bottom: 8px;"><strong>Administrator:</strong> Full access to all features including settings, user management, security reports, alert management, and logs</li>
+            <li style="margin-bottom: 8px;"><strong>Read-only:</strong> Limited access to view and search emails, reports, and quarantine. Cannot download .eml files, modify settings, or perform administrative actions</li>
         </ul>
 
         <p style="margin-bottom: 0;"><strong>Managing Your Profile:</strong> All users can access their profile settings from the user menu (top-right) to change password and update personal information.</p>
@@ -263,6 +266,195 @@
         <div class="alert alert-danger" style="margin-bottom: 0;">
             <i class="fas fa-exclamation-circle"></i> <strong>Security Warning:</strong> Store backups securely! They contain all email data, encryption keys (IMAP_PASSWORD_KEY, SESSION_SECRET), and database credentials. The configuration file is required to decrypt stored passwords.
         </div>
+    </div>
+</div>
+
+<!-- Security Features -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-shield-alt"></i>
+            <span>Security Features</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <p style="margin-bottom: 16px;"><strong>Account Lockout:</strong> After 5 consecutive failed login attempts, accounts are locked for 15 minutes to prevent brute force attacks.</p>
+        
+        <p style="margin-bottom: 16px;"><strong>Forgot Password:</strong> Users can reset their password by clicking "Forgot Password?" on the login page. A reset link will be emailed to their registered email address.</p>
+        
+        <p style="margin-bottom: 16px;"><strong>Session Security:</strong> User sessions automatically expire. All sensitive data (passwords, email content) is encrypted in the database.</p>
+        
+        <p style="margin-bottom: 12px;"><strong>Password Requirements:</strong></p>
+        <ul style="padding-left: 24px; margin-bottom: 16px;">
+            <li style="margin-bottom: 8px;">Minimum 8 characters recommended</li>
+            <li style="margin-bottom: 8px;">Use strong, unique passwords</li>
+            <li style="margin-bottom: 8px;">Change passwords regularly for administrator accounts</li>
+        </ul>
+
+        <div class="alert alert-info" style="margin-bottom: 0;">
+            <i class="fas fa-info-circle"></i> <strong>Security Best Practice:</strong> Use app-specific passwords for Gmail with 2FA enabled, and regularly review audit logs for suspicious activity.
+        </div>
+    </div>
+</div>
+
+<!-- Quarantine Management -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-shield-virus"></i>
+            <span>Quarantine Management</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <p style="margin-bottom: 16px;">The quarantine system automatically isolates potentially harmful emails detected by antivirus scanning. Both administrators and read-only users can view quarantined emails.</p>
+        
+        <p style="margin-bottom: 12px;"><strong>Viewing Quarantined Emails:</strong></p>
+        <ul style="padding-left: 24px; margin-bottom: 16px;">
+            <li style="margin-bottom: 8px;">Navigate to the <strong>Quarantine</strong> page from the sidebar</li>
+            <li style="margin-bottom: 8px;">View email details, sender, subject, and quarantine reason</li>
+            <li style="margin-bottom: 8px;">Click on an email to view its full content</li>
+            <li style="margin-bottom: 8px;">Search and filter quarantined emails</li>
+        </ul>
+
+        <p style="margin-bottom: 12px;"><strong>Administrator Actions:</strong></p>
+        <ul style="padding-left: 24px; margin-bottom: 16px;">
+            <li style="margin-bottom: 8px;"><strong>Release:</strong> Move the email back to the regular archive</li>
+            <li style="margin-bottom: 8px;"><strong>Delete:</strong> Permanently remove the quarantined email</li>
+            <li style="margin-bottom: 8px;"><strong>Delete from Server:</strong> Remove the email from the original mail server (IMAP/Gmail/O365)</li>
+        </ul>
+
+        <div class="alert alert-warning" style="margin-bottom: 0;">
+            <i class="fas fa-exclamation-triangle"></i> <strong>Caution:</strong> Only release emails from quarantine if you're certain they are safe. Malicious emails can compromise your system.
+        </div>
+    </div>
+</div>
+
+<!-- Alert Management (Administrators Only) -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-bell"></i>
+            <span>Alert Management</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <p style="margin-bottom: 16px;">Administrators can configure automated alerts for system events and performance issues. Alerts help monitor system health and respond to issues proactively.</p>
+        
+        <p style="margin-bottom: 12px;"><strong>Available Alert Types:</strong></p>
+        <ul style="padding-left: 24px; margin-bottom: 16px;">
+            <li style="margin-bottom: 8px;"><strong>Error Alerts:</strong> System errors, connection failures, authentication issues</li>
+            <li style="margin-bottom: 8px;"><strong>Warning Alerts:</strong> Performance issues, high resource usage, unusual activity</li>
+            <li style="margin-bottom: 8px;"><strong>Info Alerts:</strong> System status changes, maintenance notifications</li>
+            <li style="margin-bottom: 8px;"><strong>Success Alerts:</strong> Successful operations, completed tasks</li>
+        </ul>
+
+        <p style="margin-bottom: 12px;"><strong>Configuring Alerts:</strong></p>
+        <ol style="padding-left: 24px; margin-bottom: 16px;">
+            <li style="margin-bottom: 8px;">Navigate to <strong>Alert Management</strong> from the administration section</li>
+            <li style="margin-bottom: 8px;">Enable/disable individual alert triggers</li>
+            <li style="margin-bottom: 8px;">Configure email notifications for administrators</li>
+            <li style="margin-bottom: 8px;">View alert history and acknowledge alerts</li>
+        </ol>
+
+        <p style="margin-bottom: 0;">Alerts are displayed in the dashboard and can trigger email notifications to administrators with valid email addresses.</p>
+    </div>
+</div>
+
+<!-- User Profile & Personalization -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-user-cog"></i>
+            <span>User Profile & Personalization</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <p style="margin-bottom: 16px;">Customize your experience with personal settings and preferences available to all users.</p>
+        
+        <p style="margin-bottom: 12px;"><strong>Profile Management:</strong></p>
+        <ul style="padding-left: 24px; margin-bottom: 16px;">
+            <li style="margin-bottom: 8px;">Access your profile from the user menu (top-right corner)</li>
+            <li style="margin-bottom: 8px;">Update personal information (name, email)</li>
+            <li style="margin-bottom: 8px;">Change your password securely</li>
+            <li style="margin-bottom: 8px;">View login history and account creation date</li>
+        </ul>
+
+        <p style="margin-bottom: 12px;"><strong>Personal Settings:</strong></p>
+        <ul style="padding-left: 24px; margin-bottom: 16px;">
+            <li style="margin-bottom: 8px;"><strong>Theme:</strong> Choose between Light, Dark, or System theme</li>
+            <li style="margin-bottom: 8px;"><strong>Date Format:</strong> Customize how dates are displayed (DD/MM/YYYY, MM/DD/YYYY, etc.)</li>
+            <li style="margin-bottom: 8px;"><strong>Time Format:</strong> Select 12-hour or 24-hour time display</li>
+            <li style="margin-bottom: 8px;"><strong>Timezone:</strong> Set your local timezone for accurate timestamps</li>
+        </ul>
+
+        <p style="margin-bottom: 0;">Personal settings are saved per user and persist across sessions. Theme changes take effect immediately.</p>
+    </div>
+</div>
+
+<!-- Antivirus Integration -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-virus-slash"></i>
+            <span>Antivirus Integration</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <p style="margin-bottom: 16px;">Daygle Mail Archiver integrates with ClamAV antivirus to automatically scan incoming emails for malware and viruses.</p>
+        
+        <p style="margin-bottom: 12px;"><strong>How It Works:</strong></p>
+        <ul style="padding-left: 24px; margin-bottom: 16px;">
+            <li style="margin-bottom: 8px;">Each email is scanned by ClamAV before being archived</li>
+            <li style="margin-bottom: 8px;">Infected emails are automatically quarantined</li>
+            <li style="margin-bottom: 8px;">Clean emails proceed to normal archiving</li>
+            <li style="margin-bottom: 8px;">Scan results are logged for audit purposes</li>
+        </ul>
+
+        <p style="margin-bottom: 12px;"><strong>Configuration:</strong></p>
+        <ul style="padding-left: 24px; margin-bottom: 16px;">
+            <li style="margin-bottom: 8px;">ClamAV must be running and accessible to the worker process</li>
+            <li style="margin-bottom: 8px;">Configure ClamAV host and port in environment variables</li>
+            <li style="margin-bottom: 8px;">Quarantined emails are retained for 90 days by default</li>
+            <li style="margin-bottom: 8px;">Quarantine data can be encrypted with a dedicated key</li>
+        </ul>
+
+        <div class="alert alert-info" style="margin-bottom: 0;">
+            <i class="fas fa-info-circle"></i> <strong>Note:</strong> Antivirus scanning requires ClamAV to be installed and running. Check the AV Stats report for scan statistics and performance metrics.
+        </div>
+    </div>
+</div>
+
+<!-- Reports Overview -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-chart-bar"></i>
+            <span>Reports & Analytics</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <p style="margin-bottom: 16px;">Comprehensive reporting provides insights into email archiving operations, system performance, and security metrics.</p>
+        
+        <p style="margin-bottom: 12px;"><strong>Available Reports:</strong></p>
+        <ul style="padding-left: 24px; margin-bottom: 16px;">
+            <li style="margin-bottom: 8px;"><strong>Email Volume:</strong> Track email archiving trends over time (daily/weekly/monthly)</li>
+            <li style="margin-bottom: 8px;"><strong>Account Activity:</strong> Monitor fetch account performance and status</li>
+            <li style="margin-bottom: 8px;"><strong>System Health:</strong> Database size, disk usage, and system metrics</li>
+            <li style="margin-bottom: 8px;"><strong>AV Stats:</strong> Antivirus scan results and performance</li>
+            <li style="margin-bottom: 8px;"><strong>Storage Utilization:</strong> Disk space usage and growth trends</li>
+            <li style="margin-bottom: 8px;"><strong>Retention Policy:</strong> Email deletion statistics and policy compliance</li>
+            <li style="margin-bottom: 8px;"><strong>System Performance:</strong> Response times and system load metrics</li>
+            <li style="margin-bottom: 8px;"><strong>Security & Access:</strong> Login attempts, security events (Administrators only)</li>
+            <li style="margin-bottom: 8px;"><strong>Data Quality:</strong> Email processing success rates and error analysis</li>
+        </ul>
+
+        <p style="margin-bottom: 12px;"><strong>Report Access:</strong></p>
+        <ul style="padding-left: 24px; margin-bottom: 0;">
+            <li style="margin-bottom: 8px;">Most reports are available to both administrators and read-only users</li>
+            <li style="margin-bottom: 8px;">Security & Access reports are restricted to administrators only</li>
+            <li style="margin-bottom: 8px;">All reports support date range filtering and interactive charts</li>
+            <li style="margin-bottom: 8px;">Reports update automatically as new data becomes available</li>
+        </ul>
     </div>
 </div>
 
