@@ -42,6 +42,7 @@ services:
     environment:
       DB_DSN: ${DB_DSN:-}
       IMAP_PASSWORD_KEY: ${IMAP_PASSWORD_KEY:-}
+      CLAMAV_QUARANTINE_KEY: ${CLAMAV_QUARANTINE_KEY:-}
       CLAMAV_HOST: ${CLAMAV_HOST:-clamav}
       CLAMAV_PORT: ${CLAMAV_PORT:-3310}
     volumes:

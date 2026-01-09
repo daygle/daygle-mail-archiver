@@ -34,7 +34,7 @@ imap_password_key = 8t2y0x8qZp8G7QfVYp4p0Q2u7v8Yx1m4l8e0q2c3s0A=
 # Optional: Fernet key for quarantined raw email encryption
 # IMPORTANT: Use a dedicated key for quarantine data - do NOT reuse imap_password_key
 # Generate with: python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-CLAMAV_QUARANTINE_KEY=2f3u1r9qAq4J2T5vZp6m3H0s7y9Qx8l7rV0b2n4k0C=
+CLAMAV_QUARANTINE_KEY=b5pS7dcRdkMsAOdqqcoW5ZccJxIo3o-mBiS07kZcavI=
 
 # ClamAV configuration is managed via the database (`settings` table) and the Global Settings UI.
 # Default values are seeded in `db/schema.sql` when initializing the database.

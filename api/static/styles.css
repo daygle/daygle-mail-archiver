@@ -2511,6 +2511,35 @@ a:hover {
     margin-right: 8px;
 }
 
+.auth-links {
+    margin-top: 24px;
+    text-align: center;
+}
+
+.auth-divider {
+    border: none;
+    height: 1px;
+    background: var(--border);
+    margin: 24px 0;
+    opacity: 0.5;
+}
+
+.auth-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.9375rem;
+    transition: color 0.2s ease;
+}
+
+.auth-link:hover {
+    color: var(--primary);
+    text-decoration: underline;
+}
+
+.auth-link i {
+    margin-right: 6px;
+}
+
 .password-requirements {
     font-size: 0.875rem;
     color: var(--text-secondary);
