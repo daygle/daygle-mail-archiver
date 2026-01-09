@@ -202,19 +202,55 @@
                 return false;
             };
             
-            // Mobile toggle
+            // Mobile toggle - improved touch handling
             const mobileToggle = document.getElementById('sidebarMobileToggle');
             if (mobileToggle) {
-                mobileToggle.onclick = function() {
+                // Use addEventListener for better compatibility
+                mobileToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Toggle the mobile-open class
                     sidebar.classList.toggle('mobile-open');
+                    
+                    // Add visual feedback
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 100);
+                    
                     return false;
-                };
+                });
+                
+                // Add touch event support for better mobile compatibility
+                mobileToggle.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    this.style.backgroundColor = 'var(--bg-hover)';
+                });
+                
+                mobileToggle.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    this.style.backgroundColor = '';
+                    
+                    // Toggle the sidebar
+                    sidebar.classList.toggle('mobile-open');
+                });
             }
             
-            // Close mobile sidebar when clicking outside
+            // Close mobile sidebar when clicking outside - improved logic
             document.addEventListener('click', function(e) {
                 if (window.innerWidth <= 768) {
-                    if (!sidebar.contains(e.target) && e.target.id !== 'sidebarMobileToggle') {
+                    // Only close if clicking outside sidebar AND not on the toggle button
+                    if (!sidebar.contains(e.target) && e.target !== mobileToggle && !mobileToggle.contains(e.target)) {
+                        sidebar.classList.remove('mobile-open');
+                    }
+                }
+            });
+            
+            // Also close on touch for mobile
+            document.addEventListener('touchstart', function(e) {
+                if (window.innerWidth <= 768) {
+                    if (!sidebar.contains(e.target) && e.target !== mobileToggle && !mobileToggle.contains(e.target)) {
                         sidebar.classList.remove('mobile-open');
                     }
                 }

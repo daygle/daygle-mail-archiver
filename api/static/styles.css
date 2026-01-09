@@ -1324,10 +1324,25 @@ textarea.form-control {
         transform: translateX(-100%);
         width: var(--sidebar-width);
         box-shadow: var(--shadow-xl);
+        z-index: 1000;
     }
     
     .sidebar.mobile-open {
         transform: translateX(0);
+        z-index: 1002;
+    }
+    
+    /* Add overlay when sidebar is open on mobile */
+    .sidebar.mobile-open::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: -1;
+        backdrop-filter: blur(2px);
     }
     
     /* Main content - no margin on mobile */
@@ -1360,13 +1375,38 @@ textarea.form-control {
     
     /* Show mobile toggle button */
     .sidebar-mobile-toggle {
-        display: flex;
+        display: flex !important;
         align-items: center;
         justify-content: center;
-        width: 40px;
-        height: 40px;
-        padding: 0;
+        width: 48px !important;
+        height: 48px !important;
+        padding: 0 !important;
         font-size: 1.25rem;
+        margin-right: 8px;
+        border-radius: var(--radius-md) !important;
+        background: var(--bg-primary) !important;
+        border: 1px solid var(--border-color) !important;
+        color: var(--text-secondary) !important;
+        cursor: pointer !important;
+        transition: all var(--transition-fast) !important;
+        position: relative !important;
+        z-index: 1001 !important;
+        flex-shrink: 0 !important;
+        -webkit-tap-highlight-color: transparent !important;
+        touch-action: manipulation !important;
+    }
+    
+    .sidebar-mobile-toggle:hover {
+        background: var(--bg-hover) !important;
+        border-color: var(--border-hover) !important;
+        color: var(--text-primary) !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    .sidebar-mobile-toggle:active {
+        transform: scale(0.95) !important;
+        background: var(--bg-active) !important;
     }
     
     /* Content container */
