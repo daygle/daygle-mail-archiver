@@ -618,7 +618,8 @@ const DashboardManager = {
 
             // Use GridStack.makeWidget to convert the DOM element into a grid item (preserves inner IDs)
             if (this.grid && typeof this.grid.makeWidget === 'function') {
-                this.grid.makeWidget(wrapper, { id: config.id });
+                // Provide explicit position/size so GridStack does not auto-reflow items
+                this.grid.makeWidget(wrapper, { x: config.x, y: config.y, w: config.w, h: config.h, id: config.id });
             } else if (this.grid && typeof this.grid.addWidget === 'function') {
                 // Fallback: older GridStack may accept object; use content as last resort
                 this.grid.addWidget({
