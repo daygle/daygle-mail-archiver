@@ -76,13 +76,7 @@
         </button>
     </div>
     <div class="card-body">
-        {% if flash %}
-        <div class="alert alert-info alert-dismissible fade show" role="alert">
-            <i class="fas fa-info-circle"></i>
-            <span>{{ flash }}</span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        {% endif %}
+        {# Keep static alert blocks only; dynamic flash messages are shown as toasts in base.html #}
 
         {% if roles %}
         <div class="table-container">
