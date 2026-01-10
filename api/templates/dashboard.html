@@ -578,14 +578,35 @@ const DashboardManager = {
             console.debug('Template exists, content length:', content.outerHTML.length);
         } catch (e) { /* ignore */ }
 
-        this.grid.addWidget({
-            x: config.x,
-            y: config.y,
-            w: config.w,
-            h: config.h,
-            content: content.outerHTML,
-            id: config.id
-        });
+        // Create a grid-stack item element and attach the content node so the DOM keeps the id attribute
+        try {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'grid-stack-item';
+            wrapper.setAttribute('gs-x', String(config.x));
+            wrapper.setAttribute('gs-y', String(config.y));
+            wrapper.setAttribute('gs-w', String(config.w));
+            wrapper.setAttribute('gs-h', String(config.h));
+            wrapper.appendChild(content);
+
+            // Use GridStack.makeWidget to convert the DOM element into a grid item (preserves inner IDs)
+            if (this.grid && typeof this.grid.makeWidget === 'function') {
+                this.grid.makeWidget(wrapper, { id: config.id });
+            } else if (this.grid && typeof this.grid.addWidget === 'function') {
+                // Fallback: older GridStack may accept object; use content as last resort
+                this.grid.addWidget({
+                    x: config.x,
+                    y: config.y,
+                    w: config.w,
+                    h: config.h,
+                    content: content.outerHTML,
+                    id: config.id
+                });
+            } else {
+                console.error('GridStack API not available to add widget');
+            }
+        } catch (e) {
+            console.error('Error adding widget to grid:', e);
+        }
 
         // Debug: verify it was added
         try {
