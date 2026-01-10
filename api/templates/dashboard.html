@@ -58,6 +58,21 @@
 <!-- GridStack Dashboard -->
 <div class="grid-stack" id="dashboard-grid">
     <!-- Widgets will be dynamically added here -->
+
+    <!-- Temporary debug widget: visible static GridStack item to verify CSS/JS rendering -->
+    <div class="grid-stack-item" gs-x="0" gs-y="0" gs-w="3" gs-h="3" id="static-debug-widget">
+        <div class="grid-stack-item-content widget-card">
+            <div class="widget-header">
+                <div class="widget-title">Debug: Static Widget</div>
+            </div>
+            <div class="widget-body">
+                <div class="stat-display">
+                    <div class="stat-value">Test</div>
+                    <div class="stat-label">Static debug widget to confirm GridStack rendering</div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Widget Templates (Hidden) -->
@@ -533,6 +548,15 @@ const DashboardManager = {
 
         // Wait for widgets to be added to DOM before loading data
         setTimeout(() => {
+            try {
+                console.debug('Dashboard: render complete, grid items count:', this.grid && typeof this.grid.getGridItems === 'function' ? this.grid.getGridItems().length : 0);
+                if (this.grid && typeof this.grid.getGridItems === 'function') {
+                    this.grid.getGridItems().forEach(item => {
+                        try { console.debug('Dashboard: grid item node id:', item.gridstackNode ? item.gridstackNode.id : item.id); } catch (e) {}
+                    });
+                }
+            } catch (e) { console.error('Dashboard post-render debug error:', e); }
+
             this.loadAllData();
         }, 100);
     },
@@ -548,6 +572,12 @@ const DashboardManager = {
         content.id = `widget-${config.id}`;
         content.style.display = 'block';
 
+        // Debug: log what we're adding
+        try {
+            console.debug('Dashboard: adding widget', config.id, { x: config.x, y: config.y, w: config.w, h: config.h });
+            console.debug('Template exists, content length:', content.outerHTML.length);
+        } catch (e) { /* ignore */ }
+
         this.grid.addWidget({
             x: config.x,
             y: config.y,
@@ -556,6 +586,14 @@ const DashboardManager = {
             content: content.outerHTML,
             id: config.id
         });
+
+        // Debug: verify it was added
+        try {
+            const items = (this.grid && typeof this.grid.getGridItems === 'function') ? this.grid.getGridItems() : [];
+            console.debug('Dashboard: after addWidget, grid item count =', items.length);
+            const domEl = document.getElementById(`widget-${config.id}`);
+            console.debug(`Dashboard: DOM element for widget-${config.id} present:`, !!domEl);
+        } catch (e) { console.error('Dashboard addWidget debug error:', e); }
     },
 
     templateExists(id) {
