@@ -2125,8 +2125,9 @@ a:hover {
 /* Toolbar edit-mode button visibility: by default only customise button shows; in editing mode show other controls */
 .dashboard-toolbar .toolbar-right .btn { display: none; }
 .dashboard-toolbar .toolbar-right #btn-customize { display: inline-flex; }
-.dashboard-toolbar.editing .toolbar-right .btn { display: inline-flex; }
-.dashboard-toolbar.editing .toolbar-right #btn-customize { display: none; }
+/* Show only elements explicitly marked for edit mode; use !important to avoid conflicts */
+.dashboard-toolbar.editing .toolbar-right .show-on-edit { display: inline-flex !important; }
+.dashboard-toolbar.editing .toolbar-right #btn-customize { display: none !important; }
 
 /* Customization Panel */
 .customization-panel {
