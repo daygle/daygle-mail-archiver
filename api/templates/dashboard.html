@@ -339,6 +339,9 @@ const DashboardManager = {
     grid: null,
     charts: {},
     editMode: false,
+    // Enable debug logging by setting this to true (default: false)
+    debug: false,
+    debugLog(...args) { if (this.debug) console.debug(...args); },
     widgetSettings: {
         // No chart widgets currently implemented
     },
@@ -462,7 +465,7 @@ const DashboardManager = {
             try {
                 if (typeof this.grid.cellHeight === 'function') {
                     this.grid.cellHeight(80);
-                    console.debug('Dashboard: forced grid.cellHeight(80) to ensure CSS vars are set');
+                    this.debugLog('Dashboard: forced grid.cellHeight(80) to ensure CSS vars are set');
                 }
             } catch (e) { console.warn('Dashboard: failed to force cellHeight', e); }
 
@@ -557,28 +560,28 @@ const DashboardManager = {
         // Wait for widgets to be added to DOM before loading data
         setTimeout(() => {
             try {
-                console.debug('Dashboard: render complete, grid items count:', this.grid && typeof this.grid.getGridItems === 'function' ? this.grid.getGridItems().length : 0);
+                this.debugLog('Dashboard: render complete, grid items count:', this.grid && typeof this.grid.getGridItems === 'function' ? this.grid.getGridItems().length : 0);
 
                 // Log computed CSS vars on grid element
                 try {
                     const gridEl = this.grid && this.grid.el ? this.grid.el : document.querySelector('.grid-stack');
                     if (gridEl) {
                         const cs = getComputedStyle(gridEl);
-                        console.debug('Dashboard: CSS --gs-cell-height:', cs.getPropertyValue('--gs-cell-height'));
-                        console.debug('Dashboard: CSS --gs-column-width:', cs.getPropertyValue('--gs-column-width'));
+                        this.debugLog('Dashboard: CSS --gs-cell-height:', cs.getPropertyValue('--gs-cell-height'));
+                        this.debugLog('Dashboard: CSS --gs-column-width:', cs.getPropertyValue('--gs-column-width'));
                     }
                 } catch (e) { }
 
                 if (this.grid && typeof this.grid.getGridItems === 'function') {
                     this.grid.getGridItems().forEach(item => {
                         try {
-                            console.debug('Dashboard: grid item node id:', item.gridstackNode ? item.gridstackNode.id : item.id);
+                            this.debugLog('Dashboard: grid item node id:', item.gridstackNode ? item.gridstackNode.id : item.id);
                             const el = item.el || (item.gridstackNode && item.gridstackNode.el);
                             if (el) {
-                                console.debug('  attrs gs-x,gs-y,gs-w,gs-h:', el.getAttribute('gs-x'), el.getAttribute('gs-y'), el.getAttribute('gs-w'), el.getAttribute('gs-h'));
-                                console.debug('  inline styles top,left,width,height:', el.style.top, el.style.left, el.style.width, el.style.height);
+                                this.debugLog('  attrs gs-x,gs-y,gs-w,gs-h:', el.getAttribute('gs-x'), el.getAttribute('gs-y'), el.getAttribute('gs-w'), el.getAttribute('gs-h'));
+                                this.debugLog('  inline styles top,left,width,height:', el.style.top, el.style.left, el.style.width, el.style.height);
                                 const rect = el.getBoundingClientRect();
-                                console.debug('  bounding rect:', rect.top, rect.left, rect.width, rect.height);
+                                this.debugLog('  bounding rect:', rect.top, rect.left, rect.width, rect.height);
                             }
                         } catch (e) { }
                     });
@@ -602,8 +605,8 @@ const DashboardManager = {
 
         // Debug: log what we're adding
         try {
-            console.debug('Dashboard: adding widget', config.id, { x: config.x, y: config.y, w: config.w, h: config.h });
-            console.debug('Template exists, content length:', content.outerHTML.length);
+            this.debugLog('Dashboard: adding widget', config.id, { x: config.x, y: config.y, w: config.w, h: config.h });
+            this.debugLog('Template exists, content length:', content.outerHTML.length);
         } catch (e) { /* ignore */ }
 
         // Create a grid-stack item element and attach the content node so the DOM keeps the id attribute
@@ -640,9 +643,9 @@ const DashboardManager = {
         // Debug: verify it was added
         try {
             const items = (this.grid && typeof this.grid.getGridItems === 'function') ? this.grid.getGridItems() : [];
-            console.debug('Dashboard: after addWidget, grid item count =', items.length);
+            this.debugLog('Dashboard: after addWidget, grid item count =', items.length);
             const domEl = document.getElementById(`widget-${config.id}`);
-            console.debug(`Dashboard: DOM element for widget-${config.id} present:`, !!domEl);
+            this.debugLog(`Dashboard: DOM element for widget-${config.id} present:`, !!domEl);
         } catch (e) { console.error('Dashboard addWidget debug error:', e); }
     },
 
@@ -757,7 +760,7 @@ const DashboardManager = {
     },
 
     showWidgetSelector() {
-        console.debug('showWidgetSelector called');
+        this.debugLog('showWidgetSelector called');
         let modal = document.getElementById('widget-selector-modal');
         let container = document.getElementById('widget-selector-list');
         
