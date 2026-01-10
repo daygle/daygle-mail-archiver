@@ -115,3 +115,24 @@
     </div>
 </form>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+// Listen for theme changes made elsewhere (e.g. user dropdown) and update select live
+window.addEventListener('theme-changed', function(e) {
+    try {
+        var themeSelect = document.getElementById('theme');
+        if (themeSelect) {
+            var newTheme = e && e.detail && e.detail.theme ? e.detail.theme : null;
+            if (newTheme) {
+                themeSelect.value = newTheme;
+
+                // brief highlight to show change
+                themeSelect.classList.add('theme-updated');
+                setTimeout(function(){ themeSelect.classList.remove('theme-updated'); }, 800);
+            }
+        }
+    } catch (err) { console.debug('theme-changed listener error', err); }
+});
+</script>
+{% endblock %}

@@ -7,6 +7,7 @@ from utils.db import query, execute
 from utils.logger import log
 from utils.templates import templates
 from utils.permissions import PermissionChecker
+from fastapi import Body
 
 router = APIRouter()
 
@@ -245,3 +246,24 @@ def update_user_settings(request: Request, page_size: int = Form(...), date_form
         log("error", "Settings", f"Failed to update settings for user '{username}': {str(e)}", "")
         flash(request, "Failed to update settings. Please try again.")
         return RedirectResponse("/user-settings", status_code=303)
+
+
+@router.post("/api/user/theme")
+def set_user_theme(request: Request, payload: dict = Body(...)):
+    """Set a user's theme preference (light/dark/system) — lightweight endpoint used by the client toggle."""
+    if not require_login(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    theme = payload.get("theme")
+    if theme not in ("light", "dark", "system"):
+        return JSONResponse({"error": "Invalid theme"}, status_code=400)
+
+    user_id = request.session.get("user_id")
+    try:
+        execute("UPDATE users SET theme_preference = :theme WHERE id = :id", {"theme": theme, "id": user_id})
+    except Exception as e:
+        log("error", "Settings", f"Failed to persist theme for user {user_id}: {str(e)}", "")
+        # Even if DB update fails, update session so UX still reflects choice
+
+    request.session["theme"] = theme
+    return JSONResponse({"status": "ok"})

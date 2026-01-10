@@ -16,6 +16,11 @@
             var serverGlobalTheme = "{{ request.session.get('global_theme', '') }}";
             window.__serverTheme = serverTheme || '';
             window.__serverGlobalTheme = serverGlobalTheme || '';
+            {% if request.session.username %}
+            window.__isLoggedIn = true;
+            {% else %}
+            window.__isLoggedIn = false;
+            {% endif %}
 
             try {
                 var savedLocalTheme = localStorage.getItem('theme');
@@ -175,11 +180,11 @@
                                 <i class="fas fa-cog"></i>
                                 <span>User Settings</span>
                             </a>
-                            <button type="button" class="dropdown-item theme-toggle-item" id="themeToggle" title="Toggle theme" style="display:flex; align-items:center; gap:8px;">
+                            <a href="#" class="dropdown-item theme-toggle-item" id="themeToggle" role="button" title="Toggle theme">
                                 <i class="fas fa-sun" id="themeIconLight"></i>
                                 <i class="fas fa-moon" id="themeIconDark" style="display:none;"></i>
                                 <span>Toggle theme</span>
-                            </button>
+                            </a>
                             <div class="dropdown-divider"></div>
                             <a href="/logout" class="dropdown-item">
                                 <i class="fas fa-right-from-bracket"></i>
@@ -307,7 +312,29 @@
         function setTheme(theme) {
             html.setAttribute('data-theme', theme);
             localStorage.setItem('theme', theme);
-            
+
+            // persist user preference to server when logged in and give feedback
+            try {
+                if (window.__isLoggedIn) {
+                    fetch('/api/user/theme', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ theme: theme })
+                    }).then((resp) => {
+                        if (resp.ok) {
+                            showToast('Theme saved');
+                        } else {
+                            showToast('Theme saved locally');
+                        }
+                    }).catch(() => {
+                        showToast('Theme saved locally');
+                    });
+                } else {
+                    // Not logged in — inform user choice is local only
+                    showToast('Theme applied');
+                }
+            } catch (e) {}
+
             if (theme === 'dark') {
                 themeIconLight.style.display = 'none';
                 themeIconDark.style.display = 'block';
@@ -315,6 +342,11 @@
                 themeIconLight.style.display = 'block';
                 themeIconDark.style.display = 'none';
             }
+
+            // Emit a global event so other parts of the UI (e.g. settings page) can react
+            try {
+                window.dispatchEvent(new CustomEvent('theme-changed', { detail: { theme: theme } }));
+            } catch (e) {}
         }
 
         // Restore theme: prefer localStorage (user choice) then server preference
@@ -356,10 +388,51 @@
         }
 
         if (themeToggle) {
-            themeToggle.addEventListener('click', () => {
+            themeToggle.addEventListener('click', (e) => {
+                e.preventDefault();
                 const currentTheme = html.getAttribute('data-theme');
-                setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                setTheme(newTheme);
             });
+        }
+
+        // Small Bootstrap toast for user feedback when preference is saved
+        function showToast(message) {
+            try {
+                // Create toast container if missing
+                let container = document.getElementById('toastContainer');
+                if (!container) {
+                    container = document.createElement('div');
+                    container.id = 'toastContainer';
+                    container.style.position = 'fixed';
+                    container.style.right = '16px';
+                    container.style.bottom = '16px';
+                    container.style.zIndex = 12000;
+                    document.body.appendChild(container);
+                }
+
+                const toastEl = document.createElement('div');
+                toastEl.className = 'toast align-items-center text-bg-secondary border-0';
+                toastEl.setAttribute('role', 'alert');
+                toastEl.setAttribute('aria-live', 'assertive');
+                toastEl.setAttribute('aria-atomic', 'true');
+                toastEl.style.minWidth = '180px';
+
+                toastEl.innerHTML = `
+                    <div class="d-flex">
+                        <div class="toast-body">${message}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                `;
+
+                container.appendChild(toastEl);
+                const bt = new bootstrap.Toast(toastEl, { delay: 2500 });
+                bt.show();
+                toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+            } catch (e) {
+                // fallback - no toast available
+                console.log('Toast:', message);
+            }
         }
 
         // User menu dropdown

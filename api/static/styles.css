@@ -2989,6 +2989,12 @@ a:hover {
     text-align: center;
 }
 
+/* Small highlight animation when settings are updated live */
+.theme-updated {
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.12) inset;
+    transition: box-shadow 220ms ease-in-out;
+}
+
 .dropdown-divider {
     height: 1px;
     background-color: var(--border-color);
