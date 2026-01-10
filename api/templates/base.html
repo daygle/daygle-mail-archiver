@@ -139,11 +139,6 @@
                 </div>
 
                 <div class="topbar-right">
-                    <button type="button" class="btn-ghost theme-toggle" id="themeToggle" title="Toggle theme">
-                        <i class="fas fa-sun" id="themeIconLight"></i>
-                        <i class="fas fa-moon" id="themeIconDark" style="display:none;"></i>
-                    </button>
-
                     {% if request.session.username %}
                     <div class="alerts-menu">
                         <a href="/alerts" class="alerts-button" title="View Alerts">
@@ -170,6 +165,11 @@
                                 <i class="fas fa-cog"></i>
                                 <span>User Settings</span>
                             </a>
+                            <button type="button" class="dropdown-item theme-toggle-item" id="themeToggle" title="Toggle theme" style="display:flex; align-items:center; gap:8px;">
+                                <i class="fas fa-sun" id="themeIconLight"></i>
+                                <i class="fas fa-moon" id="themeIconDark" style="display:none;"></i>
+                                <span>Toggle theme</span>
+                            </button>
                             <div class="dropdown-divider"></div>
                             <a href="/logout" class="dropdown-item">
                                 <i class="fas fa-right-from-bracket"></i>
