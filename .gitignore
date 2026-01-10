@@ -65,3 +65,7 @@ dist/
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
+
+# Ignore dev-only helpers
+# new dev helper folder
+/scripts-development/
