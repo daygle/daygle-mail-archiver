@@ -645,8 +645,8 @@ const DashboardManager = {
     },
 
     showWidgetSelector() {
-        const modal = document.getElementById('widget-selector-modal');
-        const container = document.getElementById('widget-selector-list');
+        let modal = document.getElementById('widget-selector-modal');
+        let container = document.getElementById('widget-selector-list');
         
         if (!modal || !container) {
             console.error('Modal or container not found', { modal, container });
