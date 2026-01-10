@@ -245,31 +245,7 @@ button:focus-visible,
     width: 0;
 }
 
-.sidebar-toggle {
-    margin-left: auto;
-    background: transparent;
-    border: none;
-    color: var(--text-inverse);
-    cursor: pointer;
-    padding: 8px;
-    border-radius: var(--radius-md);
-    transition: background-color var(--transition-fast);
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.sidebar-toggle:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-/* Ensure toggle button is always visible even when sidebar is collapsed */
-.sidebar.collapsed .sidebar-toggle {
-    display: flex;
-    opacity: 1;
-    visibility: visible;
-}
+/* sidebar-toggle removed - unused */
 
 /* Navigation Menu */
 .sidebar-nav {
@@ -609,13 +585,7 @@ button:focus-visible,
 
 #api-unreachable-banner { margin: 0.5rem 1rem; }
 
-/* Stats Cards */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 20px;
-    margin-bottom: 24px;
-}
+/* stats-grid removed - unused */
 
 .stat-card {
     background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover));
@@ -1462,9 +1432,7 @@ textarea.form-control {
 
 /* Tablet Styles (768px - 1024px) */
 @media (max-width: 1024px) and (min-width: 769px) {
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+    /* stats-grid rules removed - unused */
     
     .grid-cols-3 {
         grid-template-columns: repeat(2, 1fr);
@@ -1583,10 +1551,7 @@ textarea.form-control {
     }
     
     /* Grid layouts - stack on mobile */
-    .stats-grid {
-        grid-template-columns: 1fr;
-        gap: 12px;
-    }
+    /* stats-grid removed - unused */
     
     .grid-cols-2,
     .grid-cols-3,
@@ -2129,20 +2094,7 @@ a:hover {
 .dashboard-toolbar.editing .toolbar-right .show-on-edit { display: inline-flex !important; }
 .dashboard-toolbar.editing .toolbar-right #btn-customize { display: none !important; }
 
-/* Customization Panel */
-.customization-panel {
-    position: fixed;
-    top: var(--topbar-height);
-    right: 0;
-    width: 320px;
-    height: calc(100vh - var(--topbar-height));
-    background: var(--bg-primary);
-    border-left: 1px solid var(--border-color);
-    box-shadow: var(--shadow-xl);
-    z-index: 1000;
-    overflow-y: auto;
-    transition: transform var(--transition-base);
-}
+/* customization-panel removed - unused */
 
 .panel-header {
     display: flex;
@@ -2612,9 +2564,7 @@ a:hover {
 
 /* Responsive Adjustments */
 @media (max-width: 768px) {
-    .customization-panel {
-        width: 100%;
-    }
+    /* customization-panel removed - unused */
     
     .stats-grid-mini {
         grid-template-columns: 1fr;
