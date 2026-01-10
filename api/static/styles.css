@@ -2122,6 +2122,12 @@ a:hover {
     gap: 0.5rem;
 }
 
+/* Toolbar edit-mode button visibility: by default only customise button shows; in editing mode show other controls */
+.dashboard-toolbar .toolbar-right .btn { display: none; }
+.dashboard-toolbar .toolbar-right #btn-customize { display: inline-flex; }
+.dashboard-toolbar.editing .toolbar-right .btn { display: inline-flex; }
+.dashboard-toolbar.editing .toolbar-right #btn-customize { display: none; }
+
 /* Customization Panel */
 .customization-panel {
     position: fixed;

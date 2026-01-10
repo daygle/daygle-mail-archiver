@@ -620,6 +620,8 @@ const DashboardManager = {
             document.getElementById('btn-reset-layout').style.display = 'inline-block';
             document.getElementById('btn-cancel').style.display = 'inline-block';
             document.querySelector('.grid-stack').classList.add('edit-mode');
+            const toolbar = document.querySelector('.dashboard-toolbar');
+            if (toolbar) toolbar.classList.add('editing');
         } else {
             this.grid.disable();
             document.getElementById('btn-customize').style.display = 'inline-block';
@@ -628,6 +630,8 @@ const DashboardManager = {
             document.getElementById('btn-reset-layout').style.display = 'none';
             document.getElementById('btn-cancel').style.display = 'none';
             document.querySelector('.grid-stack').classList.remove('edit-mode');
+            const toolbar = document.querySelector('.dashboard-toolbar');
+            if (toolbar) toolbar.classList.remove('editing');
         }
     },
 
