@@ -77,7 +77,7 @@ class ClamAVScanner:
     
     def __init__(self, host: str = 'clamav', port: int = 3310):
         """
-        Initialize ClamAV scanner.
+        Initialise ClamAV scanner.
         
         Args:
             host: ClamAV daemon hostname
@@ -132,7 +132,7 @@ class ClamAVScanner:
                         log_warning('clamav_quarantine_encrypt set but CLAMAV_QUARANTINE_KEY not found in config')
                         self._quarantine_encrypt = False
                 except Exception as e:
-                    log_warning('Failed to initialize quarantine encryption', str(e))
+                    log_warning('Failed to initialise quarantine encryption', str(e))
                     self._quarantine_encrypt = False
         except Exception as e:
             # If we can't load settings, use defaults and disable scanning

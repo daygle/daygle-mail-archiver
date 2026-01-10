@@ -62,7 +62,7 @@ def gmail_oauth_callback(request: Request, account_id: int, code: str = None, er
         return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)
     
     if not code:
-        request.session["flash"] = "No authorization code received"
+        request.session["flash"] = "No authorisation code received"
         return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)
     
     # Get account details
@@ -124,7 +124,7 @@ def gmail_oauth_callback(request: Request, account_id: int, code: str = None, er
         username = request.session.get("username", "unknown")
         log("info", "OAuth", f"User '{username}' successfully completed Gmail OAuth for account {account_id}", "")
         
-        request.session["flash"] = "Gmail OAuth authorization successful!"
+        request.session["flash"] = "Gmail OAuth authorisation successful!"
         return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)
         
     except requests.exceptions.Timeout:
@@ -137,7 +137,7 @@ def gmail_oauth_callback(request: Request, account_id: int, code: str = None, er
         return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)
     except Exception as e:
         log("error", "OAuth", f"Gmail OAuth error for account {account_id}: {str(e)}", "")
-        request.session["flash"] = "OAuth authorization failed. Please try again."
+        request.session["flash"] = "OAuth authorisation failed. Please try again."
         return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)
 
 
@@ -185,7 +185,7 @@ def o365_oauth_callback(request: Request, account_id: int, code: str = None, err
         return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)
     
     if not code:
-        request.session["flash"] = "No authorization code received"
+        request.session["flash"] = "No authorisation code received"
         return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)
     
     # Get account details
@@ -248,7 +248,7 @@ def o365_oauth_callback(request: Request, account_id: int, code: str = None, err
         username = request.session.get("username", "unknown")
         log("info", "OAuth", f"User '{username}' successfully completed Office 365 OAuth for account {account_id}", "")
         
-        request.session["flash"] = "Office 365 OAuth authorization successful!"
+        request.session["flash"] = "Office 365 OAuth authorisation successful!"
         return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)
         
     except requests.exceptions.Timeout:
@@ -261,5 +261,5 @@ def o365_oauth_callback(request: Request, account_id: int, code: str = None, err
         return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)
     except Exception as e:
         log("error", "OAuth", f"Office 365 OAuth error for account {account_id}: {str(e)}", "")
-        request.session["flash"] = "OAuth authorization failed. Please try again."
+        request.session["flash"] = "OAuth authorisation failed. Please try again."
         return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)

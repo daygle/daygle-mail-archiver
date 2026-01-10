@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Daygle Mail Archiver - Database Initialization
-Initialize the database with required tables for development.
+Daygle Mail Archiver - Database Initialisation
+Initialise the database with required tables for development.
 """
 
 import os
@@ -25,10 +25,10 @@ except ImportError:
 from sqlalchemy import create_engine, text
 
 def init_database():
-    """Initialize the database with required tables."""
+    """Initialise the database with required tables."""
     db_dsn = os.getenv('DB_DSN', 'sqlite:///./test.db')
 
-    print(f"Initializing database: {db_dsn}")
+    print(f"Initialising database: {db_dsn}")
 
     # Create engine
     engine = create_engine(db_dsn)
@@ -125,7 +125,7 @@ def init_database():
         for key, name, desc, alert_type, enabled in default_triggers:
             conn.execute(text(f"INSERT OR IGNORE INTO alert_triggers (trigger_key, name, description, alert_type, enabled) VALUES ('{key}', '{name}', '{desc}', '{alert_type}', {enabled})"))
 
-    print("Database initialized successfully!")
+    print("Database initialised successfully!")
     print("Default admin user: admin / admin")
 
 if __name__ == "__main__":

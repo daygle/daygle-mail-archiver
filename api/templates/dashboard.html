@@ -174,12 +174,12 @@
 {% endblock %}
 
 {% block content %}
-<!-- Customization Toolbar -->
+<!-- Customisation Toolbar -->
 <div class="dashboard-toolbar">
     <div class="toolbar-left">
     </div>
     <div class="toolbar-right">
-        <button id="btn-customize" class="btn btn-secondary" title="Customize Dashboard">
+        <button id="btn-customize" class="btn btn-secondary" title="Customise Dashboard">
             <i class="fas fa-cog"></i>
         </button>
         <button id="btn-add-widget" class="btn btn-info" style="display: none;" title="Add Widget">
@@ -542,7 +542,7 @@ const DashboardManager = {
         }
     },
 
-    // Default widget layout - now focused on customizable stat widgets
+    // Default widget layout - now focused on customisable stat widgets
     defaultWidgets: [
         { id: 'total-emails', x: 0, y: 0, w: 3, h: 3, visible: true },
         { id: 'emails-today', x: 3, y: 0, w: 3, h: 3, visible: true },
@@ -574,7 +574,7 @@ const DashboardManager = {
             return;
         }
 
-        // Initialize GridStack
+        // Initialise GridStack
         try {
             this.grid = GridStack.init({
                 column: 12,
@@ -599,9 +599,9 @@ const DashboardManager = {
             const retryBtn = document.getElementById('api-retry-now');
             if (retryBtn) retryBtn.addEventListener('click', () => { this.retryAll(); });
         } catch (error) {
-            console.error('Error initializing dashboard:', error);
+            console.error('Error initialising dashboard:', error);
             console.error('Error stack:', error.stack);
-            alert('Dashboard failed to initialize: ' + error.message + '\n\nCheck the browser console for more details.');
+            alert('Dashboard failed to initialise: ' + error.message + '\n\nCheck the browser console for more details.');
         }
     },
 
@@ -704,10 +704,10 @@ const DashboardManager = {
 
     setupEventListeners() {
         
-        // Customize button
+        // Customise button
         const customizeBtn = document.getElementById('btn-customize');
         if (!customizeBtn) {
-            console.error('Customize button not found!');
+            console.error('Customise button not found!');
             return;
         }
         customizeBtn.addEventListener('click', () => {
@@ -1129,7 +1129,7 @@ const DashboardManager = {
     }
 };
 
-// Initialize dashboard when DOM is ready
+// Initialise dashboard when DOM is ready
 let initAttempts = 0;
 const maxAttempts = 50; // 5 seconds max
 
@@ -1138,7 +1138,7 @@ function initDashboard() {
     if (typeof GridStack === 'undefined') {
         if (initAttempts >= maxAttempts) {
             console.error('GridStack failed to load after 5 seconds');
-            alert('Dashboard initialization timeout. GridStack library did not load. Please check:\n\n1. Network tab in Developer Tools (F12)\n2. Your internet connection\n3. Firewall/antivirus blocking CDNs');
+            alert('Dashboard initialisation timeout. GridStack library did not load. Please check:\n\n1. Network tab in Developer Tools (F12)\n2. Your internet connection\n3. Firewall/antivirus blocking CDNs');
             return;
         }
         setTimeout(initDashboard, 100);

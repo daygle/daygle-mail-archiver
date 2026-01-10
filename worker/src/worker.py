@@ -13,11 +13,11 @@ from clamav_scanner import ClamAVScanner
 
 POLL_INTERVAL_FALLBACK = 300  # seconds
 
-# Initialize ClamAV scanner (singleton)
+# Initialise ClamAV scanner (singleton)
 clamav_scanner = None
 
 def get_clamav_scanner():
-    """Get or initialize the ClamAV scanner."""
+    """Get or initialise the ClamAV scanner."""
     global clamav_scanner
     if clamav_scanner is None:
         clamav_scanner = ClamAVScanner()

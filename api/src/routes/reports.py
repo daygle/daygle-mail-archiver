@@ -280,7 +280,7 @@ def account_activity_report(request: Request, start_date: str = None, end_date: 
             ORDER BY sync_date, source
         """, {"start_date": start_dt, "end_date": end_dt}).mappings().all()
 
-        # Organize trend data
+        # Organise trend data
         sources = set()
         trend_data = defaultdict(lambda: defaultdict(int))
 
@@ -786,7 +786,7 @@ def retention_policy_report(request: Request, start_date: str = None, end_date: 
             ORDER BY deletion_date
         """, {"start_date": start_dt.date(), "end_date": end_dt.date()}).mappings().all()
 
-        # Organize deletion data
+        # Organise deletion data
         deletion_labels = []
         manual_deletions = []
         retention_deletions = []

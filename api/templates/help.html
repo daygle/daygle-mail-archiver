@@ -54,11 +54,12 @@
     <div class="card-body">
         <ol style="padding-left: 24px; margin-bottom: 0;">
             <li style="margin-bottom: 12px;">Create a Google Cloud project and enable Gmail API</li>
-            <li style="margin-bottom: 12px;">Create OAuth 2.0 credentials with redirect URI: <code>http://your-domain/oauth/gmail/callback</code></li>
+            <li style="margin-bottom: 12px;">Create OAuth 2.0 credentials and register the redirect URI used by the application. Example (per-account callback): <code>http://your-domain/oauth/gmail/callback/{account_id}</code></li>
+            <li style="margin-bottom: 12px;">When creating credentials ensure you request offline access (refresh token) and the Gmail scopes required for read access</li>
             <li style="margin-bottom: 12px;">Add a new account and select <strong>"Gmail API"</strong></li>
             <li style="margin-bottom: 12px;">Enter your OAuth Client ID and Client Secret</li>
-            <li style="margin-bottom: 12px;">Save the account, then click <strong>"Authorize Gmail"</strong></li>
-            <li style="margin-bottom: 0;">Complete the Google authorization flow</li>
+            <li style="margin-bottom: 12px;">Save the account, then click <strong>"Authorise Gmail"</strong></li>
+            <li style="margin-bottom: 0;">Complete the Google authorisation flow</li>
         </ol>
     </div>
 </div>
@@ -75,10 +76,11 @@
         <ol style="padding-left: 24px; margin-bottom: 0;">
             <li style="margin-bottom: 12px;">Register an app in Azure AD / Microsoft 365 Admin Center</li>
             <li style="margin-bottom: 12px;">Add Mail.Read permission and create a client secret</li>
+            <li style="margin-bottom: 12px;">Register the application's redirect URI (per-account callback). Example: <code>http://your-domain/oauth/o365/callback/{account_id}</code></li>
             <li style="margin-bottom: 12px;">Add a new account and select <strong>"Office 365 API"</strong></li>
             <li style="margin-bottom: 12px;">Enter your OAuth Client ID and Client Secret</li>
-            <li style="margin-bottom: 12px;">Save the account, then click <strong>"Authorize Office 365"</strong></li>
-            <li style="margin-bottom: 0;">Complete the Microsoft authorization flow</li>
+            <li style="margin-bottom: 12px;">Save the account, then click <strong>"Authorise Office 365"</strong></li>
+            <li style="margin-bottom: 0;">Complete the Microsoft authorisation flow</li>
         </ol>
     </div>
 </div>
@@ -127,7 +129,7 @@
         <p style="margin-bottom: 16px;"><strong>Page Size & Date Format:</strong> Control items per page in email listings and configure global date/time display format.</p>
         <p style="margin-bottom: 16px;"><strong>Theme Settings:</strong> Set the default theme (Light, Dark, or System) for all users. Individual users can override this in their personal settings.</p>
         <div class="alert alert-info" style="margin-bottom: 0;">
-            <i class="fas fa-info-circle"></i> Retention cleanup runs automatically during worker cycles. All deletions are tracked on the Dashboard. Individual users can customize their date format, time format, and theme in User Settings.
+            <i class="fas fa-info-circle"></i> Retention cleanup runs automatically during worker cycles. All deletions are tracked on the Dashboard. Individual users can customise their date format, time format, and theme in User Settings.
         </div>
     </div>
 </div>
@@ -156,7 +158,7 @@
     </div>
     <div class="card-body">
         <p style="margin-bottom: 16px;"><strong>Connection Issues:</strong> Use the Test button on fetch accounts, check firewall settings, verify SSL/TLS settings, and use app-specific passwords for Gmail with 2FA.</p>
-        <p style="margin-bottom: 16px;"><strong>OAuth Authorization Failed:</strong> Verify Client ID and Secret, ensure redirect URI is properly configured, check API permissions, and try re-authorizing.</p>
+        <p style="margin-bottom: 16px;"><strong>OAuth Authorisation Failed:</strong> Verify Client ID and Secret, ensure the registered redirect URI matches the application's per-account callback path (for example <code>/oauth/gmail/callback/{account_id}</code> or <code>/oauth/o365/callback/{account_id}</code>), check API permissions/scopes, and re-authorise. See the project's OAuth Integration wiki page for details.</p>
         <p style="margin-bottom: 16px;"><strong>No Emails Being Fetched:</strong> Check that the account is Enabled, verify the worker is running, and review error emails in the logs.</p>
         <p style="margin-bottom: 16px;"><strong>Account Lockout:</strong> If locked out due to failed login attempts, wait 15 minutes or use the forgot password feature to unlock your account.</p>
         <p style="margin-bottom: 16px;"><strong>Read-Only User Restrictions:</strong> If you cannot download .eml files or perform administrative actions, you may have read-only permissions. Contact an administrator for elevated access.</p>
@@ -164,12 +166,12 @@
     </div>
 </div>
 
-<!-- Email Deletion Behavior -->
+<!-- Email Deletion Behaviour -->
 <div class="card" style="margin-bottom: 24px;">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-trash-alt"></i>
-            <span>Email Deletion Behavior</span>
+            <span>Email Deletion Behaviour</span>
         </div>
     </div>
     <div class="card-body">
@@ -200,15 +202,12 @@
         <ol style="padding-left: 24px; margin-bottom: 16px;">
             <li style="margin-bottom: 8px;">Navigate to <strong>User Management</strong> from the sidebar</li>
             <li style="margin-bottom: 8px;">Click <strong>"Create New User"</strong></li>
-            <li style="margin-bottom: 8px;">Enter username, email, and select a role (viewer or administrator)</li>
+            <li style="margin-bottom: 8px;">Enter username, email, and assign one or more roles (configured in Roles & Permissions)</li>
             <li style="margin-bottom: 8px;">User will need to set their password on first login</li>
         </ol>
 
         <p style="margin-bottom: 12px;"><strong>User Roles:</strong></p>
-        <ul style="padding-left: 24px; margin-bottom: 16px;">
-            <li style="margin-bottom: 8px;"><strong>Administrator:</strong> Full access to all features including settings, user management, security reports, alert management, and logs</li>
-            <li style="margin-bottom: 8px;"><strong>Read-only:</strong> Limited access to view and search emails, reports, and quarantine. Cannot download .eml files, modify settings, or perform administrative actions</li>
-        </ul>
+        <p style="margin-bottom: 16px;">Roles map to granular permissions and can be customised in the <strong>Roles & Permissions</strong> administration page. Assign one or more roles to a user to grant the necessary permissions. Administrators typically have full access, while other roles may restrict actions such as downloading .eml files or modifying settings.</p>
 
         <p style="margin-bottom: 0;"><strong>Managing Your Profile:</strong> All users can access their profile settings from the user menu (top-right) to change password and update personal information.</p>
     </div>
@@ -329,6 +328,34 @@
     </div>
 </div>
 
+        <!-- Emails Help -->
+        <div class="card" style="margin-bottom: 24px;">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fas fa-envelope"></i>
+                    <span>Emails Help</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <p style="margin-bottom: 12px;">Learn more about the Emails page, searching, download/export, quarantine, and delete modes in the documentation.</p>
+                <p style="margin-bottom: 0;"><a href="https://github.com/daygle/daygle-mail-archiver/wiki/Emails" class="btn btn-outline-primary">Open Emails Wiki Page</a></p>
+            </div>
+        </div>
+
+        <!-- Reports Help -->
+        <div class="card" style="margin-bottom: 24px;">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reports Help</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <p style="margin-bottom: 12px;">Learn more about the Reports page, exports, and analytics in the documentation.</p>
+                <p style="margin-bottom: 0;"><a href="https://github.com/daygle/daygle-mail-archiver/wiki/Reports" class="btn btn-outline-primary">Open Reports Wiki Page</a></p>
+            </div>
+        </div>
+
 <!-- Alert Management (Administrators Only) -->
 <div class="card" style="margin-bottom: 24px;">
     <div class="card-header">
@@ -369,7 +396,7 @@
         </div>
     </div>
     <div class="card-body">
-        <p style="margin-bottom: 16px;">Customize your experience with personal settings and preferences available to all users.</p>
+        <p style="margin-bottom: 16px;">Customise your experience with personal settings and preferences available to all users.</p>
         
         <p style="margin-bottom: 12px;"><strong>Profile Management:</strong></p>
         <ul style="padding-left: 24px; margin-bottom: 16px;">
@@ -382,7 +409,7 @@
         <p style="margin-bottom: 12px;"><strong>Personal Settings:</strong></p>
         <ul style="padding-left: 24px; margin-bottom: 16px;">
             <li style="margin-bottom: 8px;"><strong>Theme:</strong> Choose between Light, Dark, or System theme</li>
-            <li style="margin-bottom: 8px;"><strong>Date Format:</strong> Customize how dates are displayed (DD/MM/YYYY, MM/DD/YYYY, etc.)</li>
+            <li style="margin-bottom: 8px;"><strong>Date Format:</strong> Customise how dates are displayed (DD/MM/YYYY, MM/DD/YYYY, etc.)</li>
             <li style="margin-bottom: 8px;"><strong>Time Format:</strong> Select 12-hour or 24-hour time display</li>
             <li style="margin-bottom: 8px;"><strong>Timezone:</strong> Set your local timezone for accurate timestamps</li>
         </ul>

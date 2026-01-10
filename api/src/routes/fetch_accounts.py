@@ -379,7 +379,7 @@ def test_account_connection(request: Request, id: int):
             
             access_token = get_valid_token(id, "gmail")
             if not access_token:
-                flash(request, "✗ Gmail authentication failed - please re-authorize")
+                flash(request, "✗ Gmail authentication failed - please re-authorise")
             else:
                 # Test API call
                 headers = {"Authorization": f"Bearer {access_token}"}
@@ -401,7 +401,7 @@ def test_account_connection(request: Request, id: int):
             
             access_token = get_valid_token(id, "o365")
             if not access_token:
-                flash(request, "✗ Office 365 authentication failed - please re-authorize")
+                flash(request, "✗ Office 365 authentication failed - please re-authorise")
             else:
                 # Test API call
                 headers = {"Authorization": f"Bearer {access_token}"}

@@ -2,7 +2,7 @@
 
 Daygle Mail Archiver is a deterministic email ingestion and archiving system designed for long‑term retention, auditability, and operational reliability. It ingests emails from multiple sources (IMAP, Gmail API, Office 365 Graph API), stores messages in a structured database, and exposes a clean UI for browsing, retention policy management, and administrative control.
 
-This project is built with explicit, maintainable configuration, modular backend logic, and a modernized UI — ensuring predictable behaviour across all environments.
+This project is built with explicit, maintainable configuration, modular backend logic, and a modernised UI — ensuring predictable behaviour across all environments.
 
 ---
 
@@ -15,10 +15,10 @@ This project is built with explicit, maintainable configuration, modular backend
 - **Retention Policies**: Automatic purging based on configurable rules
 - **Deletion Tracking**: Dashboard analytics for manual and automated deletions
 - **Mail Server Cleanup**: Optional deletion from mail servers during retention cleanup
-- **User Management**: Multi-user system with role-based access (Administrator/Read Only)
+- **User Management**: Multi-user system with role-based access via granular roles and permissions
 - **OAuth2 Integration**: Secure authentication for Gmail and Office 365
 - **Worker Status Monitoring**: Real-time health monitoring of fetch workers
-- **Dashboard Analytics**: Visual charts and customizable widget layouts
+- **Dashboard Analytics**: Visual charts and customisable widget layouts
 - **Test Connection**: Test IMAP, Gmail, and Office 365 connections from the UI
 - **Database Backup & Restore**: Built-in backup functionality
 - **Audit Logging**: Complete audit trail of all system actions
@@ -35,11 +35,10 @@ This project is built with explicit, maintainable configuration, modular backend
 
 ### Quick Links
 
-- **[Installation Guide](https://github.com/daygle/daygle-mail-archiver/wiki/Installation-Guide)** - Get started with installation
-- **[Configuration](https://github.com/daygle/daygle-mail-archiver/wiki/Configuration)** - Configure the system
-- **[Email Accounts Setup](https://github.com/daygle/daygle-mail-archiver/wiki/Email-Accounts-Setup)** - Set up IMAP, Gmail, Office 365
+- **[Installation Guide](https://github.com/daygle/daygle-mail-archiver/wiki/Installation-Guide)** - Get started with installation and configuration
+- **[Fetch Accounts](https://github.com/daygle/daygle-mail-archiver/wiki/Fetch-Accounts-Setup)** - Set up IMAP, Gmail, Office 365
 - **[User Management](https://github.com/daygle/daygle-mail-archiver/wiki/User-Management)** - Manage users and roles
-- **[Dashboard Customization](https://github.com/daygle/daygle-mail-archiver/wiki/Dashboard-Customization)** - Customize your dashboard
+- **[Dashboard](https://github.com/daygle/daygle-mail-archiver/wiki/Dashboard)** - Customise your dashboard
 - **[ClamAV Virus Scanning](https://github.com/daygle/daygle-mail-archiver/wiki/ClamAV-Virus-Scanning)** - Configure virus scanning
 - **[Advanced Reporting](https://github.com/daygle/daygle-mail-archiver/wiki/Advanced-Reporting)** - Email volume, account activity, and system health reports
 - **[Email Alerts & Notifications](https://github.com/daygle/daygle-mail-archiver/wiki/Email-Alerts-&-Notifications)** - Configure SMTP alerts and notification system
@@ -116,7 +115,7 @@ cd ..
 cp .env.example .env
 # Edit .env with your configuration
 
-# Initialize database
+# Initialise database
 python init_db.py
 
 # Run development server
@@ -172,7 +171,7 @@ Daygle Mail Archiver includes comprehensive reporting capabilities to monitor sy
 - Security events and access patterns
 - Data completeness and quality metrics
 
-Reports are accessible via the **Reports** menu and support customizable date ranges and export capabilities.
+Reports are accessible via the **Reports** menu and support customisable date ranges and export capabilities.
 
 ---
 
@@ -203,17 +202,37 @@ Configure SMTP settings in **Global Settings** → **SMTP Email Configuration** 
 
 ## �🔄 Updating
 
-Check for updates from the dashboard or via command line:
+Check for updates via the command line:
 
 ```bash
 # Check for updates
 ./update.sh --check
 
-# Update system
+# Update system (interactive)
 ./update.sh
+
+# Update system without prompts
+./update.sh --force
+
+# Update but don’t start containers automatically (useful for inspection)
+./update.sh --skip-start
 ```
 
-The update script automatically backs up data before updating.
+What the update script does:
+
+- Fetches and merges the latest code from the current git branch (attempts to preserve local changes by saving diffs and committing current state)
+- Pulls updated Docker images via Docker Compose
+- Rebuilds and restarts containers (with fallback to `--no-cache` and build cache pruning on failure)
+- Saves local repository diffs to `./update_diffs/` if you have uncommitted changes
+
+Important: the update script does NOT automatically create a full database backup. You should create a backup before updating if you need to preserve the database state. Use the provided backup script before running `update.sh`:
+
+```bash
+# Create a full system backup (database + config)
+./scripts/backup_restore.sh backup
+```
+
+See [Updating](https://github.com/daygle/daygle-mail-archiver/wiki/Updating) in the wiki for a recommended update workflow, rollback tips, and common troubleshooting steps.
 
 ---
 

@@ -356,7 +356,7 @@
         if (userMenuButton && userMenu && userMenuDropdown) {
             userMenuButton.addEventListener('click', (e) => {
                 e.stopPropagation();
-                e.preventDefault(); // Prevent any default behavior
+                e.preventDefault(); // Prevent any default behaviour
                 const isShown = userMenuDropdown.classList.contains('show');
                 if (isShown) {
                     userMenuDropdown.classList.remove('show');

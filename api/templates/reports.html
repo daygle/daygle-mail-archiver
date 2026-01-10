@@ -453,7 +453,7 @@ Chart = undefined; // Clear any existing Chart
 // Global chart instances - updated 2026-01-08
 let emailVolumeChart, accountActivityChart, errorTrendsChart, avStatsChart;
 
-// Initialize chart variables on window to prevent undefined errors
+// Initialise chart variables on window to prevent undefined errors
 window.storageTrendsChart = null;
 window.retentionChart = null;
 window.performanceChart = null;
@@ -461,7 +461,7 @@ window.workerActivityChart = null;
 window.securityChart = null;
 window.sizeDistributionChart = null;
 
-// Initialize charts and load data
+// Initialise charts and load data
 document.addEventListener('DOMContentLoaded', function() {
     initializeCharts();
     setDefaultDateRanges();
@@ -529,7 +529,7 @@ function setDefaultDateRanges() {
     document.getElementById('securityEndDate').value = formatDate(today);
 }
 
-// Initialize chart instances
+// Initialise chart instances
 function initializeCharts() {
     // Check if Chart.js is loaded
     if (typeof Chart === 'undefined') {
