@@ -4,8 +4,8 @@
 
 {% block extra_css %}
 <!-- GridStack CSS (CDN) -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@10.2.0/dist/gridstack.min.css" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@10.2.0/dist/gridstack-extra.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@12.4.2/dist/gridstack.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@12.4.2/dist/gridstack-extra.min.css" />
 {# Dashboard-specific styles moved to api/static/styles.css #}
 {% endblock %}
 
@@ -402,6 +402,23 @@ const DashboardManager = {
         return value.toLocaleString();
     },
 
+    // Scale widgets for the current display columns. If the grid is using fewer columns
+    // than the canonical 12 (e.g. 6 columns on small screens), scale x and w so the
+    // layout preserves the intended arrangement. This does not mutate the input array.
+    scaleWidgetsForDisplay(widgets) {
+        if (!widgets || !Array.isArray(widgets)) return widgets;
+        // If columns not set yet, assume desktop (12)
+        const cols = this.columns || 12;
+        if (cols === 12) return widgets;
+
+        const factor = 12 / cols; // e.g. 2 when cols=6
+        return widgets.map(w => {
+            const newW = Math.min(Math.max(1, Math.round(w.w * factor)), cols);
+            const newX = Math.min(Math.max(0, Math.round(w.x * factor)), cols - newW);
+            return Object.assign({}, w, { x: newX, w: newW });
+        });
+    },
+
     init() {
         // Check if GridStack is loaded
         if (typeof GridStack === 'undefined') {
@@ -412,8 +429,13 @@ const DashboardManager = {
 
         // Initialise GridStack
         try {
+            // Use fewer columns on small screens (2 columns) by halving the column count
+            // Default layout is designed for 12 columns (4 columns of w=3). On small screens
+            // we use 6 columns so widgets sized w=3 become w=6 (2 columns layout).
+            this.columns = window.matchMedia('(max-width: 768px)').matches ? 6 : 12;
+
             this.grid = GridStack.init({
-                column: 12,
+                column: this.columns,
                 cellHeight: 80,
                 margin: 20,
                 float: false,
@@ -454,16 +476,19 @@ const DashboardManager = {
             
             const data = await response.json();
             
-            let widgets = data.widgets && data.widgets.length > 0 
-                ? data.widgets.map(w => ({
-                    id: w.widget_id,
-                    x: w.x,
-                    y: w.y,
-                    w: w.w,
-                    h: w.h,
-                    visible: w.visible
-                  }))
-                : this.defaultWidgets;
+                        let widgets = data.widgets && data.widgets.length > 0 
+                                ? data.widgets.map(w => ({
+                                        id: w.widget_id,
+                                        x: w.x,
+                                        y: w.y,
+                                        w: w.w,
+                                        h: w.h,
+                                        visible: w.visible
+                                    }))
+                                : this.defaultWidgets.slice();
+
+                        // Scale widgets for the current screen size (e.g. reduce 4 columns -> 2 columns)
+                        widgets = this.scaleWidgetsForDisplay(widgets);
 
             // Drop any widgets that do not have a matching template (avoids corrupted saved layouts)
             widgets = widgets.filter(w => this.templateExists(w.id));
@@ -756,13 +781,20 @@ const DashboardManager = {
         const widgets = [];
         const items = this.grid.getGridItems();
         
+        // When the UI is using a reduced column count (e.g. 6), normalize values back
+        // to canonical 12-column coordinates before saving so preferences remain device-agnostic.
+        const cols = this.columns || 12;
+        const saveFactor = cols === 12 ? 1 : (12 / cols);
+
         items.forEach(item => {
             const node = item.gridstackNode;
+            const normW = saveFactor === 1 ? node.w : Math.max(1, Math.round(node.w / saveFactor));
+            const normX = saveFactor === 1 ? node.x : Math.max(0, Math.round(node.x / saveFactor));
             widgets.push({
                 widget_id: node.id,
-                x: node.x,
+                x: normX,
                 y: node.y,
-                w: node.w,
+                w: normW,
                 h: node.h,
                 visible: true
             });
