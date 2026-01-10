@@ -238,38 +238,6 @@
         <p class="mb-0">Each log entry includes a timestamp, username, action type, and details. Use the search and filter features to find specific events.</p>
     
 
-<!-- Backup and Restore -->
-<div class="card">
-    <div class="card-header">
-        <div class="card-title">
-            <i class="fas fa-database"></i>
-            <span>Backup and Restore</span>
-        </div>
-    </div>
-    <div class="card-body">
-        <p class="mb-16">Protect your email archive with the built-in command-line backup and restore script. Backups include both the database AND the configuration file with encryption keys.</p>
-        
-        <p class="mb-12"><strong>Creating a Backup:</strong></p>
-        <pre class="code-block"><code>cd /opt/daygle-mail-archiver
-./scripts/backup_restore.sh backup</code></pre>
-        <p class="mb-16">This creates a timestamped backup file in the <code>./backups/</code> directory (or custom location) containing the complete PostgreSQL database dump and <code>daygle_mail_archiver.conf</code> file with all encryption keys.</p>
-
-        <p class="mb-12"><strong>Listing Available Backups:</strong></p>
-        <pre class="code-block"><code>./scripts/backup_restore.sh list</code></pre>
-
-        <p class="mb-12"><strong>Restoring from Backup:</strong></p>
-        <pre class="code-block"><code>./scripts/backup_restore.sh restore daygle_mail_archiver_backup_20240105_120000.tar.gz</code></pre>
-        <p class="mb-16">After restore, restart the services with: <code>docker compose restart</code></p>
-
-        <p class="mb-12"><strong>Deleting Old Backups:</strong></p>
-        <pre class="code-block"><code>./scripts/backup_restore.sh delete daygle_mail_archiver_backup_20240105_120000.tar.gz</code></pre>
-
-        <div class="alert alert-danger mb-0">
-            <i class="fas fa-exclamation-circle"></i> <strong>Security Warning:</strong> Store backups securely! They contain all email data, encryption keys (IMAP_PASSWORD_KEY, SESSION_SECRET), and database credentials. The configuration file is required to decrypt stored passwords.
-        </div>
-    </div>
-</div>
-
 <!-- Security Features -->
 <div class="card">
     <div class="card-header">
@@ -484,6 +452,38 @@
             <li class="mb-8">All reports support date range filtering and interactive charts</li>
             <li class="mb-8">Reports update automatically as new data becomes available</li>
         </ul>
+    </div>
+</div>
+
+<!-- Backup and Restore -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-database"></i>
+            <span>Backup and Restore</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <p class="mb-16">Protect your email archive with the built-in command-line backup and restore script. Backups include both the database AND the configuration file with encryption keys.</p>
+        
+        <p class="mb-12"><strong>Creating a Backup:</strong></p>
+        <pre class="code-block"><code>cd /opt/daygle-mail-archiver
+./scripts/backup_restore.sh backup</code></pre>
+        <p class="mb-16">This creates a timestamped backup file in the <code>./backups/</code> directory (or custom location) containing the complete PostgreSQL database dump and <code>daygle_mail_archiver.conf</code> file with all encryption keys.</p>
+
+        <p class="mb-12"><strong>Listing Available Backups:</strong></p>
+        <pre class="code-block"><code>./scripts/backup_restore.sh list</code></pre>
+
+        <p class="mb-12"><strong>Restoring from Backup:</strong></p>
+        <pre class="code-block"><code>./scripts/backup_restore.sh restore daygle_mail_archiver_backup_20240105_120000.tar.gz</code></pre>
+        <p class="mb-16">After restore, restart the services with: <code>docker compose restart</code></p>
+
+        <p class="mb-12"><strong>Deleting Old Backups:</strong></p>
+        <pre class="code-block"><code>./scripts/backup_restore.sh delete daygle_mail_archiver_backup_20240105_120000.tar.gz</code></pre>
+
+        <div class="alert alert-danger mb-0">
+            <i class="fas fa-exclamation-circle"></i> <strong>Security Warning:</strong> Store backups securely! They contain all email data, encryption keys (IMAP_PASSWORD_KEY, SESSION_SECRET), and database credentials. The configuration file is required to decrypt stored passwords.
+        </div>
     </div>
 </div>
 

@@ -393,11 +393,18 @@ button:focus-visible,
     gap: 0.5rem;
     font-weight: 600;
 }
-.card-body .code-block {
+/* Code block improvements: preserve whitespace, allow horizontal scroll, and ensure line-height prevents overlapping */
+pre.code-block,
+pre.code-block code {
     background: var(--bg-secondary);
     padding: 12px;
     border-radius: 6px;
-    overflow: auto;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.95rem;
+    white-space: pre;
+    line-height: 1.6;
 }
 .card .card-body p, .card .card-body ul, .card .card-body ol {
     margin-bottom: 0.75rem;
