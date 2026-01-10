@@ -18,7 +18,7 @@
         <button id="btn-customize" class="btn btn-secondary" title="Customise Dashboard">
             <i class="fas fa-cog"></i>
         </button>
-        <button id="btn-add-widget" class="btn btn-info show-on-edit" title="Add Widget">
+        <button id="btn-add-widget" class="btn btn-info show-on-edit" title="Add Widget" onclick="DashboardManager.showWidgetSelector()">
             <i class="fas fa-plus"></i>
         </button>
         <button id="btn-save-layout" class="btn btn-primary show-on-edit" title="Save Layout">
@@ -645,6 +645,7 @@ const DashboardManager = {
     },
 
     showWidgetSelector() {
+        console.debug('showWidgetSelector called');
         let modal = document.getElementById('widget-selector-modal');
         let container = document.getElementById('widget-selector-list');
         
