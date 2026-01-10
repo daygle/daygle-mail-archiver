@@ -378,8 +378,9 @@ button:focus-visible,
 
 /* Help page layout improvements */
 .help-grid {
+    /* Use single column layout for help content to improve readability */
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    grid-template-columns: 1fr;
     gap: 24px;
     align-items: start;
 }
@@ -3095,16 +3096,7 @@ a:hover {
 }
 
 /* Help page responsive grid */
-.help-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 20px;
-}
-@media (min-width: 960px) {
-    .help-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-}
+/* Help grid layout is defined earlier to keep a single source of truth */
 .help-grid .card {
     display: flex;
     flex-direction: column;
