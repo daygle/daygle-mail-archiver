@@ -3157,9 +3157,9 @@ a:hover {
 }
 
 /* Utility helpers to replace inline styles in templates */
-.d-none { display: none !important; }
-.d-inline { display: inline !important; }
-.d-inline-block { display: inline-block !important; }
+.d-none { display: none; }
+.d-inline { display: inline; }
+.d-inline-block { display: inline-block; }
 .d-grid { display: grid; }
 .d-flex { display: flex; }
 .gap-12 { gap: 12px; }
