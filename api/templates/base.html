@@ -206,13 +206,9 @@
 
             <!-- Page Content -->
             <div class="content-container">
-                {% if flash %}
-                <div class="alert alert-info alert-dismissible fade show" role="alert">
-                    <i class="fas fa-info-circle"></i>
-                    <span>{{ flash }}</span>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                {% endif %}
+                    {% if flash %}
+                    <script>window.__initialFlash = {{ flash|tojson }};</script>
+                    {% endif %}
 
                 {% block content %}{% endblock %}
             </div>
@@ -311,29 +307,7 @@
 
         function setTheme(theme) {
             html.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
-
-            // persist user preference to server when logged in and give feedback
-            try {
-                if (window.__isLoggedIn) {
-                    fetch('/api/user/theme', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ theme: theme })
-                    }).then((resp) => {
-                        if (resp.ok) {
-                            showToast('Theme saved');
-                        } else {
-                            showToast('Theme saved locally');
-                        }
-                    }).catch(() => {
-                        showToast('Theme saved locally');
-                    });
-                } else {
-                    // Not logged in — inform user choice is local only
-                    showToast('Theme applied');
-                }
-            } catch (e) {}
+            try { localStorage.setItem('theme', theme); } catch (e) {}
 
             if (theme === 'dark') {
                 themeIconLight.style.display = 'none';
@@ -344,8 +318,29 @@
             }
 
             // Emit a global event so other parts of the UI (e.g. settings page) can react
+            try { window.dispatchEvent(new CustomEvent('theme-changed', { detail: { theme: theme } })); } catch (e) {}
+        }
+
+        // Persist theme to server and show user feedback — call this only on explicit user action
+        function persistTheme(theme) {
             try {
-                window.dispatchEvent(new CustomEvent('theme-changed', { detail: { theme: theme } }));
+                if (window.__isLoggedIn) {
+                    fetch('/api/user/theme', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ theme: theme })
+                    }).then((resp) => {
+                        if (resp.ok) {
+                                showToast('Theme saved', 'success');
+                            } else {
+                                showToast('Theme saved locally', 'info');
+                            }
+                    }).catch(() => {
+                        showToast('Theme saved locally', 'info');
+                    });
+                } else {
+                    showToast('Theme applied', 'info');
+                }
             } catch (e) {}
         }
 
@@ -393,12 +388,32 @@
                 const currentTheme = html.getAttribute('data-theme');
                 const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
                 setTheme(newTheme);
+                // Persist because this was an explicit user action
+                persistTheme(newTheme);
             });
         }
 
         // Small Bootstrap toast for user feedback when preference is saved
-        function showToast(message) {
+        function showToast(message, type) {
+            // Accept either a string or an object { message: '', type: 'info' }
             try {
+                if (typeof message === 'object' && message !== null) {
+                    type = type || message.type;
+                    message = message.message || '';
+                }
+                type = (type || 'info').toLowerCase();
+
+                // map logical types to Bootstrap bg classes
+                const typeClassMap = {
+                    success: 'text-bg-success',
+                    error: 'text-bg-danger',
+                    danger: 'text-bg-danger',
+                    warning: 'text-bg-warning',
+                    info: 'text-bg-info',
+                    neutral: 'text-bg-secondary'
+                };
+                const bgClass = typeClassMap[type] || 'text-bg-secondary';
+
                 // Create toast container if missing
                 let container = document.getElementById('toastContainer');
                 if (!container) {
@@ -412,7 +427,7 @@
                 }
 
                 const toastEl = document.createElement('div');
-                toastEl.className = 'toast align-items-center text-bg-secondary border-0';
+                toastEl.className = `toast align-items-center ${bgClass} border-0`;
                 toastEl.setAttribute('role', 'alert');
                 toastEl.setAttribute('aria-live', 'assertive');
                 toastEl.setAttribute('aria-atomic', 'true');
@@ -435,6 +450,13 @@
             }
         }
 
+        // If server provided a flash message, show it as a toast for consistency
+        try {
+            if (window.__initialFlash) {
+                showToast(window.__initialFlash);
+            }
+        } catch (e) {}
+        
         // User menu dropdown
         const userMenuButton = document.getElementById('userMenuButton');
         const userMenu = userMenuButton ? userMenuButton.closest('.user-menu') : null;

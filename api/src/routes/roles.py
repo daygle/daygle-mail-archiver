@@ -19,8 +19,11 @@ def require_admin(request: Request):
     checker = PermissionChecker(request)
     return checker.has_permission("manage_roles")
 
-def flash(request: Request, message: str):
-    request.session["flash"] = message
+def flash(request: Request, message, category: str = 'info'):
+    if isinstance(message, dict):
+        request.session["flash"] = message
+    else:
+        request.session["flash"] = {"message": message, "type": category}
 
 @router.get("/roles")
 def list_roles(request: Request):
@@ -76,13 +79,13 @@ def create_role(
         display_name = re.sub(r'[_\-]+', ' ', name.strip()).title()
         slug = re.sub(r'[\s\-]+', '_', display_name).lower()
         if not display_name or len(display_name) < 2:
-            flash(request, "Role name must be at least 2 characters long")
+            flash(request, "Role name must be at least 2 characters long", 'error')
             return RedirectResponse("/roles", status_code=303)
 
         # Check if role slug already exists
         existing = query("SELECT id FROM roles WHERE name = :name", {"name": slug}).first()
         if existing:
-            flash(request, f"Role '{display_name}' already exists")
+            flash(request, f"Role '{display_name}' already exists", 'error')
             return RedirectResponse("/roles", status_code=303)
 
         # Create the role
@@ -103,12 +106,12 @@ def create_role(
                     log("error", "Roles", f"Failed to add permission {perm_id} to role {role_id}: {str(e)}")
 
         log("info", "Roles", f"Created new role '{name}' with {len(permission_ids)} permissions")
-        flash(request, f"Role '{name}' created successfully")
+        flash(request, f"Role '{name}' created successfully", 'success')
         return RedirectResponse("/roles", status_code=303)
 
     except Exception as e:
         log("error", "Roles", f"Failed to create role '{name}': {str(e)}")
-        flash(request, "Failed to create role")
+        flash(request, "Failed to create role", 'error')
         return RedirectResponse("/roles", status_code=303)
 
 @router.get("/roles/{role_id}/edit")
@@ -125,7 +128,7 @@ def edit_role_form(request: Request, role_id: int):
     """, {"role_id": role_id}).mappings().first()
 
     if not role:
-        flash(request, "Role not found")
+        flash(request, "Role not found", 'error')
         return RedirectResponse("/roles", status_code=303)
 
     # Get role's current permissions
@@ -171,7 +174,7 @@ def update_role(
         display_name = re.sub(r'[_\-]+', ' ', name.strip()).title()
         slug = re.sub(r'[\s\-]+', '_', display_name).lower()
         if not display_name or len(display_name) < 2:
-            flash(request, "Role name must be at least 2 characters long")
+            flash(request, "Role name must be at least 2 characters long", 'error')
             return RedirectResponse(f"/roles/{role_id}/edit", status_code=303)
 
         # Check if role slug already exists (excluding current role)
@@ -181,7 +184,7 @@ def update_role(
         """, {"name": slug, "role_id": role_id}).first()
 
         if existing:
-            flash(request, f"Role '{display_name}' already exists")
+            flash(request, f"Role '{display_name}' already exists", 'error')
             return RedirectResponse(f"/roles/{role_id}/edit", status_code=303)
 
         # Update the role
@@ -211,12 +214,12 @@ def update_role(
                     log("error", "Roles", f"Failed to add permission {perm_id} to role {role_id}: {str(e)}")
 
         log("info", "Roles", f"Updated role '{name}' with {len(permission_ids)} permissions")
-        flash(request, f"Role '{name}' updated successfully")
+        flash(request, f"Role '{name}' updated successfully", 'success')
         return RedirectResponse("/roles", status_code=303)
 
     except Exception as e:
         log("error", "Roles", f"Failed to update role {role_id}: {str(e)}")
-        flash(request, "Failed to update role")
+        flash(request, "Failed to update role", 'error')
         return RedirectResponse(f"/roles/{role_id}/edit", status_code=303)
 
 @router.post("/roles/{role_id}/delete")
@@ -234,7 +237,7 @@ def delete_role(request: Request, role_id: int):
         """, {"role_id": role_id}).first()
 
         if users_with_role and users_with_role["count"] > 0:
-            flash(request, "Cannot delete role that is assigned to users")
+            flash(request, "Cannot delete role that is assigned to users", 'error')
             return RedirectResponse("/roles", status_code=303)
 
         # Get role name for logging
@@ -248,10 +251,10 @@ def delete_role(request: Request, role_id: int):
         execute("DELETE FROM roles WHERE id = :role_id", {"role_id": role_id})
 
         log("info", "Roles", f"Deleted role '{role_name}'")
-        flash(request, f"Role '{role_name}' deleted successfully")
+        flash(request, f"Role '{role_name}' deleted successfully", 'success')
         return RedirectResponse("/roles", status_code=303)
 
     except Exception as e:
         log("error", "Roles", f"Failed to delete role {role_id}: {str(e)}")
-        flash(request, "Failed to delete role")
+        flash(request, "Failed to delete role", 'error')
         return RedirectResponse("/roles", status_code=303)

@@ -25,8 +25,8 @@ def require_login(request: Request):
     return "user_id" in request.session
 
 
-def flash(request: Request, message: str):
-    request.session["flash"] = message
+def flash(request: Request, message: str, category: str = 'info'):
+    request.session["flash"] = {"message": message, "type": category}
 
 
 @router.get("/fetch-accounts")
@@ -164,15 +164,15 @@ def create_account(
         username_session = request.session.get("username", "unknown")
         log("info", "Fetch Accounts", f"User '{username_session}' created fetch account '{name}' (type: {account_type})", "")
 
-        flash(request, f"{account_type.upper()} account created successfully")
+        flash(request, f"{account_type.upper()} account created successfully", "success")
         return RedirectResponse("/fetch-accounts", status_code=303)
     
     except Exception as e:
         # Handle duplicate name error
         if "duplicate key" in str(e) or "unique constraint" in str(e).lower():
-            flash(request, f"Account name '{name}' already exists. Please choose a different name.")
+            flash(request, f"Account name '{name}' already exists. Please choose a different name.", "error")
         else:
-            flash(request, f"Failed to create account: {str(e)}")
+            flash(request, f"Failed to create account: {str(e)}", "error")
         
         # Return to form with data
         account = {
@@ -270,15 +270,15 @@ def update_account(
         username_session = request.session.get("username", "unknown")
         log("info", "Fetch Accounts", f"User '{username_session}' updated fetch account '{name}' (ID: {id})", "")
 
-        flash(request, f"{account_type.upper()} account updated successfully")
+        flash(request, f"{account_type.upper()} account updated successfully", "success")
         return RedirectResponse("/fetch-accounts", status_code=303)
     
     except Exception as e:
         # Handle duplicate name error
         if "duplicate key" in str(e) or "unique constraint" in str(e).lower():
-            flash(request, f"Account name '{name}' already exists. Please choose a different name.")
+            flash(request, f"Account name '{name}' already exists. Please choose a different name.", "error")
         else:
-            flash(request, f"Failed to update account: {str(e)}")
+            flash(request, f"Failed to update account: {str(e)}", "error")
         
         # Redirect back to edit form
         return RedirectResponse(f"/fetch-accounts/{id}/edit", status_code=303)
@@ -295,7 +295,7 @@ def delete_account(request: Request, id: int, mode: str = Form(...)):
     ).mappings().first()
 
     if not account:
-        flash(request, "Account not found")
+        flash(request, "Account not found", "error")
         return RedirectResponse("/fetch-accounts", status_code=303)
 
     if mode == "retain":
@@ -303,7 +303,7 @@ def delete_account(request: Request, id: int, mode: str = Form(...)):
         query("DELETE FROM fetch_accounts WHERE id = :id", {"id": id})
         username = request.session.get("username", "unknown")
         log("info", "Fetch Accounts", f"User '{username}' deleted fetch account '{account['name']}' (ID: {id}), emails retained", "")
-        flash(request, f"Fetch account '{account['name']}' deleted. Emails retained.")
+        flash(request, f"Fetch account '{account['name']}' deleted. Emails retained.", "success")
         return RedirectResponse("/fetch-accounts", status_code=303)
 
     elif mode == "delete_messages":
@@ -318,10 +318,10 @@ def delete_account(request: Request, id: int, mode: str = Form(...)):
         username = request.session.get("username", "unknown")
         log("warning", "Fetch Accounts", f"User '{username}' deleted fetch account '{account['name']}' (ID: {id}) and all related emails", "")
 
-        flash(request, f"Fetch account '{account['name']}' and all related emails deleted.")
+        flash(request, f"Fetch account '{account['name']}' and all related emails deleted.", "success")
         return RedirectResponse("/fetch-accounts", status_code=303)
 
-    flash(request, "Invalid delete mode.")
+    flash(request, "Invalid delete mode.", "error")
     return RedirectResponse("/fetch-accounts", status_code=303)
 
 
@@ -343,7 +343,7 @@ def test_account_connection(request: Request, id: int):
     ).mappings().first()
 
     if not acc:
-        flash(request, "Account not found")
+        flash(request, "Account not found", "error")
         return RedirectResponse("/fetch-accounts", status_code=303)
 
     account_type = acc["account_type"]
@@ -364,7 +364,7 @@ def test_account_connection(request: Request, id: int):
                         conn.starttls()
                     conn.login(acc["username"], password)
                 
-                flash(request, f"IMAP connection successful to {acc['host']}")
+                flash(request, f"IMAP connection successful to {acc['host']}", "success")
             finally:
                 if conn:
                     try:
@@ -379,7 +379,7 @@ def test_account_connection(request: Request, id: int):
             
             access_token = get_valid_token(id, "gmail")
             if not access_token:
-                flash(request, "✗ Gmail authentication failed - please re-authorise")
+                flash(request, "✗ Gmail authentication failed - please re-authorise", "error")
             else:
                 # Test API call
                 headers = {"Authorization": f"Bearer {access_token}"}
@@ -390,9 +390,9 @@ def test_account_connection(request: Request, id: int):
                 )
                 if response.status_code == 200:
                     email = response.json().get("emailAddress", "unknown")
-                    flash(request, f"Gmail API connection successful ({email})")
+                    flash(request, f"Gmail API connection successful ({email})", "success")
                 else:
-                    flash(request, f"✗ Gmail API connection failed: {response.status_code}")
+                    flash(request, f"✗ Gmail API connection failed: {response.status_code}", "error")
                     
         elif account_type == "o365":
             # Test Office 365 Graph API connection
@@ -401,7 +401,7 @@ def test_account_connection(request: Request, id: int):
             
             access_token = get_valid_token(id, "o365")
             if not access_token:
-                flash(request, "✗ Office 365 authentication failed - please re-authorise")
+                flash(request, "✗ Office 365 authentication failed - please re-authorise", "error")
             else:
                 # Test API call
                 headers = {"Authorization": f"Bearer {access_token}"}
@@ -413,14 +413,14 @@ def test_account_connection(request: Request, id: int):
                 if response.status_code == 200:
                     user = response.json()
                     email = user.get("mail") or user.get("userPrincipalName", "unknown")
-                    flash(request, f"Office 365 API connection successful ({email})")
+                    flash(request, f"Office 365 API connection successful ({email})", "success")
                 else:
-                    flash(request, f"✗ Office 365 API connection failed: {response.status_code}")
+                    flash(request, f"✗ Office 365 API connection failed: {response.status_code}", "error")
         else:
-            flash(request, f"✗ Unknown account type: {account_type}")
+            flash(request, f"✗ Unknown account type: {account_type}", "error")
             
     except Exception as e:
-        flash(request, f"✗ Connection failed: {str(e)}")
+        flash(request, f"✗ Connection failed: {str(e)}", "error")
 
     return RedirectResponse("/fetch-accounts", status_code=303)
 
@@ -509,12 +509,12 @@ def test_connection(
             else:
                 conn.login(username, password)
 
-        flash(request, "Connection successful")
+        flash(request, "Connection successful", "success")
 
     except Exception as e:
         print("=== IMAP TEST ERROR ===", file=sys.stderr)
         traceback.print_exc()
-        flash(request, f"Connection failed: {str(e)}")
+        flash(request, f"Connection failed: {str(e)}", "error")
     finally:
         if conn:
             try:

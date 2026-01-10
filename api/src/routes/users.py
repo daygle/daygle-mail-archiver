@@ -14,8 +14,11 @@ router = APIRouter()
 def require_login(request: Request):
     return "user_id" in request.session
 
-def flash(request: Request, message: str):
-    request.session["flash"] = message
+def flash(request: Request, message, category: str = 'info'):
+    if isinstance(message, dict):
+        request.session["flash"] = message
+    else:
+        request.session["flash"] = {"message": message, "type": category}
 
 @router.get("/users")
 def list_users(request: Request):
@@ -71,40 +74,40 @@ def create_user(
     
     # Validate username
     if not username or len(username) < 3:
-        flash(request, "Username must be at least 3 characters long.")
+        flash(request, "Username must be at least 3 characters long.", 'error')
         return RedirectResponse("/users", status_code=303)
     
     # Check username uniqueness
     existing = query("SELECT id FROM users WHERE username = :u", {"u": username}).mappings().first()
     if existing:
-        flash(request, f"Username '{username}' already exists.")
+        flash(request, f"Username '{username}' already exists.", 'error')
         return RedirectResponse("/users", status_code=303)
     
     # Validate password strength
     if len(password) < 8:
-        flash(request, "Password must be at least 8 characters long.")
+        flash(request, "Password must be at least 8 characters long.", 'error')
         return RedirectResponse("/users", status_code=303)
     
     if not re.search(r"[a-z]", password):
-        flash(request, "Password must contain at least one lowercase letter.")
+        flash(request, "Password must contain at least one lowercase letter.", 'error')
         return RedirectResponse("/users", status_code=303)
     
     if not re.search(r"[A-Z]", password):
-        flash(request, "Password must contain at least one uppercase letter.")
+        flash(request, "Password must contain at least one uppercase letter.", 'error')
         return RedirectResponse("/users", status_code=303)
     
     if not re.search(r"[0-9]", password):
-        flash(request, "Password must contain at least one number.")
+        flash(request, "Password must contain at least one number.", 'error')
         return RedirectResponse("/users", status_code=303)
     
     # Validate email format if provided
     if email and not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email):
-        flash(request, "Invalid email format.")
+        flash(request, "Invalid email format.", 'error')
         return RedirectResponse("/users", status_code=303)
     
     # Validate that at least one role is selected
     if not role_ids:
-        flash(request, "At least one role must be assigned to the user.")
+        flash(request, "At least one role must be assigned to the user.", 'error')
         return RedirectResponse("/users", status_code=303)
     
     try:
@@ -143,11 +146,11 @@ def create_user(
             log("warning", "Users", f"Failed to sync legacy role for user {user_id}: {str(e)}")
 
         log("info", "Users", f"Admin '{admin_username}' created new user '{username}' with {len(role_ids)} roles")
-        flash(request, f"User '{username}' created successfully")
+        flash(request, f"User '{username}' created successfully", 'success')
         return RedirectResponse("/users", status_code=303)
     except Exception as e:
         log("error", "Users", f"Failed to create user '{username}' by admin '{admin_username}': {str(e)}", "")
-        flash(request, "User creation failed. Please try again.")
+        flash(request, "User creation failed. Please try again.", 'error')
     return RedirectResponse("/users", status_code=303)
 
 @router.get("/api/users/{user_id}")
@@ -231,7 +234,7 @@ def update_user(
     
     # Validate username
     if not username or len(username) < 3:
-        flash(request, "Username must be at least 3 characters long.")
+        flash(request, "Username must be at least 3 characters long.", 'error')
         return RedirectResponse("/users", status_code=303)
     
     # Check username uniqueness (excluding current user)
@@ -240,36 +243,36 @@ def update_user(
         {"u": username, "id": user_id}
     ).mappings().first()
     if existing:
-        flash(request, f"Username '{username}' already exists.")
+        flash(request, f"Username '{username}' already exists.", 'error')
         return RedirectResponse("/users", status_code=303)
     
     # Validate email format if provided
     if email and not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email):
-        flash(request, "Invalid email format.")
+        flash(request, "Invalid email format.", 'error')
         return RedirectResponse("/users", status_code=303)
     
     # Validate that at least one role is selected
     if not role_ids:
-        flash(request, "At least one role must be assigned to the user.")
+        flash(request, "At least one role must be assigned to the user.", 'error')
         return RedirectResponse(f"/users/{user_id}/edit", status_code=303)
     
     try:
         if password:
             # Validate password strength if changing
             if len(password) < 8:
-                flash(request, "Password must be at least 8 characters long.")
+                flash(request, "Password must be at least 8 characters long.", 'error')
                 return RedirectResponse("/users", status_code=303)
             
             if not re.search(r"[a-z]", password):
-                flash(request, "Password must contain at least one lowercase letter.")
+                flash(request, "Password must contain at least one lowercase letter.", 'error')
                 return RedirectResponse("/users", status_code=303)
             
             if not re.search(r"[A-Z]", password):
-                flash(request, "Password must contain at least one uppercase letter.")
+                flash(request, "Password must contain at least one uppercase letter.", 'error')
                 return RedirectResponse("/users", status_code=303)
             
             if not re.search(r"[0-9]", password):
-                flash(request, "Password must contain at least one number.")
+                flash(request, "Password must contain at least one number.", 'error')
                 return RedirectResponse("/users", status_code=303)
             
             # Update with new password
@@ -330,10 +333,10 @@ def update_user(
             except Exception as e:
                 log("warning", "Users", f"Failed to update role assignments for user {user_id}: {str(e)}")
 
-            flash(request, "User updated successfully.")
+            flash(request, "User updated successfully.", 'success')
     except Exception as e:
         log("error", "Users", f"Failed to update user {user_id} by admin '{admin_username}': {str(e)}", "")
-        flash(request, "User update failed. Please try again.")
+        flash(request, "User update failed. Please try again.", 'error')
     
     return RedirectResponse("/users", status_code=303)
 
@@ -346,7 +349,7 @@ def delete_user(request: Request, user_id: int):
     admin_username = request.session.get("username", "unknown")
     
     if user_id == current_user_id:
-        flash(request, "Cannot delete your own account.")
+        flash(request, "Cannot delete your own account.", 'error')
         return RedirectResponse("/users", status_code=303)
 
     try:
@@ -356,13 +359,13 @@ def delete_user(request: Request, user_id: int):
 
         execute("DELETE FROM users WHERE id = :id", {"id": user_id})
         log("info", "Users", f"Admin '{admin_username}' deleted user '{username}' (ID: {user_id})", "")
-        flash(request, "User deleted successfully.")
+        flash(request, "User deleted successfully.", 'success')
     except Exception as e:
         error_msg = str(e).lower()
         if "foreign key" in error_msg:
-            flash(request, "Cannot delete user due to existing references. Please reassign or clear their data first.")
+            flash(request, "Cannot delete user due to existing references. Please reassign or clear their data first.", 'error')
         else:
-            flash(request, "User deletion failed. Please try again.")
+            flash(request, "User deletion failed. Please try again.", 'error')
         log("error", "Users", f"Failed to delete user {user_id} by admin '{admin_username}': {str(e)}", "")
     return RedirectResponse("/users", status_code=303)
 
@@ -375,14 +378,14 @@ def toggle_user_enabled(request: Request, user_id: int):
     admin_username = request.session.get("username", "unknown")
     
     if user_id == current_user_id:
-        flash(request, "Cannot disable your own account.")
+        flash(request, "Cannot disable your own account.", 'error')
         return RedirectResponse("/users", status_code=303)
 
     try:
         # Get username for logging
         user = query("SELECT username, enabled FROM users WHERE id = :id", {"id": user_id}).mappings().first()
         if not user:
-            flash(request, "User not found.")
+            flash(request, "User not found.", 'error')
             return RedirectResponse("/users", status_code=303)
         
         # Toggle the enabled status
@@ -392,8 +395,8 @@ def toggle_user_enabled(request: Request, user_id: int):
         )
         new_status = "disabled" if user["enabled"] else "enabled"
         log("info", "Users", f"Admin '{admin_username}' {new_status} user '{user['username']}' (ID: {user_id})", "")
-        flash(request, "User status updated successfully.")
+        flash(request, "User status updated successfully.", 'success')
     except Exception as e:
         log("error", "Users", f"Failed to toggle user {user_id} by admin '{admin_username}': {str(e)}", "")
-        flash(request, "User status update failed. Please try again.")
+        flash(request, "User status update failed. Please try again.", 'error')
     return RedirectResponse("/users", status_code=303)

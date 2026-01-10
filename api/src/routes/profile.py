@@ -14,8 +14,11 @@ router = APIRouter()
 def require_login(request: Request):
     return "user_id" in request.session
 
-def flash(request: Request, message: str):
-    request.session["flash"] = message
+def flash(request: Request, message, category: str = 'info'):
+    if isinstance(message, dict):
+        request.session["flash"] = message
+    else:
+        request.session["flash"] = {"message": message, "type": category}
 
 @router.get("/api/user/profile")
 def get_user_profile(request: Request):
@@ -66,40 +69,40 @@ def change_password(
     user = query("SELECT password_hash FROM users WHERE id = :id", {"id": user_id}).mappings().first()
 
     if not user:
-        flash(request, "User not found.")
+        flash(request, "User not found.", 'error')
         return RedirectResponse("/profile", status_code=303)
     
     # Verify current password
     try:
         if not bcrypt.checkpw(current_password.encode('utf-8'), user["password_hash"].encode('utf-8')):
             log("warning", "Security", f"User '{username}' failed password change - incorrect current password", "")
-            flash(request, "Current password is incorrect.")
+            flash(request, "Current password is incorrect.", 'error')
             return RedirectResponse("/profile", status_code=303)
     except Exception as e:
         log("error", "Security", f"Password verification error for user '{username}': {str(e)}", "")
-        flash(request, "An error occurred. Please try again.")
+        flash(request, "An error occurred. Please try again.", 'error')
         return RedirectResponse("/profile", status_code=303)
 
     # Validate new password
     if new_password != confirm_password:
-        flash(request, "New passwords do not match.")
+        flash(request, "New passwords do not match.", 'error')
         return RedirectResponse("/profile", status_code=303)
 
     if len(new_password) < 8:
-        flash(request, "New password must be at least 8 characters long.")
+        flash(request, "New password must be at least 8 characters long.", 'error')
         return RedirectResponse("/profile", status_code=303)
     
     # Check password complexity
     if not re.search(r"[a-z]", new_password):
-        flash(request, "Password must contain at least one lowercase letter.")
+        flash(request, "Password must contain at least one lowercase letter.", 'error')
         return RedirectResponse("/profile", status_code=303)
     
     if not re.search(r"[A-Z]", new_password):
-        flash(request, "Password must contain at least one uppercase letter.")
+        flash(request, "Password must contain at least one uppercase letter.", 'error')
         return RedirectResponse("/profile", status_code=303)
     
     if not re.search(r"[0-9]", new_password):
-        flash(request, "Password must contain at least one number.")
+        flash(request, "Password must contain at least one number.", 'error')
         return RedirectResponse("/profile", status_code=303)
 
     try:
@@ -107,11 +110,11 @@ def change_password(
         execute("UPDATE users SET password_hash = :h WHERE id = :id", {"h": hash_pw, "id": user_id})
         
         log("warning", "Security", f"User '{username}' successfully changed their password", "")
-        flash(request, "Password changed successfully.")
+        flash(request, "Password changed successfully.", 'success')
         return RedirectResponse("/profile", status_code=303)
     except Exception as e:
         log("error", "Security", f"Failed to update password for user '{username}': {str(e)}", "")
-        flash(request, "Failed to update password. Please try again.")
+        flash(request, "Failed to update password. Please try again.", 'error')
         return RedirectResponse("/profile", status_code=303)
 
 @router.post("/profile/update-info")
@@ -129,7 +132,7 @@ def update_info(
     
     # Validate email format if provided
     if email and not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email):
-        flash(request, "Invalid email format.")
+        flash(request, "Invalid email format.", 'error')
         return RedirectResponse("/profile", status_code=303)
     
     try:
@@ -140,11 +143,11 @@ def update_info(
         """, {"fn": first_name.strip(), "ln": last_name.strip(), "e": email.strip(), "id": user_id})
         
         log("info", "Profile", f"User '{username}' updated their profile information", "")
-        flash(request, "Profile updated successfully.")
+        flash(request, "Profile updated successfully.", 'success')
         return RedirectResponse("/profile", status_code=303)
     except Exception as e:
         log("error", "Profile", f"Failed to update profile for user '{username}': {str(e)}", "")
-        flash(request, "Failed to update profile. Please try again.")
+        flash(request, "Failed to update profile. Please try again.", 'error')
         return RedirectResponse("/profile", status_code=303)
 
 @router.get("/user-settings")
@@ -199,7 +202,7 @@ def update_user_settings(request: Request, page_size: int = Form(...), date_form
     
     # Validate page_size
     if page_size < 10 or page_size > 500:
-        flash(request, "Items per page must be between 10 and 500.")
+        flash(request, "Items per page must be between 10 and 500.", 'error')
         return RedirectResponse("/user-settings", status_code=303)
     
     try:
@@ -240,11 +243,11 @@ def update_user_settings(request: Request, page_size: int = Form(...), date_form
         if changed_settings:
             log("info", "Settings", f"User '{username}' updated their settings ({', '.join(changed_settings)})", "")
         
-        flash(request, "User settings updated successfully.")
+        flash(request, "User settings updated successfully.", 'success')
         return RedirectResponse("/user-settings", status_code=303)
     except Exception as e:
         log("error", "Settings", f"Failed to update settings for user '{username}': {str(e)}", "")
-        flash(request, "Failed to update settings. Please try again.")
+        flash(request, "Failed to update settings. Please try again.", 'error')
         return RedirectResponse("/user-settings", status_code=303)
 
 

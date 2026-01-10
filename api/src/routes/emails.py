@@ -20,8 +20,8 @@ def require_login(request: Request):
     return "user_id" in request.session
 
 
-def flash(request: Request, message: str):
-    request.session["flash"] = message
+def flash(request: Request, message: str, category: str = 'info'):
+    request.session["flash"] = {"message": message, "type": category}
 
 
 @router.get("/emails", response_class=HTMLResponse)
@@ -208,7 +208,7 @@ def quarantine_single_email(request: Request, email_id: int):
         return RedirectResponse("/login", status_code=303)
     
     if not can_delete(request):
-        flash(request, "You don't have permission to quarantine emails.")
+        flash(request, "You don't have permission to quarantine emails.", 'error')
         return RedirectResponse(f"/emails/{email_id}", status_code=303)
 
     quarantined = _quarantine_emails([email_id], request.session.get("username", "unknown"))
@@ -229,9 +229,9 @@ def quarantine_single_email(request: Request, email_id: int):
         log("error", "Emails", f"Failed to create quarantine alert: {str(e)}", "")
     
     if quarantined > 0:
-        flash(request, "Email quarantined successfully.")
+        flash(request, "Email quarantined successfully.", 'success')
     else:
-        flash(request, "Email could not be quarantined (may already be quarantined).")
+        flash(request, "Email could not be quarantined (may already be quarantined).", 'error')
     
     return RedirectResponse("/emails", status_code=303)
 
@@ -251,7 +251,7 @@ def perform_delete(
         return RedirectResponse("/login", status_code=303)
     
     if not can_delete(request):
-        flash(request, "You don't have permission to delete emails.")
+        flash(request, "You don't have permission to delete emails.", 'error')
         return RedirectResponse("/emails", status_code=303)
 
     if not isinstance(ids, list):
@@ -261,7 +261,7 @@ def perform_delete(
         deleted = _delete_emails_from_db(ids)
         username = request.session.get("username", "unknown")
         log("warning", "Emails", f"User '{username}' deleted {deleted} email(s) from database (IDs: {ids})", "")
-        flash(request, f"Deleted {deleted} email(s) from the database.")
+        flash(request, f"Deleted {deleted} email(s) from the database.", 'success')
         return RedirectResponse("/emails", status_code=303)
 
     elif mode == "imap":
@@ -274,18 +274,20 @@ def perform_delete(
             flash(
                 request,
                 f"Deleted {deleted} email(s) from database and mail server. Some errors occurred: {error_text}",
+                'error'
             )
         else:
             log("warning", "Emails", f"User '{username}' deleted {deleted} email(s) from IMAP and database (IDs: {ids})", "")
             flash(
                 request,
                 f"Deleted {deleted} email(s) from database and mail server.",
+                'success'
             )
 
         return RedirectResponse("/emails", status_code=303)
 
     else:
-        flash(request, "Invalid delete mode selected.")
+        flash(request, "Invalid delete mode selected.", 'error')
         return RedirectResponse("/emails", status_code=303)
 
 
@@ -301,7 +303,7 @@ def perform_quarantine(
         return RedirectResponse("/login", status_code=303)
     
     if not can_delete(request):  # Assuming quarantine requires same permission as delete
-        flash(request, "You don't have permission to quarantine emails.")
+        flash(request, "You don't have permission to quarantine emails.", 'error')
         return RedirectResponse("/emails", status_code=303)
 
     if not isinstance(ids, list):
@@ -325,9 +327,9 @@ def perform_quarantine(
         log("error", "Emails", f"Failed to create quarantine alert: {str(e)}", "")
     
     if quarantined > 0:
-        flash(request, f"Quarantined {quarantined} email(s).")
+        flash(request, f"Quarantined {quarantined} email(s).", 'success')
     else:
-        flash(request, "No emails were quarantined.")
+        flash(request, "No emails were quarantined.", 'info')
     
     return RedirectResponse("/emails", status_code=303)
 

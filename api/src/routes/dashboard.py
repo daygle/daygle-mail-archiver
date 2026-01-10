@@ -29,9 +29,9 @@ class DashboardLayout(BaseModel):
     widgets: List[WidgetPreference]
 
 
-def flash(request: Request, message: str):
+def flash(request: Request, message: str, category: str = 'info'):
     session = getattr(request, 'session', {})
-    session["flash"] = message
+    session["flash"] = {"message": message, "type": category}
 
 
 def get_user_date_format(request: Request, date_only: bool = False) -> str:
@@ -214,12 +214,12 @@ async def save_dashboard_preferences(request: Request, widgets: str = Form(...))
 
         username = getattr(request, "session", {}).get("username", "unknown")
         log("info", "Dashboard", f"User '{username}' saved dashboard preferences", "")
-        flash(request, "Dashboard layout saved successfully!")
+        flash(request, "Dashboard layout saved successfully!", 'success')
         return RedirectResponse("/dashboard", status_code=303)
     except Exception as e:
         username = getattr(request, "session", {}).get("username", "unknown")
         log("error", "Dashboard", f"Failed to save dashboard preferences for user '{username}': {str(e)}", "")
-        flash(request, "Failed to save dashboard layout")
+        flash(request, "Failed to save dashboard layout", 'error')
         return RedirectResponse("/dashboard", status_code=303)
 
 

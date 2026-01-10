@@ -11,8 +11,11 @@ router = APIRouter()
 def require_login(request: Request):
     return "user_id" in request.session
 
-def flash(request: Request, message: str):
-    request.session["flash"] = message
+def flash(request: Request, message, category: str = 'info'):
+    if isinstance(message, dict):
+        request.session["flash"] = message
+    else:
+        request.session["flash"] = {"message": message, "type": category}
 
 @router.get("/global-settings")
 def settings_form(request: Request):
@@ -137,7 +140,7 @@ def save_settings(
         # If default_theme changed, optionally inform or update behaviour (no further action required here).
     except Exception as e:
         log("error", "Settings", f"Failed to save settings: {str(e)}", "")
-        flash(request, f"Failed to save settings: {str(e)}")
+        flash(request, f"Failed to save settings: {str(e)}", 'error')
         return RedirectResponse("/global-settings", status_code=303)
 
     # Log only changed fields
@@ -167,35 +170,35 @@ def save_settings(
         'smtp_from_name': smtp_from_name,
     }
 
-    flash(request, "Settings updated successfully.")
+    flash(request, "Settings updated successfully.", 'success')
     return RedirectResponse("/global-settings", status_code=303)
 
 @router.post("/api/test-smtp")
 def test_smtp(request: Request):
     """Test SMTP connection and send a test email to the current user"""
     if not require_login(request):
-        flash(request, "You must be logged in to test SMTP.")
+        flash(request, "You must be logged in to test SMTP.", 'error')
         return RedirectResponse("/login", status_code=303)
 
     try:
         # Get current user's email address
         user_id = request.session.get("user_id")
         if not user_id:
-            flash(request, "User session not found.")
+            flash(request, "User session not found.", 'error')
             return RedirectResponse("/global-settings", status_code=303)
         
         user = query("SELECT email FROM users WHERE id = :id", {"id": int(user_id)}).mappings().first()
         if not user or not user.get("email"):
-            flash(request, "Your account does not have an email address configured.")
+            flash(request, "Your account does not have an email address configured.", 'error')
             return RedirectResponse("/global-settings", status_code=303)
 
         success, message = test_smtp_connection(user["email"], int(user_id))
         if success:
-            flash(request, f"SMTP test successful: {message}")
+            flash(request, f"SMTP test successful: {message}", 'success')
         else:
-            flash(request, f"SMTP test failed: {message}")
+            flash(request, f"SMTP test failed: {message}", 'error')
     except Exception as e:
         log("error", "Settings", f"SMTP test failed: {str(e)}", "")
-        flash(request, f"SMTP test failed: {str(e)}")
+        flash(request, f"SMTP test failed: {str(e)}", 'error')
     
     return RedirectResponse("/global-settings", status_code=303)

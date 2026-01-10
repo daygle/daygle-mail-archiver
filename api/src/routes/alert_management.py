@@ -17,8 +17,8 @@ def require_admin(request: Request):
     checker = PermissionChecker(request)
     return checker.has_permission("manage_alerts")
 
-def flash(request: Request, message: str):
-    request.session["flash"] = message
+def flash(request: Request, message: str, category: str = 'info'):
+    request.session["flash"] = {"message": message, "type": category}
 
 @router.get("/alert-management")
 def alert_management_form(request: Request):
@@ -65,11 +65,11 @@ def update_trigger_status(request: Request, trigger_id: int = Form(...), enabled
 
         log("info", "Alert Management", f"Alert trigger '{trigger_name}' {'enabled' if enabled else 'disabled'}", "")
 
-        flash(request, f"Alert trigger '{trigger_name}' {'enabled' if enabled else 'disabled'} successfully.")
+        flash(request, f"Alert trigger '{trigger_name}' {'enabled' if enabled else 'disabled'} successfully.", 'success')
         return RedirectResponse("/alert-management", status_code=303)
     except Exception as e:
         log("error", "Alert Management", f"Failed to update trigger status: {str(e)}", "")
-        flash(request, "Failed to update trigger status.")
+        flash(request, "Failed to update trigger status.", 'error')
         return RedirectResponse("/alert-management", status_code=303)
 
 @router.post("/alert-management/triggers/update-severity")
@@ -80,7 +80,7 @@ def update_trigger_severity(request: Request, trigger_id: int = Form(...), alert
     # Validate alert_type
     valid_types = ['error', 'warning', 'info', 'success']
     if alert_type not in valid_types:
-        flash(request, f"Invalid alert type: {alert_type}")
+        flash(request, f"Invalid alert type: {alert_type}", 'error')
         return RedirectResponse("/alert-management", status_code=303)
 
     try:
@@ -92,9 +92,9 @@ def update_trigger_severity(request: Request, trigger_id: int = Form(...), alert
 
         log("info", "Alert Management", f"Alert trigger '{trigger_name}' severity changed to {alert_type}", "")
 
-        flash(request, f"Alert trigger '{trigger_name}' severity updated to {alert_type}.")
+        flash(request, f"Alert trigger '{trigger_name}' severity updated to {alert_type}.", 'success')
         return RedirectResponse("/alert-management", status_code=303)
     except Exception as e:
         log("error", "Alert Management", f"Failed to update trigger severity: {str(e)}", "")
-        flash(request, "Failed to update trigger severity.")
+        flash(request, "Failed to update trigger severity.", 'error')
         return RedirectResponse("/alert-management", status_code=303)

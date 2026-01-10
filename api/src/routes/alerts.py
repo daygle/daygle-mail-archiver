@@ -15,8 +15,8 @@ router = APIRouter()
 def require_login(request: Request):
     return "user_id" in request.session
 
-def flash(request: Request, message: str):
-    request.session["flash"] = message
+def flash(request: Request, message: str, category: str = 'info'):
+    request.session["flash"] = {"message": message, "type": category}
 
 @router.get("/alerts")
 def alerts_page(
@@ -104,7 +104,7 @@ def acknowledge_alert_api(request: Request, alert_id: int):
 
     user_id = request.session.get("user_id")
     if not user_id:
-        flash(request, "User not found")
+        flash(request, "User not found", 'error')
         return RedirectResponse("/alerts", status_code=303)
 
     try:
@@ -112,14 +112,14 @@ def acknowledge_alert_api(request: Request, alert_id: int):
         if success:
             username = request.session.get("username", "unknown")
             log("info", "Alerts", f"User '{username}' acknowledged alert ID {alert_id}", "")
-            flash(request, "Alert acknowledged successfully!")
+            flash(request, "Alert acknowledged successfully!", 'success')
             return RedirectResponse("/alerts", status_code=303)
         else:
-            flash(request, "Alert not found or already acknowledged")
+            flash(request, "Alert not found or already acknowledged", 'info')
             return RedirectResponse("/alerts", status_code=303)
     except Exception as e:
         log("error", "Alerts", f"Failed to acknowledge alert {alert_id}: {str(e)}", "")
-        flash(request, "Failed to acknowledge alert")
+        flash(request, "Failed to acknowledge alert", 'error')
         return RedirectResponse("/alerts", status_code=303)
 
 @router.get("/api/alerts/unacknowledged-count")
@@ -150,20 +150,20 @@ def create_alert_api(
 
     checker = PermissionChecker(request)
     if not checker.has_permission("manage_alerts"):
-        flash(request, "Access denied")
+        flash(request, "Access denied", 'error')
         return RedirectResponse("/alerts", status_code=303)
 
     if alert_type not in ['error', 'warning', 'info', 'success']:
-        flash(request, "Invalid alert type")
+        flash(request, "Invalid alert type", 'error')
         return RedirectResponse("/alerts", status_code=303)
 
     try:
         alert_id = create_alert(alert_type, title, message, details, send_email)
         username = request.session.get("username", "unknown")
         log("info", "Alerts", f"Admin '{username}' created {alert_type} alert: {title}", "")
-        flash(request, "Test alert created successfully!")
+        flash(request, "Test alert created successfully!", 'success')
         return RedirectResponse("/alerts", status_code=303)
     except Exception as e:
         log("error", "Alerts", f"Failed to create alert: {str(e)}", "")
-        flash(request, "Failed to create test alert")
+        flash(request, "Failed to create test alert", 'error')
         return RedirectResponse("/alerts", status_code=303)
