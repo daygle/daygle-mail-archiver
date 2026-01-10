@@ -1316,21 +1316,20 @@ textarea.form-control {
 .theme-toggle-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px 12px;
+    gap: 8px; /* match .dropdown-item spacing */
+    padding: 12px 16px; /* match .dropdown-item padding */
     color: var(--text-primary);
     background: transparent;
     border: none;
     width: 100%;
     text-align: left;
     cursor: pointer;
-    font-size: 0.9375rem;
+    font-size: 0.875rem; /* match .dropdown-item font-size */
 }
 .theme-toggle-item i {
-    width: 18px;
+    width: 16px;
     text-align: center;
-    font-size: 1rem;
-    color: var(--text-secondary);
+    /* inherit color/font-size from parent to match other items */
 }
 .theme-toggle-item:hover {
     background: var(--bg-hover);
@@ -1882,6 +1881,27 @@ textarea.form-control {
 .text-left { text-align: left; }
 
 .mt-1 { margin-top: 0.5rem; }
+
+/* Responsive table column helpers
+   - Use `.hide-mobile` on `th`/`td` to hide on small screens (<= 767px)
+   - Use `.hide-sm` to hide on small and below (<= 575px)
+   - Use `.show-xs` to force show on extra-small when needed
+*/
+.hide-mobile { display: table-cell; }
+.hide-sm { display: table-cell; }
+
+@media (max-width: 767px) {
+    .hide-mobile { display: none !important; }
+}
+
+@media (max-width: 575px) {
+    .hide-sm { display: none !important; }
+}
+
+/* Ensure hidden table header/cell spacing doesn't collapse on some browsers */
+th.hide-mobile, td.hide-mobile, th.hide-sm, td.hide-sm {
+    white-space: nowrap;
+}
 .mt-2 { margin-top: 1rem; }
 .mt-3 { margin-top: 1.5rem; }
 .mt-4 { margin-top: 2rem; }

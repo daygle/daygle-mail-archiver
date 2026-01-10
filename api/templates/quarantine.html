@@ -73,10 +73,10 @@
                             <input type="checkbox" id="select-all" class="form-check-input">
                         </th>
                         {% endif %}
-                        <th>ID</th>
+                        <th class="hide-mobile">ID</th>
                         <th>Subject</th>
                         <th>Sender</th>
-                        <th>Virus</th>
+                        <th class="hide-mobile">Virus</th>
                         <th>Quarantined At</th>
                         <th>Actions</th>
                     </tr>
@@ -89,10 +89,10 @@
                             <input type="checkbox" name="ids" value="{{ i.id }}" class="form-check-input quarantine-checkbox">
                         </td>
                         {% endif %}
-                        <td>{{ i.id }}</td>
+                        <td class="hide-mobile">{{ i.id }}</td>
                         <td>{{ i.subject or '(no subject)' }}</td>
                         <td>{{ i.sender or 'unknown' }}</td>
-                        <td>{{ i.virus_name or '' }}</td>
+                        <td class="hide-mobile">{{ i.virus_name or '' }}</td>
                         <td>{{ i.quarantined_at }}</td>
                         <td>
                             <a class="btn btn-sm btn-primary" href="/quarantine/{{ i.id }}">View</a>

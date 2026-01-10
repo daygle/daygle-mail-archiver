@@ -77,10 +77,10 @@
                             </th>
                             {% endif %}
                             <th>Date</th>
-                            <th>Account</th>
-                            <th>Folder</th>
+                            <th class="hide-mobile">Account</th>
+                            <th class="hide-mobile">Folder</th>
                             <th>From</th>
-                            <th>To</th>
+                            <th class="hide-mobile">To</th>
                             <th>Subject</th>
                             <th class="col-center">
                                 <i class="fas fa-shield-virus" title="Virus Scan"></i>
@@ -96,14 +96,14 @@
                             </td>
                             {% endif %}
                             <td>{{ email.date }}</td>
-                            <td>
+                            <td class="hide-mobile">
                                 <span class="badge badge-primary">{{ email.source }}</span>
                             </td>
-                            <td>
+                            <td class="hide-mobile">
                                 <span class="badge badge-secondary">{{ email.folder }}</span>
                             </td>
                             <td>{{ email.sender }}</td>
-                            <td>{{ email.recipients }}</td>
+                            <td class="hide-mobile">{{ email.recipients }}</td>
                             <td>
                                 <a href="/emails/{{ email.id }}" class="link">
                                     {{ email.subject or "(no subject)" }}

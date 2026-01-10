@@ -86,7 +86,7 @@
                 <tr>
                     <th>Time</th>
                     <th>Level</th>
-                    <th>Source</th>
+                    <th class="hide-mobile">Source</th>
                     <th>Message</th>
                 </tr>
             </thead>
@@ -105,7 +105,7 @@
                             <span class="badge badge-secondary">{{ e.level }}</span>
                         {% endif %}
                     </td>
-                    <td><span class="badge badge-secondary">{{ e.source_label }}</span></td>
+                    <td class="hide-mobile"><span class="badge badge-secondary">{{ e.source_label }}</span></td>
                     <td>{{ e.message }}</td>
                 </tr>
                 {% endfor %}

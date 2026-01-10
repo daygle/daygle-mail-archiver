@@ -204,9 +204,9 @@
                             <th>Type</th>
                             <th>Host/Service</th>
                             <th>User</th>
-                            <th>Poll Interval</th>
+                            <th class="hide-mobile">Poll Interval</th>
                             <th>Enabled</th>
-                            <th>Last Success</th>
+                            <th class="hide-mobile">Last Success</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -233,7 +233,7 @@
                                 {% endif %}
                             </td>
                             <td>{{ acc.username or '-' }}</td>
-                            <td>{{ acc.poll_interval_seconds }}s</td>
+                            <td class="hide-mobile">{{ acc.poll_interval_seconds }}s</td>
                             <td>
                                 {% if acc.enabled %}
                                     <span class="badge badge-success"><i class="fas fa-check"></i> Enabled</span>
@@ -241,7 +241,7 @@
                                     <span class="badge badge-danger"><i class="fas fa-times"></i> Disabled</span>
                                 {% endif %}
                             </td>
-                            <td>
+                            <td class="hide-mobile">
                                 {% if acc.last_success %}
                                     <small>{{ acc.last_success.strftime(request.session.get('date_format', '%d/%m/%Y %H:%M')) }}</small>
                                 {% else %}

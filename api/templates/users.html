@@ -121,10 +121,10 @@
                             <th>Username</th>
                             <th>Name</th>
                             <th>Email</th>
-                            <th>Roles</th>
+                            <th class="hide-mobile">Roles</th>
                             <th>Status</th>
-                            <th>Created</th>
-                            <th>Last Login</th>
+                            <th class="hide-mobile">Created</th>
+                            <th class="hide-mobile">Last Login</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -134,7 +134,7 @@
                             <td><strong>{{ user.username }}</strong></td>
                             <td>{{ (user.first_name or '') ~ ' ' ~ (user.last_name or '') if user.first_name or user.last_name else '-' }}</td>
                             <td>{{ user.email or '-' }}</td>
-                            <td>
+                            <td class="hide-mobile">
                                 {% if user.roles %}
                                     {% for role in user.roles.split(', ') %}
                                         <span class="badge badge-secondary">{{ role }}</span>
@@ -150,8 +150,8 @@
                                     <span class="badge badge-danger"><i class="fas fa-times"></i> Disabled</span>
                                 {% endif %}
                             </td>
-                            <td><small>{{ user.created_at | format_user_datetime(request.session.user_id) }}</small></td>
-                            <td>
+                            <td class="hide-mobile"><small>{{ user.created_at | format_user_datetime(request.session.user_id) }}</small></td>
+                            <td class="hide-mobile">
                                 {% if user.last_login %}
                                     <small>{{ user.last_login | format_user_datetime(request.session.user_id) }}</small>
                                 {% else %}

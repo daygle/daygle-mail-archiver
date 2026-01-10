@@ -26,10 +26,10 @@
                         <th>Status</th>
                         <th>Account Name</th>
                         <th>Type</th>
-                        <th>Last Heartbeat</th>
-                        <th>Last Success</th>
-                        <th>Poll Interval</th>
-                        <th>Last Error</th>
+                        <th class="hide-mobile">Last Heartbeat</th>
+                        <th class="hide-mobile">Last Success</th>
+                        <th class="hide-mobile">Poll Interval</th>
+                        <th class="hide-mobile">Last Error</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -65,7 +65,7 @@
                                 {{ acc.account_type|upper }}
                             </span>
                         </td>
-                        <td>
+                        <td class="hide-mobile">
                             {% if acc.last_heartbeat %}
                                 <div><strong>{{ acc.heartbeat_ago }}</strong></div>
                                 <small style="color: var(--text-secondary);">{{ acc.last_heartbeat | format_user_datetime(request.session.user_id) }}</small>
@@ -73,7 +73,7 @@
                                 <span style="color: var(--text-secondary);">Never</span>
                             {% endif %}
                         </td>
-                        <td>
+                        <td class="hide-mobile">
                             {% if acc.last_success %}
                                 <div style="color: var(--success); font-weight: 600;">{{ acc.success_ago }}</div>
                                 <small style="color: var(--text-secondary);">{{ acc.last_success | format_user_datetime(request.session.user_id) }}</small>
@@ -81,14 +81,14 @@
                                 <span style="color: var(--text-secondary);">Never</span>
                             {% endif %}
                         </td>
-                        <td>
+                        <td class="hide-mobile">
                             {% if acc.poll_interval %}
                                 {{ acc.poll_interval }}s
                             {% else %}
                                 <span style="color: var(--text-secondary);">Default (300s)</span>
                             {% endif %}
                         </td>
-                        <td>
+                        <td class="hide-mobile">
                             {% if acc.last_error %}
                                 <span style="color: var(--danger);">
                                     <i class="fas fa-exclamation-circle"></i>
