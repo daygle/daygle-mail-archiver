@@ -650,21 +650,38 @@ const DashboardManager = {
         
         if (!modal || !container) {
             console.error('Modal or container not found', { modal, container });
-            return;
+            // Try a fallback selector for the container and modal
+            const fallbackModal = document.querySelector('#widget-selector-modal');
+            const fallbackContainer = document.querySelector('#widget-selector-list');
+            if (!fallbackModal || !fallbackContainer) return;
+            modal = fallbackModal; // eslint-disable-line no-param-reassign
+            container = fallbackContainer; // eslint-disable-line no-param-reassign
         }
-        
         container.innerHTML = '';
 
-        // Get currently visible widgets
+        // Determine currently visible widgets. Use GridStack if available, otherwise fall back to DOM lookup.
         const visibleWidgets = new Set();
-        const items = this.grid.getGridItems();
-        items.forEach(item => {
-            if (item.gridstackNode) {
-                visibleWidgets.add(item.gridstackNode.id);
+        try {
+            if (this.grid && typeof this.grid.getGridItems === 'function') {
+                const items = this.grid.getGridItems() || [];
+                items.forEach(item => {
+                    try {
+                        if (item && item.gridstackNode && item.gridstackNode.id) visibleWidgets.add(item.gridstackNode.id);
+                    } catch (e) { /* ignore item */ }
+                });
             }
-        });
+        } catch (e) {
+            console.warn('GridStack getGridItems failed; falling back to DOM check', e);
+        }
 
-        // Show all available widgets
+        // DOM fallback: if GridStack didn't report items, check for existing widget elements
+        if (visibleWidgets.size === 0) {
+            this.defaultWidgets.forEach(w => {
+                if (document.getElementById(`widget-${w.id}`)) visibleWidgets.add(w.id);
+            });
+        }
+
+        // Always populate the selector from defaultWidgets so it's visible even if detection fails
         this.defaultWidgets.forEach(widget => {
             const isVisible = visibleWidgets.has(widget.id);
             const item = document.createElement('div');
@@ -677,15 +694,15 @@ const DashboardManager = {
                     ${isVisible ? '<i class="fas fa-check"></i> Added' : '<i class="fas fa-plus"></i> Add'}
                 </div>
             `;
-            
+
             if (!isVisible) {
                 item.addEventListener('click', () => {
                     this.addWidget(widget);
-                    this.loadWidgetData(widget.id);
+                    try { this.loadWidgetData(widget.id); } catch (e) { /* ignore */ }
                     this.hideModal(modal);
                 });
             }
-            
+
             container.appendChild(item);
         });
 
