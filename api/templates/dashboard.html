@@ -711,13 +711,18 @@ const DashboardManager = {
     },
 
     showModal(modal) {
+        // Remove Bootstrap d-none (display: none !important) and then show
+        modal.classList.remove('d-none');
         modal.style.display = 'flex';
-        modal.classList.add('show');
+        // Use RAF to ensure CSS transitions fire
+        requestAnimationFrame(() => modal.classList.add('show'));
     },
 
     hideModal(modal) {
         modal.classList.remove('show');
         setTimeout(() => {
+            // Add d-none so Bootstrap utilities fully hide the element
+            modal.classList.add('d-none');
             modal.style.display = 'none';
         }, 150);
     },
