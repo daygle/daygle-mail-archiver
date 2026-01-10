@@ -1,3 +1,11 @@
+/*
+ * Patched Font Awesome Free 7.0.1 - local webfonts paths
+ * This file replaces the original all.min.css with font URLs pointing
+ * to /static/vendor/fontawesome/webfonts/... to ensure local-only loading
+ * and avoid browser sanitizer rejections.
+ */
+/* Minimal header and @font-face entries; full rules preserved in all.fixed.css */
+@import url("/static/vendor/fontawesome/all.fixed.css");
 /*!
  * Font Awesome Free 7.0.1 by @fontawesome - https://fontawesome.com
  * License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License)
