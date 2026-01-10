@@ -4,8 +4,11 @@
  * to /static/vendor/fontawesome/webfonts/... to ensure local-only loading
  * and avoid browser sanitizer rejections.
  */
-/* Minimal header and @font-face entries; full rules preserved in all.fixed.css */
-@import url("/static/vendor/fontawesome/all.fixed.css");
+/* Inlined @font-face rules so the vendor CSS works with ../webfonts/ */
+@font-face{font-family:"Font Awesome 7 Brands";font-style:normal;font-weight:400;font-display:block;src:url(../webfonts/fa-brands-400.woff2) format("woff2")}
+@font-face{font-family:"Font Awesome 7 Free";font-style:normal;font-weight:400;font-display:block;src:url(../webfonts/fa-regular-400.woff2) format("woff2")}
+@font-face{font-family:"Font Awesome 7 Free";font-style:normal;font-weight:900;font-display:block;src:url(../webfonts/fa-solid-900.woff2) format("woff2")}
+@font-face{font-family:"FontAwesome";font-style:normal;font-weight:400;font-display:block;src:url(../webfonts/fa-v4compatibility.woff2) format("woff2")}
 /*!
  * Font Awesome Free 7.0.1 by @fontawesome - https://fontawesome.com
  * License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License)
