@@ -458,6 +458,14 @@ const DashboardManager = {
                 draggable: { handle: '.widget-header' }
             });
 
+            // Ensure CSS variables are applied (force an explicit cellHeight application)
+            try {
+                if (typeof this.grid.cellHeight === 'function') {
+                    this.grid.cellHeight(80);
+                    console.debug('Dashboard: forced grid.cellHeight(80) to ensure CSS vars are set');
+                }
+            } catch (e) { console.warn('Dashboard: failed to force cellHeight', e); }
+
             // Disable editing by default
             this.grid.disable();
 
@@ -550,9 +558,29 @@ const DashboardManager = {
         setTimeout(() => {
             try {
                 console.debug('Dashboard: render complete, grid items count:', this.grid && typeof this.grid.getGridItems === 'function' ? this.grid.getGridItems().length : 0);
+
+                // Log computed CSS vars on grid element
+                try {
+                    const gridEl = this.grid && this.grid.el ? this.grid.el : document.querySelector('.grid-stack');
+                    if (gridEl) {
+                        const cs = getComputedStyle(gridEl);
+                        console.debug('Dashboard: CSS --gs-cell-height:', cs.getPropertyValue('--gs-cell-height'));
+                        console.debug('Dashboard: CSS --gs-column-width:', cs.getPropertyValue('--gs-column-width'));
+                    }
+                } catch (e) { }
+
                 if (this.grid && typeof this.grid.getGridItems === 'function') {
                     this.grid.getGridItems().forEach(item => {
-                        try { console.debug('Dashboard: grid item node id:', item.gridstackNode ? item.gridstackNode.id : item.id); } catch (e) {}
+                        try {
+                            console.debug('Dashboard: grid item node id:', item.gridstackNode ? item.gridstackNode.id : item.id);
+                            const el = item.el || (item.gridstackNode && item.gridstackNode.el);
+                            if (el) {
+                                console.debug('  attrs gs-x,gs-y,gs-w,gs-h:', el.getAttribute('gs-x'), el.getAttribute('gs-y'), el.getAttribute('gs-w'), el.getAttribute('gs-h'));
+                                console.debug('  inline styles top,left,width,height:', el.style.top, el.style.left, el.style.width, el.style.height);
+                                const rect = el.getBoundingClientRect();
+                                console.debug('  bounding rect:', rect.top, rect.left, rect.width, rect.height);
+                            }
+                        } catch (e) { }
                     });
                 }
             } catch (e) { console.error('Dashboard post-render debug error:', e); }
