@@ -2,10 +2,12 @@
 
 {% block page_title %}Help & Documentation{% endblock %}
 
+{# Styles moved to api/static/styles.css to centralise layout rules #}
+
 {% block content %}
 <div class="help-grid">
 <!-- Quick Start Guide -->
-<div class="card" style="margin-bottom: 24px;">
+<div class="card">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-rocket"></i>
@@ -13,18 +15,18 @@
         </div>
     </div>
     <div class="card-body">
-        <p style="margin-bottom: 16px;">Learn how to use Daygle Mail Archiver to fetch, store, and manage your emails.</p>
-        <ol style="padding-left: 24px; margin-bottom: 0;">
-            <li style="margin-bottom: 12px;"><strong>Set up a Fetch Account:</strong> Go to Settings → Fetch Accounts and add a new email account (IMAP, Gmail, or Office 365)</li>
-            <li style="margin-bottom: 12px;"><strong>Enable the account:</strong> Make sure the "Enabled" checkbox is checked</li>
-            <li style="margin-bottom: 12px;"><strong>Start the worker:</strong> The worker will automatically fetch emails based on the poll interval</li>
-            <li style="margin-bottom: 0;"><strong>View your emails:</strong> Navigate to the Emails page to browse and search archived emails</li>
+        <p class="mb-16">Learn how to use Daygle Mail Archiver to fetch, store, and manage your emails.</p>
+        <ol class="pl-24 mb-0">
+            <li class="mb-12"><strong>Set up a Fetch Account:</strong> Go to Settings → Fetch Accounts and add a new email account (IMAP, Gmail, or Office 365)</li>
+            <li class="mb-12"><strong>Enable the account:</strong> Make sure the "Enabled" checkbox is checked</li>
+            <li class="mb-12"><strong>Start the worker:</strong> The worker will automatically fetch emails based on the poll interval</li>
+            <li class="mb-0"><strong>View your emails:</strong> Navigate to the Emails page to browse and search archived emails</li>
         </ol>
     </div>
 </div>
 
 <!-- Adding IMAP Accounts -->
-<div class="card" style="margin-bottom: 24px;">
+<div class="card">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-server"></i>
@@ -32,19 +34,19 @@
         </div>
     </div>
     <div class="card-body">
-        <ol style="padding-left: 24px; margin-bottom: 0;">
-            <li style="margin-bottom: 12px;">Go to <strong>Settings → Fetch Accounts</strong> and click <strong>"Add New Account"</strong></li>
-            <li style="margin-bottom: 12px;">Select <strong>"IMAP"</strong> as the account type</li>
-            <li style="margin-bottom: 12px;">Enter your IMAP server details (host, port, username, password, SSL)</li>
-            <li style="margin-bottom: 12px;">Set the poll interval (how often to check for new emails)</li>
-            <li style="margin-bottom: 12px;">Click <strong>"Test"</strong> to verify the connection</li>
-            <li style="margin-bottom: 0;">Click <strong>"Create Account"</strong> to save</li>
+        <ol class="pl-24 mb-0">
+            <li class="mb-12">Go to <strong>Settings → Fetch Accounts</strong> and click <strong>"Add New Account"</strong></li>
+            <li class="mb-12">Select <strong>"IMAP"</strong> as the account type</li>
+            <li class="mb-12">Enter your IMAP server details (host, port, username, password, SSL)</li>
+            <li class="mb-12">Set the poll interval (how often to check for new emails)</li>
+            <li class="mb-12">Click <strong>"Test"</strong> to verify the connection</li>
+            <li class="mb-0">Click <strong>"Create Account"</strong> to save</li>
         </ol>
     </div>
 </div>
 
 <!-- Adding Gmail API Accounts -->
-<div class="card" style="margin-bottom: 24px;">
+<div class="card">
     <div class="card-header">
         <div class="card-title">
             <i class="fab fa-google"></i>
@@ -52,20 +54,20 @@
         </div>
     </div>
     <div class="card-body">
-        <ol style="padding-left: 24px; margin-bottom: 0;">
-            <li style="margin-bottom: 12px;">Create a Google Cloud project and enable Gmail API</li>
-            <li style="margin-bottom: 12px;">Create OAuth 2.0 credentials and register the redirect URI used by the application. Example (per-account callback): <code>http://your-domain/oauth/gmail/callback/{account_id}</code></li>
-            <li style="margin-bottom: 12px;">When creating credentials ensure you request offline access (refresh token) and the Gmail scopes required for read access</li>
-            <li style="margin-bottom: 12px;">Add a new account and select <strong>"Gmail API"</strong></li>
-            <li style="margin-bottom: 12px;">Enter your OAuth Client ID and Client Secret</li>
-            <li style="margin-bottom: 12px;">Save the account, then click <strong>"Authorise Gmail"</strong></li>
-            <li style="margin-bottom: 0;">Complete the Google authorisation flow</li>
+        <ol class="pl-24 mb-0">
+            <li class="mb-12">Create a Google Cloud project and enable Gmail API</li>
+            <li class="mb-12">Create OAuth 2.0 credentials and register the redirect URI used by the application. Example (per-account callback): <code>http://your-domain/oauth/gmail/callback/{account_id}</code></li>
+            <li class="mb-12">When creating credentials ensure you request offline access (refresh token) and the Gmail scopes required for read access</li>
+            <li class="mb-12">Add a new account and select <strong>"Gmail API"</strong></li>
+            <li class="mb-12">Enter your OAuth Client ID and Client Secret</li>
+            <li class="mb-12">Save the account, then click <strong>"Authorise Gmail"</strong></li>
+            <li class="mb-0">Complete the Google authorisation flow</li>
         </ol>
     </div>
 </div>
 
 <!-- Adding Office 365 Accounts -->
-<div class="card" style="margin-bottom: 24px;">
+<div class="card">
     <div class="card-header">
         <div class="card-title">
             <i class="fab fa-microsoft"></i>
@@ -73,20 +75,20 @@
         </div>
     </div>
     <div class="card-body">
-        <ol style="padding-left: 24px; margin-bottom: 0;">
-            <li style="margin-bottom: 12px;">Register an app in Azure AD / Microsoft 365 Admin Center</li>
-            <li style="margin-bottom: 12px;">Add Mail.Read permission and create a client secret</li>
-            <li style="margin-bottom: 12px;">Register the application's redirect URI (per-account callback). Example: <code>http://your-domain/oauth/o365/callback/{account_id}</code></li>
-            <li style="margin-bottom: 12px;">Add a new account and select <strong>"Office 365 API"</strong></li>
-            <li style="margin-bottom: 12px;">Enter your OAuth Client ID and Client Secret</li>
-            <li style="margin-bottom: 12px;">Save the account, then click <strong>"Authorise Office 365"</strong></li>
-            <li style="margin-bottom: 0;">Complete the Microsoft authorisation flow</li>
+        <ol class="pl-24 mb-0">
+            <li class="mb-12">Register an app in Azure AD / Microsoft 365 Admin Center</li>
+            <li class="mb-12">Add Mail.Read permission and create a client secret</li>
+            <li class="mb-12">Register the application's redirect URI (per-account callback). Example: <code>http://your-domain/oauth/o365/callback/{account_id}</code></li>
+            <li class="mb-12">Add a new account and select <strong>"Office 365 API"</strong></li>
+            <li class="mb-12">Enter your OAuth Client ID and Client Secret</li>
+            <li class="mb-12">Save the account, then click <strong>"Authorise Office 365"</strong></li>
+            <li class="mb-0">Complete the Microsoft authorisation flow</li>
         </ol>
     </div>
 </div>
 
 <!-- Managing Emails -->
-<div class="card" style="margin-bottom: 24px;">
+<div class="card">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-inbox"></i>
@@ -94,16 +96,16 @@
         </div>
     </div>
     <div class="card-body">
-        <p style="margin-bottom: 16px;"><strong>Viewing Emails:</strong> Navigate to the Emails page to see all archived emails. You can search, filter by folder, view full content, and download raw .eml files (administrators only).</p>
-        <p style="margin-bottom: 16px;"><strong>Deleting Emails:</strong> Click the delete button next to an email for individual deletion, or use "Delete All" with filters for bulk operations (administrators only).</p>
-        <div class="alert alert-warning" style="margin-bottom: 0;">
+        <p class="mb-16"><strong>Viewing Emails:</strong> Navigate to the Emails page to see all archived emails. You can search, filter by folder, view full content, and download raw .eml files (administrators only).</p>
+        <p class="mb-16"><strong>Deleting Emails:</strong> Click the delete button next to an email for individual deletion, or use "Delete All" with filters for bulk operations (administrators only).</p>
+        <div class="alert alert-warning mb-0">
             <i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> Deletions are permanent and cannot be undone. Read-only users cannot delete emails or download .eml files.
         </div>
     </div>
 </div>
 
 <!-- Worker Status -->
-<div class="card" style="margin-bottom: 24px;">
+<div class="card">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-heartbeat"></i>
@@ -111,13 +113,13 @@
         </div>
     </div>
     <div class="card-body">
-        <p style="margin-bottom: 16px;">The Worker Status page shows the health of your email fetch workers, including status (green=running, red=stopped), last heartbeat, number of accounts being monitored, and recent errors.</p>
-        <p style="margin-bottom: 0;">If the worker status is red, check that the worker process is running and review the error logs.</p>
+        <p class="mb-16">The Worker Status page shows the health of your email fetch workers, including status (green=running, red=stopped), last heartbeat, number of accounts being monitored, and recent errors.</p>
+        <p class="mb-0">If the worker status is red, check that the worker process is running and review the error logs.</p>
     </div>
 </div>
 
 <!-- Global Settings -->
-<div class="card" style="margin-bottom: 24px;">
+<div class="card">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-sliders"></i>
@@ -125,17 +127,17 @@
         </div>
     </div>
     <div class="card-body">
-        <p style="margin-bottom: 16px;"><strong>Retention Policy:</strong> Configure automatic deletion of old emails. Set retention period (days, months, years) and optionally delete from mail servers (IMAP only).</p>
-        <p style="margin-bottom: 16px;"><strong>Page Size & Date Format:</strong> Control items per page in email listings and configure global date/time display format.</p>
-        <p style="margin-bottom: 16px;"><strong>Theme Settings:</strong> Set the default theme (Light, Dark, or System) for all users. Individual users can override this in their personal settings.</p>
-        <div class="alert alert-info" style="margin-bottom: 0;">
+        <p class="mb-16"><strong>Retention Policy:</strong> Configure automatic deletion of old emails. Set retention period (days, months, years) and optionally delete from mail servers (IMAP only).</p>
+        <p class="mb-16"><strong>Page Size & Date Format:</strong> Control items per page in email listings and configure global date/time display format.</p>
+        <p class="mb-16"><strong>Theme Settings:</strong> Set the default theme (Light, Dark, or System) for all users. Individual users can override this in their personal settings.</p>
+        <div class="alert alert-info mb-0">
             <i class="fas fa-info-circle"></i> Retention cleanup runs automatically during worker cycles. All deletions are tracked on the Dashboard. Individual users can customise their date format, time format, and theme in User Settings.
         </div>
     </div>
 </div>
 
 <!-- Dashboard Analytics -->
-<div class="card" style="margin-bottom: 24px;">
+<div class="card">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-chart-line"></i>
@@ -143,13 +145,13 @@
         </div>
     </div>
     <div class="card-body">
-        <p style="margin-bottom: 16px;">The Dashboard provides comprehensive statistics about your email archive including email volume trends, top senders/receivers, deletion statistics, mail server deletions, and storage metrics.</p>
-        <p style="margin-bottom: 0;">All charts are interactive and update in real-time based on your archive data.</p>
+        <p class="mb-16">The Dashboard provides comprehensive statistics about your email archive including email volume trends, top senders/receivers, deletion statistics, mail server deletions, and storage metrics.</p>
+        <p class="mb-0">All charts are interactive and update in real-time based on your archive data.</p>
     </div>
 </div>
 
 <!-- Troubleshooting -->
-<div class="card" style="margin-bottom: 24px;">
+<div class="card">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-wrench"></i>
@@ -157,17 +159,17 @@
         </div>
     </div>
     <div class="card-body">
-        <p style="margin-bottom: 16px;"><strong>Connection Issues:</strong> Use the Test button on fetch accounts, check firewall settings, verify SSL/TLS settings, and use app-specific passwords for Gmail with 2FA.</p>
-        <p style="margin-bottom: 16px;"><strong>OAuth Authorisation Failed:</strong> Verify Client ID and Secret, ensure the registered redirect URI matches the application's per-account callback path (for example <code>/oauth/gmail/callback/{account_id}</code> or <code>/oauth/o365/callback/{account_id}</code>), check API permissions/scopes, and re-authorise. See the project's OAuth Integration wiki page for details.</p>
-        <p style="margin-bottom: 16px;"><strong>No Emails Being Fetched:</strong> Check that the account is Enabled, verify the worker is running, and review error emails in the logs.</p>
-        <p style="margin-bottom: 16px;"><strong>Account Lockout:</strong> If locked out due to failed login attempts, wait 15 minutes or use the forgot password feature to unlock your account.</p>
-        <p style="margin-bottom: 16px;"><strong>Read-Only User Restrictions:</strong> If you cannot download .eml files or perform administrative actions, you may have read-only permissions. Contact an administrator for elevated access.</p>
-        <p style="margin-bottom: 0;"><strong>Performance Issues:</strong> Reduce poll interval, enable "Delete after processing" option, or implement retention policies to limit database size.</p>
+        <p class="mb-16"><strong>Connection Issues:</strong> Use the Test button on fetch accounts, check firewall settings, verify SSL/TLS settings, and use app-specific passwords for Gmail with 2FA.</p>
+        <p class="mb-16"><strong>OAuth Authorisation Failed:</strong> Verify Client ID and Secret, ensure the registered redirect URI matches the application's per-account callback path (for example <code>/oauth/gmail/callback/{account_id}</code> or <code>/oauth/o365/callback/{account_id}</code>), check API permissions/scopes, and re-authorise. See the project's OAuth Integration wiki page for details.</p>
+        <p class="mb-16"><strong>No Emails Being Fetched:</strong> Check that the account is Enabled, verify the worker is running, and review error emails in the logs.</p>
+        <p class="mb-16"><strong>Account Lockout:</strong> If locked out due to failed login attempts, wait 15 minutes or use the forgot password feature to unlock your account.</p>
+        <p class="mb-16"><strong>Read-Only User Restrictions:</strong> If you cannot download .eml files or perform administrative actions, you may have read-only permissions. Contact an administrator for elevated access.</p>
+        <p class="mb-0"><strong>Performance Issues:</strong> Reduce poll interval, enable "Delete after processing" option, or implement retention policies to limit database size.</p>
     </div>
 </div>
 
 <!-- Email Deletion Behaviour -->
-<div class="card" style="margin-bottom: 24px;">
+<div class="card">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-trash-alt"></i>
@@ -175,20 +177,20 @@
         </div>
     </div>
     <div class="card-body">
-        <p style="margin-bottom: 16px;">When "Delete Email After Processed" is enabled, emails are removed from the mail server after being archived:</p>
-        <ul style="padding-left: 24px; margin-bottom: 16px;">
-            <li style="margin-bottom: 8px;"><strong>IMAP:</strong> Can mark as deleted (recoverable) or permanently expunge (not recoverable)</li>
-            <li style="margin-bottom: 8px;"><strong>Gmail:</strong> Moves to Trash with 30-day recovery period</li>
-            <li style="margin-bottom: 8px;"><strong>Office 365:</strong> Moves to Deleted Items (recoverable until emptied)</li>
+        <p class="mb-16">When "Delete Email After Processed" is enabled, emails are removed from the mail server after being archived:</p>
+        <ul class="pl-24 mb-16">
+            <li class="mb-8"><strong>IMAP:</strong> Can mark as deleted (recoverable) or permanently expunge (not recoverable)</li>
+            <li class="mb-8"><strong>Gmail:</strong> Moves to Trash with 30-day recovery period</li>
+            <li class="mb-8"><strong>Office 365:</strong> Moves to Deleted Items (recoverable until emptied)</li>
         </ul>
-        <div class="alert alert-danger" style="margin-bottom: 0;">
+        <div class="alert alert-danger mb-0">
             <i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> The "Permanently Expunge Deleted" option for IMAP accounts irreversibly removes emails from the server. Use with extreme caution!
         </div>
     </div>
 </div>
 
 <!-- User Management (Administrators Only) -->
-<div class="card" style="margin-bottom: 24px;">
+<div class="card">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-users"></i>
@@ -196,25 +198,25 @@
         </div>
     </div>
     <div class="card-body">
-        <p style="margin-bottom: 16px;">Administrators can manage system users through the <strong>User Management</strong> page in the administration section.</p>
+        <p class="mb-16">Administrators can manage system users through the <strong>User Management</strong> page in the administration section.</p>
         
-        <p style="margin-bottom: 12px;"><strong>Creating Users:</strong></p>
-        <ol style="padding-left: 24px; margin-bottom: 16px;">
-            <li style="margin-bottom: 8px;">Navigate to <strong>User Management</strong> from the sidebar</li>
-            <li style="margin-bottom: 8px;">Click <strong>"Create New User"</strong></li>
-            <li style="margin-bottom: 8px;">Enter username, email, and assign one or more roles (configured in Roles & Permissions)</li>
-            <li style="margin-bottom: 8px;">User will need to set their password on first login</li>
+        <p class="mb-12"><strong>Creating Users:</strong></p>
+        <ol class="pl-24 mb-16">
+            <li class="mb-8">Navigate to <strong>User Management</strong> from the sidebar</li>
+            <li class="mb-8">Click <strong>"Create New User"</strong></li>
+            <li class="mb-8">Enter username, email, and assign one or more roles (configured in Roles & Permissions)</li>
+            <li class="mb-8">User will need to set their password on first login</li>
         </ol>
 
-        <p style="margin-bottom: 12px;"><strong>User Roles:</strong></p>
-        <p style="margin-bottom: 16px;">Roles map to granular permissions and can be customised in the <strong>Roles & Permissions</strong> administration page. Assign one or more roles to a user to grant the necessary permissions. Administrators typically have full access, while other roles may restrict actions such as downloading .eml files or modifying settings.</p>
+        <p class="mb-12"><strong>User Roles:</strong></p>
+        <p class="mb-16">Roles map to granular permissions and can be customised in the <strong>Roles & Permissions</strong> administration page. Assign one or more roles to a user to grant the necessary permissions. Administrators typically have full access, while other roles may restrict actions such as downloading .eml files or modifying settings.</p>
 
-        <p style="margin-bottom: 0;"><strong>Managing Your Profile:</strong> All users can access their profile settings from the user menu (top-right) to change password and update personal information.</p>
+        <p class="mb-0"><strong>Managing Your Profile:</strong> All users can access their profile settings from the user menu (top-right) to change password and update personal information.</p>
     </div>
 </div>
 
 <!-- Audit Logs (Administrators Only) -->
-<div class="card" style="margin-bottom: 24px;">
+<div class="card">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-list"></i>
@@ -222,22 +224,22 @@
         </div>
     </div>
     <div class="card-body">
-        <p style="margin-bottom: 16px;">The system maintains a complete audit trail of all actions. Administrators can view logs through the <strong>Logs</strong> page in the administration section.</p>
+        <p class="mb-16">The system maintains a complete audit trail of all actions. Administrators can view logs through the <strong>Logs</strong> page in the administration section.</p>
         
-        <p style="margin-bottom: 12px;"><strong>Logged Actions Include:</strong></p>
-        <ul style="padding-left: 24px; margin-bottom: 16px;">
-            <li style="margin-bottom: 8px;">User login and logout events</li>
-            <li style="margin-bottom: 8px;">Email deletions (manual and automated)</li>
-            <li style="margin-bottom: 8px;">Fetch account creation and modifications</li>
-            <li style="margin-bottom: 8px;">Settings changes</li>
-            <li style="margin-bottom: 8px;">User management actions</li>
+        <p class="mb-12"><strong>Logged Actions Include:</strong></p>
+        <ul class="pl-24 mb-16">
+            <li class="mb-8">User login and logout events</li>
+            <li class="mb-8">Email deletions (manual and automated)</li>
+            <li class="mb-8">Fetch account creation and modifications</li>
+            <li class="mb-8">Settings changes</li>
+            <li class="mb-8">User management actions</li>
         </ul>
 
-        <p style="margin-bottom: 0;">Each log entry includes a timestamp, username, action type, and details. Use the search and filter features to find specific events.</p>
+        <p class="mb-0">Each log entry includes a timestamp, username, action type, and details. Use the search and filter features to find specific events.</p>
     
 
 <!-- Backup and Restore -->
-<div class="card" style="margin-bottom: 24px;">
+<div class="card">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-database"></i>
@@ -245,31 +247,31 @@
         </div>
     </div>
     <div class="card-body">
-        <p style="margin-bottom: 16px;">Protect your email archive with the built-in command-line backup and restore script. Backups include both the database AND the configuration file with encryption keys.</p>
+        <p class="mb-16">Protect your email archive with the built-in command-line backup and restore script. Backups include both the database AND the configuration file with encryption keys.</p>
         
-        <p style="margin-bottom: 12px;"><strong>Creating a Backup:</strong></p>
+        <p class="mb-12"><strong>Creating a Backup:</strong></p>
         <pre class="code-block"><code>cd /opt/daygle-mail-archiver
 ./scripts/backup_restore.sh backup</code></pre>
-        <p style="margin-bottom: 16px;">This creates a timestamped backup file in the <code>./backups/</code> directory (or custom location) containing the complete PostgreSQL database dump and <code>daygle_mail_archiver.conf</code> file with all encryption keys.</p>
+        <p class="mb-16">This creates a timestamped backup file in the <code>./backups/</code> directory (or custom location) containing the complete PostgreSQL database dump and <code>daygle_mail_archiver.conf</code> file with all encryption keys.</p>
 
-        <p style="margin-bottom: 12px;"><strong>Listing Available Backups:</strong></p>
+        <p class="mb-12"><strong>Listing Available Backups:</strong></p>
         <pre class="code-block"><code>./scripts/backup_restore.sh list</code></pre>
 
-        <p style="margin-bottom: 12px;"><strong>Restoring from Backup:</strong></p>
+        <p class="mb-12"><strong>Restoring from Backup:</strong></p>
         <pre class="code-block"><code>./scripts/backup_restore.sh restore daygle_mail_archiver_backup_20240105_120000.tar.gz</code></pre>
-        <p style="margin-bottom: 16px;">After restore, restart the services with: <code>docker compose restart</code></p>
+        <p class="mb-16">After restore, restart the services with: <code>docker compose restart</code></p>
 
-        <p style="margin-bottom: 12px;"><strong>Deleting Old Backups:</strong></p>
+        <p class="mb-12"><strong>Deleting Old Backups:</strong></p>
         <pre class="code-block"><code>./scripts/backup_restore.sh delete daygle_mail_archiver_backup_20240105_120000.tar.gz</code></pre>
 
-        <div class="alert alert-danger" style="margin-bottom: 0;">
+        <div class="alert alert-danger mb-0">
             <i class="fas fa-exclamation-circle"></i> <strong>Security Warning:</strong> Store backups securely! They contain all email data, encryption keys (IMAP_PASSWORD_KEY, SESSION_SECRET), and database credentials. The configuration file is required to decrypt stored passwords.
         </div>
     </div>
 </div>
 
 <!-- Security Features -->
-<div class="card" style="margin-bottom: 24px;">
+<div class="card">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-shield-alt"></i>
@@ -277,27 +279,27 @@
         </div>
     </div>
     <div class="card-body">
-        <p style="margin-bottom: 16px;"><strong>Account Lockout:</strong> After 5 consecutive failed login attempts, accounts are locked for 15 minutes to prevent brute force attacks.</p>
-        
-        <p style="margin-bottom: 16px;"><strong>Forgot Password:</strong> Users can reset their password by clicking "Forgot Password?" on the login page. A reset link will be emailed to their registered email address.</p>
-        
-        <p style="margin-bottom: 16px;"><strong>Session Security:</strong> User sessions automatically expire. All sensitive data (passwords, email content) is encrypted in the database.</p>
-        
-        <p style="margin-bottom: 12px;"><strong>Password Requirements:</strong></p>
-        <ul style="padding-left: 24px; margin-bottom: 16px;">
-            <li style="margin-bottom: 8px;">Minimum 8 characters recommended</li>
-            <li style="margin-bottom: 8px;">Use strong, unique passwords</li>
-            <li style="margin-bottom: 8px;">Change passwords regularly for administrator accounts</li>
+        <p class="mb-16"><strong>Account Lockout:</strong> After 5 consecutive failed login attempts, accounts are locked for 15 minutes to prevent brute force attacks.</p>
+
+        <p class="mb-16"><strong>Forgot Password:</strong> Users can reset their password by clicking "Forgot Password?" on the login page. A reset link will be emailed to their registered email address.</p>
+
+        <p class="mb-16"><strong>Session Security:</strong> User sessions automatically expire. All sensitive data (passwords, email content) is encrypted in the database.</p>
+
+        <p class="mb-12"><strong>Password Requirements:</strong></p>
+        <ul class="pl-24 mb-16">
+            <li class="mb-8">Minimum 8 characters recommended</li>
+            <li class="mb-8">Use strong, unique passwords</li>
+            <li class="mb-8">Change passwords regularly for administrator accounts</li>
         </ul>
 
-        <div class="alert alert-info" style="margin-bottom: 0;">
+        <div class="alert alert-info mb-0">
             <i class="fas fa-info-circle"></i> <strong>Security Best Practice:</strong> Use app-specific passwords for Gmail with 2FA enabled, and regularly review audit logs for suspicious activity.
         </div>
     </div>
 </div>
 
 <!-- Quarantine Management -->
-<div class="card" style="margin-bottom: 24px;">
+<div class="card">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-shield-virus"></i>
@@ -305,31 +307,31 @@
         </div>
     </div>
     <div class="card-body">
-        <p style="margin-bottom: 16px;">The quarantine system automatically isolates potentially harmful emails detected by antivirus scanning. Both administrators and read-only users can view quarantined emails.</p>
-        
-        <p style="margin-bottom: 12px;"><strong>Viewing Quarantined Emails:</strong></p>
-        <ul style="padding-left: 24px; margin-bottom: 16px;">
-            <li style="margin-bottom: 8px;">Navigate to the <strong>Quarantine</strong> page from the sidebar</li>
-            <li style="margin-bottom: 8px;">View email details, sender, subject, and quarantine reason</li>
-            <li style="margin-bottom: 8px;">Click on an email to view its full content</li>
-            <li style="margin-bottom: 8px;">Search and filter quarantined emails</li>
+        <p class="mb-16">The quarantine system automatically isolates potentially harmful emails detected by antivirus scanning. Both administrators and read-only users can view quarantined emails.</p>
+
+        <p class="mb-12"><strong>Viewing Quarantined Emails:</strong></p>
+        <ul class="pl-24 mb-16">
+            <li class="mb-8">Navigate to the <strong>Quarantine</strong> page from the sidebar</li>
+            <li class="mb-8">View email details, sender, subject, and quarantine reason</li>
+            <li class="mb-8">Click on an email to view its full content</li>
+            <li class="mb-8">Search and filter quarantined emails</li>
         </ul>
 
-        <p style="margin-bottom: 12px;"><strong>Administrator Actions:</strong></p>
-        <ul style="padding-left: 24px; margin-bottom: 16px;">
-            <li style="margin-bottom: 8px;"><strong>Release:</strong> Move the email back to the regular archive</li>
-            <li style="margin-bottom: 8px;"><strong>Delete:</strong> Permanently remove the quarantined email</li>
-            <li style="margin-bottom: 8px;"><strong>Delete from Server:</strong> Remove the email from the original mail server (IMAP/Gmail/O365)</li>
+        <p class="mb-12"><strong>Administrator Actions:</strong></p>
+        <ul class="pl-24 mb-16">
+            <li class="mb-8"><strong>Release:</strong> Move the email back to the regular archive</li>
+            <li class="mb-8"><strong>Delete:</strong> Permanently remove the quarantined email</li>
+            <li class="mb-8"><strong>Delete from Server:</strong> Remove the email from the original mail server (IMAP/Gmail/O365)</li>
         </ul>
 
-        <div class="alert alert-warning" style="margin-bottom: 0;">
+        <div class="alert alert-warning mb-0">
             <i class="fas fa-exclamation-triangle"></i> <strong>Caution:</strong> Only release emails from quarantine if you're certain they are safe. Malicious emails can compromise your system.
         </div>
     </div>
 </div>
 
         <!-- Emails Help -->
-        <div class="card" style="margin-bottom: 24px;">
+        <div class="card">
             <div class="card-header">
                 <div class="card-title">
                     <i class="fas fa-envelope"></i>
@@ -337,13 +339,13 @@
                 </div>
             </div>
             <div class="card-body">
-                <p style="margin-bottom: 12px;">Learn more about the Emails page, searching, download/export, quarantine, and delete modes in the documentation.</p>
-                <p style="margin-bottom: 0;"><a href="https://github.com/daygle/daygle-mail-archiver/wiki/Emails" class="btn btn-outline-primary">Open Emails Wiki Page</a></p>
+                <p class="mb-12">Learn more about the Emails page, searching, download/export, quarantine, and delete modes in the documentation.</p>
+                <p class="mb-0"><a href="https://github.com/daygle/daygle-mail-archiver/wiki/Emails" class="btn btn-outline-primary">Open Emails Wiki Page</a></p>
             </div>
         </div>
 
         <!-- Reports Help -->
-        <div class="card" style="margin-bottom: 24px;">
+        <div class="card">
             <div class="card-header">
                 <div class="card-title">
                     <i class="fas fa-chart-bar"></i>
@@ -351,13 +353,13 @@
                 </div>
             </div>
             <div class="card-body">
-                <p style="margin-bottom: 12px;">Learn more about the Reports page, exports, and analytics in the documentation.</p>
-                <p style="margin-bottom: 0;"><a href="https://github.com/daygle/daygle-mail-archiver/wiki/Reports" class="btn btn-outline-primary">Open Reports Wiki Page</a></p>
+                <p class="mb-12">Learn more about the Reports page, exports, and analytics in the documentation.</p>
+                <p class="mb-0"><a href="https://github.com/daygle/daygle-mail-archiver/wiki/Reports" class="btn btn-outline-primary">Open Reports Wiki Page</a></p>
             </div>
         </div>
 
 <!-- Alert Management (Administrators Only) -->
-<div class="card" style="margin-bottom: 24px;">
+<div class="card">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-bell"></i>
@@ -365,30 +367,30 @@
         </div>
     </div>
     <div class="card-body">
-        <p style="margin-bottom: 16px;">Administrators can configure automated alerts for system events and performance issues. Alerts help monitor system health and respond to issues proactively.</p>
-        
-        <p style="margin-bottom: 12px;"><strong>Available Alert Types:</strong></p>
-        <ul style="padding-left: 24px; margin-bottom: 16px;">
-            <li style="margin-bottom: 8px;"><strong>Error Alerts:</strong> System errors, connection failures, authentication issues</li>
-            <li style="margin-bottom: 8px;"><strong>Warning Alerts:</strong> Performance issues, high resource usage, unusual activity</li>
-            <li style="margin-bottom: 8px;"><strong>Info Alerts:</strong> System status changes, maintenance notifications</li>
-            <li style="margin-bottom: 8px;"><strong>Success Alerts:</strong> Successful operations, completed tasks</li>
+        <p class="mb-16">Administrators can configure automated alerts for system events and performance issues. Alerts help monitor system health and respond to issues proactively.</p>
+
+        <p class="mb-12"><strong>Available Alert Types:</strong></p>
+        <ul class="pl-24 mb-16">
+            <li class="mb-8"><strong>Error Alerts:</strong> System errors, connection failures, authentication issues</li>
+            <li class="mb-8"><strong>Warning Alerts:</strong> Performance issues, high resource usage, unusual activity</li>
+            <li class="mb-8"><strong>Info Alerts:</strong> System status changes, maintenance notifications</li>
+            <li class="mb-8"><strong>Success Alerts:</strong> Successful operations, completed tasks</li>
         </ul>
 
-        <p style="margin-bottom: 12px;"><strong>Configuring Alerts:</strong></p>
-        <ol style="padding-left: 24px; margin-bottom: 16px;">
-            <li style="margin-bottom: 8px;">Navigate to <strong>Alert Management</strong> from the administration section</li>
-            <li style="margin-bottom: 8px;">Enable/disable individual alert triggers</li>
-            <li style="margin-bottom: 8px;">Configure email notifications for administrators</li>
-            <li style="margin-bottom: 8px;">View alert history and acknowledge alerts</li>
+        <p class="mb-12"><strong>Configuring Alerts:</strong></p>
+        <ol class="pl-24 mb-16">
+            <li class="mb-8">Navigate to <strong>Alert Management</strong> from the administration section</li>
+            <li class="mb-8">Enable/disable individual alert triggers</li>
+            <li class="mb-8">Configure email notifications for administrators</li>
+            <li class="mb-8">View alert history and acknowledge alerts</li>
         </ol>
 
-        <p style="margin-bottom: 0;">Alerts are displayed in the dashboard and can trigger email notifications to administrators with valid email addresses.</p>
+        <p class="mb-0">Alerts are displayed in the dashboard and can trigger email notifications to administrators with valid email addresses.</p>
     </div>
 </div>
 
 <!-- User Profile & Personalization -->
-<div class="card" style="margin-bottom: 24px;">
+<div class="card">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-user-cog"></i>
@@ -396,30 +398,30 @@
         </div>
     </div>
     <div class="card-body">
-        <p style="margin-bottom: 16px;">Customise your experience with personal settings and preferences available to all users.</p>
-        
-        <p style="margin-bottom: 12px;"><strong>Profile Management:</strong></p>
-        <ul style="padding-left: 24px; margin-bottom: 16px;">
-            <li style="margin-bottom: 8px;">Access your profile from the user menu (top-right corner)</li>
-            <li style="margin-bottom: 8px;">Update personal information (name, email)</li>
-            <li style="margin-bottom: 8px;">Change your password securely</li>
-            <li style="margin-bottom: 8px;">View login history and account creation date</li>
+        <p class="mb-16">Customise your experience with personal settings and preferences available to all users.</p>
+
+        <p class="mb-12"><strong>Profile Management:</strong></p>
+        <ul class="pl-24 mb-16">
+            <li class="mb-8">Access your profile from the user menu (top-right corner)</li>
+            <li class="mb-8">Update personal information (name, email)</li>
+            <li class="mb-8">Change your password securely</li>
+            <li class="mb-8">View login history and account creation date</li>
         </ul>
 
-        <p style="margin-bottom: 12px;"><strong>Personal Settings:</strong></p>
-        <ul style="padding-left: 24px; margin-bottom: 16px;">
-            <li style="margin-bottom: 8px;"><strong>Theme:</strong> Choose between Light, Dark, or System theme</li>
-            <li style="margin-bottom: 8px;"><strong>Date Format:</strong> Customise how dates are displayed (DD/MM/YYYY, MM/DD/YYYY, etc.)</li>
-            <li style="margin-bottom: 8px;"><strong>Time Format:</strong> Select 12-hour or 24-hour time display</li>
-            <li style="margin-bottom: 8px;"><strong>Timezone:</strong> Set your local timezone for accurate timestamps</li>
+        <p class="mb-12"><strong>Personal Settings:</strong></p>
+        <ul class="pl-24 mb-16">
+            <li class="mb-8"><strong>Theme:</strong> Choose between Light, Dark, or System theme</li>
+            <li class="mb-8"><strong>Date Format:</strong> Customise how dates are displayed (DD/MM/YYYY, MM/DD/YYYY, etc.)</li>
+            <li class="mb-8"><strong>Time Format:</strong> Select 12-hour or 24-hour time display</li>
+            <li class="mb-8"><strong>Timezone:</strong> Set your local timezone for accurate timestamps</li>
         </ul>
 
-        <p style="margin-bottom: 0;">Personal settings are saved per user and persist across sessions. Theme changes take effect immediately.</p>
+        <p class="mb-0">Personal settings are saved per user and persist across sessions. Theme changes take effect immediately.</p>
     </div>
 </div>
 
 <!-- Antivirus Integration -->
-<div class="card" style="margin-bottom: 24px;">
+<div class="card">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-virus-slash"></i>
@@ -427,32 +429,32 @@
         </div>
     </div>
     <div class="card-body">
-        <p style="margin-bottom: 16px;">Daygle Mail Archiver integrates with ClamAV antivirus to automatically scan incoming emails for malware and viruses.</p>
-        
-        <p style="margin-bottom: 12px;"><strong>How It Works:</strong></p>
-        <ul style="padding-left: 24px; margin-bottom: 16px;">
-            <li style="margin-bottom: 8px;">Each email is scanned by ClamAV before being archived</li>
-            <li style="margin-bottom: 8px;">Infected emails are automatically quarantined</li>
-            <li style="margin-bottom: 8px;">Clean emails proceed to normal archiving</li>
-            <li style="margin-bottom: 8px;">Scan results are logged for audit purposes</li>
+        <p class="mb-16">Daygle Mail Archiver integrates with ClamAV antivirus to automatically scan incoming emails for malware and viruses.</p>
+
+        <p class="mb-12"><strong>How It Works:</strong></p>
+        <ul class="pl-24 mb-16">
+            <li class="mb-8">Each email is scanned by ClamAV before being archived</li>
+            <li class="mb-8">Infected emails are automatically quarantined</li>
+            <li class="mb-8">Clean emails proceed to normal archiving</li>
+            <li class="mb-8">Scan results are logged for audit purposes</li>
         </ul>
 
-        <p style="margin-bottom: 12px;"><strong>Configuration:</strong></p>
-        <ul style="padding-left: 24px; margin-bottom: 16px;">
-            <li style="margin-bottom: 8px;">ClamAV must be running and accessible to the worker process</li>
-            <li style="margin-bottom: 8px;">Configure ClamAV host and port in environment variables</li>
-            <li style="margin-bottom: 8px;">Quarantined emails are retained for 90 days by default</li>
-            <li style="margin-bottom: 8px;">Quarantine data can be encrypted with a dedicated key</li>
+        <p class="mb-12"><strong>Configuration:</strong></p>
+        <ul class="pl-24 mb-16">
+            <li class="mb-8">ClamAV must be running and accessible to the worker process</li>
+            <li class="mb-8">Configure ClamAV host and port in environment variables</li>
+            <li class="mb-8">Quarantined emails are retained for 90 days by default</li>
+            <li class="mb-8">Quarantine data can be encrypted with a dedicated key</li>
         </ul>
 
-        <div class="alert alert-info" style="margin-bottom: 0;">
+        <div class="alert alert-info mb-0">
             <i class="fas fa-info-circle"></i> <strong>Note:</strong> Antivirus scanning requires ClamAV to be installed and running. Check the AV Stats report for scan statistics and performance metrics.
         </div>
     </div>
 </div>
 
 <!-- Reports Overview -->
-<div class="card" style="margin-bottom: 24px;">
+<div class="card">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-chart-bar"></i>
@@ -460,27 +462,27 @@
         </div>
     </div>
     <div class="card-body">
-        <p style="margin-bottom: 16px;">Comprehensive reporting provides insights into email archiving operations, system performance, and security metrics.</p>
-        
-        <p style="margin-bottom: 12px;"><strong>Available Reports:</strong></p>
-        <ul style="padding-left: 24px; margin-bottom: 16px;">
-            <li style="margin-bottom: 8px;"><strong>Email Volume:</strong> Track email archiving trends over time (daily/weekly/monthly)</li>
-            <li style="margin-bottom: 8px;"><strong>Account Activity:</strong> Monitor fetch account performance and status</li>
-            <li style="margin-bottom: 8px;"><strong>System Health:</strong> Database size, disk usage, and system metrics</li>
-            <li style="margin-bottom: 8px;"><strong>AV Stats:</strong> Antivirus scan results and performance</li>
-            <li style="margin-bottom: 8px;"><strong>Storage Utilization:</strong> Disk space usage and growth trends</li>
-            <li style="margin-bottom: 8px;"><strong>Retention Policy:</strong> Email deletion statistics and policy compliance</li>
-            <li style="margin-bottom: 8px;"><strong>System Performance:</strong> Response times and system load metrics</li>
-            <li style="margin-bottom: 8px;"><strong>Security & Access:</strong> Login attempts, security events (Administrators only)</li>
-            <li style="margin-bottom: 8px;"><strong>Data Quality:</strong> Email processing success rates and error analysis</li>
+        <p class="mb-16">Comprehensive reporting provides insights into email archiving operations, system performance, and security metrics.</p>
+
+        <p class="mb-12"><strong>Available Reports:</strong></p>
+        <ul class="pl-24 mb-16">
+            <li class="mb-8"><strong>Email Volume:</strong> Track email archiving trends over time (daily/weekly/monthly)</li>
+            <li class="mb-8"><strong>Account Activity:</strong> Monitor fetch account performance and status</li>
+            <li class="mb-8"><strong>System Health:</strong> Database size, disk usage, and system metrics</li>
+            <li class="mb-8"><strong>AV Stats:</strong> Antivirus scan results and performance</li>
+            <li class="mb-8"><strong>Storage Utilization:</strong> Disk space usage and growth trends</li>
+            <li class="mb-8"><strong>Retention Policy:</strong> Email deletion statistics and policy compliance</li>
+            <li class="mb-8"><strong>System Performance:</strong> Response times and system load metrics</li>
+            <li class="mb-8"><strong>Security & Access:</strong> Login attempts, security events (Administrators only)</li>
+            <li class="mb-8"><strong>Data Quality:</strong> Email processing success rates and error analysis</li>
         </ul>
 
-        <p style="margin-bottom: 12px;"><strong>Report Access:</strong></p>
-        <ul style="padding-left: 24px; margin-bottom: 0;">
-            <li style="margin-bottom: 8px;">Most reports are available to both administrators and read-only users</li>
-            <li style="margin-bottom: 8px;">Security & Access reports are restricted to administrators only</li>
-            <li style="margin-bottom: 8px;">All reports support date range filtering and interactive charts</li>
-            <li style="margin-bottom: 8px;">Reports update automatically as new data becomes available</li>
+        <p class="mb-12"><strong>Report Access:</strong></p>
+        <ul class="pl-24 mb-0">
+            <li class="mb-8">Most reports are available to both administrators and read-only users</li>
+            <li class="mb-8">Security & Access reports are restricted to administrators only</li>
+            <li class="mb-8">All reports support date range filtering and interactive charts</li>
+            <li class="mb-8">Reports update automatically as new data becomes available</li>
         </ul>
     </div>
 </div>
@@ -494,11 +496,11 @@
         </div>
     </div>
     <div class="card-body">
-        <ul style="padding-left: 24px; margin-bottom: 0;">
-            <li style="margin-bottom: 8px;"><strong>GitHub Repository:</strong> View source code and report issues</li>
-            <li style="margin-bottom: 8px;"><strong>Documentation:</strong> Check the README.md for technical details</li>
-            <li style="margin-bottom: 8px;"><strong>Support:</strong> Contact the administrator or check the logs for detailed error information</li>
-            <li style="margin-bottom: 8px;"><strong>Donate:</strong> Support development via the <a href="/donate">Donate</a> page</li>
+        <ul class="pl-24 mb-0">
+            <li class="mb-8"><strong>GitHub Repository:</strong> View source code and report issues</li>
+            <li class="mb-8"><strong>Documentation:</strong> Check the README.md for technical details</li>
+            <li class="mb-8"><strong>Support:</strong> Contact the administrator or check the logs for detailed error information</li>
+            <li class="mb-8"><strong>Donate:</strong> Support development via the <a href="/donate">Donate</a> page</li>
         </ul>
     </div>
 </div>

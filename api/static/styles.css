@@ -400,6 +400,34 @@ button:focus-visible,
     opacity: 1;
 }
 
+/* Help page layout improvements */
+.help-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+    align-items: start;
+}
+.help-grid > .card {
+    margin-bottom: 0; /* grid gap controls spacing */
+}
+.card-header .card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+}
+.card-body .code-block {
+    background: var(--bg-secondary);
+    padding: 12px;
+    border-radius: 6px;
+    overflow: auto;
+}
+.card .card-body p, .card .card-body ul, .card .card-body ol {
+    margin-bottom: 0.75rem;
+}
+.help-grid .alert { margin-bottom: 0; }
+
+
 .sidebar.collapsed .nav-chevron {
     opacity: 0;
 }
@@ -515,6 +543,7 @@ button:focus-visible,
     border: 1px solid var(--border-color);
     overflow: hidden;
     transition: all var(--transition-base);
+    margin-bottom: 24px;
 }
 
 .card:hover {
@@ -546,6 +575,39 @@ button:focus-visible,
     border-top: 1px solid var(--border-color);
     background: var(--bg-secondary);
 }
+
+/* Dashboard widget & modal styles moved from dashboard template */
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+@keyframes slideOut {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+}
+.widget-card { position: relative; contain: layout style paint; }
+.widget-header { flex-shrink: 0; }
+.widget-body { min-height: 0; }
+.stat-display { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 0.5rem; min-height: 80px; flex: 1; }
+.stat-value { font-size: clamp(1.2rem, 4vw, 2.5rem); font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem; line-height: 1.2; word-break: break-word; }
+.stat-label { font-size: clamp(0.75rem, 2vw, 0.9rem); color: var(--text-secondary); font-weight: 500; line-height: 1.3; word-break: break-word; }
+.modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; }
+.modal-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); }
+.modal-content { position: relative; background: var(--bg-primary); border-radius: var(--radius-lg); box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-height: 80vh; overflow: hidden; display: flex; flex-direction: column; z-index: 1; max-width: 600px; }
+.modal-header { padding: 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
+.modal-body { padding: 1.5rem; overflow-y: auto; }
+.widget-actions { position: absolute; top: 8px; right: 8px; display: none; gap: 4px; z-index: 100; }
+.grid-stack.edit-mode .widget-actions { display: flex; }
+.widget-action-btn { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; color: var(--text-primary); font-size: 0.85rem; transition: all 0.2s; }
+.widget-action-btn:hover { background: var(--accent-primary); color: white; border-color: var(--accent-primary); }
+.widget-action-btn.danger:hover { background: #ef4444; border-color: #ef4444; }
+.widget-settings-btn:hover { background: #f59e0b; border-color: #f59e0b; }
+.widget-selector-item { padding: 0.75rem 1rem; background: var(--bg-secondary); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.2s; }
+.widget-selector-item:hover { background: var(--accent-primary); color: white; }
+.widget-selector-item.disabled { opacity: 0.5; cursor: not-allowed; }
+.widget-selector-item.disabled:hover { background: var(--bg-secondary); color: var(--text-primary); }
+
+#api-unreachable-banner { margin: 0.5rem 1rem; }
 
 /* Stats Cards */
 .stats-grid {
@@ -3093,3 +3155,27 @@ a:hover {
 .help-grid .card .card-body {
     flex: 1 1 auto;
 }
+
+/* Utility helpers to replace inline styles in templates */
+.d-none { display: none !important; }
+.d-inline { display: inline !important; }
+.d-inline-block { display: inline-block !important; }
+.d-grid { display: grid; }
+.d-flex { display: flex; }
+.gap-12 { gap: 12px; }
+.gap-8 { gap: 8px; }
+.mb-24 { margin-bottom: 24px; }
+.mb-20 { margin-bottom: 20px; }
+.mb-16 { margin-bottom: 16px; }
+.mb-12 { margin-bottom: 12px; }
+.mb-8 { margin-bottom: 8px; }
+.mb-0 { margin-bottom: 0; }
+.mt-24 { margin-top: 24px; }
+.mt-20 { margin-top: 20px; }
+.ml-1rem { margin-left: 1rem; }
+.p-0 { padding: 0 !important; }
+.py-48 { padding-top: 48px; padding-bottom: 48px; }
+.pl-24 { padding-left: 24px; }
+.text-danger { color: var(--danger); }
+.text-secondary { color: var(--text-secondary); }
+.code-block { background: var(--bg-secondary); padding: 12px; border-radius: 6px; }

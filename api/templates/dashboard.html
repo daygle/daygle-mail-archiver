@@ -6,171 +6,7 @@
 <!-- GridStack CSS (CDN) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@10.2.0/dist/gridstack.min.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@10.2.0/dist/gridstack-extra.min.css" />
-<style>
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-@keyframes slideOut {
-    from {
-        transform: translateX(0);
-        opacity: 1;
-    }
-    to {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-}
-/* Widget card fixes for proper containment */
-.widget-card {
-    position: relative;
-    contain: layout style paint;
-}
-
-.widget-header {
-    flex-shrink: 0;
-}
-
-.widget-body {
-    min-height: 0;
-}
-/* Individual stat widget styling */
-.stat-display {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    text-align: center;
-    padding: 0.5rem;
-    min-height: 80px;
-    flex: 1;
-}
-.stat-value {
-    font-size: clamp(1.2rem, 4vw, 2.5rem);
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 0.25rem;
-    line-height: 1.2;
-    word-break: break-word;
-}
-.stat-label {
-    font-size: clamp(0.75rem, 2vw, 0.9rem);
-    color: var(--text-secondary);
-    font-weight: 500;
-    line-height: 1.3;
-    word-break: break-word;
-}
-/* Modal styles */
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 10000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.modal-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-}
-.modal-content {
-    position: relative;
-    background: var(--bg-primary);
-    border-radius: var(--radius-lg);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    max-height: 80vh;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    z-index: 1;
-}
-.modal-header {
-    padding: 1.5rem;
-    border-bottom: 1px solid var(--border-color);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-.modal-body {
-    padding: 1.5rem;
-    overflow-y: auto;
-}
-/* Widget action buttons in edit mode */
-.widget-actions {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    display: none;
-    gap: 4px;
-    z-index: 100;
-}
-.grid-stack.edit-mode .widget-actions {
-    display: flex;
-}
-.widget-action-btn {
-    width: 28px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--bg-primary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    color: var(--text-primary);
-    font-size: 0.85rem;
-    transition: all 0.2s;
-}
-.widget-action-btn:hover {
-    background: var(--accent-primary);
-    color: white;
-    border-color: var(--accent-primary);
-}
-.widget-action-btn.danger:hover {
-    background: #ef4444;
-    border-color: #ef4444;
-}
-.widget-settings-btn:hover {
-    background: #f59e0b;
-    border-color: #f59e0b;
-}
-.widget-selector-item {
-    padding: 0.75rem 1rem;
-    background: var(--bg-secondary);
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-.widget-selector-item:hover {
-    background: var(--accent-primary);
-    color: white;
-}
-.widget-selector-item.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-.widget-selector-item.disabled:hover {
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-}
-</style>
+{# Dashboard-specific styles moved to api/static/styles.css #}
 {% endblock %}
 
 {% block content %}
@@ -182,31 +18,31 @@
         <button id="btn-customize" class="btn btn-secondary" title="Customise Dashboard">
             <i class="fas fa-cog"></i>
         </button>
-        <button id="btn-add-widget" class="btn btn-info" style="display: none;" title="Add Widget">
+        <button id="btn-add-widget" class="btn btn-info d-none" title="Add Widget">
             <i class="fas fa-plus"></i>
         </button>
-        <button id="btn-save-layout" class="btn btn-primary" style="display: none;" title="Save Layout">
+        <button id="btn-save-layout" class="btn btn-primary d-none" title="Save Layout">
             <i class="fas fa-save"></i>
         </button>
-        <button id="btn-reset-layout" class="btn btn-warning" style="display: none;" title="Reset Layout">
+        <button id="btn-reset-layout" class="btn btn-warning d-none" title="Reset Layout">
             <i class="fas fa-undo"></i>
         </button>
-        <button id="btn-cancel" class="btn btn-secondary" style="display: none;" title="Cancel">
+        <button id="btn-cancel" class="btn btn-secondary d-none" title="Cancel">
             <i class="fas fa-times"></i>
         </button>
     </div>
 </div>
 
 <!-- API Unreachable Banner (hidden by default) -->
-<div id="api-unreachable-banner" class="alert alert-warning" style="display: none; margin: 0.5rem 1rem;">
+<div id="api-unreachable-banner" class="alert alert-warning d-none">
     <span id="api-unreachable-message">API unreachable — retrying...</span>
-    <button id="api-retry-now" class="btn btn-sm btn-primary" style="margin-left: 1rem;">Retry now</button>
+    <button id="api-retry-now" class="btn btn-sm btn-primary ml-1rem">Retry now</button>
 </div>
 
 <!-- Widget Selector Modal (Hidden by default) -->
-<div id="widget-selector-modal" class="modal" style="display: none;">
+<div id="widget-selector-modal" class="modal d-none">
     <div class="modal-overlay" id="modal-overlay"></div>
-    <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-content">
         <div class="modal-header">
             <h3><i class="fas fa-plus-circle"></i> Add Widgets</h3>
             <button class="btn-icon" id="btn-close-modal">
@@ -214,8 +50,8 @@
             </button>
         </div>
         <div class="modal-body">
-            <p class="text-muted" style="margin-bottom: 1rem;">Select widgets to add to your dashboard:</p>
-            <div id="widget-selector-list" style="display: grid; gap: 0.5rem;"></div>
+            <p class="text-muted mb-16">Select widgets to add to your dashboard:</p>
+            <div id="widget-selector-list" class="d-grid gap-8"></div>
         </div>
     </div>
 </div>
