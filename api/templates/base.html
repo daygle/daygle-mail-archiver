@@ -10,13 +10,23 @@
     <link rel="stylesheet" href="/static/styles.css">
     <script>
         (function(){
-            // Expose server-side theme preference to client.
-            // If user has chosen 'light' or 'dark', apply it immediately so CSS loads with correct theme.
+            // Expose server-side theme preference to client and prefer a locally saved theme.
+            // This ensures user toggles persist across page navigations without needing a server update.
             var serverTheme = "{{ request.session.get('theme', '') }}";
             var serverGlobalTheme = "{{ request.session.get('global_theme', '') }}";
             window.__serverTheme = serverTheme || '';
             window.__serverGlobalTheme = serverGlobalTheme || '';
-            if (serverTheme && serverTheme !== 'system') {
+
+            try {
+                var savedLocalTheme = localStorage.getItem('theme');
+            } catch (e) {
+                var savedLocalTheme = null;
+            }
+
+            // Prefer an explicit localStorage theme (light/dark) to avoid flicker and keep user choice.
+            if (savedLocalTheme && savedLocalTheme !== 'system') {
+                document.documentElement.setAttribute('data-theme', savedLocalTheme);
+            } else if (serverTheme && serverTheme !== 'system') {
                 document.documentElement.setAttribute('data-theme', serverTheme);
             } else if (serverTheme === 'system' && serverGlobalTheme && serverGlobalTheme !== 'system') {
                 document.documentElement.setAttribute('data-theme', serverGlobalTheme);
@@ -307,16 +317,20 @@
             }
         }
 
-        // Restore theme from server preference (if set) or localStorage
+        // Restore theme: prefer localStorage (user choice) then server preference
         const serverTheme = window.__serverTheme || '';
         const serverGlobalTheme = window.__serverGlobalTheme || '';
-        
+        const savedLocalTheme = (function(){ try { return localStorage.getItem('theme'); } catch(e){ return null; } })();
+
         function getSystemTheme() {
             // Detect browser's preferred color scheme
             return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         }
         
-        if (serverTheme && serverTheme !== 'system') {
+        if (savedLocalTheme && savedLocalTheme !== 'system') {
+            // User has a locally stored explicit preference — honor it
+            setTheme(savedLocalTheme);
+        } else if (serverTheme && serverTheme !== 'system') {
             // honor explicit user preference stored on server
             setTheme(serverTheme);
         } else if (serverTheme === 'system' && serverGlobalTheme && serverGlobalTheme !== 'system') {
@@ -326,7 +340,7 @@
             // user or global setting is 'system' — follow browser preference
             setTheme(getSystemTheme());
         } else {
-            const savedTheme = localStorage.getItem('theme') || 'light';
+            const savedTheme = savedLocalTheme || 'light';
             setTheme(savedTheme);
         }
 

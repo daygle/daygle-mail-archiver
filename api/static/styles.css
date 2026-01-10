@@ -2970,6 +2970,20 @@ a:hover {
     background-color: var(--bg-hover);
 }
 
+/* Ensure hover preserves readable text color in both themes */
+.dropdown-item,
+.theme-toggle-item {
+    color: var(--text-primary);
+}
+.dropdown-item:hover,
+.theme-toggle-item:hover {
+    color: var(--text-primary);
+}
+.dropdown-item:hover i,
+.theme-toggle-item:hover i {
+    color: var(--text-primary);
+}
+
 .dropdown-item i {
     width: 16px;
     text-align: center;
