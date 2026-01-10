@@ -450,10 +450,20 @@
             }
         }
 
-        // If server provided a flash message, show it as a toast for consistency
+        // If server provided a flash message, show it as a toast for consistency.
+        // Defer until Bootstrap is loaded (or window.load) so `bootstrap.Toast` is available.
         try {
-            if (window.__initialFlash) {
-                showToast(window.__initialFlash);
+            function displayInitialFlash() {
+                if (window.__initialFlash) {
+                    showToast(window.__initialFlash);
+                    window.__initialFlash = null;
+                }
+            }
+
+            if (window.bootstrap) {
+                displayInitialFlash();
+            } else {
+                window.addEventListener('load', displayInitialFlash);
             }
         } catch (e) {}
         
