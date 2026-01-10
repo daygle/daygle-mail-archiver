@@ -428,7 +428,9 @@ const DashboardManager = {
         const cols = this.columns || 12;
         if (cols === 12) return widgets;
 
-        const factor = 12 / cols; // e.g. 2 when cols=6
+        // Scale canonical 12-column coordinates to the current columns.
+        // e.g., when cols=2, factor = 2/12 = 0.1667 so w=3 -> round(3 * 0.1667) => 1
+        const factor = cols / 12;
         return widgets.map(w => {
             const newW = Math.min(Math.max(1, Math.round(w.w * factor)), cols);
             const newX = Math.min(Math.max(0, Math.round(w.x * factor)), cols - newW);
@@ -446,10 +448,10 @@ const DashboardManager = {
 
         // Initialise GridStack
         try {
-            // Use fewer columns on small screens (2 columns) by halving the column count
-            // Default layout is designed for 12 columns (4 columns of w=3). On small screens
-            // we use 6 columns so widgets sized w=3 become w=6 (2 columns layout).
-            this.columns = window.matchMedia('(max-width: 768px)').matches ? 6 : 12;
+            // Use fewer columns on small screens (2 columns) to present a two-column layout on small devices.
+            // Default layout targets 12 columns on desktop; on small screens we use 2 columns so items
+            // are scaled appropriately (e.g., w=3 on 12-column -> w=1 on 2-column).
+            this.columns = window.matchMedia('(max-width: 768px)').matches ? 2 : 12;
 
             this.grid = GridStack.init({
                 column: this.columns,
@@ -878,8 +880,10 @@ const DashboardManager = {
 
         items.forEach(item => {
             const node = item.gridstackNode;
-            const normW = saveFactor === 1 ? node.w : Math.max(1, Math.round(node.w / saveFactor));
-            const normX = saveFactor === 1 ? node.x : Math.max(0, Math.round(node.x / saveFactor));
+            // Convert current (display) coordinates back to canonical 12-column coordinates
+            // by multiplying by saveFactor (12 / cols) so preferences remain device-agnostic.
+            const normW = saveFactor === 1 ? node.w : Math.max(1, Math.round(node.w * saveFactor));
+            const normX = saveFactor === 1 ? node.x : Math.max(0, Math.round(node.x * saveFactor));
             widgets.push({
                 widget_id: node.id,
                 x: normX,
