@@ -379,7 +379,14 @@ const DashboardManager = {
             try {
                 const response = await fetch(url, options);
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                const data = await response.json();
+                // Be defensive: some endpoints may return non-JSON on failure; attempt to parse JSON and fail otherwise to trigger retry
+                const text = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (parseErr) {
+                    throw new Error('Invalid JSON response');
+                }
                 this.hideApiBanner();
                 return data;
             } catch (err) {
@@ -442,7 +449,11 @@ const DashboardManager = {
         // Check if GridStack is loaded
         if (typeof GridStack === 'undefined') {
             console.error('GridStack library not loaded - CDN might be blocked or unavailable');
-            alert('Dashboard failed to load: GridStack library not available. Please check your internet connection and refresh the page.');
+            if (typeof showToast === 'function') {
+                showToast('Dashboard failed to load: GridStack library not available. Please check your internet connection and refresh the page.', 'error');
+            } else {
+                alert('Dashboard failed to load: GridStack library not available. Please check your internet connection and refresh the page.');
+            }
             return;
         }
 
@@ -486,7 +497,11 @@ const DashboardManager = {
         } catch (error) {
             console.error('Error initialising dashboard:', error);
             console.error('Error stack:', error.stack);
-            alert('Dashboard failed to initialise: ' + error.message + '\n\nCheck the browser console for more details.');
+            if (typeof showToast === 'function') {
+                showToast('Dashboard failed to initialise: ' + error.message + '\n\nCheck the browser console for more details.', 'error');
+            } else {
+                alert('Dashboard failed to initialise: ' + error.message + '\n\nCheck the browser console for more details.');
+            }
         }
     },
 
@@ -678,12 +693,14 @@ const DashboardManager = {
         });
 
         // Save layout button
-        document.getElementById('btn-save-layout').addEventListener('click', () => {
+        const saveBtn = document.getElementById('btn-save-layout');
+        if (saveBtn) saveBtn.addEventListener('click', () => {
             this.saveLayout();
         });
 
         // Reset layout button
-        document.getElementById('btn-reset-layout').addEventListener('click', () => {
+        const resetBtn = document.getElementById('btn-reset-layout');
+        if (resetBtn) resetBtn.addEventListener('click', () => {
             if (confirm('Reset dashboard to default layout?')) {
                 this.renderWidgets(this.defaultWidgets);
                 this.saveLayout();
@@ -691,17 +708,20 @@ const DashboardManager = {
         });
 
         // Cancel button
-        document.getElementById('btn-cancel').addEventListener('click', () => {
+        const cancelBtn = document.getElementById('btn-cancel');
+        if (cancelBtn) cancelBtn.addEventListener('click', () => {
             this.cancelEdit();
         });
 
         // Close modal button
-        document.getElementById('btn-close-modal').addEventListener('click', () => {
+        const closeModalBtn = document.getElementById('btn-close-modal');
+        if (closeModalBtn) closeModalBtn.addEventListener('click', () => {
             this.hideModal(document.getElementById('widget-selector-modal'));
         });
 
         // Modal overlay click
-        document.getElementById('modal-overlay').addEventListener('click', () => {
+        const modalOverlay = document.getElementById('modal-overlay');
+        if (modalOverlay) modalOverlay.addEventListener('click', () => {
             this.hideModal(document.getElementById('widget-selector-modal'));
         });
 
@@ -731,22 +751,34 @@ const DashboardManager = {
 
         if (this.editMode) {
             this.grid.enable();
-            document.getElementById('btn-customize').style.display = 'none';
-            document.getElementById('btn-add-widget').style.display = 'inline-block';
-            document.getElementById('btn-save-layout').style.display = 'inline-block';
-            document.getElementById('btn-reset-layout').style.display = 'inline-block';
-            document.getElementById('btn-cancel').style.display = 'inline-block';
-            document.querySelector('.grid-stack').classList.add('edit-mode');
+            const btnCustomize = document.getElementById('btn-customize');
+            if (btnCustomize) btnCustomize.style.display = 'none';
+            const btnAdd = document.getElementById('btn-add-widget');
+            if (btnAdd) btnAdd.style.display = 'inline-block';
+            const btnSave = document.getElementById('btn-save-layout');
+            if (btnSave) btnSave.style.display = 'inline-block';
+            const btnReset = document.getElementById('btn-reset-layout');
+            if (btnReset) btnReset.style.display = 'inline-block';
+            const btnCancel = document.getElementById('btn-cancel');
+            if (btnCancel) btnCancel.style.display = 'inline-block';
+            const gridEl = document.querySelector('.grid-stack');
+            if (gridEl) gridEl.classList.add('edit-mode');
             const toolbar = document.querySelector('.dashboard-toolbar');
             if (toolbar) toolbar.classList.add('editing');
         } else {
             this.grid.disable();
-            document.getElementById('btn-customize').style.display = 'inline-block';
-            document.getElementById('btn-add-widget').style.display = 'none';
-            document.getElementById('btn-save-layout').style.display = 'none';
-            document.getElementById('btn-reset-layout').style.display = 'none';
-            document.getElementById('btn-cancel').style.display = 'none';
-            document.querySelector('.grid-stack').classList.remove('edit-mode');
+            const btnCustomize = document.getElementById('btn-customize');
+            if (btnCustomize) btnCustomize.style.display = 'inline-block';
+            const btnAdd = document.getElementById('btn-add-widget');
+            if (btnAdd) btnAdd.style.display = 'none';
+            const btnSave = document.getElementById('btn-save-layout');
+            if (btnSave) btnSave.style.display = 'none';
+            const btnReset = document.getElementById('btn-reset-layout');
+            if (btnReset) btnReset.style.display = 'none';
+            const btnCancel = document.getElementById('btn-cancel');
+            if (btnCancel) btnCancel.style.display = 'none';
+            const gridEl = document.querySelector('.grid-stack');
+            if (gridEl) gridEl.classList.remove('edit-mode');
             const toolbar = document.querySelector('.dashboard-toolbar');
             if (toolbar) toolbar.classList.remove('editing');
         }
@@ -1127,7 +1159,11 @@ function initDashboard() {
     if (typeof GridStack === 'undefined') {
         if (initAttempts >= maxAttempts) {
             console.error('GridStack failed to load after 5 seconds');
-            alert('Dashboard initialisation timeout. GridStack library did not load. Please check:\n\n1. Network tab in Developer Tools (F12)\n2. Your internet connection\n3. Firewall/antivirus blocking CDNs');
+            if (typeof showToast === 'function') {
+                showToast('Dashboard initialisation timeout. GridStack library did not load. Please check your browser console and network connection.', 'error');
+            } else {
+                alert('Dashboard initialisation timeout. GridStack library did not load. Please check:\n\n1. Network tab in Developer Tools (F12)\n2. Your internet connection\n3. Firewall/antivirus blocking CDNs');
+            }
             return;
         }
         setTimeout(initDashboard, 100);
