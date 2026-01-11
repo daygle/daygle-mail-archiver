@@ -245,11 +245,17 @@ Action Taken: {action}"""
                     except Exception:
                         expires_at = None
 
+                    try:
+                        from utils.email_parser import compute_signature
+                        sig = compute_signature(raw_bytes)
+                    except Exception:
+                        sig = None
+
                     execute(
                         """
                         INSERT INTO quarantined_emails
-                        (original_source, original_folder, original_uid, subject, sender, recipients, date, raw_email, compressed, virus_name, reason, quarantined_at, expires_at, quarantined_by)
-                        VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, TRUE, :virus_name, :reason, NOW(), :expires_at, :quarantined_by)
+                        (original_source, original_folder, original_uid, subject, sender, recipients, date, raw_email, signature, compressed, virus_name, reason, quarantined_at, expires_at, quarantined_by)
+                        VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, :signature, TRUE, :virus_name, :reason, NOW(), :expires_at, :quarantined_by)
                         """,
                         {
                             "source": source,
@@ -260,6 +266,7 @@ Action Taken: {action}"""
                             "recipients": recipients,
                             "date": date_header,
                             "raw_email": raw_to_store,
+                            "signature": sig,
                             "virus_name": virus_name,
                             "reason": 'quarantined by ClamAV',
                             "expires_at": expires_at,
@@ -277,16 +284,24 @@ Action Taken: {action}"""
     # Insert into emails table (store compressed bytes unless quarantined)
     if not quarantined:
         try:
-            execute(
+                    # compute signature of uncompressed raw email
+                    try:
+                        from utils.email_parser import compute_signature
+                        sig = compute_signature(raw_bytes)
+                    except Exception:
+                        sig = None
+
+                    execute(
                 """
-                INSERT INTO emails (source, folder, uid, subject, sender, recipients, date, raw_email, compressed, virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined)
-                VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, :compressed, :virus_scanned, :virus_detected, :virus_name, :scan_timestamp, :quarantined)
+                INSERT INTO emails (source, folder, uid, subject, sender, recipients, date, raw_email, signature, compressed, virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined)
+                VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, :signature, :compressed, :virus_scanned, :virus_detected, :virus_name, :scan_timestamp, :quarantined)
                 ON CONFLICT (source, folder, uid) DO UPDATE SET
                     subject = EXCLUDED.subject,
                     sender = EXCLUDED.sender,
                     recipients = EXCLUDED.recipients,
                     date = EXCLUDED.date,
                     raw_email = EXCLUDED.raw_email,
+                    signature = EXCLUDED.signature,
                     compressed = EXCLUDED.compressed,
                     virus_scanned = EXCLUDED.virus_scanned,
                 virus_detected = EXCLUDED.virus_detected,
@@ -303,6 +318,7 @@ Action Taken: {action}"""
                 "recipients": recipients,
                 "date": date_header,
                 "raw_email": compressed_bytes,
+                "signature": sig,
                 "compressed": bool(compressed_bytes),
                 "virus_scanned": virus_scanned,
                 "virus_detected": virus_detected,

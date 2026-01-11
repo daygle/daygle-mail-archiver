@@ -9,6 +9,7 @@ from utils.config import get_config
 from utils.security import decrypt_password, can_delete
 from cryptography.fernet import Fernet
 from utils.alerts import create_alert
+from utils.email_parser import compute_signature
 
 router = APIRouter()
 
@@ -181,16 +182,65 @@ def list_quarantine(request: Request, q: str = None, virus: str = None, page: in
     total = int(total_row['total'] or 0) if total_row else 0
 
     rows = query(
-        f'SELECT id, subject, sender, recipients, virus_name, quarantined_at, expires_at FROM quarantined_emails {where_sql} ORDER BY quarantined_at DESC LIMIT :limit OFFSET :offset',
+        f'SELECT id, subject, sender, recipients, virus_name, quarantined_at, expires_at, raw_email, compressed, signature FROM quarantined_emails {where_sql} ORDER BY quarantined_at DESC LIMIT :limit OFFSET :offset',
         {**params, 'limit': page_size, 'offset': offset}
     ).mappings().all()
 
     total_pages = (total + page_size - 1) // page_size if page_size else 1
+    # Compute integrity for each quarantined item if possible
+    processed = []
+    fernet = _get_quarantine_fernet()
+    for r in rows:
+        ir = dict(r)
+        integrity = 'unknown'
+        try:
+            stored_sig = ir.get('signature')
+            raw_blob = ir.get('raw_email')
+            compressed_flag = ir.get('compressed')
+            data = raw_blob
+            if raw_blob is not None:
+                if fernet:
+                    try:
+                        data = fernet.decrypt(raw_blob)
+                    except Exception:
+                        # If decryption fails, leave data as-is and mark unknown
+                        data = raw_blob
+                # attempt gzip decompression if appears gzipped
+                try:
+                    if isinstance(data, (bytes, bytearray)) and len(data) >= 2 and data[:2] == b"\x1f\x8b":
+                        import gzip as _gzip
+                        data = _gzip.decompress(data)
+                except Exception:
+                    pass
+
+                try:
+                    current_sig = compute_signature(data)
+                except Exception:
+                    current_sig = None
+
+                if stored_sig is None:
+                    integrity = 'no_signature'
+                elif current_sig is None:
+                    integrity = 'unknown'
+                elif stored_sig == current_sig:
+                    integrity = 'ok'
+                else:
+                    integrity = 'modified'
+            else:
+                integrity = 'no_raw'
+        except Exception:
+            integrity = 'unknown'
+
+        ir.pop('raw_email', None)
+        ir.pop('compressed', None)
+        ir['integrity'] = integrity
+        processed.append(ir)
+
     msg = request.session.pop('flash', None)
 
     return templates.TemplateResponse('quarantine.html', {
         'request': request,
-        'items': rows,
+        'items': processed,
         'q': q or '',
         'virus': virus or '',
         'page': page,
@@ -223,6 +273,8 @@ def view_quarantine(request: Request, qid: int):
     raw = item.get('raw_email')
     f = _get_quarantine_fernet()
     preview = None
+    integrity = 'unknown'
+    current_sig = None
     if raw:
         try:
             data = raw
@@ -237,8 +289,27 @@ def view_quarantine(request: Request, qid: int):
                 # If decompression fails, fall back to raw bytes
                 pass
             preview = data[:10000].decode(errors='replace') if isinstance(data, (bytes, bytearray)) else str(data)
+            # compute integrity for this quarantined item
+            try:
+                current_sig = compute_signature(data)
+                stored_sig = item.get('signature')
+                if stored_sig is None:
+                    integrity = 'no_signature'
+                elif current_sig is None:
+                    integrity = 'unknown'
+                elif stored_sig == current_sig:
+                    integrity = 'ok'
+                else:
+                    integrity = 'modified'
+            except Exception:
+                integrity = 'unknown'
         except Exception:
             preview = '[Could not decrypt or render content]'
+
+    # attach integrity fields to item for template
+    item = dict(item)
+    item['integrity'] = integrity
+    item['current_signature'] = current_sig
 
     return templates.TemplateResponse('quarantine-view.html', {'request': request, 'item': item, 'preview': preview})
 
@@ -278,45 +349,54 @@ def restore_quarantine(request: Request, qid: int):
     raw = item.get('raw_email')
     f = _get_quarantine_fernet()
     if raw:
-        try:
-            data = raw
-            if f:
-                data = f.decrypt(data)
-            # Insert or update email in emails table
-            execute(
-                """
-                UPDATE emails SET raw_email = :raw, compressed = TRUE, quarantined = FALSE, quarantine_id = NULL, virus_scanned = TRUE, virus_detected = TRUE, virus_name = :vname, scan_timestamp = :qtime
-                WHERE source = :source AND folder = :folder AND uid = :uid
-                """,
-                {
-                    'raw': data,
-                    'vname': item.get('virus_name'),
-                    'qtime': item.get('quarantined_at'),
-                    'source': item.get('original_source'),
-                    'folder': item.get('original_folder'),
-                    'uid': item.get('original_uid')
-                }
-            )
-            # If no row updated, insert a new row
-            execute(
-                """
-                INSERT INTO emails (source, folder, uid, subject, sender, recipients, date, raw_email, compressed, virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined)
-                VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, TRUE, TRUE, TRUE, :vname, :qtime, TRUE)
-                ON CONFLICT (source, folder, uid) DO NOTHING
-                """,
-                {
-                    'source': item.get('original_source'),
-                    'folder': item.get('original_folder'),
-                    'uid': item.get('original_uid'),
-                    'subject': item.get('subject'),
-                    'sender': item.get('sender'),
-                    'recipients': item.get('recipients'),
-                    'date': item.get('date'),
-                    'raw_email': data,
-                    'vname': item.get('virus_name'),
-                    'qtime': item.get('quarantined_at')
-                }
-            )
+            try:
+                data = raw
+                if f:
+                    data = f.decrypt(data)
+                # compute signature
+                try:
+                    from utils.email_parser import compute_signature
+                    sig = compute_signature(data)
+                except Exception:
+                    sig = None
+
+                # Insert or update email in emails table
+                execute(
+                    """
+                    UPDATE emails SET raw_email = :raw, signature = :signature, compressed = TRUE, quarantined = FALSE, quarantine_id = NULL, virus_scanned = TRUE, virus_detected = TRUE, virus_name = :vname, scan_timestamp = :qtime
+                    WHERE source = :source AND folder = :folder AND uid = :uid
+                    """,
+                    {
+                        'raw': data,
+                        'signature': sig,
+                        'vname': item.get('virus_name'),
+                        'qtime': item.get('quarantined_at'),
+                        'source': item.get('original_source'),
+                        'folder': item.get('original_folder'),
+                        'uid': item.get('original_uid')
+                    }
+                )
+                # If no row updated, insert a new row
+                execute(
+                    """
+                    INSERT INTO emails (source, folder, uid, subject, sender, recipients, date, raw_email, signature, compressed, virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined)
+                    VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, :signature, TRUE, TRUE, TRUE, :vname, :qtime, TRUE)
+                    ON CONFLICT (source, folder, uid) DO NOTHING
+                    """,
+                    {
+                        'source': item.get('original_source'),
+                        'folder': item.get('original_folder'),
+                        'uid': item.get('original_uid'),
+                        'subject': item.get('subject'),
+                        'sender': item.get('sender'),
+                        'recipients': item.get('recipients'),
+                        'date': item.get('date'),
+                        'raw_email': data,
+                        'signature': sig,
+                        'vname': item.get('virus_name'),
+                        'qtime': item.get('quarantined_at')
+                    }
+                )
         except Exception as e:
             log('error', 'Quarantine', f"Failed to restore quarantined email {qid}: {str(e)}", "")
             return RedirectResponse(f'/quarantine/{qid}', status_code=303)
@@ -383,25 +463,7 @@ def delete_quarantine(request: Request, qid: int, mode: str = Form("db")):
             error_text = " | ".join(errors)
             log("warning", "Quarantine", f"User '{username}' deleted quarantined email {qid} from IMAP and database with errors", error_text)
             request.session['flash'] = f"Deleted quarantined email from database and mail server. Some errors occurred: {error_text}"
-        else:
-            log("warning", "Quarantine", f"User '{username}' deleted quarantined email {qid} from IMAP and database", "")
-            request.session['flash'] = "Deleted quarantined email from database and mail server."
-
-        return RedirectResponse('/quarantine', status_code=303)
-
-    else:
-        request.session['flash'] = "Invalid delete mode selected."
-        return RedirectResponse('/quarantine', status_code=303)
-
-
-@router.post("/quarantine/restore")
-def perform_bulk_restore(
-    request: Request,
-    ids: List[int] = Form(...),
-):
-    """
-    Bulk restore selected quarantined emails.
-    """
+        
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
@@ -427,14 +489,23 @@ def perform_bulk_restore(
                     data = raw
                     if f:
                         data = f.decrypt(data)
+
+                    # compute signature
+                    try:
+                        from utils.email_parser import compute_signature
+                        sig = compute_signature(data)
+                    except Exception:
+                        sig = None
+
                     # Insert or update email in emails table
                     execute(
                         """
-                        UPDATE emails SET raw_email = :raw, compressed = TRUE, quarantined = FALSE, quarantine_id = NULL, virus_scanned = TRUE, virus_detected = TRUE, virus_name = :vname, scan_timestamp = :qtime
+                        UPDATE emails SET raw_email = :raw, signature = :signature, compressed = TRUE, quarantined = FALSE, quarantine_id = NULL, virus_scanned = TRUE, virus_detected = TRUE, virus_name = :vname, scan_timestamp = :qtime
                         WHERE source = :source AND folder = :folder AND uid = :uid
                         """,
                         {
                             'raw': data,
+                            'signature': sig,
                             'vname': item.get('virus_name'),
                             'qtime': item.get('quarantined_at'),
                             'source': item.get('original_source'),
@@ -445,8 +516,8 @@ def perform_bulk_restore(
                     # If no row updated, insert a new row
                     execute(
                         """
-                        INSERT INTO emails (source, folder, uid, subject, sender, recipients, date, raw_email, compressed, virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined)
-                        VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, TRUE, TRUE, TRUE, :vname, :qtime, TRUE)
+                        INSERT INTO emails (source, folder, uid, subject, sender, recipients, date, raw_email, signature, compressed, virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined)
+                        VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, :signature, TRUE, TRUE, TRUE, :vname, :qtime, TRUE)
                         ON CONFLICT (source, folder, uid) DO NOTHING
                         """,
                         {
@@ -458,6 +529,7 @@ def perform_bulk_restore(
                             'recipients': item.get('recipients'),
                             'date': item.get('date'),
                             'raw_email': data,
+                            'signature': sig,
                             'vname': item.get('virus_name'),
                             'qtime': item.get('quarantined_at')
                         }

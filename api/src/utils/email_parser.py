@@ -1,6 +1,7 @@
 import gzip
 from email import message_from_bytes
 from email.message import EmailMessage
+import hashlib
 
 def decompress(raw: bytes, compressed: bool) -> bytes:
     return gzip.decompress(raw) if compressed else raw
@@ -58,3 +59,12 @@ def parse_email(raw: bytes):
         "headers": headers,
         "body": extract_body(msg),
     }
+
+
+def compute_signature(raw: bytes) -> str:
+    """Compute SHA256 hex signature of the raw email bytes."""
+    if raw is None:
+        return ""
+    h = hashlib.sha256()
+    h.update(raw)
+    return h.hexdigest()

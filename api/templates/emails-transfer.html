@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block page_title %}Transfer Emails{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">
+      <i class="fas fa-file-import"></i>
+      <span>Import / Export Emails</span>
+    </div>
+  </div>
+  <div class="card-body">
+    {% if flash %}
+    <div class="alert alert-{{ flash.type }}">{{ flash.message }}</div>
+    {% endif %}
+
+    <form method="post" action="/emails/import" enctype="multipart/form-data">
+      <div class="mb-3">
+        <label for="files" class="form-label">Choose EML, MBOX, PST, or ZIP files (ZIP may contain EML/MBX/PST)</label>
+        <input type="file" name="files" id="files" multiple accept=".eml,.mbox,.mbx,.pst,.zip,application/zip" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label for="source" class="form-label">Assign to Fetch Account</label>
+        <select name="source" id="source" class="form-select">
+          <option value="import">import (default)</option>
+          {% for a in accounts %}
+          <option value="{{ a }}">{{ a }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label for="folder" class="form-label">Folder</label>
+        <input type="text" name="folder" id="folder" value="Imported" class="form-control">
+      </div>
+
+      <div class="mt-3">
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-upload"></i>
+          <span>Upload and Import</span>
+        </button>
+        <a href="/emails" class="btn btn-secondary ms-2">Cancel</a>
+      </div>
+    </form>
+
+    <p class="text-muted mt-3">Note: PST import requires optional dependencies (`pypff`). If not installed, PST files cannot be imported. ZIP files are supported and will be scanned for EML/MBX/PST entries.</p>
+  </div>
+</div>
+
+{% endblock %}

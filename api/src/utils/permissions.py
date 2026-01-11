@@ -180,4 +180,7 @@ PERMISSIONS = {
 
     # Personal Settings
     'manage_own_profile': 'manage_own_profile'
+    ,
+    # Importing emails
+    'import_emails': 'import_emails'
 }

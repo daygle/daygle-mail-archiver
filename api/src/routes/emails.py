@@ -1,11 +1,15 @@
 from typing import List
-
-from fastapi import APIRouter, Request, Form
+import io
+import gzip
+import zipfile
+import mailbox
+from fastapi import APIRouter, Request, Form, UploadFile, File
 from fastapi.responses import RedirectResponse, StreamingResponse, HTMLResponse
 from imaplib import IMAP4, IMAP4_SSL
 
 from utils.db import query, execute
 from utils.email_parser import decompress, parse_email
+from utils.email_parser import compute_signature
 from utils.security import decrypt_password, can_delete
 from utils.logger import log
 from utils.templates import templates
@@ -74,7 +78,7 @@ def list_emails(
     rows = query(
         f"""
         SELECT id, source, folder, uid, subject, sender, recipients, date, created_at,
-               virus_scanned, virus_detected, virus_name
+               virus_scanned, virus_detected, virus_name, raw_email, compressed, signature
         FROM emails
         WHERE quarantined = FALSE
         {where_sql}
@@ -91,11 +95,46 @@ def list_emails(
 
     msg = request.session.pop("flash", None)
 
+    # Compute integrity per-row (may be expensive because it needs raw bytes)
+    processed = []
+    for r in rows:
+        rr = dict(r)
+        integrity = "unknown"
+        try:
+            stored_sig = rr.get("signature")
+            raw_blob = rr.get("raw_email")
+            compressed_flag = rr.get("compressed")
+            if raw_blob is not None:
+                raw = decompress(raw_blob, compressed_flag)
+                try:
+                    current_sig = compute_signature(raw)
+                except Exception:
+                    current_sig = None
+
+                if stored_sig is None:
+                    integrity = "no_signature"
+                elif current_sig is None:
+                    integrity = "unknown"
+                elif stored_sig == current_sig:
+                    integrity = "ok"
+                else:
+                    integrity = "modified"
+            else:
+                integrity = "no_raw"
+        except Exception:
+            integrity = "unknown"
+
+        # remove large raw fields before sending to template
+        rr.pop("raw_email", None)
+        rr.pop("compressed", None)
+        rr["integrity"] = integrity
+        processed.append(rr)
+
     return templates.TemplateResponse(
         "emails.html",
         {
             "request": request,
-            "emails": rows,
+            "emails": processed,
             "page": page,
             "page_size": page_size,
             "total": total,
@@ -115,7 +154,7 @@ def view_email(request: Request, email_id: int):
     row = query(
         """
         SELECT id, source, folder, uid, subject, sender, recipients, date,
-               raw_email, compressed, created_at, virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined
+               raw_email, compressed, signature, created_at, virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined
         FROM emails
         WHERE id = :id
         """,
@@ -151,6 +190,19 @@ def view_email(request: Request, email_id: int):
     raw = decompress(row["raw_email"], row["compressed"])
     parsed = parse_email(raw)
 
+    # compute integrity status
+    try:
+        stored_sig = row.get("signature")
+        current_sig = compute_signature(raw)
+        if stored_sig is None:
+            integrity = "no_signature"
+        elif stored_sig == current_sig:
+            integrity = "ok"
+        else:
+            integrity = "modified"
+    except Exception:
+        integrity = "unknown"
+
     username = request.session.get("username", "unknown")
     log("info", "Emails", f"User '{username}' viewed email ID {email_id}", "")
 
@@ -164,6 +216,9 @@ def view_email(request: Request, email_id: int):
             "headers": parsed["headers"],
             "body": parsed["body"],
             "flash": msg,
+            "integrity": integrity,
+            "stored_signature": row.get("signature"),
+            "current_signature": current_sig if 'current_sig' in locals() else None,
         },
     )
 
@@ -200,6 +255,40 @@ def download_email(request: Request, email_id: int):
         media_type="message/rfc822",
         headers={"Content-Disposition": f'attachment; filename="email-{email_id}.eml"'},
     )
+
+
+@router.get("/emails/{email_id}/verify")
+def verify_email(request: Request, email_id: int):
+    if not require_login(request):
+        return RedirectResponse("/login", status_code=303)
+
+    # Check permission to view emails
+    checker = PermissionChecker(request)
+    if not checker.has_permission("view_emails"):
+        return HTMLResponse("Access denied: Insufficient permissions to verify emails", status_code=403)
+
+    row = query(
+        "SELECT raw_email, compressed, signature FROM emails WHERE id = :id",
+        {"id": email_id},
+    ).mappings().first()
+
+    if not row:
+        return HTMLResponse("Not found", status_code=404)
+
+    raw = decompress(row["raw_email"], row["compressed"]) if row["raw_email"] is not None else b""
+    current_sig = None
+    try:
+        current_sig = compute_signature(raw)
+    except Exception:
+        current_sig = None
+
+    stored_sig = row.get("signature")
+
+    match = (stored_sig is not None and current_sig is not None and stored_sig == current_sig)
+
+    # Return JSON result
+    from fastapi.responses import JSONResponse
+    return JSONResponse({"id": email_id, "match": match, "stored_signature": stored_sig, "current_signature": current_sig})
 
 
 @router.post("/emails/{email_id}/quarantine")
@@ -356,8 +445,8 @@ def _quarantine_emails(ids: List[int], quarantined_by: str) -> int:
             # Insert into quarantined_emails
             quarantine_id = execute("""
                 INSERT INTO quarantined_emails
-                (original_source, original_folder, original_uid, subject, sender, recipients, date, raw_email, compressed, reason, quarantined_by)
-                VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, :compressed, :reason, :quarantined_by)
+                (original_source, original_folder, original_uid, subject, sender, recipients, date, raw_email, signature, compressed, reason, quarantined_by)
+                VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, :signature, :compressed, :reason, :quarantined_by)
             """, {
                 "source": email["source"],
                 "folder": email["folder"],
@@ -367,6 +456,7 @@ def _quarantine_emails(ids: List[int], quarantined_by: str) -> int:
                 "recipients": email["recipients"],
                 "date": email["date"],
                 "raw_email": email["raw_email"],
+                "signature": email.get("signature"),
                 "compressed": email["compressed"],
                 "reason": "manually quarantined",
                 "quarantined_by": quarantined_by
@@ -507,3 +597,394 @@ def _delete_emails_from_mail_server_and_db(ids: List[int]) -> tuple[int, list[st
         )
 
     return deleted, errors
+
+
+@router.get("/emails/import", response_class=HTMLResponse)
+def import_email_page(request: Request):
+    if not require_login(request):
+        return RedirectResponse("/login", status_code=303)
+
+    checker = PermissionChecker(request)
+    if not checker.has_permission("import_emails"):
+        return HTMLResponse("Access denied: Insufficient permissions to import emails", status_code=403)
+
+    msg = request.session.pop("flash", None)
+    # Provide list of fetch accounts so user can assign imported messages to a source
+    try:
+        accounts_rows = query("SELECT name FROM fetch_accounts ORDER BY name").mappings().all()
+        accounts = [r["name"] for r in accounts_rows]
+    except Exception:
+        accounts = []
+
+    return templates.TemplateResponse(
+        "emails-transfer.html",
+        {"request": request, "flash": msg, "accounts": accounts},
+    )
+
+
+def _insert_raw_email(raw: bytes, request: Request, source: str = "import", folder: str = "Imported") -> bool:
+    try:
+        # Parse headers for metadata
+        parsed = parse_email(raw)
+
+        # Compute next uid for this source/folder to avoid collisions
+        next_uid_row = query(
+            "SELECT COALESCE(MAX(uid), 0) + 1 AS next_uid FROM emails WHERE source = :source AND folder = :folder",
+            {"source": source, "folder": folder},
+        ).mappings().first()
+        uid = int(next_uid_row["next_uid"]) if next_uid_row else 1
+
+        compressed_raw = gzip.compress(raw)
+        try:
+            sig = compute_signature(raw)
+        except Exception:
+            sig = None
+
+        execute(
+            """
+            INSERT INTO emails (source, folder, uid, subject, sender, recipients, date, raw_email, signature, compressed)
+            VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, :signature, :compressed)
+            """,
+            {
+                "source": source,
+                "folder": folder,
+                "uid": uid,
+                "subject": parsed["headers"].get("subject", ""),
+                "sender": parsed["headers"].get("from", ""),
+                "recipients": parsed["headers"].get("to", ""),
+                "date": parsed["headers"].get("date", ""),
+                "raw_email": compressed_raw,
+                "signature": sig,
+                "compressed": True,
+            },
+        )
+
+        username = request.session.get("username", "unknown")
+        log("info", "Import", f"User '{username}' imported an email (source={source}, folder={folder}, uid={uid})", "")
+        return True
+    except Exception as e:
+        log("error", "Import", f"Failed to insert imported email: {str(e)}", "")
+        return False
+
+
+@router.post("/emails/import")
+async def import_emails(request: Request, source: str = Form("import"), folder: str = Form("Imported"), files: List[UploadFile] = File(...)):
+    if not require_login(request):
+        return RedirectResponse("/login", status_code=303)
+
+    checker = PermissionChecker(request)
+    if not checker.has_permission("import_emails"):
+        return HTMLResponse("Access denied: Insufficient permissions to import emails", status_code=403)
+
+    imported = 0
+    errors = []
+
+    for upload in files:
+        filename = upload.filename or ""
+        lower = filename.lower()
+        content = await upload.read()
+
+        try:
+            if lower.endswith(".eml") or upload.content_type == "message/rfc822":
+                if _insert_raw_email(content, request, source=source, folder=folder):
+                    imported += 1
+                else:
+                    errors.append(f"{filename}: failed to insert")
+
+            elif lower.endswith(".mbox") or lower.endswith(".mbx") or upload.content_type == "application/mbox":
+                # Use mailbox to parse mbox content from memory
+                try:
+                    mbox = mailbox.mbox(io.BytesIO(content))
+                except Exception:
+                    # mailbox.mbox expects a file path; fallback to manual parse
+                    buf = io.BytesIO(content)
+                    data = buf.getvalue().split(b"\nFrom ")
+                    for i, part in enumerate(data):
+                        if not part.strip():
+                            continue
+                        # Ensure proper 'From ' prefix for the first part
+                        raw = part if part.startswith(b"From ") else b"From " + part
+                        if _insert_raw_email(raw, request, source=source, folder=folder):
+                            imported += 1
+                        else:
+                            errors.append(f"{filename} part {i}: failed to insert")
+
+            elif lower.endswith('.zip') or upload.content_type == 'application/zip':
+                try:
+                    with zipfile.ZipFile(io.BytesIO(content)) as zf:
+                        for info in zf.infolist():
+                            if info.is_dir():
+                                continue
+                            try:
+                                inner_name = info.filename
+                                inner_lower = inner_name.lower()
+                                fcontent = zf.read(info.filename)
+                                if inner_lower.endswith('.eml') or inner_name.endswith('.msg'):
+                                    if _insert_raw_email(fcontent, request, source=source, folder=folder):
+                                        imported += 1
+                                    else:
+                                        errors.append(f"{filename}:{inner_name}: failed to insert")
+                                elif inner_lower.endswith('.mbox') or inner_lower.endswith('.mbx'):
+                                    # parse embedded mbox
+                                    parts = fcontent.split(b"\nFrom ")
+                                    for i, part in enumerate(parts):
+                                        if not part.strip():
+                                            continue
+                                        raw = part if part.startswith(b"From ") else b"From " + part
+                                        if _insert_raw_email(raw, request, source=source, folder=folder):
+                                            imported += 1
+                                        else:
+                                            errors.append(f"{filename}:{inner_name} part {i}: failed to insert")
+                                elif inner_lower.endswith('.pst'):
+                                    # try pypff on embedded PST if available
+                                    try:
+                                        import pypff
+                                        pst = pypff.file()
+                                        pst.open_file_object(io.BytesIO(fcontent))
+
+                                        def _traverse_folder_pst(folder):
+                                            nonlocal imported
+                                            for i in range(folder.number_of_sub_messages):
+                                                try:
+                                                    message = folder.get_sub_message(i)
+                                                    raw = b""
+                                                    try:
+                                                        raw_full = message.get_email()
+                                                        if raw_full:
+                                                            raw = raw_full
+                                                    except Exception:
+                                                        try:
+                                                            transport = message.get_transport_headers()
+                                                            if transport:
+                                                                raw = transport
+                                                        except Exception:
+                                                            raw = b""
+
+                                                    if isinstance(raw, str):
+                                                        raw = raw.encode('utf-8', errors='replace')
+
+                                                    if _insert_raw_email(raw, request, source=source, folder=folder):
+                                                        imported += 1
+                                                except Exception:
+                                                    continue
+
+                                            for j in range(folder.number_of_sub_folders):
+                                                try:
+                                                    sub = folder.get_sub_folder(j)
+                                                    _traverse_folder_pst(sub)
+                                                except Exception:
+                                                    continue
+
+                                        root = pst.get_root_folder()
+                                        _traverse_folder_pst(root)
+                                        pst.close()
+                                    except Exception as e:
+                                        errors.append(f"{filename}:{inner_name}: PST import failed ({str(e)})")
+                                else:
+                                    # unsupported inner file, skip
+                                    continue
+                            except Exception as e:
+                                errors.append(f"{filename}:{info.filename}: {str(e)}")
+                except Exception as e:
+                    errors.append(f"{filename}: zip extraction failed ({str(e)})")
+
+            elif lower.endswith(".pst"):
+                # PST import requires pypff (optional). Try to use it if available.
+                try:
+                    import pypff
+
+                    pst = pypff.file()
+                    pst.open_file_object(io.BytesIO(content))
+
+                    def _traverse_folder(folder):
+                        nonlocal imported
+                        for i in range(folder.number_of_sub_messages):
+                            try:
+                                message = folder.get_sub_message(i)
+                                raw = message.get_transport_headers() or b""
+                                # pypff message -> try to get RFC822 if available
+                                try:
+                                    raw_full = message.get_email()
+                                    if raw_full:
+                                        raw = raw_full
+                                except Exception:
+                                    pass
+
+                                if isinstance(raw, str):
+                                    raw = raw.encode("utf-8", errors="replace")
+
+                                if _insert_raw_email(raw, request, source=source, folder=folder):
+                                    imported += 1
+                                else:
+                                    errors.append(f"{filename}: failed to insert PST message")
+                            except Exception:
+                                continue
+
+                        # traverse subfolders
+                        for j in range(folder.number_of_sub_folders):
+                            try:
+                                sub = folder.get_sub_folder(j)
+                                _traverse_folder(sub)
+                            except Exception:
+                                continue
+
+                    root = pst.get_root_folder()
+                    _traverse_folder(root)
+                    pst.close()
+                except Exception as e:
+                    errors.append(f"{filename}: PST import not available or failed ({str(e)})")
+
+            else:
+                errors.append(f"{filename}: unsupported file type")
+        except Exception as e:
+            errors.append(f"{filename}: {str(e)}")
+
+    if imported > 0:
+        flash(request, f"Imported {imported} message(s).", 'success')
+    if errors:
+        flash(request, "; ".join(errors), 'error')
+
+    return RedirectResponse("/emails", status_code=303)
+
+
+@router.post("/emails/export")
+def export_emails(request: Request, ids: List[int] = Form(...), format: str = Form("zip")):
+    if not require_login(request):
+        return RedirectResponse("/login", status_code=303)
+
+    checker = PermissionChecker(request)
+    if not checker.has_permission("export_emails"):
+        return HTMLResponse("Access denied: Insufficient permissions to export emails", status_code=403)
+
+    if not isinstance(ids, list):
+        ids = [ids]
+
+    rows = query(
+        f"SELECT id, raw_email, compressed FROM emails WHERE id IN ({','.join([':id' + str(i) for i in range(len(ids))])})",
+        {f"id{i}": v for i, v in enumerate(ids)},
+    ).mappings().all()
+
+    if not rows:
+        flash(request, "No emails found to export.", 'error')
+        return RedirectResponse("/emails", status_code=303)
+
+    username = request.session.get("username", "unknown")
+
+    if format == "mbox":
+        mbox_buf = io.BytesIO()
+        for r in rows:
+            raw = decompress(r["raw_email"], r["compressed"]) if r["raw_email"] is not None else b""
+            try:
+                parsed = parse_email(raw)
+                date_hdr = parsed.get("headers", {}).get("date", "-")
+            except Exception:
+                date_hdr = "-"
+
+            from_line = f"From - {date_hdr}\n".encode("utf-8", errors="replace")
+            mbox_buf.write(from_line)
+            mbox_buf.write(raw)
+            if not raw.endswith(b"\n"):
+                mbox_buf.write(b"\n")
+            mbox_buf.write(b"\n")
+
+        mbox_buf.seek(0)
+        log("info", "Export", f"User '{username}' exported {len(rows)} email(s) as mbox", "")
+        return StreamingResponse(
+            iter([mbox_buf.getvalue()]),
+            media_type="application/mbox",
+            headers={"Content-Disposition": f'attachment; filename="emails-export.mbox"'},
+        )
+
+    # Default: Create zip of .eml files
+    bio = io.BytesIO()
+    with zipfile.ZipFile(bio, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        for r in rows:
+            raw = decompress(r["raw_email"], r["compressed"]) if r["raw_email"] is not None else b""
+            zf.writestr(f"email-{r['id']}.eml", raw)
+
+    bio.seek(0)
+    log("info", "Export", f"User '{username}' exported {len(rows)} email(s)", "")
+
+    return StreamingResponse(
+        iter([bio.getvalue()]),
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="emails-export.zip"'},
+    )
+
+
+@router.post("/emails/export_filtered")
+def export_filtered(request: Request, q: str = Form(None), account: str = Form(None), folder: str = Form(None), format: str = Form("zip")):
+    if not require_login(request):
+        return RedirectResponse("/login", status_code=303)
+
+    checker = PermissionChecker(request)
+    if not checker.has_permission("export_emails"):
+        return HTMLResponse("Access denied: Insufficient permissions to export emails", status_code=403)
+
+    # Build WHERE clause from filters
+    where = []
+    params = {}
+    if q:
+        where.append("to_tsvector('simple', coalesce(subject,'') || ' ' || coalesce(sender,'') || ' ' || coalesce(recipients,'')) @@ plainto_tsquery(:q)")
+        params["q"] = q
+    if account:
+        where.append("source = :account")
+        params["account"] = account
+    if folder:
+        where.append("folder = :folder")
+        params["folder"] = folder
+
+    where_sql = "WHERE " + " AND ".join(where) if where else ""
+    # Always exclude quarantined messages in export by default
+    if where_sql:
+        where_sql = where_sql + " AND quarantined = FALSE"
+    else:
+        where_sql = "WHERE quarantined = FALSE"
+
+    rows = query(f"SELECT id, raw_email, compressed FROM emails {where_sql}", params).mappings().all()
+
+    if not rows:
+        flash(request, "No emails found to export.", 'error')
+        return RedirectResponse("/emails", status_code=303)
+
+    username = request.session.get("username", "unknown")
+
+    if format == "mbox":
+        mbox_buf = io.BytesIO()
+        for r in rows:
+            raw = decompress(r["raw_email"], r["compressed"]) if r["raw_email"] is not None else b""
+            try:
+                parsed = parse_email(raw)
+                date_hdr = parsed.get("headers", {}).get("date", "-")
+            except Exception:
+                date_hdr = "-"
+
+            from_line = f"From - {date_hdr}\n".encode("utf-8", errors="replace")
+            mbox_buf.write(from_line)
+            mbox_buf.write(raw)
+            if not raw.endswith(b"\n"):
+                mbox_buf.write(b"\n")
+            mbox_buf.write(b"\n")
+
+        mbox_buf.seek(0)
+        log("info", "Export", f"User '{username}' exported {len(rows)} email(s) as mbox", "")
+        return StreamingResponse(
+            iter([mbox_buf.getvalue()]),
+            media_type="application/mbox",
+            headers={"Content-Disposition": f'attachment; filename="emails-export.mbox"'},
+        )
+
+    bio = io.BytesIO()
+    with zipfile.ZipFile(bio, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        for r in rows:
+            raw = decompress(r["raw_email"], r["compressed"]) if r["raw_email"] is not None else b""
+            zf.writestr(f"email-{r['id']}.eml", raw)
+
+    bio.seek(0)
+    log("info", "Export", f"User '{username}' exported {len(rows)} email(s)", "")
+
+    return StreamingResponse(
+        iter([bio.getvalue()]),
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="emails-export.zip"'},
+    )

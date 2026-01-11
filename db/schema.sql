@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS emails (
 
     -- Raw email storage
     raw_email BYTEA,
+    signature TEXT,
     compressed BOOLEAN NOT NULL DEFAULT TRUE,
 
     -- Quarantine flag (moves raw emails into a quarantine table when necessary)
@@ -237,6 +238,7 @@ CREATE TABLE IF NOT EXISTS quarantined_emails (
     recipients TEXT,
     date TEXT,
     raw_email BYTEA,
+    signature TEXT,
     compressed BOOLEAN NOT NULL DEFAULT TRUE,
     virus_name TEXT,
     reason TEXT,
@@ -387,6 +389,7 @@ INSERT INTO permissions (name, description, category) VALUES
     ('view_emails', 'View and search emails', 'emails'),
     ('delete_emails', 'Delete emails from archive', 'emails'),
     ('export_emails', 'Export emails to external formats', 'emails'),
+    ('import_emails', 'Import emails from EML/MBOX/PST', 'emails'),
     
     -- Quarantine Management
     ('view_quarantine', 'View quarantined emails', 'emails'),

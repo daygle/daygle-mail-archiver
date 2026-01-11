@@ -91,6 +91,12 @@
                         <span>Quarantine</span>
                     </a>
                     {% endif %}
+                    {% if 'import_emails' in request.session.get('permissions', []) or 'export_emails' in request.session.get('permissions', []) %}
+                    <a href="/emails/import" class="nav-link {% if '/emails/import' in request.url.path %}active{% endif %}">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span>Transfer</span>
+                    </a>
+                    {% endif %}
                 </div>
                 {% if 'manage_users' in request.session.get('permissions', []) or 'manage_roles' in request.session.get('permissions', []) or 'manage_global_settings' in request.session.get('permissions', []) or 'manage_alerts' in request.session.get('permissions', []) or 'view_logs' in request.session.get('permissions', []) %}
                 <div class="nav-section">
