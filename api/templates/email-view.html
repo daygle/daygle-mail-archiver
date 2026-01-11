@@ -207,6 +207,7 @@
                 <small class="text-muted">
                     Debug: HTML length: {{ body.html | length }}, Contains 'cid:': {{ 'cid:' in body.html }}, Embedded images: {{ body.embedded_images | length }} keys: {{ body.embedded_images.keys() | list }}
                     <br>HTML starts with: {{ body.html[:200] | truncate(100) }}
+                    <br>Parts: {{ body.debug_parts | join(', ') if body.debug_parts else 'No parts info' }}
                 </small>
             </div>
         {% else %}

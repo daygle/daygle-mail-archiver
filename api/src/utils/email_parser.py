@@ -14,23 +14,19 @@ def parse_email(raw: bytes):
         text = ""
         html = ""
         embedded_images = {}
+        debug_parts = []
 
         if m.is_multipart():
+            debug_parts = []
             for part in m.walk():
                 ctype = part.get_content_type()
                 disp = str(part.get("Content-Disposition") or "").lower()
-                content_id = part.get("Content-ID", "")
-                if content_id:
-                    # Remove angle brackets if present
-                    content_id = content_id.strip("<>")
-                    # Extract just the local part before @ if present
-                    if '@' in content_id:
-                        content_id = content_id.split('@')[0]
+                original_cid = part.get("Content-ID", "")
+                debug_parts.append(f"{ctype}, disp={disp}, cid={original_cid}")
 
                 # Handle embedded images
                 if ctype.startswith("image/"):
                     # Check if this image has a Content-ID
-                    original_cid = part.get("Content-ID", "")
                     if original_cid:
                         try:
                             image_data = part.get_payload(decode=True)
@@ -69,6 +65,7 @@ def parse_email(raw: bytes):
                     )
                     html += html_part
         else:
+            debug_parts = ["Not multipart"]
             ctype = m.get_content_type()
             if ctype == "text/plain":
                 text = m.get_payload(decode=True).decode(
@@ -102,7 +99,7 @@ def parse_email(raw: bytes):
             debug_info = f"<!-- Debug: Found {len(embedded_images)} embedded images -->"
             html = debug_info + html
 
-        return {"text": text, "html": html, "embedded_images": embedded_images}
+        return {"text": text, "html": html, "embedded_images": embedded_images, "debug_parts": debug_parts}
 
     headers = {
         "subject": msg.get("Subject", ""),
