@@ -40,8 +40,15 @@ def list_emails(
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    # Get page_size from user settings, fallback to global settings
+    # Get user_id for timezone formatting
     user_id = request.session.get("user_id")
+    if user_id is not None:
+        try:
+            user_id = int(user_id)
+        except (ValueError, TypeError):
+            user_id = None
+
+    # Get page_size from user settings, fallback to global settings
     page_size = 50  # Default
     
     if user_id:
@@ -124,6 +131,12 @@ def list_emails(
                 integrity = "no_raw"
         except Exception:
             integrity = "unknown"
+
+        # Format email date according to user preferences
+        if rr["date"] and hasattr(rr["date"], 'strftime'):  # Check if it's a datetime object
+            rr["date_formatted"] = format_datetime(rr["date"], user_id)
+        else:
+            rr["date_formatted"] = rr["date"]  # Keep as string if already formatted
 
         # remove large raw fields before sending to template
         rr.pop("raw_email", None)

@@ -130,7 +130,7 @@
                         <td>{{ i.subject or '(no subject)' }}</td>
                         <td>{{ i.sender or 'unknown' }}</td>
                         <td class="hide-mobile">{{ i.virus_name or '' }}</td>
-                        <td>{{ i.quarantined_at }}</td>
+                        <td>{{ i.quarantined_at_formatted or i.quarantined_at }}</td>
                         <td>
                             <div class="flex gap-2">
                                 <a class="btn btn-secondary btn-sm" href="/quarantine/{{ i.id }}" title="View">
@@ -185,12 +185,10 @@
         <p style="margin-top: 20px; margin-bottom: 20px;"><strong>This will move the selected messages back to the regular email list for normal access.</strong></p>
 
         <div class="text-center" style="margin-top: 20px;">
-            <form method="post" action="/quarantine/restore" id="restore-form" style="display: inline;">
-                <button type="submit" class="btn btn-success">
-                    <i class="fas fa-undo"></i>
-                    <span class="hide-mobile">Restore Selected Messages</span>
-                </button>
-            </form>
+            <button type="button" class="btn btn-success" onclick="performRestore()">
+                <i class="fas fa-undo"></i>
+                <span class="hide-mobile">Restore Selected Messages</span>
+            </button>
             <button type="button" class="btn btn-secondary ms-2" onclick="hideRestoreConfirmation()">
                 <i class="fas fa-times"></i>
                 <span class="hide-mobile">Cancel</span>
@@ -350,6 +348,26 @@
         // Submit the form
         bulkForm.submit();
     };
-})();
+
+    window.performRestore = function() {
+        // Create a form for restore
+        const restoreForm = document.createElement('form');
+        restoreForm.method = 'post';
+        restoreForm.action = '/quarantine/restore';
+        
+        // Add selected IDs
+        const checkboxes = document.querySelectorAll('input[name="selected_emails"]:checked');
+        checkboxes.forEach(checkbox => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'ids';
+            input.value = checkbox.value;
+            restoreForm.appendChild(input);
+        });
+        
+        // Submit the form
+        document.body.appendChild(restoreForm);
+        restoreForm.submit();
+    };
 </script>
 {% endblock %}

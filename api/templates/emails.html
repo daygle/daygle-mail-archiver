@@ -100,7 +100,7 @@
                                 <input type="checkbox" name="ids" value="{{ email.id }}" class="form-check-input email-checkbox">
                             </td>
                             {% endif %}
-                            <td>{{ email.date }}</td>
+                            <td>{{ email.date_formatted or email.date }}</td>
                             <td class="hide-mobile">
                                 <span class="badge badge-primary">{{ email.source }}</span>
                             </td>

@@ -140,8 +140,15 @@ def list_quarantine(request: Request, q: str = None, virus: str = None, page: in
         request.session['flash'] = 'Access denied'
         return RedirectResponse('/dashboard', status_code=303)
 
-    # Pagination: determine page_size from user or global settings
+    # Get user_id for timezone formatting
     user_id = request.session.get('user_id')
+    if user_id is not None:
+        try:
+            user_id = int(user_id)
+        except (ValueError, TypeError):
+            user_id = None
+
+    # Pagination: determine page_size from user or global settings
     page_size = 50
     if user_id:
         try:
@@ -235,6 +242,13 @@ def list_quarantine(request: Request, q: str = None, virus: str = None, page: in
         ir.pop('raw_email', None)
         ir.pop('compressed', None)
         ir['integrity'] = integrity
+        
+        # Format quarantined_at according to user preferences
+        if ir["quarantined_at"] and hasattr(ir["quarantined_at"], 'strftime'):  # Check if it's a datetime object
+            ir["quarantined_at_formatted"] = format_datetime(ir["quarantined_at"], user_id)
+        else:
+            ir["quarantined_at_formatted"] = ir["quarantined_at"]  # Keep as string if already formatted
+        
         processed.append(ir)
 
     msg = request.session.pop('flash', None)
