@@ -1,6 +1,7 @@
 """
 Simplified ClamAV scanner for API import functionality.
 """
+import os
 import pyclamd
 from typing import Optional, Tuple
 from datetime import datetime, timezone
@@ -30,7 +31,7 @@ class ClamAVScanner:
         self._load_settings()
 
     def _load_settings(self):
-        """Load ClamAV settings from database."""
+        """Load ClamAV settings from database, with environment variable fallbacks."""
         try:
             settings = query(
                 """
@@ -42,15 +43,15 @@ class ClamAVScanner:
             settings_dict = {s['key']: s['value'] for s in settings}
 
             self._enabled = settings_dict.get('clamav_enabled', 'true').lower() == 'true'
-            self.host = settings_dict.get('clamav_host', 'clamav')
-            self.port = int(settings_dict.get('clamav_port', '3310'))
+            self.host = settings_dict.get('clamav_host', os.getenv('CLAMAV_HOST', 'clamav'))
+            self.port = int(settings_dict.get('clamav_port', os.getenv('CLAMAV_PORT', '3310')))
 
         except Exception as e:
             log("warning", "ClamAV", f"Failed to load ClamAV settings: {e}", "")
-            # Use defaults if settings can't be loaded
-            self._enabled = True
-            self.host = 'clamav'
-            self.port = 3310
+            # Use environment variables or defaults if settings can't be loaded
+            self._enabled = os.getenv('CLAMAV_ENABLED', 'true').lower() == 'true'
+            self.host = os.getenv('CLAMAV_HOST', 'clamav')
+            self.port = int(os.getenv('CLAMAV_PORT', '3310'))
 
     def is_enabled(self) -> bool:
         """Check if virus scanning is enabled."""
@@ -118,5 +119,4 @@ class ClamAVScanner:
             # Reset cached scanner on error to force reconnection next time
             self._scanner = None
             # On error, allow email through but log the issue
-            return False, None, scan_timestamp</content>
-<parameter name="filePath">g:\Git\daygle-mail-archiver\api\src\utils\clamav_scanner.py
+            return False, None, scan_timestamp

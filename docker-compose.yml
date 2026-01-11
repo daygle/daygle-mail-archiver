@@ -24,6 +24,8 @@ services:
       DB_DSN: ${DB_DSN:-}
       SESSION_SECRET: ${SESSION_SECRET:-}
       IMAP_PASSWORD_KEY: ${IMAP_PASSWORD_KEY:-}
+      CLAMAV_HOST: ${CLAMAV_HOST:-clamav}
+      CLAMAV_PORT: ${CLAMAV_PORT:-3310}
     volumes:
       # Mount daygle_mail_archiver.conf file if it exists
       - ./daygle_mail_archiver.conf:/app/daygle_mail_archiver.conf:ro
@@ -31,6 +33,8 @@ services:
       - ./.git:/app/.git:ro
     depends_on:
       db:
+        condition: service_healthy
+      clamav:
         condition: service_healthy
     ports:
       - "8000:8000"
