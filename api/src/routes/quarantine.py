@@ -309,10 +309,20 @@ def view_quarantine(request: Request, qid: int):
     body = {}
     
     if raw:
+        decryption_successful = False
         try:
             data = raw
             if f:
-                data = f.decrypt(data)
+                try:
+                    data = f.decrypt(data)
+                    decryption_successful = True
+                except Exception:
+                    # If decryption fails, try to decompress as-is (might be unencrypted)
+                    data = raw
+                    decryption_successful = False
+            else:
+                decryption_successful = True  # No encryption to worry about
+            
             # If data appears to be gzipped, decompress
             try:
                 if isinstance(data, (bytes, bytearray)) and len(data) >= 2 and data[:2] == b"\x1f\x8b":
@@ -335,19 +345,22 @@ def view_quarantine(request: Request, qid: int):
                 # Keep empty headers and body, but we still have preview
             
             # compute integrity
-            try:
-                current_sig = compute_signature(data)
-                stored_sig = item.get('signature')
-                if stored_sig is None:
-                    integrity = 'no_signature'
-                elif current_sig is None:
+            if decryption_successful or not f:  # Only compute integrity if we could decrypt or there was no encryption
+                try:
+                    current_sig = compute_signature(data)
+                    stored_sig = item.get('signature')
+                    if stored_sig is None:
+                        integrity = 'no_signature'
+                    elif current_sig is None:
+                        integrity = 'unknown'
+                    elif stored_sig == current_sig:
+                        integrity = 'ok'
+                    else:
+                        integrity = 'modified'
+                except Exception:
                     integrity = 'unknown'
-                elif stored_sig == current_sig:
-                    integrity = 'ok'
-                else:
-                    integrity = 'modified'
-            except Exception:
-                integrity = 'unknown'
+            else:
+                integrity = 'encrypted'  # Cannot verify integrity of encrypted content without key
                 
         except Exception as e:
             log('error', 'Quarantine', f'Failed to process quarantined email {qid}: {e}')

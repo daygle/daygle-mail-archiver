@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS emails (
     sender TEXT,
     recipients TEXT,
     date TEXT,
+    message_id TEXT,
 
     -- Raw email storage
     raw_email BYTEA,
@@ -237,6 +238,7 @@ CREATE TABLE IF NOT EXISTS quarantined_emails (
     sender TEXT,
     recipients TEXT,
     date TEXT,
+    message_id TEXT,
     raw_email BYTEA,
     signature TEXT,
     compressed BOOLEAN NOT NULL DEFAULT TRUE,

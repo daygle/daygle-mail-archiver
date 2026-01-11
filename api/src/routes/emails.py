@@ -376,7 +376,7 @@ def view_email(request: Request, email_id: int):
 
     row = query(
         """
-        SELECT id, source, folder, uid, subject, sender, recipients, date,
+        SELECT id, source, folder, uid, subject, sender, recipients, date, message_id,
                raw_email, compressed, signature, created_at, virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined
         FROM emails
         WHERE id = :id
@@ -666,7 +666,7 @@ def _quarantine_emails(ids: List[int], quarantined_by: str) -> int:
         try:
             # Get email data
             email = query("""
-                SELECT id, source, folder, uid, subject, sender, recipients, date, raw_email, compressed
+                SELECT id, source, folder, uid, subject, sender, recipients, date, message_id, raw_email, compressed
                 FROM emails 
                 WHERE id = :id AND quarantined = FALSE
             """, {"id": email_id}).mappings().first()
@@ -674,11 +674,14 @@ def _quarantine_emails(ids: List[int], quarantined_by: str) -> int:
             if not email:
                 continue  # Already quarantined or doesn't exist
             
+            # Use stored message_id
+            message_id = email.get("message_id")
+            
             # Insert into quarantined_emails
             quarantine_id = execute("""
                 INSERT INTO quarantined_emails
-                (original_source, original_folder, original_uid, subject, sender, recipients, date, raw_email, signature, compressed, reason, quarantined_by)
-                VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, :signature, :compressed, :reason, :quarantined_by)
+                (original_source, original_folder, original_uid, subject, sender, recipients, date, message_id, raw_email, signature, compressed, reason, quarantined_by)
+                VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :message_id, :raw_email, :signature, :compressed, :reason, :quarantined_by)
             """, {
                 "source": email["source"],
                 "folder": email["folder"],
@@ -687,6 +690,7 @@ def _quarantine_emails(ids: List[int], quarantined_by: str) -> int:
                 "sender": email["sender"],
                 "recipients": email["recipients"],
                 "date": email["date"],
+                "message_id": message_id,
                 "raw_email": email["raw_email"],
                 "signature": email.get("signature"),
                 "compressed": email["compressed"],

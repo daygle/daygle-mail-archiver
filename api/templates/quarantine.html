@@ -122,6 +122,8 @@
                             <span class="badge badge-danger">Modified</span>
                             {% elif i.integrity == 'no_signature' %}
                             <span class="badge badge-secondary">No Sig</span>
+                            {% elif i.integrity == 'encrypted' %}
+                            <span class="badge badge-warning">Encrypted</span>
                             {% else %}
                             <span class="badge badge-secondary">Unknown</span>
                             {% endif %}

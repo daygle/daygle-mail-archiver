@@ -176,6 +176,7 @@ def store_email(
             recipients_list.extend(vals)
     recipients = ", ".join(recipients_list) if recipients_list else None
     date_header = msg.get("Date")
+    message_id = msg.get("Message-ID")
 
     # Compress the raw email for storage
     try:
@@ -254,8 +255,8 @@ Action Taken: {action}"""
                     execute(
                         """
                         INSERT INTO quarantined_emails
-                        (original_source, original_folder, original_uid, subject, sender, recipients, date, raw_email, signature, compressed, virus_name, reason, quarantined_at, expires_at, quarantined_by)
-                        VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, :signature, TRUE, :virus_name, :reason, NOW(), :expires_at, :quarantined_by)
+                        (original_source, original_folder, original_uid, subject, sender, recipients, date, message_id, raw_email, signature, compressed, virus_name, reason, quarantined_at, expires_at, quarantined_by)
+                        VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :message_id, :raw_email, :signature, TRUE, :virus_name, :reason, NOW(), :expires_at, :quarantined_by)
                         """,
                         {
                             "source": source,
@@ -265,6 +266,7 @@ Action Taken: {action}"""
                             "sender": sender,
                             "recipients": recipients,
                             "date": date_header,
+                            "message_id": message_id,
                             "raw_email": raw_to_store,
                             "signature": sig,
                             "virus_name": virus_name,
@@ -293,13 +295,14 @@ Action Taken: {action}"""
 
                     execute(
                 """
-                INSERT INTO emails (source, folder, uid, subject, sender, recipients, date, raw_email, signature, compressed, virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined)
-                VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, :signature, :compressed, :virus_scanned, :virus_detected, :virus_name, :scan_timestamp, :quarantined)
+                INSERT INTO emails (source, folder, uid, subject, sender, recipients, date, message_id, raw_email, signature, compressed, virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined)
+                VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :message_id, :raw_email, :signature, :compressed, :virus_scanned, :virus_detected, :virus_name, :scan_timestamp, :quarantined)
                 ON CONFLICT (source, folder, uid) DO UPDATE SET
                     subject = EXCLUDED.subject,
                     sender = EXCLUDED.sender,
                     recipients = EXCLUDED.recipients,
                     date = EXCLUDED.date,
+                    message_id = EXCLUDED.message_id,
                     raw_email = EXCLUDED.raw_email,
                     signature = EXCLUDED.signature,
                     compressed = EXCLUDED.compressed,
@@ -317,6 +320,7 @@ Action Taken: {action}"""
                 "sender": sender,
                 "recipients": recipients,
                 "date": date_header,
+                "message_id": message_id,
                 "raw_email": compressed_bytes,
                 "signature": sig,
                 "compressed": bool(compressed_bytes),

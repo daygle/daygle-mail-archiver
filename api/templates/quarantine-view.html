@@ -42,7 +42,7 @@
                     <div class="email-detail-item">
                         <label class="email-detail-label">Message ID</label>
                         <div class="email-detail-value">
-                            <code class="text-break">{{ headers.message_id or "(no message id)" }}</code>
+                            <code class="text-break">{{ item.message_id or "(no message id)" }}</code>
                         </div>
                     </div>
                 </div>
@@ -100,6 +100,8 @@
                             <span class="badge bg-danger"><i class="fas fa-exclamation-triangle"></i> Modified</span>
                             {% elif item.integrity == 'no_signature' %}
                             <span class="badge bg-secondary"><i class="fas fa-question"></i> No Signature</span>
+                            {% elif item.integrity == 'encrypted' %}
+                            <span class="badge bg-warning"><i class="fas fa-lock"></i> Encrypted</span>
                             {% else %}
                             <span class="badge bg-secondary"><i class="fas fa-question"></i> Unknown</span>
                             {% endif %}
