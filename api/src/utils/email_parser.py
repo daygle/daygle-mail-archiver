@@ -2,6 +2,7 @@ import gzip
 from email import message_from_bytes
 from email.message import EmailMessage
 import hashlib
+import base64
 
 def decompress(raw: bytes, compressed: bool) -> bytes:
     return gzip.decompress(raw) if compressed else raw
@@ -12,11 +13,26 @@ def parse_email(raw: bytes):
     def extract_body(m: EmailMessage):
         text = ""
         html = ""
+        embedded_images = {}
 
         if m.is_multipart():
             for part in m.walk():
                 ctype = part.get_content_type()
                 disp = str(part.get("Content-Disposition") or "").lower()
+                content_id = part.get("Content-ID", "").strip("<>")
+
+                # Handle embedded images
+                if content_id and ctype.startswith("image/"):
+                    try:
+                        image_data = part.get_payload(decode=True)
+                        if image_data:
+                            # Create data URL for the image
+                            encoded = base64.b64encode(image_data).decode('ascii')
+                            data_url = f"data:{ctype};base64,{encoded}"
+                            embedded_images[content_id] = data_url
+                    except Exception:
+                        pass
+                    continue
 
                 if "attachment" in disp:
                     continue
@@ -27,10 +43,11 @@ def parse_email(raw: bytes):
                         errors="replace",
                     )
                 elif ctype == "text/html":
-                    html += part.get_payload(decode=True).decode(
+                    html_part = part.get_payload(decode=True).decode(
                         part.get_content_charset() or "utf-8",
                         errors="replace",
                     )
+                    html += html_part
         else:
             ctype = m.get_content_type()
             if ctype == "text/plain":
@@ -44,7 +61,12 @@ def parse_email(raw: bytes):
                     errors="replace",
                 )
 
-        return {"text": text, "html": html}
+        # Replace cid: references with data URLs
+        if html and embedded_images:
+            for cid, data_url in embedded_images.items():
+                html = html.replace(f'cid:{cid}', data_url)
+
+        return {"text": text, "html": html, "embedded_images": embedded_images}
 
     headers = {
         "subject": msg.get("Subject", ""),
