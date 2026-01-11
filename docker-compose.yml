@@ -20,12 +20,13 @@ services:
       context: ./api
     image: daygle-mail-archiver-db-init:local
     container_name: daygle-mail-archiver-db-init
-    command: python init_db.py
+    # Run the repository root init_db.py (mounted below) to avoid overlapping /app mounts
+    command: python /init_db.py
     environment:
       DB_DSN: ${DB_DSN:-}
     volumes:
-      - ./db:/app/db:ro
-      - ./api:/app:ro
+      - ./db:/db:ro
+      - ./init_db.py:/init_db.py:ro
     depends_on:
       db:
         condition: service_healthy
