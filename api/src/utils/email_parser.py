@@ -14,15 +14,12 @@ def parse_email(raw: bytes):
         text = ""
         html = ""
         embedded_images = {}
-        debug_parts = []
 
         if m.is_multipart():
-            debug_parts = []
             for part in m.walk():
                 ctype = part.get_content_type()
                 disp = str(part.get("Content-Disposition") or "").lower()
                 original_cid = part.get("Content-ID", "")
-                debug_parts.append(f"{ctype}, disp={disp}, cid={original_cid}")
 
                 # Handle embedded images
                 if ctype.startswith("image/"):
@@ -96,7 +93,6 @@ def parse_email(raw: bytes):
                     )
                     html += html_part
         else:
-            debug_parts = ["Not multipart"]
             ctype = m.get_content_type()
             if ctype == "text/plain":
                 text = m.get_payload(decode=True).decode(
@@ -126,11 +122,9 @@ def parse_email(raw: bytes):
                 for pattern in patterns:
                     html = re.sub(pattern, data_url, html, flags=re.IGNORECASE)
             
-            # Add debug info to HTML
-            debug_info = f"<!-- Debug: Found {len(embedded_images)} embedded images: {list(embedded_images.keys())} -->"
-            html = debug_info + html
 
-        return {"text": text, "html": html, "embedded_images": embedded_images, "debug_parts": debug_parts}
+
+        return {"text": text, "html": html, "embedded_images": embedded_images}
 
     headers = {
         "subject": msg.get("Subject", ""),

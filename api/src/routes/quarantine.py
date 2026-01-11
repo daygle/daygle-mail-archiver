@@ -306,12 +306,37 @@ def view_quarantine(request: Request, qid: int):
         except Exception:
             preview = '[Could not decrypt or render content]'
 
+    # Parse email headers if raw email is available
+    headers = {}
+    if raw:
+        try:
+            data = raw
+            if f:
+                data = f.decrypt(data)
+            # If data appears to be gzipped, decompress for parsing
+            try:
+                if isinstance(data, (bytes, bytearray)) and len(data) >= 2 and data[:2] == b"\x1f\x8b":
+                    import gzip as _gzip
+                    data = _gzip.decompress(data)
+            except Exception:
+                pass
+            
+            # Parse email to extract headers
+            from utils.email_parser import parse_email
+            parsed = parse_email(data)
+            headers = parsed.get('headers', {})
+            body = parsed.get('body', {})
+        except Exception as e:
+            log('warning', 'Quarantine', f'Failed to parse email headers for quarantine item {qid}: {e}')
+            headers = {}
+            body = {}
+
     # attach integrity fields to item for template
     item = dict(item)
     item['integrity'] = integrity
     item['current_signature'] = current_sig
 
-    return templates.TemplateResponse('quarantine-view.html', {'request': request, 'item': item, 'preview': preview})
+    return templates.TemplateResponse('quarantine-view.html', {'request': request, 'item': item, 'preview': preview, 'headers': headers, 'body': body})
 
 
 @router.get('/quarantine/_session')

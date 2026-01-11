@@ -45,6 +45,16 @@
                     </div>
                 </div>
             </div>
+            <div class="row g-3 mt-2">
+                <div class="col-12">
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Message ID</label>
+                        <div class="email-detail-value">
+                            <code class="text-break">{{ headers.message_id or "(no message id)" }}</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Security Information -->
@@ -110,12 +120,36 @@
     {% endif %}
 </div>
 
-<!-- Preview Card -->
+<!-- Email Body Card -->
 <div class="card">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-file-alt"></i>
-            <span>Preview</span>
+            <span>Email Body</span>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if body.html %}
+            <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; background: var(--bg-primary);">
+                {{ body.html | safe }}
+            </div>
+            <div class="mt-2">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle"></i> Embedded images are displayed inline where available
+                </small>
+            </div>
+        {% else %}
+            <pre style="background: var(--bg-secondary); padding: 16px; border-radius: var(--radius-md); overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;">{{ body.text }}</pre>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Raw Preview Card (Fallback) -->
+<div class="card mt-4">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-code"></i>
+            <span>Raw Preview</span>
         </div>
     </div>
     <div class="card-body">

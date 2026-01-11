@@ -39,6 +39,16 @@
                     </div>
                 </div>
             </div>
+            <div class="row g-3 mt-2">
+                <div class="col-12">
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Message ID</label>
+                        <div class="email-detail-value">
+                            <code class="text-break">{{ headers.message_id or "(no message id)" }}</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Sender & Recipients -->
@@ -165,21 +175,6 @@
     </div>
 </div>
 
-<!-- Headers Card -->
-<div class="card mb-4">
-    <div class="card-header">
-        <div class="card-title">
-            <i class="fas fa-list"></i>
-            <span>Email Headers</span>
-        </div>
-    </div>
-    <div class="card-body">
-        <pre style="background: var(--bg-secondary); padding: 16px; border-radius: var(--radius-md); overflow-x: auto; font-family: 'Courier New', monospace; font-size: 0.875rem;">
-{% for k, v in headers.items() %}
-{{ k }}: {{ v }}
-{% endfor %}</pre>
-    </div>
-</div>
 
 <!-- Body Card -->
 <div class="card">
@@ -200,14 +195,6 @@
             <div class="mt-2">
                 <small class="text-muted">
                     <i class="fas fa-info-circle"></i> Embedded images are displayed inline where available
-                </small>
-            </div>
-            <!-- Debug info -->
-            <div class="mt-2">
-                <small class="text-muted">
-                    Debug: HTML length: {{ body.html | length }}, Contains 'cid:': {{ 'cid:' in body.html }}, Embedded images: {{ body.embedded_images | length }} keys: {{ body.embedded_images.keys() | list }}
-                    <br>HTML starts with: {{ body.html[:200] | truncate(100) }}
-                    <br>Parts: {{ body.debug_parts | join(', ') if body.debug_parts else 'No parts info' }}
                 </small>
             </div>
         {% else %}
