@@ -16,6 +16,7 @@ from utils.templates import templates
 from utils.timezone import format_datetime
 from utils.alerts import create_alert
 from utils.permissions import PermissionChecker
+from utils.clamav_scanner import ClamAVScanner
 
 router = APIRouter()
 
@@ -187,10 +188,41 @@ def _insert_raw_email(raw: bytes, request: Request, source: str = "import", fold
         except Exception:
             sig = None
 
+        # Virus scanning
+        virus_scanned = False
+        virus_detected = False
+        virus_name = None
+        scan_timestamp = None
+
+        scanner = ClamAVScanner()
+        if scanner.is_enabled():
+            virus_detected, virus_name, scan_timestamp = scanner.scan(raw)
+            virus_scanned = True
+
+            if virus_detected:
+                username = request.session.get("username", "unknown")
+                log("warning", "Import", f"Virus detected in imported email: {virus_name}", f"User: {username}, Source: {source}, Folder: {folder}")
+
+                create_alert(
+                    'error',
+                    'Virus Detected in Imported Email',
+                    f'Malicious email detected during import: {virus_name}',
+                    f"""Virus: {virus_name}
+Subject: {parsed["headers"].get("subject", "N/A")}
+From: {parsed["headers"].get("from", "Unknown")}
+Imported by: {username}
+Source: {source}
+Folder: {folder}""",
+                    'virus_detected',
+                )
+
+                # Reject infected emails during import
+                return False
+
         execute(
             """
-            INSERT INTO emails (source, folder, uid, subject, sender, recipients, date, raw_email, signature, compressed)
-            VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, :signature, :compressed)
+            INSERT INTO emails (source, folder, uid, subject, sender, recipients, date, raw_email, signature, compressed, virus_scanned, virus_detected, virus_name, scan_timestamp)
+            VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, :signature, :compressed, :virus_scanned, :virus_detected, :virus_name, :scan_timestamp)
             """,
             {
                 "source": source,
@@ -203,6 +235,10 @@ def _insert_raw_email(raw: bytes, request: Request, source: str = "import", fold
                 "raw_email": compressed_raw,
                 "signature": sig,
                 "compressed": True,
+                "virus_scanned": virus_scanned,
+                "virus_detected": virus_detected,
+                "virus_name": virus_name,
+                "scan_timestamp": scan_timestamp,
             },
         )
 

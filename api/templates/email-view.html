@@ -23,16 +23,6 @@
             {% endif %}
             {% if request.session.role == 'administrator' %}
                 <div style="display:inline-block; margin-left:8px;">
-                    {% if integrity == 'ok' %}
-                    <span class="badge badge-success"><i class="fas fa-check"></i> Integrity OK</span>
-                    {% elif integrity == 'modified' %}
-                    <span class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i> Modified</span>
-                    {% elif integrity == 'no_signature' %}
-                    <span class="badge badge-secondary"><i class="fas fa-question"></i> No Signature</span>
-                    {% else %}
-                    <span class="badge badge-secondary"><i class="fas fa-question"></i> Unknown</span>
-                    {% endif %}
-                </div>
             {% if not email.quarantined %}
             <form method="post" action="/emails/{{ email.id }}/quarantine" style="display:inline;">
                 <button type="submit" class="btn btn-warning btn-sm">
@@ -76,6 +66,22 @@
                         <td style="background: var(--bg-secondary); font-weight: 600;">Folder</td>
                         <td><span class="badge badge-secondary">{{ email.folder }}</span></td>
                     </tr>
+                    {% if request.session.role == 'administrator' %}
+                    <tr>
+                        <td style="background: var(--bg-secondary); font-weight: 600;">Integrity</td>
+                        <td>
+                            {% if integrity == 'ok' %}
+                            <span class="badge badge-success"><i class="fas fa-check"></i> Integrity OK</span>
+                            {% elif integrity == 'modified' %}
+                            <span class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i> Modified</span>
+                            {% elif integrity == 'no_signature' %}
+                            <span class="badge badge-secondary"><i class="fas fa-question"></i> No Signature</span>
+                            {% else %}
+                            <span class="badge badge-secondary"><i class="fas fa-question"></i> Unknown</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
                     {% if email.virus_scanned %}
                     <tr>
                         <td style="background: var(--bg-secondary); font-weight: 600;">Virus Scan</td>
