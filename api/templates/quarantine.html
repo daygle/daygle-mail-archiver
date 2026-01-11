@@ -98,8 +98,8 @@
                             <input type="checkbox" id="select-all" class="form-check-input">
                         </th>
                         {% endif %}
-                        <th>Integrity</th>
                         <th class="hide-mobile">ID</th>
+                        <th>Integrity</th>
                         <th>Subject</th>
                         <th>Sender</th>
                         <th class="hide-mobile">Virus</th>
@@ -115,6 +115,7 @@
                             <input type="checkbox" name="ids" value="{{ i.id }}" class="form-check-input quarantine-checkbox">
                         </td>
                         {% endif %}
+                        <td class="hide-mobile">{{ i.id }}</td>
                         <td>
                             {% if i.integrity == 'ok' %}
                             <span class="badge badge-success">OK</span>
@@ -128,7 +129,6 @@
                             <span class="badge badge-secondary">Unknown</span>
                             {% endif %}
                         </td>
-                        <td class="hide-mobile">{{ i.id }}</td>
                         <td>{{ i.subject or '(no subject)' }}</td>
                         <td>{{ i.sender or 'unknown' }}</td>
                         <td class="hide-mobile">{{ i.virus_name or '' }}</td>
@@ -156,7 +156,7 @@
                     {% endfor %}
                     {% if items|length == 0 %}
                     <tr>
-                        <td colspan="{% if request.session.role == 'administrator' %}8{% else %}7{% endif %}" class="text-center empty-state">
+                        <td colspan="{% if request.session.role == 'administrator' %}9{% else %}8{% endif %}" class="text-center empty-state">
                             <div>
                                 <i class="fas fa-shield-virus empty-icon"></i>
                                 <p>No quarantined messages</p>

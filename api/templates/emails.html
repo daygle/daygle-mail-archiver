@@ -144,7 +144,7 @@
                         {% endfor %}
                         {% if emails|length == 0 %}
                         <tr>
-                            <td colspan="{% if request.session.role == 'administrator' %}8{% else %}7{% endif %}" class="text-center empty-state">
+                            <td colspan="{% if request.session.role == 'administrator' %}9{% else %}8{% endif %}" class="text-center empty-state">
                                 <div>
                                     <i class="fas fa-inbox empty-icon"></i>
                                     <p>No emails found.</p>

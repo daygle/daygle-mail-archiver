@@ -301,6 +301,14 @@ def view_quarantine(request: Request, qid: int):
         item["quarantined_at_formatted"] = item["quarantined_at"]  # Keep as string if already formatted
 
     raw = item.get('raw_email')
+    # DB drivers may return a memoryview for bytea fields; ensure we have bytes
+    if isinstance(raw, memoryview):
+        raw = raw.tobytes()
+    elif raw is not None and not isinstance(raw, (bytes, bytearray)):
+        try:
+            raw = bytes(raw)
+        except Exception:
+            pass
     f = _get_quarantine_fernet()
     preview = None
     integrity = 'unknown'
