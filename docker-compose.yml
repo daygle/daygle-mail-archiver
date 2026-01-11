@@ -18,7 +18,6 @@ services:
   db-init:
     build:
       context: ./api
-    image: daygle-mail-archiver-db-init:local
     container_name: daygle-mail-archiver-db-init
     # Run the repository root init_db.py (mounted below) to avoid overlapping /app mounts
     command: python /init_db.py
