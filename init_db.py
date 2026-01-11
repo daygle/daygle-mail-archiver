@@ -26,7 +26,7 @@ from sqlalchemy import create_engine, text
 
 def init_database():
     """Initialise the database with required tables."""
-    db_dsn = os.getenv('DB_DSN', 'sqlite:///./test.db')
+    db_dsn = os.getenv('DB_DSN', 'postgresql+psycopg2://daygle_mail_archiver:change_me@localhost:5432/daygle_mail_archiver')
 
     print(f"Initialising database: {db_dsn}")
 
@@ -37,8 +37,8 @@ def init_database():
         # Create logs table
         conn.execute(text('''
             CREATE TABLE IF NOT EXISTS logs (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                timestamp TEXT NOT NULL,
+                id SERIAL PRIMARY KEY,
+                timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
                 level TEXT NOT NULL,
                 source TEXT NOT NULL,
                 message TEXT NOT NULL,
@@ -57,53 +57,50 @@ def init_database():
         # Create users table
         conn.execute(text('''
             CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 username TEXT UNIQUE NOT NULL,
                 password_hash TEXT NOT NULL,
                 role TEXT NOT NULL DEFAULT 'user',
-                created_at TEXT NOT NULL,
-                last_login TEXT
+                created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+                last_login TIMESTAMP WITH TIME ZONE
             )
         '''))
 
         # Create alert_triggers table
         conn.execute(text('''
             CREATE TABLE IF NOT EXISTS alert_triggers (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 trigger_key TEXT UNIQUE NOT NULL,
                 name TEXT NOT NULL,
                 description TEXT,
                 alert_type TEXT NOT NULL,
-                enabled BOOLEAN NOT NULL DEFAULT 1
+                enabled BOOLEAN NOT NULL DEFAULT TRUE
             )
         '''))
 
         # Create alerts table
         conn.execute(text('''
             CREATE TABLE IF NOT EXISTS alerts (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 trigger_id INTEGER NOT NULL,
                 message TEXT NOT NULL,
                 severity TEXT NOT NULL,
-                acknowledged BOOLEAN NOT NULL DEFAULT 0,
-                created_at TEXT NOT NULL,
-                acknowledged_at TEXT,
+                acknowledged BOOLEAN NOT NULL DEFAULT FALSE,
+                created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+                acknowledged_at TIMESTAMP WITH TIME ZONE,
                 FOREIGN KEY (trigger_id) REFERENCES alert_triggers(id)
             )
         '''))
 
         # Insert default admin user (password: admin)
         conn.execute(text('''
-            INSERT OR IGNORE INTO users (username, password_hash, role, created_at)
-            VALUES ('admin', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewfLkIwF5zl5ZL2e', 'admin', datetime('now'))
+            INSERT INTO users (username, password_hash, role, created_at)
+            VALUES ('admin', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewfLkIwF5zl5ZL2e', 'admin', NOW())
+            ON CONFLICT (username) DO NOTHING
         '''))
 
-        # Ensure theme_preference column exists (idempotent if database already has it)
-        try:
-            conn.execute(text("ALTER TABLE users ADD COLUMN theme_preference TEXT NOT NULL DEFAULT 'system'"))
-        except Exception:
-            # Column likely already exists or DB doesn't support ALTER with IF NOT EXISTS; ignore
-            pass
+        # Ensure theme_preference column exists (Postgres supports IF NOT EXISTS)
+        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS theme_preference TEXT NOT NULL DEFAULT 'system'"))
 
         # Insert some default settings
         default_settings = [
@@ -114,7 +111,7 @@ def init_database():
             ('setup_complete', 'false')
         ]
         for key, value in default_settings:
-            conn.execute(text(f"INSERT OR IGNORE INTO settings (key, value) VALUES ('{key}', '{value}')"))
+            conn.execute(text(f"INSERT INTO settings (key, value) VALUES ('{key}', '{value}') ON CONFLICT (key) DO NOTHING"))
 
         # Insert some default alert triggers
         default_triggers = [
@@ -123,7 +120,7 @@ def init_database():
             ('storage_full', 'Storage Full', 'Disk space running low', 'warning', 1)
         ]
         for key, name, desc, alert_type, enabled in default_triggers:
-            conn.execute(text(f"INSERT OR IGNORE INTO alert_triggers (trigger_key, name, description, alert_type, enabled) VALUES ('{key}', '{name}', '{desc}', '{alert_type}', {enabled})"))
+            conn.execute(text(f"INSERT INTO alert_triggers (trigger_key, name, description, alert_type, enabled) VALUES ('{key}', '{name}', '{desc}', '{alert_type}', {enabled}) ON CONFLICT (trigger_key) DO NOTHING"))
 
     print("Database initialised successfully!")
     print("Default admin user: admin / admin")

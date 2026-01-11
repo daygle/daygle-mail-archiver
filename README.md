@@ -127,7 +127,7 @@ The application will be available at `http://localhost:8000`
 ### Development Features
 
 - **Auto-reload**: Code changes automatically restart the server
-- **SQLite database**: Lightweight database for development
+- **PostgreSQL (recommended)**: Use the same database type as production for parity — start the DB container (`docker compose up -d db`) and set `DB_DSN` to a PostgreSQL DSN (see `.env-dev.example`).
 - **Environment variables**: Configuration via `.env` file
 - **Debug logging**: Detailed logs for troubleshooting
 
