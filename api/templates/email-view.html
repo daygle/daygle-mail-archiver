@@ -201,6 +201,23 @@
     </div>
 </div>
 
+<!-- Raw Preview Card (Fallback) -->
+<div class="card mt-4">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-code"></i>
+            <span>Raw Preview</span>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if preview %}
+            <pre style="background: var(--bg-secondary); padding: 16px; border-radius: var(--radius-md); overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; max-height:400px; overflow:auto;">{{ preview }}</pre>
+        {% else %}
+            <p class="text-muted">No preview available</p>
+        {% endif %}
+    </div>
+</div>
+
 <!-- Delete Confirmation Section (Initially Hidden) -->
 <div id="delete-confirmation" class="card" style="display: none;">
     <div class="card-header">

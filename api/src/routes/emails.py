@@ -420,6 +420,10 @@ def view_email(request: Request, email_id: int):
         row["date_formatted"] = row["date"]  # Keep as None/empty if already None
 
     raw = decompress(row["raw_email"], row["compressed"])
+    # Ensure bytes type for parsing and preview
+    if isinstance(raw, memoryview):
+        raw = raw.tobytes()
+    preview = raw[:10000].decode(errors='replace') if isinstance(raw, (bytes, bytearray)) else str(raw)
     parsed = parse_email(raw)
 
     # compute integrity status
@@ -447,6 +451,7 @@ def view_email(request: Request, email_id: int):
             "email": row,
             "headers": parsed["headers"],
             "body": parsed["body"],
+            "preview": preview,
             "flash": msg,
             "integrity": integrity,
             "stored_signature": row.get("signature"),
