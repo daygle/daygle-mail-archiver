@@ -147,7 +147,7 @@ def list_emails(
 
 
 @router.get("/emails/import", response_class=HTMLResponse)
-def import_email_page(request: Request):
+def emails_transfer_page(request: Request):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
@@ -769,72 +769,7 @@ def _delete_emails_from_mail_server_and_db(ids: List[int]) -> tuple[int, list[st
 
 
 @router.post("/emails/export")
-def export_emails(request: Request, ids: List[int] = Form(...), format: str = Form("zip")):
-    if not require_login(request):
-        return RedirectResponse("/login", status_code=303)
-
-    checker = PermissionChecker(request)
-    if not checker.has_permission("export_emails"):
-        return HTMLResponse("Access denied: Insufficient permissions to export emails", status_code=403)
-
-    if not isinstance(ids, list):
-        ids = [ids]
-
-    rows = query(
-        f"SELECT id, raw_email, compressed FROM emails WHERE id IN ({','.join([':id' + str(i) for i in range(len(ids))])})",
-        {f"id{i}": v for i, v in enumerate(ids)},
-    ).mappings().all()
-
-    if not rows:
-        flash(request, "No emails found to export.", 'error')
-        return RedirectResponse("/emails", status_code=303)
-
-    username = request.session.get("username", "unknown")
-
-    if format == "mbox":
-        mbox_buf = io.BytesIO()
-        for r in rows:
-            raw = decompress(r["raw_email"], r["compressed"]) if r["raw_email"] is not None else b""
-            try:
-                parsed = parse_email(raw)
-                date_hdr = parsed.get("headers", {}).get("date", "-")
-            except Exception:
-                date_hdr = "-"
-
-            from_line = f"From - {date_hdr}\n".encode("utf-8", errors="replace")
-            mbox_buf.write(from_line)
-            mbox_buf.write(raw)
-            if not raw.endswith(b"\n"):
-                mbox_buf.write(b"\n")
-            mbox_buf.write(b"\n")
-
-        mbox_buf.seek(0)
-        log("info", "Export", f"User '{username}' exported {len(rows)} email(s) as mbox", "")
-        return StreamingResponse(
-            iter([mbox_buf.getvalue()]),
-            media_type="application/mbox",
-            headers={"Content-Disposition": f'attachment; filename="emails-export.mbox"'},
-        )
-
-    # Default: Create zip of .eml files
-    bio = io.BytesIO()
-    with zipfile.ZipFile(bio, "w", compression=zipfile.ZIP_DEFLATED) as zf:
-        for r in rows:
-            raw = decompress(r["raw_email"], r["compressed"]) if r["raw_email"] is not None else b""
-            zf.writestr(f"email-{r['id']}.eml", raw)
-
-    bio.seek(0)
-    log("info", "Export", f"User '{username}' exported {len(rows)} email(s)", "")
-
-    return StreamingResponse(
-        iter([bio.getvalue()]),
-        media_type="application/zip",
-        headers={"Content-Disposition": f'attachment; filename="emails-export.zip"'},
-    )
-
-
-@router.post("/emails/export_filtered")
-def export_filtered(request: Request, q: str = Form(None), account: str = Form(None), folder: str = Form(None), format: str = Form("zip")):
+def export_emails(request: Request, q: str = Form(None), account: str = Form(None), folder: str = Form(None), format: str = Form("zip")):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 

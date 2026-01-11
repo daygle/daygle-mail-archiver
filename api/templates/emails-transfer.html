@@ -7,7 +7,7 @@
   <div class="card-header">
     <div class="card-title">
       <i class="fas fa-file-import"></i>
-      <span>Import / Export Emails</span>
+      <span>Import Emails</span>
     </div>
   </div>
   <div class="card-body">
@@ -15,7 +15,7 @@
     <div class="alert alert-{{ flash.type }}">{{ flash.message }}</div>
     {% endif %}
 
-    <form method="post" action="/emails/import" enctype="multipart/form-data">
+    <form id="import-form" method="post" action="/emails/import" enctype="multipart/form-data">
       <div class="mb-3">
         <label for="files" class="form-label">Choose EML or MBOX files (ZIP may contain EML/MBX)</label>
         <input type="file" name="files" id="files" multiple accept=".eml,.mbox,.mbx,.zip,application/zip" class="form-control">
@@ -24,7 +24,7 @@
       <div class="mb-3">
         <label for="source" class="form-label">Assign to Fetch Account</label>
         <select name="source" id="source" class="form-select">
-          <option value="import">import (default)</option>
+          <option value="import">Select a fetch account</option>
           {% for a in accounts %}
           <option value="{{ a }}">{{ a }}</option>
           {% endfor %}
@@ -35,17 +35,18 @@
         <label for="folder" class="form-label">Folder</label>
         <input type="text" name="folder" id="folder" value="Imported" class="form-control">
       </div>
-
-      <div class="mt-3">
-        <button type="submit" class="btn btn-primary">
-          <i class="fas fa-upload"></i>
-          <span>Upload and Import</span>
-        </button>
-        <a href="/emails" class="btn btn-secondary ms-2">Cancel</a>
-      </div>
     </form>
 
     <p class="text-muted mt-3">Note: ZIP files are supported and will be scanned for EML/MBX entries. PST files are not supported.</p>
+  </div>
+  <div class="card-footer">
+    <div class="d-flex justify-content-end">
+      <a href="/emails" class="btn btn-secondary me-2">Cancel</a>
+      <button type="submit" form="import-form" class="btn btn-primary">
+        <i class="fas fa-upload"></i>
+        <span>Upload and Import</span>
+      </button>
+    </div>
   </div>
 </div>
 
@@ -59,12 +60,12 @@
   <div class="card-body">
     <p class="text-muted">Export all emails for a selected fetch account in ZIP (EML files) or MBOX format.</p>
 
-    <form method="post" action="/emails/export_filtered">
+    <form method="post" action="/emails/export">
       <div class="row g-3 align-items-end">
         <div class="col-md-4">
           <label for="export-account" class="form-label">Fetch Account</label>
           <select name="account" id="export-account" class="form-select" required>
-            <option value="">Select an account...</option>
+            <option value="">Select a fetch account</option>
             {% for a in accounts %}
             <option value="{{ a }}">{{ a }}</option>
             {% endfor %}
@@ -73,8 +74,8 @@
         <div class="col-md-3">
           <label for="export-format" class="form-label">Format</label>
           <select name="format" id="export-format" class="form-select">
-            <option value="zip">ZIP (EML files)</option>
             <option value="mbox">MBOX</option>
+            <option value="zip">ZIP (EML files)</option>
           </select>
         </div>
         <div class="col-md-auto">

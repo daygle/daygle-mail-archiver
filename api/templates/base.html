@@ -58,7 +58,7 @@
                         <i class="fas fa-chart-line"></i>
                         <span>Dashboard</span>
                     </a>
-                    <a href="/emails" class="nav-link {% if '/emails' in request.url.path %}active{% endif %}">
+                    <a href="/emails" class="nav-link {% if request.url.path == '/emails' or (request.url.path.startswith('/emails/') and not request.url.path.startswith('/emails/import')) %}active{% endif %}">
                         <i class="fas fa-inbox"></i>
                         <span>Emails</span>
                     </a>
@@ -92,7 +92,7 @@
                     </a>
                     {% endif %}
                     {% if 'import_emails' in request.session.get('permissions', []) or 'export_emails' in request.session.get('permissions', []) %}
-                    <a href="/emails/import" class="nav-link {% if '/emails/import' in request.url.path %}active{% endif %}">
+                    <a href="/emails/import" class="nav-link {% if request.url.path == '/emails/import' %}active{% endif %}">
                         <i class="fas fa-exchange-alt"></i>
                         <span>Transfer</span>
                     </a>
