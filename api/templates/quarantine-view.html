@@ -26,33 +26,66 @@
             {% endif %}
         </div>
     </div>
-    <div class="card-body" style="padding: 0;">
-        <div class="table-container">
-            <table class="table">
-                <tbody>
-                    <tr>
-                        <td class="col-left" style="background: var(--bg-secondary); font-weight: 600;">Subject</td>
-                        <td><strong>{{ item.subject or "(no subject)" }}</strong></td>
-                    </tr>
-                    <tr>
-                        <td style="background: var(--bg-secondary); font-weight: 600;">Sender</td>
-                        <td>{{ item.sender or 'unknown' }}</td>
-                    </tr>
-                    <tr>
-                        <td style="background: var(--bg-secondary); font-weight: 600;">Virus</td>
-                        <td>{{ item.virus_name or '' }}</td>
-                    </tr>
-                    <tr>
-                        <td style="background: var(--bg-secondary); font-weight: 600;">Quarantined At</td>
-                        <td>{{ item.quarantined_at }}</td>
-                    </tr>
-                    <tr>
-                        <td style="background: var(--bg-secondary); font-weight: 600;">Reason</td>
-                        <td>{{ item.reason or '' }}</td>
-                    </tr>
-                    <tr>
-                        <td style="background: var(--bg-secondary); font-weight: 600;">Integrity</td>
-                        <td>
+    <div class="card-body">
+        <!-- Quarantine Message Information -->
+        <div class="mb-4">
+            <h5 class="mb-3 text-danger">
+                <i class="fas fa-biohazard me-2"></i>Quarantine Details
+            </h5>
+            <div class="row g-3">
+                <div class="col-12">
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Subject</label>
+                        <div class="email-detail-value">
+                            <strong class="text-break">{{ item.subject or "(no subject)" }}</strong>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Sender</label>
+                        <div class="email-detail-value text-break">{{ item.sender or 'unknown' }}</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Quarantined At</label>
+                        <div class="email-detail-value">{{ item.quarantined_at }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Information -->
+        <div class="mb-4">
+            <h6 class="mb-3 text-muted">
+                <i class="fas fa-shield-alt me-2"></i>Security Information
+            </h6>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Virus Detected</label>
+                        <div class="email-detail-value">
+                            {% if item.virus_name %}
+                            <span class="badge badge-danger">
+                                <i class="fas fa-exclamation-triangle"></i> {{ item.virus_name }}
+                            </span>
+                            {% else %}
+                            <span class="badge badge-secondary">No virus name available</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Reason</label>
+                        <div class="email-detail-value">{{ item.reason or 'Not specified' }}</div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Integrity Status</label>
+                        <div class="email-detail-value">
                             {% if item.integrity == 'ok' %}
                             <span class="badge badge-success"><i class="fas fa-check"></i> Integrity OK</span>
                             {% elif item.integrity == 'modified' %}
@@ -62,10 +95,10 @@
                             {% else %}
                             <span class="badge badge-secondary"><i class="fas fa-question"></i> Unknown</span>
                             {% endif %}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
