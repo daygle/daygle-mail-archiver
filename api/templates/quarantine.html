@@ -156,7 +156,7 @@
                     {% endfor %}
                     {% if items|length == 0 %}
                     <tr>
-                        <td colspan="{% if request.session.role == 'administrator' %}7{% else %}6{% endif %}" class="text-center empty-state">
+                        <td colspan="{% if request.session.role == 'administrator' %}8{% else %}7{% endif %}" class="text-center empty-state">
                             <div>
                                 <i class="fas fa-shield-virus empty-icon"></i>
                                 <p>No quarantined messages</p>
