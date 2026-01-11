@@ -47,6 +47,37 @@ def parse_email(raw: bytes):
                         except Exception:
                             pass
                         continue
+                # Also check for application/octet-stream with Content-ID (potential embedded images)
+                elif ctype == "application/octet-stream" and original_cid:
+                    try:
+                        image_data = part.get_payload(decode=True)
+                        if image_data and len(image_data) < 1024 * 1024:
+                            # Try to detect if it's actually an image by checking the first few bytes
+                            if len(image_data) > 4:
+                                # Check for common image signatures
+                                if image_data.startswith(b'\xff\xd8\xff'):  # JPEG
+                                    img_ctype = "image/jpeg"
+                                elif image_data.startswith(b'\x89PNG\r\n\x1a\n'):  # PNG
+                                    img_ctype = "image/png"
+                                elif image_data.startswith(b'GIF87a') or image_data.startswith(b'GIF89a'):  # GIF
+                                    img_ctype = "image/gif"
+                                elif image_data.startswith(b'BM'):  # BMP
+                                    img_ctype = "image/bmp"
+                                else:
+                                    img_ctype = None
+                                
+                                if img_ctype:
+                                    encoded = base64.b64encode(image_data).decode('ascii')
+                                    data_url = f"data:{img_ctype};base64,{encoded}"
+                                    
+                                    cleaned_cid = original_cid.strip("<>")
+                                    if '@' in cleaned_cid:
+                                        cleaned_cid = cleaned_cid.split('@')[0]
+                                    embedded_images[cleaned_cid] = data_url
+                                    embedded_images[original_cid] = data_url
+                                    embedded_images[original_cid.strip("<>")] = data_url
+                    except Exception:
+                        pass
                     # If no Content-ID, check if it's referenced in HTML (this is less reliable)
                     # For now, we'll skip images without Content-ID
 
@@ -96,7 +127,7 @@ def parse_email(raw: bytes):
                     html = re.sub(pattern, data_url, html, flags=re.IGNORECASE)
             
             # Add debug info to HTML
-            debug_info = f"<!-- Debug: Found {len(embedded_images)} embedded images -->"
+            debug_info = f"<!-- Debug: Found {len(embedded_images)} embedded images: {list(embedded_images.keys())} -->"
             html = debug_info + html
 
         return {"text": text, "html": html, "embedded_images": embedded_images, "debug_parts": debug_parts}
