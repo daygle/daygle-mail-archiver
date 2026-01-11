@@ -106,5 +106,104 @@
             <script src="/static/js/toast.js"></script>
         </div>
     </div>
+
+    <script>
+        // Reveal auth content after styles are loaded to reduce FOUC
+        function revealAuth(){
+            try{
+                var auths = document.querySelectorAll('.auth-card, .auth-container');
+                for(var i=0;i<auths.length;i++) auths[i].classList.add('visible');
+            }catch(e){/* ignore */}
+        }
+        // Reveal only after full load to ensure stylesheets are applied
+        window.addEventListener('load', function(){ setTimeout(revealAuth, 50); });
+        if (document.readyState === 'complete') { setTimeout(revealAuth, 50); }
+
+        // Global error handler for auth pages — prefer to show toasts when available
+        function showAuthError(msg){
+            try{
+                if(window.createToast){
+                    window.createToast(msg, 'error');
+                    return;
+                }
+                // fallback: insert inline error block
+                let container = document.querySelector('.auth-card');
+                let err = container.querySelector('.auth-error');
+                if(!err){
+                    err = document.createElement('div');
+                    err.className = 'auth-error';
+                    err.innerHTML = '<i class="fas fa-exclamation-circle"></i><span></span>';
+                    container.insertBefore(err, container.querySelector('.auth-form'));
+                }
+                err.querySelector('span').textContent = msg;
+            }catch(e){
+                console.error('Failed to show auth error:', e);
+            }
+        }
+
+        window.addEventListener('error', function(ev){
+            console.error('Global error on setup page:', ev.error || ev.message, ev);
+            const message = ev && ev.error && ev.error.message ? ev.error.message : (ev && ev.message) || 'An unexpected error occurred';
+            showAuthError(message);
+        });
+
+        window.addEventListener('unhandledrejection', function(ev){
+            console.error('Unhandled rejection on setup page:', ev.reason);
+            const message = (ev.reason && ev.reason.message) || (typeof ev.reason === 'string' ? ev.reason : 'An unexpected error occurred');
+            showAuthError(message);
+        });
+
+        // Theme toggle functionality for auth pages
+        (function(){
+            const themeToggle = document.getElementById('authThemeToggle');
+            const lightIcon = document.getElementById('authThemeIconLight');
+            const darkIcon = document.getElementById('authThemeIconDark');
+
+            function updateThemeIcons(theme) {
+                if (theme === 'dark') {
+                    lightIcon.style.display = 'none';
+                    darkIcon.style.display = 'inline';
+                } else {
+                    lightIcon.style.display = 'inline';
+                    darkIcon.style.display = 'none';
+                }
+            }
+
+            function applyTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+                updateThemeIcons(theme);
+            }
+
+            // Initialise theme icons
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            updateThemeIcons(currentTheme);
+
+            // Theme toggle click handler
+            themeToggle.addEventListener('click', function() {
+                const currentTheme = localStorage.getItem('theme') || 'system';
+                let newTheme;
+
+                if (currentTheme === 'light') {
+                    newTheme = 'dark';
+                } else if (currentTheme === 'dark') {
+                    newTheme = 'system';
+                } else {
+                    newTheme = 'light';
+                }
+
+                applyTheme(newTheme);
+            });
+
+            // Listen for system theme changes
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+                const savedTheme = localStorage.getItem('theme') || 'system';
+                if (savedTheme === 'system') {
+                    const systemTheme = e.matches ? 'dark' : 'light';
+                    applyTheme(systemTheme);
+                }
+            });
+        })();
+    </script>
 </body>
 </html>
