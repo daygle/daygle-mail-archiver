@@ -5,7 +5,7 @@
 {% block content %}
 <!-- Email Metadata Card -->
 <div class="card mb-4">
-    <div class="card-header flex-between">
+    <div class="card-header">
         <div class="card-title">
             <i class="fas fa-envelope-open"></i>
             <span>Email Details</span>
@@ -15,27 +15,6 @@
                 <i class="fas fa-arrow-left"></i>
                 <span class="hide-mobile">Back</span>
             </a>
-            {% if request.session.role != 'read_only' %}
-            <a href="/emails/{{ email.id }}/download" class="btn btn-primary btn-sm">
-                <i class="fas fa-download"></i>
-                <span class="hide-mobile">Download EML</span>
-            </a>
-            {% endif %}
-            {% if request.session.role == 'administrator' %}
-                <div style="display:inline-block; margin-left:8px;">
-            {% if not email.quarantined %}
-            <form method="post" action="/emails/{{ email.id }}/quarantine" style="display:inline;">
-                <button type="submit" class="btn btn-warning btn-sm">
-                    <i class="fas fa-shield-virus"></i>
-                    <span class="hide-mobile">Quarantine</span>
-                </button>
-            </form>
-            {% endif %}
-            <button type="button" class="btn btn-danger btn-sm" onclick="showDeleteConfirmation()">
-                <i class="fas fa-trash"></i>
-                <span class="hide-mobile">Delete</span>
-            </button>
-            {% endif %}
         </div>
     </div>
     <div class="card-body">
@@ -159,6 +138,47 @@
             </div>
         </div>
         {% endif %}
+    </div>
+    <div class="card-footer">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                {% if request.session.role == 'administrator' %}
+                <span class="text-muted small">
+                    {% if integrity == 'ok' %}
+                    <i class="fas fa-check text-success"></i> Integrity OK
+                    {% elif integrity == 'modified' %}
+                    <i class="fas fa-exclamation-triangle text-danger"></i> Modified
+                    {% elif integrity == 'no_signature' %}
+                    <i class="fas fa-question text-secondary"></i> No Signature
+                    {% else %}
+                    <i class="fas fa-question text-secondary"></i> Unknown
+                    {% endif %}
+                </span>
+                {% endif %}
+            </div>
+            <div class="d-flex gap-2">
+                {% if request.session.role != 'read_only' %}
+                <a href="/emails/{{ email.id }}/download" class="btn btn-primary btn-sm">
+                    <i class="fas fa-download"></i>
+                    <span class="hide-mobile">Download EML</span>
+                </a>
+                {% endif %}
+                {% if request.session.role == 'administrator' %}
+                {% if not email.quarantined %}
+                <form method="post" action="/emails/{{ email.id }}/quarantine" style="display:inline;">
+                    <button type="submit" class="btn btn-warning btn-sm">
+                        <i class="fas fa-shield-virus"></i>
+                        <span class="hide-mobile">Quarantine</span>
+                    </button>
+                </form>
+                {% endif %}
+                <button type="button" class="btn btn-danger btn-sm" onclick="showDeleteConfirmation()">
+                    <i class="fas fa-trash"></i>
+                    <span class="hide-mobile">Delete</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </div>
 
