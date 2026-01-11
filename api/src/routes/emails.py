@@ -146,6 +146,170 @@ def list_emails(
     )
 
 
+@router.get("/emails/import", response_class=HTMLResponse)
+def import_email_page(request: Request):
+    if not require_login(request):
+        return RedirectResponse("/login", status_code=303)
+
+    checker = PermissionChecker(request)
+    if not checker.has_permission("import_emails"):
+        return HTMLResponse("Access denied: Insufficient permissions to import emails", status_code=403)
+
+    msg = request.session.pop("flash", None)
+    # Provide list of fetch accounts so user can assign imported messages to a source
+    try:
+        accounts_rows = query("SELECT name FROM fetch_accounts ORDER BY name").mappings().all()
+        accounts = [r["name"] for r in accounts_rows]
+    except Exception:
+        accounts = []
+
+    return templates.TemplateResponse(
+        "emails-transfer.html",
+        {"request": request, "flash": msg, "accounts": accounts},
+    )
+
+
+def _insert_raw_email(raw: bytes, request: Request, source: str = "import", folder: str = "Imported") -> bool:
+    try:
+        # Parse headers for metadata
+        parsed = parse_email(raw)
+
+        # Compute next uid for this source/folder to avoid collisions
+        next_uid_row = query(
+            "SELECT COALESCE(MAX(uid), 0) + 1 AS next_uid FROM emails WHERE source = :source AND folder = :folder",
+            {"source": source, "folder": folder},
+        ).mappings().first()
+        uid = int(next_uid_row["next_uid"]) if next_uid_row else 1
+
+        compressed_raw = gzip.compress(raw)
+        try:
+            sig = compute_signature(raw)
+        except Exception:
+            sig = None
+
+        execute(
+            """
+            INSERT INTO emails (source, folder, uid, subject, sender, recipients, date, raw_email, signature, compressed)
+            VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, :signature, :compressed)
+            """,
+            {
+                "source": source,
+                "folder": folder,
+                "uid": uid,
+                "subject": parsed["headers"].get("subject", ""),
+                "sender": parsed["headers"].get("from", ""),
+                "recipients": parsed["headers"].get("to", ""),
+                "date": parsed["headers"].get("date", ""),
+                "raw_email": compressed_raw,
+                "signature": sig,
+                "compressed": True,
+            },
+        )
+
+        username = request.session.get("username", "unknown")
+        log("info", "Import", f"User '{username}' imported an email (source={source}, folder={folder}, uid={uid})", "")
+        return True
+    except Exception as e:
+        log("error", "Import", f"Failed to insert imported email: {str(e)}", "")
+        return False
+
+
+@router.post("/emails/import")
+async def import_emails(request: Request, source: str = Form("import"), folder: str = Form("Imported"), files: List[UploadFile] = File(...)):
+    if not require_login(request):
+        return RedirectResponse("/login", status_code=303)
+
+    checker = PermissionChecker(request)
+    if not checker.has_permission("import_emails"):
+        return HTMLResponse("Access denied: Insufficient permissions to import emails", status_code=403)
+
+    imported = 0
+    errors = []
+
+    for upload in files:
+        filename = upload.filename or ""
+        lower = filename.lower()
+        content = await upload.read()
+
+        try:
+            if lower.endswith(".eml") or upload.content_type == "message/rfc822":
+                if _insert_raw_email(content, request, source=source, folder=folder):
+                    imported += 1
+                else:
+                    errors.append(f"{filename}: failed to insert")
+
+            elif lower.endswith(".mbox") or lower.endswith(".mbx") or upload.content_type == "application/mbox":
+                # Use mailbox to parse mbox content from memory
+                try:
+                    mbox = mailbox.mbox(io.BytesIO(content))
+                except Exception:
+                    # mailbox.mbox expects a file path; fallback to manual parse
+                    buf = io.BytesIO(content)
+                    data = buf.getvalue().split(b"\nFrom ")
+                    for i, part in enumerate(data):
+                        if not part.strip():
+                            continue
+                        # Ensure proper 'From ' prefix for the first part
+                        raw = part if part.startswith(b"From ") else b"From " + part
+                        if _insert_raw_email(raw, request, source=source, folder=folder):
+                            imported += 1
+                        else:
+                            errors.append(f"{filename} part {i}: failed to insert")
+
+            elif lower.endswith('.zip') or upload.content_type == 'application/zip':
+                try:
+                    with zipfile.ZipFile(io.BytesIO(content)) as zf:
+                        for info in zf.infolist():
+                            if info.is_dir():
+                                continue
+                            try:
+                                inner_name = info.filename
+                                inner_lower = inner_name.lower()
+                                fcontent = zf.read(info.filename)
+                                if inner_lower.endswith('.eml') or inner_name.endswith('.msg'):
+                                    if _insert_raw_email(fcontent, request, source=source, folder=folder):
+                                        imported += 1
+                                    else:
+                                        errors.append(f"{filename}:{inner_name}: failed to insert")
+                                elif inner_lower.endswith('.mbox') or inner_lower.endswith('.mbx'):
+                                    # parse embedded mbox
+                                    parts = fcontent.split(b"\nFrom ")
+                                    for i, part in enumerate(parts):
+                                        if not part.strip():
+                                            continue
+                                        raw = part if part.startswith(b"From ") else b"From " + part
+                                        if _insert_raw_email(raw, request, source=source, folder=folder):
+                                            imported += 1
+                                        else:
+                                            errors.append(f"{filename}:{inner_name} part {i}: failed to insert")
+                                elif inner_lower.endswith('.pst'):
+                                    # PST support removed; skip
+                                    continue
+                                else:
+                                    # unsupported inner file, skip
+                                    continue
+                            except Exception as e:
+                                errors.append(f"{filename}:{info.filename}: {str(e)}")
+                except Exception as e:
+                    errors.append(f"{filename}: zip extraction failed ({str(e)})")
+
+            elif lower.endswith(".pst"):
+                # PST support removed — do not attempt to parse PST files
+                errors.append(f"{filename}: PST files are not supported")
+
+            else:
+                errors.append(f"{filename}: unsupported file type")
+        except Exception as e:
+            errors.append(f"{filename}: {str(e)}")
+
+    if imported > 0:
+        flash(request, f"Imported {imported} message(s).", 'success')
+    if errors:
+        flash(request, "; ".join(errors), 'error')
+
+    return RedirectResponse("/emails", status_code=303)
+
+
 @router.get("/emails/{email_id}", response_class=HTMLResponse)
 def view_email(request: Request, email_id: int):
     if not require_login(request):
@@ -599,168 +763,9 @@ def _delete_emails_from_mail_server_and_db(ids: List[int]) -> tuple[int, list[st
     return deleted, errors
 
 
-@router.get("/emails/import", response_class=HTMLResponse)
-def import_email_page(request: Request):
-    if not require_login(request):
-        return RedirectResponse("/login", status_code=303)
-
-    checker = PermissionChecker(request)
-    if not checker.has_permission("import_emails"):
-        return HTMLResponse("Access denied: Insufficient permissions to import emails", status_code=403)
-
-    msg = request.session.pop("flash", None)
-    # Provide list of fetch accounts so user can assign imported messages to a source
-    try:
-        accounts_rows = query("SELECT name FROM fetch_accounts ORDER BY name").mappings().all()
-        accounts = [r["name"] for r in accounts_rows]
-    except Exception:
-        accounts = []
-
-    return templates.TemplateResponse(
-        "emails-transfer.html",
-        {"request": request, "flash": msg, "accounts": accounts},
-    )
+    # import routes moved earlier to avoid collision with /emails/{email_id}
 
 
-def _insert_raw_email(raw: bytes, request: Request, source: str = "import", folder: str = "Imported") -> bool:
-    try:
-        # Parse headers for metadata
-        parsed = parse_email(raw)
-
-        # Compute next uid for this source/folder to avoid collisions
-        next_uid_row = query(
-            "SELECT COALESCE(MAX(uid), 0) + 1 AS next_uid FROM emails WHERE source = :source AND folder = :folder",
-            {"source": source, "folder": folder},
-        ).mappings().first()
-        uid = int(next_uid_row["next_uid"]) if next_uid_row else 1
-
-        compressed_raw = gzip.compress(raw)
-        try:
-            sig = compute_signature(raw)
-        except Exception:
-            sig = None
-
-        execute(
-            """
-            INSERT INTO emails (source, folder, uid, subject, sender, recipients, date, raw_email, signature, compressed)
-            VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, :signature, :compressed)
-            """,
-            {
-                "source": source,
-                "folder": folder,
-                "uid": uid,
-                "subject": parsed["headers"].get("subject", ""),
-                "sender": parsed["headers"].get("from", ""),
-                "recipients": parsed["headers"].get("to", ""),
-                "date": parsed["headers"].get("date", ""),
-                "raw_email": compressed_raw,
-                "signature": sig,
-                "compressed": True,
-            },
-        )
-
-        username = request.session.get("username", "unknown")
-        log("info", "Import", f"User '{username}' imported an email (source={source}, folder={folder}, uid={uid})", "")
-        return True
-    except Exception as e:
-        log("error", "Import", f"Failed to insert imported email: {str(e)}", "")
-        return False
-
-
-@router.post("/emails/import")
-async def import_emails(request: Request, source: str = Form("import"), folder: str = Form("Imported"), files: List[UploadFile] = File(...)):
-    if not require_login(request):
-        return RedirectResponse("/login", status_code=303)
-
-    checker = PermissionChecker(request)
-    if not checker.has_permission("import_emails"):
-        return HTMLResponse("Access denied: Insufficient permissions to import emails", status_code=403)
-
-    imported = 0
-    errors = []
-
-    for upload in files:
-        filename = upload.filename or ""
-        lower = filename.lower()
-        content = await upload.read()
-
-        try:
-            if lower.endswith(".eml") or upload.content_type == "message/rfc822":
-                if _insert_raw_email(content, request, source=source, folder=folder):
-                    imported += 1
-                else:
-                    errors.append(f"{filename}: failed to insert")
-
-            elif lower.endswith(".mbox") or lower.endswith(".mbx") or upload.content_type == "application/mbox":
-                # Use mailbox to parse mbox content from memory
-                try:
-                    mbox = mailbox.mbox(io.BytesIO(content))
-                except Exception:
-                    # mailbox.mbox expects a file path; fallback to manual parse
-                    buf = io.BytesIO(content)
-                    data = buf.getvalue().split(b"\nFrom ")
-                    for i, part in enumerate(data):
-                        if not part.strip():
-                            continue
-                        # Ensure proper 'From ' prefix for the first part
-                        raw = part if part.startswith(b"From ") else b"From " + part
-                        if _insert_raw_email(raw, request, source=source, folder=folder):
-                            imported += 1
-                        else:
-                            errors.append(f"{filename} part {i}: failed to insert")
-
-            elif lower.endswith('.zip') or upload.content_type == 'application/zip':
-                try:
-                    with zipfile.ZipFile(io.BytesIO(content)) as zf:
-                        for info in zf.infolist():
-                            if info.is_dir():
-                                continue
-                            try:
-                                inner_name = info.filename
-                                inner_lower = inner_name.lower()
-                                fcontent = zf.read(info.filename)
-                                if inner_lower.endswith('.eml') or inner_name.endswith('.msg'):
-                                    if _insert_raw_email(fcontent, request, source=source, folder=folder):
-                                        imported += 1
-                                    else:
-                                        errors.append(f"{filename}:{inner_name}: failed to insert")
-                                elif inner_lower.endswith('.mbox') or inner_lower.endswith('.mbx'):
-                                    # parse embedded mbox
-                                    parts = fcontent.split(b"\nFrom ")
-                                    for i, part in enumerate(parts):
-                                        if not part.strip():
-                                            continue
-                                        raw = part if part.startswith(b"From ") else b"From " + part
-                                        if _insert_raw_email(raw, request, source=source, folder=folder):
-                                            imported += 1
-                                        else:
-                                            errors.append(f"{filename}:{inner_name} part {i}: failed to insert")
-                                elif inner_lower.endswith('.pst'):
-                                    # PST support removed; skip
-                                    continue
-                                else:
-                                    # unsupported inner file, skip
-                                    continue
-                            except Exception as e:
-                                errors.append(f"{filename}:{info.filename}: {str(e)}")
-                except Exception as e:
-                    errors.append(f"{filename}: zip extraction failed ({str(e)})")
-
-            elif lower.endswith(".pst"):
-                # PST support removed — do not attempt to parse PST files
-                errors.append(f"{filename}: PST files are not supported")
-
-            else:
-                errors.append(f"{filename}: unsupported file type")
-        except Exception as e:
-            errors.append(f"{filename}: {str(e)}")
-
-    if imported > 0:
-        flash(request, f"Imported {imported} message(s).", 'success')
-    if errors:
-        flash(request, "; ".join(errors), 'error')
-
-    return RedirectResponse("/emails", status_code=303)
 
 
 @router.post("/emails/export")
