@@ -8,9 +8,18 @@ import os
 import sys
 from pathlib import Path
 
-# Add the src directory to Python path
-src_dir = Path(__file__).parent / "api" / "src"
-sys.path.insert(0, str(src_dir))
+# Add the src directory to Python path. Support both developer layout (repo root)
+# and image layout (files copied into /app during image build).
+candidate_paths = [
+    Path(__file__).parent / "api" / "src",
+    Path(__file__).parent / "src",
+    Path("/app/src"),
+    Path("/app"),
+]
+for p in candidate_paths:
+    if p.exists():
+        sys.path.insert(0, str(p))
+        break
 
 # Load environment variables from .env-dev file
 try:
