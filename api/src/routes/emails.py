@@ -170,7 +170,7 @@ def emails_transfer_page(request: Request):
     )
 
 
-def _insert_raw_email(raw: bytes, request: Request, source: str = "import", folder: str = "Imported") -> bool:
+def _insert_raw_email(raw: bytes, request: Request, source: str = "import", folder: str = "INBOX") -> bool:
     try:
         # Parse headers for metadata
         parsed = parse_email(raw)
@@ -251,7 +251,7 @@ Folder: {folder}""",
 
 
 @router.post("/emails/import")
-async def import_emails(request: Request, source: str = Form("import"), folder: str = Form("Imported"), files: List[UploadFile] = File(...)):
+async def import_emails(request: Request, source: str = Form("import"), folder: str = Form("INBOX"), files: List[UploadFile] = File(...)):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
