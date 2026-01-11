@@ -720,7 +720,7 @@ def _delete_emails_from_db(ids: List[int]) -> int:
         f"DELETE FROM emails WHERE id IN ({placeholders}) RETURNING id",
         params,
     )
-    deleted = len(result.fetchall())
+    deleted = len(result.all())
     
     # Track deletion statistics
     if deleted > 0:
