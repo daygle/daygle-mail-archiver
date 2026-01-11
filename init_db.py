@@ -115,12 +115,13 @@ def init_database():
 
         # Insert some default alert triggers
         default_triggers = [
-            ('worker_heartbeat', 'Worker Heartbeat', 'Monitor worker process health', 'system', 1),
-            ('fetch_error', 'Fetch Error', 'Email fetch failures', 'error', 1),
-            ('storage_full', 'Storage Full', 'Disk space running low', 'warning', 1)
+            ('worker_heartbeat', 'Worker Heartbeat', 'Monitor worker process health', 'system', True),
+            ('fetch_error', 'Fetch Error', 'Email fetch failures', 'error', True),
+            ('storage_full', 'Storage Full', 'Disk space running low', 'warning', True)
         ]
         for key, name, desc, alert_type, enabled in default_triggers:
-            conn.execute(text(f"INSERT INTO alert_triggers (trigger_key, name, description, alert_type, enabled) VALUES ('{key}', '{name}', '{desc}', '{alert_type}', {enabled}) ON CONFLICT (trigger_key) DO NOTHING"))
+            enabled_sql = 'TRUE' if enabled else 'FALSE'
+            conn.execute(text(f"INSERT INTO alert_triggers (trigger_key, name, description, alert_type, enabled) VALUES ('{key}', '{name}', '{desc}', '{alert_type}', {enabled_sql}) ON CONFLICT (trigger_key) DO NOTHING"))
 
     print("Database initialised successfully!")
     print("Default admin user: admin / admin")
