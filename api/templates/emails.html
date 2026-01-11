@@ -57,46 +57,6 @@
                 <i class="fas fa-file-import"></i>
                 <span class="hide-mobile">Import</span>
             </a>
-            <div class="input-group">
-                <select id="export-format" class="form-select form-select-sm" style="width: auto;">
-                    <option value="zip">ZIP (EML files)</option>
-                    <option value="mbox">MBOX</option>
-                </select>
-                <button type="button" class="btn btn-secondary btn-sm" id="export-selected-btn" disabled onclick="performExport()">
-                    <i class="fas fa-file-export"></i>
-                    <span class="hide-mobile">Export Selected</span>
-                </button>
-            </div>
-            <form method="post" action="/emails/export_filtered" class="ms-2 d-inline">
-                <input type="hidden" name="q" value="{{ q }}">
-                <input type="hidden" name="account" value="{{ account }}">
-                <input type="hidden" name="folder" value="{{ folder }}">
-                <div class="input-group">
-                    <select name="format" class="form-select form-select-sm" style="width: auto;">
-                        <option value="zip">ZIP (EML files)</option>
-                        <option value="mbox">MBOX</option>
-                    </select>
-                    <button type="submit" class="btn btn-secondary btn-sm">
-                        <i class="fas fa-file-export"></i>
-                        <span class="hide-mobile">Export Filtered</span>
-                    </button>
-                </div>
-            </form>
-            <form method="post" action="/emails/export_filtered" class="ms-2 d-inline">
-                <input type="hidden" name="q" value="">
-                <input type="hidden" name="account" value="">
-                <input type="hidden" name="folder" value="">
-                <div class="input-group">
-                    <select name="format" class="form-select form-select-sm" style="width: auto;">
-                        <option value="zip">ZIP (EML files)</option>
-                        <option value="mbox">MBOX</option>
-                    </select>
-                    <button type="submit" class="btn btn-secondary btn-sm">
-                        <i class="fas fa-file-export"></i>
-                        <span class="hide-mobile">Export All</span>
-                    </button>
-                </div>
-            </form>
             {% if request.session.role == 'administrator' %}
             <button type="button" class="btn btn-warning btn-sm" id="quarantine-selected-btn" disabled onclick="showQuarantineModal()">
                 <i class="fas fa-shield-virus"></i>
@@ -299,8 +259,6 @@
     const checkboxes = document.querySelectorAll('.email-checkbox');
     const quarantineBtn = document.getElementById('quarantine-selected-btn');
     const deleteBtn = document.getElementById('delete-selected-btn');
-    const exportBtn = document.getElementById('export-selected-btn');
-    const exportFormat = document.getElementById('export-format');
     const bulkForm = document.getElementById('emails-bulk-form');
     const quarantineForm = document.getElementById('quarantine-form');
 
@@ -309,7 +267,6 @@
       const anyChecked = checkedBoxes.length > 0;
     if (quarantineBtn) quarantineBtn.disabled = !anyChecked;
     if (deleteBtn) deleteBtn.disabled = !anyChecked;
-    if (exportBtn) exportBtn.disabled = !anyChecked;
       
       // Update quarantine form with selected IDs
       if (quarantineForm) {
@@ -426,34 +383,6 @@
       // Submit the form
       bulkForm.submit();
     };
-
-        window.performExport = function() {
-            const checkedBoxes = Array.from(checkboxes).filter(cb => cb.checked);
-            if (checkedBoxes.length === 0) return;
-
-            const form = document.createElement('form');
-            form.method = 'post';
-            form.action = '/emails/export';
-
-            checkedBoxes.forEach(cb => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'ids';
-                input.value = cb.value;
-                form.appendChild(input);
-            });
-
-            // Add format
-            const fmt = (exportFormat && exportFormat.value) ? exportFormat.value : 'zip';
-            const fmtInput = document.createElement('input');
-            fmtInput.type = 'hidden';
-            fmtInput.name = 'format';
-            fmtInput.value = fmt;
-            form.appendChild(fmtInput);
-
-            document.body.appendChild(form);
-            form.submit();
-        };
   })();
 </script>
 {% endblock %}
