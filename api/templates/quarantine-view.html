@@ -75,11 +75,9 @@
                         <label class="email-detail-label">Virus Detected</label>
                         <div class="email-detail-value">
                             {% if item.virus_name %}
-                            <span class="badge badge-danger">
-                                <i class="fas fa-exclamation-triangle"></i> {{ item.virus_name }}
-                            </span>
+                            <span class="badge bg-danger"><i class="fas fa-exclamation-triangle"></i> {{ item.virus_name }}</span>
                             {% else %}
-                            <span class="badge badge-secondary">No virus name available</span>
+                            <span class="badge bg-secondary">No virus detected</span>
                             {% endif %}
                         </div>
                     </div>

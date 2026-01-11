@@ -118,20 +118,20 @@
                         <td class="hide-mobile">{{ i.id }}</td>
                         <td>
                             {% if i.integrity == 'ok' %}
-                            <span class="badge badge-success">OK</span>
+                            <span class="badge bg-success"><i class="fas fa-check"></i> Integrity OK</span>
                             {% elif i.integrity == 'modified' %}
-                            <span class="badge badge-danger">Modified</span>
+                            <span class="badge bg-danger"><i class="fas fa-exclamation-triangle"></i> Modified</span>
                             {% elif i.integrity == 'no_signature' %}
-                            <span class="badge badge-secondary">No Sig</span>
+                            <span class="badge bg-secondary"><i class="fas fa-question"></i> No Signature</span>
                             {% elif i.integrity == 'encrypted' %}
-                            <span class="badge badge-warning">Encrypted</span>
+                            <span class="badge bg-warning"><i class="fas fa-lock"></i> Encrypted</span>
                             {% else %}
-                            <span class="badge badge-secondary">Unknown</span>
+                            <span class="badge bg-secondary"><i class="fas fa-question"></i> Unknown</span>
                             {% endif %}
                         </td>
                         <td>{{ i.subject or '(no subject)' }}</td>
                         <td>{{ i.sender or 'unknown' }}</td>
-                        <td class="hide-mobile">{{ i.virus_name or '' }}</td>
+                        <td class="hide-mobile">{{ i.virus_name or 'N/A' }}</td>
                         <td>{{ i.quarantined_at_formatted or i.quarantined_at }}</td>
                         <td>
                             <div class="flex gap-2">
