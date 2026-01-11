@@ -187,6 +187,21 @@ def update_role(
             flash(request, f"Role '{display_name}' already exists", 'error')
             return RedirectResponse(f"/roles/{role_id}/edit", status_code=303)
 
+        # Fetch current role and permissions to detect no-op
+        current_role = query("SELECT name, display_name, description FROM roles WHERE id = :role_id", {"role_id": role_id}).mappings().first()
+        current_perms = query("SELECT permission_id FROM role_permissions WHERE role_id = :role_id", {"role_id": role_id}).mappings().all()
+        current_perm_ids = [p["permission_id"] for p in current_perms]
+
+        # Compare normalized values
+        new_display = display_name
+        new_desc = description.strip() or None
+        new_perm_set = set(int(p) for p in permission_ids) if permission_ids else set()
+        current_perm_set = set(current_perm_ids)
+
+        if current_role and current_role.get('display_name') == new_display and (current_role.get('description') or None) == new_desc and new_perm_set == current_perm_set and current_role.get('name') == slug:
+            flash(request, "No changes detected.", 'info')
+            return RedirectResponse("/roles", status_code=303)
+
         # Update the role
         execute("""
             UPDATE roles
@@ -195,7 +210,7 @@ def update_role(
         """, {
             "name": slug,
             "display_name": display_name,
-            "description": description.strip() or None,
+            "description": new_desc,
             "role_id": role_id
         })
 

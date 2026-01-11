@@ -257,6 +257,25 @@ def update_user(
         return RedirectResponse(f"/users/{user_id}/edit", status_code=303)
     
     try:
+            # Fetch current user values to detect no-op
+            current = query("SELECT username, first_name, last_name, email, role, email_notifications, enabled FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+            role_rows = query("SELECT role_id FROM user_roles WHERE user_id = :id", {"id": user_id}).mappings().all()
+            current_role_ids = [str(r["role_id"]) for r in role_rows]
+
+            # Normalize inputs for comparison
+            cmp_username = username
+            cmp_first = first_name or ""
+            cmp_last = last_name or ""
+            cmp_email = email or ""
+            cmp_role = role or (current.get('role') if current else 'administrator')
+            cmp_email_notifications = bool(email_notifications)
+            cmp_enabled = True if user_id == current_user_id else bool(enabled)
+            cmp_role_ids = [str(r) for r in role_ids]
+
+            if not password and current and current.get('username') == cmp_username and (current.get('first_name') or '') == cmp_first and (current.get('last_name') or '') == cmp_last and (current.get('email') or '') == cmp_email and (current.get('role') or '') == cmp_role and bool(current.get('email_notifications')) == cmp_email_notifications and bool(current.get('enabled')) == cmp_enabled and set(current_role_ids) == set(cmp_role_ids):
+                flash(request, "No changes detected.", 'info')
+                return RedirectResponse("/users", status_code=303)
+
         if password:
             # Validate password strength if changing
             if len(password) < 8:

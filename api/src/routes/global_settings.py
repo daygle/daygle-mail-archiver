@@ -74,7 +74,6 @@ def save_settings(
     old_settings = {r["key"]: r["value"] for r in rows}
 
     try:
-        # Batch update all settings in a single query for better performance
         # Sanitize default_theme
         default_theme = default_theme if default_theme in ('system', 'light', 'dark') else 'system'
 
@@ -105,14 +104,16 @@ def save_settings(
             ('smtp_from_email', smtp_from_email),
             ('smtp_from_name', smtp_from_name),
         ]
+        # Build new settings dict for comparison
+        new_settings = {k: v for (k, v) in settings_data}
 
-        # Update session variables
-        request.session["date_format"] = date_format
-        request.session["time_format"] = time_format
-        request.session["timezone"] = timezone
-        # Update immediate global theme for current session (affects admin who saved settings)
-        request.session["global_theme"] = default_theme
-        
+        # Determine if anything changed
+        changed_keys = [k for k, v in new_settings.items() if old_settings.get(k) != v]
+        if not changed_keys:
+            flash(request, "No changes detected.", 'info')
+            return RedirectResponse("/global-settings", status_code=303)
+
+        # Apply updates
         for key, value in settings_data:
             execute(
                 """
@@ -122,7 +123,7 @@ def save_settings(
                 """,
                 {"key": key, "value": value},
             )
-        
+
         # Update session variables
         request.session["date_format"] = date_format
         request.session["time_format"] = time_format
@@ -136,8 +137,6 @@ def save_settings(
                 log("info", "Settings", f"User '{request.session.get('username', 'unknown')}' changed default_theme to {default_theme}", "")
         except Exception:
             pass
-
-        # If default_theme changed, optionally inform or update behaviour (no further action required here).
     except Exception as e:
         log("error", "Settings", f"Failed to save settings: {str(e)}", "")
         flash(request, f"Failed to save settings: {str(e)}", 'error')

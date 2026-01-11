@@ -148,12 +148,22 @@ def update_info(
         return RedirectResponse("/profile", status_code=303)
     
     try:
+        # Check for no-op: compare with current values
+        current = query("SELECT first_name, last_name, email FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+        new_fn = first_name.strip() or None
+        new_ln = last_name.strip() or None
+        new_e = email.strip() or None
+
+        if current and current.get('first_name') == new_fn and current.get('last_name') == new_ln and (current.get('email') or None) == new_e:
+            flash(request, "No changes detected.", 'info')
+            return RedirectResponse("/profile", status_code=303)
+
         execute("""
             UPDATE users 
             SET first_name = :fn, last_name = :ln, email = :e 
             WHERE id = :id
-        """, {"fn": first_name.strip(), "ln": last_name.strip(), "e": email.strip(), "id": user_id})
-        
+        """, {"fn": new_fn, "ln": new_ln, "e": new_e, "id": user_id})
+
         log("info", "Profile", f"User '{username}' updated their profile information", "")
         flash(request, "Profile updated successfully.", 'success')
         return RedirectResponse("/profile", status_code=303)
@@ -220,23 +230,8 @@ def update_user_settings(request: Request, page_size: int = Form(...), date_form
     try:
         # Get current settings for comparison
         current_settings = query("SELECT page_size, date_format, time_format, timezone, theme_preference, email_notifications FROM users WHERE id = :id", {"id": user_id}).mappings().first()
-        
-        # Only update email_notifications for administrators
-        if user_role == "administrator":
-            execute("UPDATE users SET page_size = :ps, date_format = :df, time_format = :tf, timezone = :tz, theme_preference = :theme, email_notifications = :en WHERE id = :id", 
-                    {"ps": page_size, "df": date_format, "tf": time_format, "tz": timezone, "theme": theme, "en": email_notifications, "id": user_id})
-        else:
-            execute("UPDATE users SET page_size = :ps, date_format = :df, time_format = :tf, timezone = :tz, theme_preference = :theme WHERE id = :id", 
-                    {"ps": page_size, "df": date_format, "tf": time_format, "tz": timezone, "theme": theme, "id": user_id})
-        
-        # Update session variables
-        request.session["page_size"] = page_size
-        request.session["date_format"] = date_format
-        request.session["time_format"] = time_format
-        request.session["timezone"] = timezone
-        request.session["theme"] = theme
-        
-        # Log only changed values
+
+        # Determine changed settings without applying updates yet
         changed_settings = []
         if current_settings:
             if current_settings["page_size"] != page_size:
@@ -251,10 +246,31 @@ def update_user_settings(request: Request, page_size: int = Form(...), date_form
                 changed_settings.append(f"theme={theme}")
             if user_role == "administrator" and current_settings["email_notifications"] != email_notifications:
                 changed_settings.append(f"email_notifications={email_notifications}")
-        
+
+        if not changed_settings:
+            flash(request, "No changes detected.", 'info')
+            return RedirectResponse("/user-settings", status_code=303)
+
+        # Only update email_notifications for administrators
+        if user_role == "administrator":
+            execute("UPDATE users SET page_size = :ps, date_format = :df, time_format = :tf, timezone = :tz, theme_preference = :theme, email_notifications = :en WHERE id = :id", 
+                    {"ps": page_size, "df": date_format, "tf": time_format, "tz": timezone, "theme": theme, "en": email_notifications, "id": user_id})
+        else:
+            execute("UPDATE users SET page_size = :ps, date_format = :df, time_format = :tf, timezone = :tz, theme_preference = :theme WHERE id = :id", 
+                    {"ps": page_size, "df": date_format, "tf": time_format, "tz": timezone, "theme": theme, "id": user_id})
+
+        # Update session variables
+        request.session["page_size"] = page_size
+        request.session["date_format"] = date_format
+        request.session["time_format"] = time_format
+        request.session["timezone"] = timezone
+        request.session["theme"] = theme
+
+        # Log only changed values
+        username = request.session.get("username", "unknown")
         if changed_settings:
             log("info", "Settings", f"User '{username}' updated their settings ({', '.join(changed_settings)})", "")
-        
+
         flash(request, "User settings updated successfully.", 'success')
         return RedirectResponse("/user-settings", status_code=303)
     except Exception as e:

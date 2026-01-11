@@ -233,6 +233,26 @@ def update_account(
         password_sql = ""
 
     try:
+        # Check current values to detect no-op updates
+        current = query("SELECT name, account_type, host, port, username, use_ssl, require_starttls, poll_interval_seconds, delete_after_processing, expunge_deleted, enabled FROM fetch_accounts WHERE id = :id", {"id": id}).mappings().first()
+        if current:
+            # Normalize values for comparison
+            same = (
+                (current.get('name') == name) and
+                (current.get('account_type') == account_type) and
+                (current.get('host') == host) and
+                (int(current.get('port') or 0) == int(port or 0)) and
+                (current.get('username') == username) and
+                (bool(current.get('use_ssl')) == bool(use_ssl)) and
+                (bool(current.get('require_starttls')) == bool(require_starttls)) and
+                (int(current.get('poll_interval_seconds') or 0) == int(poll_interval_seconds or 0)) and
+                (bool(current.get('delete_after_processing')) == bool(delete_after_processing)) and
+                (bool(current.get('expunge_deleted')) == bool(expunge_deleted)) and
+                (bool(current.get('enabled')) == bool(enabled))
+            )
+            if same and not password.strip():
+                flash(request, "No changes detected.", 'info')
+                return RedirectResponse("/fetch-accounts", status_code=303)
         query(
             f"""
             UPDATE fetch_accounts
