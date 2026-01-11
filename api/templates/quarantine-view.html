@@ -113,12 +113,12 @@
     <div class="card-footer">
         <div class="d-flex justify-content-end gap-2 flex-wrap">
             <form method="post" action="/quarantine/{{ item.id }}/restore" style="display:inline;">
-                <button type="submit" class="btn btn-success btn-sm flex-shrink-1">
+                <button type="submit" class="btn btn-success btn-sm flex-shrink-1 w-auto">
                     <i class="fas fa-undo"></i>
                     <span class="hide-mobile">Restore</span>
                 </button>
             </form>
-            <button type="button" class="btn btn-danger btn-sm flex-shrink-1" onclick="showDeleteConfirmation()">
+            <button type="button" class="btn btn-danger btn-sm flex-shrink-1 w-auto" onclick="showDeleteConfirmation()">
                 <i class="fas fa-trash"></i>
                 <span class="hide-mobile">Delete</span>
             </button>

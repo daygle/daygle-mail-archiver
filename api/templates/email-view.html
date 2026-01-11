@@ -150,7 +150,7 @@
     <div class="card-footer">
         <div class="d-flex justify-content-end gap-2 flex-wrap">
             {% if request.session.role != 'read_only' %}
-            <a href="/emails/{{ email.id }}/download" class="btn btn-primary btn-sm flex-shrink-1">
+            <a href="/emails/{{ email.id }}/download" class="btn btn-primary btn-sm flex-shrink-1 w-auto">
                 <i class="fas fa-download"></i>
                 <span class="hide-mobile">Download EML</span>
             </a>
@@ -158,13 +158,13 @@
             {% if request.session.role == 'administrator' %}
             {% if not email.quarantined %}
             <form method="post" action="/emails/{{ email.id }}/quarantine" style="display:inline;">
-                <button type="submit" class="btn btn-warning btn-sm flex-shrink-1">
+                <button type="submit" class="btn btn-warning btn-sm flex-shrink-1 w-auto">
                     <i class="fas fa-shield-virus"></i>
                     <span class="hide-mobile">Quarantine</span>
                 </button>
             </form>
             {% endif %}
-            <button type="button" class="btn btn-danger btn-sm flex-shrink-1" onclick="showDeleteConfirmation()">
+            <button type="button" class="btn btn-danger btn-sm flex-shrink-1 w-auto" onclick="showDeleteConfirmation()">
                 <i class="fas fa-trash"></i>
                 <span class="hide-mobile">Delete</span>
             </button>
