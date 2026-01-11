@@ -16,13 +16,13 @@
         </a>
     </div>
     <div class="card-body">
-        <!-- Quarantine Message Information -->
+        <!-- Quarantine Information -->
         <div class="mb-4">
-            <h5 class="mb-3 text-danger">
-                <i class="fas fa-biohazard me-2"></i>Quarantine Details
+            <h5 class="mb-3 text-primary">
+                <i class="fas fa-envelope-open-text me-2"></i>Quarantine Information
             </h5>
             <div class="row g-3">
-                <div class="col-12">
+                <div class="col-md-6">
                     <div class="email-detail-item">
                         <label class="email-detail-label">Subject</label>
                         <div class="email-detail-value">
@@ -32,14 +32,8 @@
                 </div>
                 <div class="col-md-6">
                     <div class="email-detail-item">
-                        <label class="email-detail-label">Sender</label>
-                        <div class="email-detail-value text-break">{{ item.sender or 'unknown' }}</div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="email-detail-item">
-                        <label class="email-detail-label">Quarantined At</label>
-                        <div class="email-detail-value">{{ item.quarantined_at }}</div>
+                        <label class="email-detail-label">Date</label>
+                        <div class="email-detail-value">{{ item.quarantined_at_formatted or item.quarantined_at }}</div>
                     </div>
                 </div>
             </div>
@@ -50,6 +44,21 @@
                         <div class="email-detail-value">
                             <code class="text-break">{{ headers.message_id or "(no message id)" }}</code>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sender & Recipients -->
+        <div class="mb-4">
+            <h6 class="mb-3 text-muted">
+                <i class="fas fa-users me-2"></i>Participants
+            </h6>
+            <div class="row g-3">
+                <div class="col-12">
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Sender</label>
+                        <div class="email-detail-value text-break">{{ item.sender or 'unknown' }}</div>
                     </div>
                 </div>
             </div>
@@ -86,13 +95,13 @@
                         <label class="email-detail-label">Integrity Status</label>
                         <div class="email-detail-value">
                             {% if item.integrity == 'ok' %}
-                            <span class="badge badge-success"><i class="fas fa-check"></i> Integrity OK</span>
+                            <span class="badge bg-success"><i class="fas fa-check"></i> Integrity OK</span>
                             {% elif item.integrity == 'modified' %}
-                            <span class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i> Modified</span>
+                            <span class="badge bg-danger"><i class="fas fa-exclamation-triangle"></i> Modified</span>
                             {% elif item.integrity == 'no_signature' %}
-                            <span class="badge badge-secondary"><i class="fas fa-question"></i> No Signature</span>
+                            <span class="badge bg-secondary"><i class="fas fa-question"></i> No Signature</span>
                             {% else %}
-                            <span class="badge badge-secondary"><i class="fas fa-question"></i> Unknown</span>
+                            <span class="badge bg-secondary"><i class="fas fa-question"></i> Unknown</span>
                             {% endif %}
                         </div>
                     </div>
@@ -136,8 +145,10 @@
                     <i class="fas fa-info-circle"></i> Embedded images are displayed inline where available
                 </small>
             </div>
-        {% else %}
+        {% elif body.text %}
             <pre style="background: var(--bg-secondary); padding: 16px; border-radius: var(--radius-md); overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;">{{ body.text }}</pre>
+        {% else %}
+            <pre style="background: var(--bg-secondary); padding: 16px; border-radius: var(--radius-md); overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;">{{ preview }}</pre>
         {% endif %}
     </div>
 </div>

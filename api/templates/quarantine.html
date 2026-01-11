@@ -132,24 +132,23 @@
                         <td class="hide-mobile">{{ i.virus_name or '' }}</td>
                         <td>{{ i.quarantined_at }}</td>
                         <td>
-                            <a class="btn btn-sm btn-primary" href="/quarantine/{{ i.id }}">
-                                <i class="fas fa-eye"></i>
-                                <span class="hide-mobile">View</span>
-                            </a>
-                            {% if request.session.role == 'administrator' %}
-                            <form method="post" action="/quarantine/{{ i.id }}/restore" style="display:inline;">
-                                <button class="btn btn-sm btn-success" type="submit">
-                                    <i class="fas fa-undo"></i>
-                                    <span class="hide-mobile">Restore</span>
-                                </button>
-                            </form>
-                            <form method="post" action="/quarantine/{{ i.id }}/delete" style="display:inline;" onsubmit="return confirm('Delete this quarantined message permanently?');">
-                                <button class="btn btn-sm btn-danger" type="submit">
-                                    <i class="fas fa-trash"></i>
-                                    <span class="hide-mobile">Delete</span>
-                                </button>
-                            </form>
-                            {% endif %}
+                            <div class="flex gap-2">
+                                <a class="btn btn-secondary btn-sm" href="/quarantine/{{ i.id }}" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if request.session.role == 'administrator' %}
+                                <form method="post" action="/quarantine/{{ i.id }}/restore" style="display:inline;">
+                                    <button class="btn btn-info btn-sm" type="submit" title="Restore">
+                                        <i class="fas fa-undo"></i>
+                                    </button>
+                                </form>
+                                <form method="post" action="/quarantine/{{ i.id }}/delete" style="display:inline;" onsubmit="return confirm('Delete this quarantined message permanently?');">
+                                    <button class="btn btn-danger btn-sm" type="submit" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}

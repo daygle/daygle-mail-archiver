@@ -658,7 +658,7 @@ def _quarantine_emails(ids: List[int], quarantined_by: str) -> int:
                 "raw_email": email["raw_email"],
                 "signature": email.get("signature"),
                 "compressed": email["compressed"],
-                "reason": "manually quarantined",
+                "reason": "Manually Quarantined",
                 "quarantined_by": quarantined_by
             })
             

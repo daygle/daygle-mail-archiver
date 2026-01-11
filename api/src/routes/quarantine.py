@@ -10,6 +10,7 @@ from utils.security import decrypt_password, can_delete
 from cryptography.fernet import Fernet
 from utils.alerts import create_alert
 from utils.email_parser import compute_signature
+from utils.timezone import format_datetime
 
 router = APIRouter()
 
@@ -270,26 +271,56 @@ def view_quarantine(request: Request, qid: int):
     if not item:
         return RedirectResponse('/quarantine', status_code=303)
 
+    # Get user_id for timezone formatting
+    user_id = request.session.get("user_id")
+    if user_id is not None:
+        try:
+            user_id = int(user_id)
+        except (ValueError, TypeError):
+            user_id = None
+
+    # Format quarantined_at according to user preferences
+    item = dict(item)  # Convert to dict to make it mutable
+    if item["quarantined_at"] and hasattr(item["quarantined_at"], 'strftime'):  # Check if it's a datetime object
+        item["quarantined_at_formatted"] = format_datetime(item["quarantined_at"], user_id)
+    else:
+        item["quarantined_at_formatted"] = item["quarantined_at"]  # Keep as string if already formatted
+
     raw = item.get('raw_email')
     f = _get_quarantine_fernet()
     preview = None
     integrity = 'unknown'
     current_sig = None
+    headers = {}
+    body = {}
+    
     if raw:
         try:
             data = raw
             if f:
                 data = f.decrypt(data)
-            # If data appears to be gzipped, decompress for preview
+            # If data appears to be gzipped, decompress
             try:
                 if isinstance(data, (bytes, bytearray)) and len(data) >= 2 and data[:2] == b"\x1f\x8b":
                     import gzip as _gzip
                     data = _gzip.decompress(data)
             except Exception:
-                # If decompression fails, fall back to raw bytes
                 pass
+            
+            # Set preview from the processed data
             preview = data[:10000].decode(errors='replace') if isinstance(data, (bytes, bytearray)) else str(data)
-            # compute integrity for this quarantined item
+            
+            # Try to parse email for headers and body
+            try:
+                from utils.email_parser import parse_email
+                parsed = parse_email(data)
+                headers = parsed.get('headers', {})
+                body = parsed.get('body', {})
+            except Exception as parse_e:
+                log('warning', 'Quarantine', f'Failed to parse email content for quarantine item {qid}: {parse_e}')
+                # Keep empty headers and body, but we still have preview
+            
+            # compute integrity
             try:
                 current_sig = compute_signature(data)
                 stored_sig = item.get('signature')
@@ -303,33 +334,11 @@ def view_quarantine(request: Request, qid: int):
                     integrity = 'modified'
             except Exception:
                 integrity = 'unknown'
-        except Exception:
-            preview = '[Could not decrypt or render content]'
-
-    # Parse email headers if raw email is available
-    headers = {}
-    if raw:
-        try:
-            data = raw
-            if f:
-                data = f.decrypt(data)
-            # If data appears to be gzipped, decompress for parsing
-            try:
-                if isinstance(data, (bytes, bytearray)) and len(data) >= 2 and data[:2] == b"\x1f\x8b":
-                    import gzip as _gzip
-                    data = _gzip.decompress(data)
-            except Exception:
-                pass
-            
-            # Parse email to extract headers
-            from utils.email_parser import parse_email
-            parsed = parse_email(data)
-            headers = parsed.get('headers', {})
-            body = parsed.get('body', {})
+                
         except Exception as e:
-            log('warning', 'Quarantine', f'Failed to parse email headers for quarantine item {qid}: {e}')
-            headers = {}
-            body = {}
+            log('error', 'Quarantine', f'Failed to process quarantined email {qid}: {e}')
+            preview = '[Could not decrypt or render content]'
+            integrity = 'unknown'
 
     # attach integrity fields to item for template
     item = dict(item)
