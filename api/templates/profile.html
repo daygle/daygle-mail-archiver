@@ -31,6 +31,7 @@
                 <div class="alert alert-info mt-3">
                     <div style="display: grid; gap: 8px;">
                         <div><strong>Username:</strong> {{ user.username }}</div>
+                        <div><strong>Role:</strong> {{ user.role or '-' }}</div>
                         <div><strong>Last Login:</strong> {{ user.last_login | format_user_datetime(request.session.user_id) if user.last_login else 'Never' }}</div>
                         <div><strong>Account Created:</strong> {{ user.created_at | format_user_datetime(request.session.user_id) if user.created_at else '-' }}</div>
                     </div>

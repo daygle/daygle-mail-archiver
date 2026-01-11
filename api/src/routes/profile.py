@@ -42,7 +42,7 @@ def profile_form(request: Request):
 
     user_id = request.session["user_id"]
     user = query("""
-        SELECT username, first_name, last_name, email, last_login, created_at 
+        SELECT username, first_name, last_name, email, last_login, created_at, role 
         FROM users WHERE id = :id
     """, {"id": user_id}).mappings().first()
 
@@ -70,40 +70,40 @@ def change_password(
 
     if not user:
         flash(request, "User not found.", 'error')
-        return RedirectResponse("/profile", status_code=303)
+        return RedirectResponse("/change-password", status_code=303)
     
     # Verify current password
     try:
         if not bcrypt.checkpw(current_password.encode('utf-8'), user["password_hash"].encode('utf-8')):
             log("warning", "Security", f"User '{username}' failed password change - incorrect current password", "")
             flash(request, "Current password is incorrect.", 'error')
-            return RedirectResponse("/profile", status_code=303)
+            return RedirectResponse("/change-password", status_code=303)
     except Exception as e:
         log("error", "Security", f"Password verification error for user '{username}': {str(e)}", "")
         flash(request, "An error occurred. Please try again.", 'error')
-        return RedirectResponse("/profile", status_code=303)
+        return RedirectResponse("/change-password", status_code=303)
 
     # Validate new password
     if new_password != confirm_password:
         flash(request, "New passwords do not match.", 'error')
-        return RedirectResponse("/profile", status_code=303)
+        return RedirectResponse("/change-password", status_code=303)
 
     if len(new_password) < 8:
         flash(request, "New password must be at least 8 characters long.", 'error')
-        return RedirectResponse("/profile", status_code=303)
+        return RedirectResponse("/change-password", status_code=303)
     
     # Check password complexity
     if not re.search(r"[a-z]", new_password):
         flash(request, "Password must contain at least one lowercase letter.", 'error')
-        return RedirectResponse("/profile", status_code=303)
+        return RedirectResponse("/change-password", status_code=303)
     
     if not re.search(r"[A-Z]", new_password):
         flash(request, "Password must contain at least one uppercase letter.", 'error')
-        return RedirectResponse("/profile", status_code=303)
+        return RedirectResponse("/change-password", status_code=303)
     
     if not re.search(r"[0-9]", new_password):
         flash(request, "Password must contain at least one number.", 'error')
-        return RedirectResponse("/profile", status_code=303)
+        return RedirectResponse("/change-password", status_code=303)
 
     try:
         hash_pw = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
@@ -111,11 +111,23 @@ def change_password(
         
         log("warning", "Security", f"User '{username}' successfully changed their password", "")
         flash(request, "Password changed successfully.", 'success')
-        return RedirectResponse("/profile", status_code=303)
+        return RedirectResponse("/change-password", status_code=303)
     except Exception as e:
         log("error", "Security", f"Failed to update password for user '{username}': {str(e)}", "")
         flash(request, "Failed to update password. Please try again.", 'error')
-        return RedirectResponse("/profile", status_code=303)
+        return RedirectResponse("/change-password", status_code=303)
+
+
+@router.get("/change-password")
+def change_password_form(request: Request):
+    if not require_login(request):
+        return RedirectResponse("/login", status_code=303)
+
+    user_id = request.session["user_id"]
+    user = query("SELECT username, first_name, last_name, email FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+
+    msg = request.session.pop("flash", None)
+    return templates.TemplateResponse("change-password.html", {"request": request, "flash": msg, "user": user})
 
 @router.post("/profile/update-info")
 def update_info(
