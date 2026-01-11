@@ -39,14 +39,14 @@
                     </select>
                 </div>
                 <div class="flex gap-2">
-                    <button type="submit" class="btn btn-primary flex-1">
-                        <i class="fas fa-search"></i>
-                        <span>Search</span>
-                    </button>
-                    <a href="/logs" class="btn btn-secondary">
-                        <i class="fas fa-times"></i>
-                        <span>Clear</span>
-                    </a>
+                            <button type="submit" class="btn btn-primary flex-1">
+                                <i class="fas fa-search"></i>
+                                <span class="hide-mobile">Search</span>
+                            </button>
+                            <a href="/logs" class="btn btn-secondary">
+                                <i class="fas fa-times"></i>
+                                <span class="hide-mobile">Clear</span>
+                            </a>
                 </div>
             </div>
             <div class="grid grid-cols-2 gap-3 mt-3">
@@ -74,7 +74,7 @@
         </div>
         <button id="toggleFilterBtn" class="btn btn-secondary btn-sm" onclick="toggleFilters()">
             <i class="fas fa-filter"></i>
-            <span>Search & Filter</span>
+            <span class="hide-mobile">Search & Filter</span>
         </button>
     </div>
     
@@ -159,10 +159,10 @@
         
         if (filterCard.style.display === 'none') {
             filterCard.style.display = 'block';
-            toggleBtn.innerHTML = '<i class="fas fa-times"></i><span>Hide Filters</span>';
+            toggleBtn.innerHTML = '<i class="fas fa-times"></i><span class="hide-mobile">Hide Filters</span>';
         } else {
             filterCard.style.display = 'none';
-            toggleBtn.innerHTML = '<i class="fas fa-filter"></i><span>Search & Filter</span>';
+            toggleBtn.innerHTML = '<i class="fas fa-filter"></i><span class="hide-mobile">Search & Filter</span>';
         }
     }
     

@@ -42,11 +42,11 @@
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary flex-fill">
                             <i class="fas fa-filter"></i>
-                            <span>Apply Filters</span>
+                            <span class="hide-mobile">Apply Filters</span>
                         </button>
                         <a href="/alerts" class="btn btn-secondary">
                             <i class="fas fa-times"></i>
-                            <span>Clear</span>
+                            <span class="hide-mobile">Clear</span>
                         </a>
                     </div>
                 </div>
@@ -71,16 +71,16 @@
         <div class="d-flex gap-2">
             <button id="toggleFilterBtn" class="btn btn-secondary btn-sm" onclick="toggleFilters()">
                 <i class="fas fa-filter"></i>
-                <span>Filter Alerts</span>
+                <span class="hide-mobile">Filter Alerts</span>
             </button>
             <button class="btn btn-secondary btn-sm" onclick="refreshAlerts()">
                 <i class="fas fa-sync-alt"></i>
-                <span>Refresh</span>
+                <span class="hide-mobile">Refresh</span>
             </button>
             {% if request.session.role == 'administrator' %}
             <button class="btn btn-primary btn-sm" onclick="createTestAlert()">
                 <i class="fas fa-plus"></i>
-                <span>Create Test Alert</span>
+                <span class="hide-mobile">Create Test Alert</span>
             </button>
             {% endif %}
         </div>
@@ -104,7 +104,7 @@
                         {% if not alert.acknowledged %}
                         <button class="btn btn-sm btn-outline-primary" onclick="acknowledgeAlert({{ alert.id }})">
                             <i class="fas fa-check"></i>
-                            <span>Acknowledge</span>
+                            <span class="hide-mobile">Acknowledge</span>
                         </button>
                         {% endif %}
                     </div>
@@ -172,13 +172,13 @@ window.toggleFilters = function() {
   const filterCard = document.getElementById('filterCard');
   const toggleBtn = document.getElementById('toggleFilterBtn');
 
-  if (filterCard.style.display === 'none') {
-    filterCard.style.display = 'block';
-    toggleBtn.innerHTML = '<i class="fas fa-times"></i><span>Hide Filters</span>';
-  } else {
-    filterCard.style.display = 'none';
-    toggleBtn.innerHTML = '<i class="fas fa-filter"></i><span>Filter Alerts</span>';
-  }
+    if (filterCard.style.display === 'none') {
+        filterCard.style.display = 'block';
+        toggleBtn.innerHTML = '<i class="fas fa-times"></i><span class="hide-mobile">Hide Filters</span>';
+    } else {
+        filterCard.style.display = 'none';
+        toggleBtn.innerHTML = '<i class="fas fa-filter"></i><span class="hide-mobile">Filter Alerts</span>';
+    }
 };
 
 // Show filter card if any filters are active

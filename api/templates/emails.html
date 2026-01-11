@@ -285,13 +285,13 @@
       const filterCard = document.getElementById('filterCard');
       const toggleBtn = document.getElementById('toggleFilterBtn');
       
-      if (filterCard.style.display === 'none') {
-        filterCard.style.display = 'block';
-        toggleBtn.innerHTML = '<i class="fas fa-times"></i><span>Hide Filters</span>';
-      } else {
-        filterCard.style.display = 'none';
-        toggleBtn.innerHTML = '<i class="fas fa-filter"></i><span>Search & Filter</span>';
-      }
+            if (filterCard.style.display === 'none') {
+                filterCard.style.display = 'block';
+                toggleBtn.innerHTML = '<i class="fas fa-times"></i><span class="hide-mobile">Hide Filters</span>';
+            } else {
+                filterCard.style.display = 'none';
+                toggleBtn.innerHTML = '<i class="fas fa-filter"></i><span class="hide-mobile">Search & Filter</span>';
+            }
     };
 
     // Show filter card if any filters are active

@@ -1929,6 +1929,10 @@ th.hide-mobile, td.hide-mobile, .hide-mobile {
     th.hide-mobile, td.hide-mobile, .hide-mobile {
         display: none !important;
     }
+    /* Ensure button/link text hidden as well (higher specificity) */
+    button .hide-mobile, a .hide-mobile, .btn .hide-mobile {
+        display: none !important;
+    }
 }
 
 .grid { display: grid; }
