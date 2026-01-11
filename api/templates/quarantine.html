@@ -19,7 +19,32 @@
             <div class="grid grid-cols-3 gap-3">
                 <div>
                     <input type="text" name="q" value="{{ q }}" placeholder="Search subject, sender, recipients" class="form-control">
+            </div>
+    
+            <!-- Pagination -->
+            {% if page > 1 or page < total_pages %}
+            <div class="card-footer">
+                <div class="flex items-center justify-between">
+                    <div>
+                        {% if page > 1 %}
+                        <a href="/quarantine?page={{ page - 1 }}{% if q %}&q={{ q }}{% endif %}{% if virus %}&virus={{ virus }}{% endif %}" class="btn btn-secondary">
+                            <i class="fas fa-chevron-left"></i>
+                            <span>Previous</span>
+                        </a>
+                        {% endif %}
+                    </div>
+                    <span class="text-secondary">Page {{ page }} of {{ total_pages }}</span>
+                    <div>
+                        {% if page < total_pages %}
+                        <a href="/quarantine?page={{ page + 1 }}{% if q %}&q={{ q }}{% endif %}{% if virus %}&virus={{ virus }}{% endif %}" class="btn btn-secondary">
+                            <span>Next</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                        {% endif %}
+                    </div>
                 </div>
+            </div>
+            {% endif %}
                 <div>
                     <input type="text" name="virus" value="{{ virus }}" placeholder="Virus name" class="form-control">
                 </div>

@@ -120,7 +120,7 @@ def _delete_quarantined_from_mail_server_and_db(ids: List[int]) -> tuple[int, li
 
 
 @router.get('/quarantine', response_class=HTMLResponse)
-def list_quarantine(request: Request, q: str = None, virus: str = None):
+def list_quarantine(request: Request, q: str = None, virus: str = None, page: int = 1):
     # Require login first
     if not request.session.get('user_id'):
         request.session['flash'] = 'Please login to access Quarantine'
@@ -138,6 +138,29 @@ def list_quarantine(request: Request, q: str = None, virus: str = None):
         request.session['flash'] = 'Access denied'
         return RedirectResponse('/dashboard', status_code=303)
 
+    # Pagination: determine page_size from user or global settings
+    user_id = request.session.get('user_id')
+    page_size = 50
+    if user_id:
+        try:
+            u = query("SELECT page_size FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+            if u and u.get('page_size'):
+                page_size = int(u.get('page_size'))
+        except Exception:
+            pass
+
+    if not user_id or not page_size:
+        try:
+            global_result = query("SELECT value FROM settings WHERE key = 'page_size'").mappings().first()
+            if global_result and global_result.get('value'):
+                page_size = int(global_result.get('value'))
+        except Exception:
+            pass
+
+    page_size = min(max(10, int(page_size or 50)), 500)
+    page = max(1, int(page or 1))
+    offset = (page - 1) * page_size
+
     # Build query with optional filters
     where_clauses = []
     params = {}
@@ -153,9 +176,29 @@ def list_quarantine(request: Request, q: str = None, virus: str = None):
     where_sql = " AND ".join(where_clauses) if where_clauses else ""
     if where_sql:
         where_sql = f"WHERE {where_sql}"
-    
-    rows = query(f'SELECT id, subject, sender, recipients, virus_name, quarantined_at, expires_at FROM quarantined_emails {where_sql} ORDER BY quarantined_at DESC', params).mappings().all()
-    return templates.TemplateResponse('quarantine.html', {'request': request, 'items': rows, 'q': q or '', 'virus': virus or ''})
+    # Get total count for pagination
+    total_row = query(f'SELECT COUNT(*) as total FROM quarantined_emails {where_sql}', params).mappings().first()
+    total = int(total_row['total'] or 0) if total_row else 0
+
+    rows = query(
+        f'SELECT id, subject, sender, recipients, virus_name, quarantined_at, expires_at FROM quarantined_emails {where_sql} ORDER BY quarantined_at DESC LIMIT :limit OFFSET :offset',
+        {**params, 'limit': page_size, 'offset': offset}
+    ).mappings().all()
+
+    total_pages = (total + page_size - 1) // page_size if page_size else 1
+    msg = request.session.pop('flash', None)
+
+    return templates.TemplateResponse('quarantine.html', {
+        'request': request,
+        'items': rows,
+        'q': q or '',
+        'virus': virus or '',
+        'page': page,
+        'page_size': page_size,
+        'total': total,
+        'total_pages': total_pages,
+        'flash': msg
+    })
 
 @router.get('/quarantine/{qid}', response_class=HTMLResponse)
 def view_quarantine(request: Request, qid: int):
