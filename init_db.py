@@ -8,18 +8,9 @@ import os
 import sys
 from pathlib import Path
 
-# Add the src directory to Python path. Support both developer layout (repo root)
-# and image layout (files copied into /app during image build).
-candidate_paths = [
-    Path(__file__).parent / "api" / "src",
-    Path(__file__).parent / "src",
-    Path("/app/src"),
-    Path("/app"),
-]
-for p in candidate_paths:
-    if p.exists():
-        sys.path.insert(0, str(p))
-        break
+# Add the src directory to Python path
+src_dir = Path(__file__).parent / "api" / "src"
+sys.path.insert(0, str(src_dir))
 
 # Load environment variables from .env-dev file
 try:
@@ -35,20 +26,9 @@ from sqlalchemy import create_engine, text
 
 def init_database():
     """Initialise the database with required tables."""
-    # Prefer explicit DB_DSN. If empty, try to construct a Postgres DSN
-    # using environment variables or sensible defaults used in docker-compose.yml.
-    db_dsn = os.getenv('DB_DSN', '')
-    if not db_dsn:
-        pg_user = os.getenv('POSTGRES_USER', 'daygle_mail_archiver')
-        pg_pass = os.getenv('POSTGRES_PASSWORD', 'change_me')
-        pg_db = os.getenv('POSTGRES_DB', 'daygle_mail_archiver')
-        pg_host = os.getenv('DB_HOST', 'db')
-        pg_port = os.getenv('DB_PORT', '5432')
-        # Construct a PostgreSQL DSN that SQLAlchemy will accept.
-        db_dsn = f"postgresql+psycopg2://{pg_user}:{pg_pass}@{pg_host}:{pg_port}/{pg_db}"
-        print(f"No DB_DSN provided — attempting Postgres at {pg_host}:{pg_port} (db={pg_db})")
-    else:
-        print(f"Initialising database: {db_dsn}")
+    db_dsn = os.getenv('DB_DSN', 'sqlite:///./test.db')
+
+    print(f"Initialising database: {db_dsn}")
 
     # Create engine
     engine = create_engine(db_dsn)

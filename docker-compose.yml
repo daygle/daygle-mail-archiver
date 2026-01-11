@@ -15,22 +15,6 @@ services:
       timeout: 5s
       retries: 5
 
-  db-init:
-    build:
-      context: ./api
-    container_name: daygle-mail-archiver-db-init
-    # Run the repository root init_db.py (mounted below) to avoid overlapping /app mounts
-    command: python /init_db.py
-    environment:
-      DB_DSN: ${DB_DSN:-}
-    volumes:
-      - ./db:/db:ro
-      - ./init_db.py:/init_db.py:ro
-    depends_on:
-      db:
-        condition: service_healthy
-    restart: "no"
-
   api:
     build:
       context: ./api
@@ -45,15 +29,8 @@ services:
       # Mount .git folder for update checking (read-only)
       - ./.git:/app/.git:ro
     depends_on:
-      db-init:
-        condition: service_completed_successfully
       db:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
     ports:
       - "8000:8000"
     restart: unless-stopped
@@ -76,11 +53,6 @@ services:
         condition: service_healthy
       clamav:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "pgrep -f worker.py >/dev/null || exit 1"]
-      interval: 60s
-      timeout: 10s
-      retries: 3
     restart: unless-stopped
 
   clamav:
