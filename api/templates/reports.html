@@ -444,11 +444,10 @@
 
 <!-- Chart.js -->
 <script>
+// Disable Chart.js source maps to prevent 404 errors
+Chart = undefined; // Clear any existing Chart
 </script>
 <script src="/static/vendor/chart.min.js"></script>
-<!-- GridStack (local vendor) -->
-<link rel="stylesheet" href="/static/vendor/gridstack/gridstack.min.css">
-<script src="/static/vendor/gridstack/gridstack-all.js"></script>
 
 <script>
 // Global chart instances - updated 2026-01-08
@@ -464,31 +463,10 @@ window.sizeDistributionChart = null;
 
 // Initialise charts and load data
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize GridStack and convert .report-section blocks into grid items
-    try {
-        const grid = GridStack.init({cellHeight: 'auto', float: false, resizable: {handles: 'e, se, s, sw, w'}});
-        document.querySelectorAll('.report-section').forEach((section, i) => {
-            // Wrap existing section into grid item structure
-            const wrapper = document.createElement('div');
-            wrapper.className = 'grid-stack-item';
-            // sensible defaults: two-column layout on large screens
-            wrapper.setAttribute('data-gs-width', '6');
-            wrapper.setAttribute('data-gs-height', '6');
-            const content = document.createElement('div');
-            content.className = 'grid-stack-item-content card p-2';
-            section.parentNode.insertBefore(wrapper, section);
-            wrapper.appendChild(content);
-            content.appendChild(section);
-            // make the newly created wrapper a widget in the grid
-            grid.makeWidget(wrapper);
-        });
-    } catch (e) {
-        console.error('GridStack init failed or not available:', e);
-    }
-
+    initializeCharts();
     setDefaultDateRanges();
     // Small delay to ensure dates are set before loading reports
-    setTimeout(() => { initializeCharts(); loadAllReports(); }, 100);
+    setTimeout(loadAllReports, 100);
 });
 
 // Utility: show a report-level message (e.g., validation)
@@ -589,10 +567,8 @@ function initializeCharts() {
         });
     }
     // Account Activity Chart
-    const accountActivityEl = document.getElementById('accountActivityChart');
-    if (accountActivityEl) {
-        const accountActivityCtx = accountActivityEl.getContext('2d');
-        accountActivityChart = new Chart(accountActivityCtx, {
+    const accountActivityCtx = document.getElementById('accountActivityChart').getContext('2d');
+    accountActivityChart = new Chart(accountActivityCtx, {
         type: 'line',
         data: {
             labels: [],
@@ -611,10 +587,8 @@ function initializeCharts() {
     });
 
     // Error Trends Chart
-    const errorTrendsEl = document.getElementById('errorTrendsChart');
-    if (errorTrendsEl) {
-        const errorTrendsCtx = errorTrendsEl.getContext('2d');
-        errorTrendsChart = new Chart(errorTrendsCtx, {
+    const errorTrendsCtx = document.getElementById('errorTrendsChart').getContext('2d');
+    errorTrendsChart = new Chart(errorTrendsCtx, {
         type: 'line',
         data: {
             labels: [],
@@ -639,11 +613,9 @@ function initializeCharts() {
     });
 
     // AV Statistics Chart
-    const avStatsEl = document.getElementById('avStatsChart');
-    if (avStatsEl) {
-        const avStatsCtx = avStatsEl.getContext ? avStatsEl.getContext('2d') : null;
-        if (avStatsCtx) {
-            avStatsChart = new Chart(avStatsCtx, {
+    const avStatsCtx = document.getElementById('avStatsChart');
+    if (avStatsCtx) {
+        avStatsChart = new Chart(avStatsCtx, {
             type: 'line',
             data: {
                 labels: [],
@@ -678,7 +650,6 @@ function initializeCharts() {
                 }
             }
         });
-        }
     } else {
         console.error('avStatsCtx not found');
     }
@@ -1048,26 +1019,24 @@ function loadStorageUtilizationReport() {
             // Clear any previous validation messages for this section
             clearReportMessageForInput(document.getElementById('storageStartDate'));
             
-            // Update metrics (use canonical snake_case fields)
-            document.getElementById('totalStorage').textContent = (data.total_storage_mb !== undefined && data.total_storage_mb !== null) ? data.total_storage_mb + ' MB' : '-';
-            document.getElementById('avgEmailSize').textContent = (data.avg_email_size_kb !== undefined && data.avg_email_size_kb !== null) ? data.avg_email_size_kb + ' KB' : '-';
-            document.getElementById('compressionRatio').textContent = (data.compression_ratio_percent !== undefined && data.compression_ratio_percent !== null) ? data.compression_ratio_percent + '%' : '-';
+            // Update metrics
+            document.getElementById('totalStorage').textContent = data.total_storage || '-';
+            document.getElementById('avgEmailSize').textContent = data.avg_email_size || '-';
+            document.getElementById('compressionRatio').textContent = data.compression_savings || '-';
             document.getElementById('totalEmails').textContent = data.total_emails || '-';
             
             // Update storage trends chart
             if (window.storageTrendsChart && typeof window.storageTrendsChart.destroy === 'function') {
                 window.storageTrendsChart.destroy();
             }
-            const storageEl = document.getElementById('storageTrendsChart');
-            if (storageEl && storageEl.getContext) {
-                const ctx = storageEl.getContext('2d');
-                window.storageTrendsChart = new Chart(ctx, {
+            const ctx = document.getElementById('storageTrendsChart').getContext('2d');
+            window.storageTrendsChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: data.storage_labels || [],
+                    labels: data.storage_trends?.labels || [],
                     datasets: [{
                         label: 'Storage Used (MB)',
-                        data: data.storage_sizes_mb || [],
+                        data: data.storage_trends?.data || [],
                         borderColor: 'rgb(75, 192, 192)',
                         tension: 0.1
                     }]
@@ -1081,10 +1050,7 @@ function loadStorageUtilizationReport() {
                         }
                     }
                 }
-                });
-            } else {
-                console.error('storageTrendsChart element not found');
-            }
+            });
             
             // Update largest emails table
             const tbody = document.getElementById('largestEmailsTableBody');
@@ -1092,13 +1058,11 @@ function loadStorageUtilizationReport() {
             if (data.largest_emails) {
                 data.largest_emails.forEach(email => {
                     const row = document.createElement('tr');
-                    const sizeDisplay = (email.size_mb !== undefined && email.size_mb !== null) ? email.size_mb + ' MB' : '-';
-                    const dateDisplay = email.created_at || '-';
                     row.innerHTML = `
                         <td>${email.subject || 'No Subject'}</td>
                         <td>${email.sender || 'Unknown'}</td>
-                        <td>${sizeDisplay}</td>
-                        <td>${dateDisplay}</td>
+                        <td>${email.size || '-'}</td>
+                        <td>${email.date || '-'}</td>
                     `;
                     tbody.appendChild(row);
                 });
@@ -1159,10 +1123,8 @@ function loadRetentionPolicyReport() {
             if (window.retentionChart && typeof window.retentionChart.destroy === 'function') {
                 window.retentionChart.destroy();
             }
-            const retentionEl = document.getElementById('retentionChart');
-            if (retentionEl && retentionEl.getContext) {
-                const ctx = retentionEl.getContext('2d');
-                window.retentionChart = new Chart(ctx, {
+            const ctx = document.getElementById('retentionChart').getContext('2d');
+            window.retentionChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: ['Manual Deletions', 'Retention Deletions', 'Server Deletions'],
@@ -1181,10 +1143,7 @@ function loadRetentionPolicyReport() {
                         }
                     }
                 }
-                });
-            } else {
-                console.error('retentionChart element not found');
-            }
+            });
             
             // Update age distribution table
             const tbody = document.getElementById('ageDistributionTableBody');
@@ -1256,32 +1215,23 @@ function loadSystemPerformanceReport() {
             // Clear any previous validation messages for this section
             clearReportMessageForInput(document.getElementById('performanceStartDate'));
             
-            // Update metrics (use canonical snake_case fields)
-            document.getElementById('currentActiveWorkers').textContent = (data.current_active_workers !== undefined && data.current_active_workers !== null) ? data.current_active_workers : '-';
-            document.getElementById('currentTotalWorkers').textContent = (data.current_total_workers !== undefined && data.current_total_workers !== null) ? data.current_total_workers : '-';
-            // avgProcessingRate: compute from emails_per_hour if provided
-            if (Array.isArray(data.emails_per_hour) && data.emails_per_hour.length) {
-                const sum = data.emails_per_hour.reduce((a,b) => a + (Number(b) || 0), 0);
-                const avg = Math.round((sum / data.emails_per_hour.length) * 100) / 100;
-                document.getElementById('avgProcessingRate').textContent = avg;
-            } else {
-                document.getElementById('avgProcessingRate').textContent = '-';
-            }
+            // Update metrics
+            document.getElementById('currentActiveWorkers').textContent = data.active_workers || '-';
+            document.getElementById('currentTotalWorkers').textContent = data.total_workers || '-';
+            document.getElementById('avgProcessingRate').textContent = data.avg_processing_rate || '-';
             
             // Update performance chart
             if (window.performanceChart && typeof window.performanceChart.destroy === 'function') {
                 window.performanceChart.destroy();
             }
-            const perfEl = document.getElementById('performanceChart');
-            if (perfEl && perfEl.getContext) {
-                const ctx = perfEl.getContext('2d');
-                window.performanceChart = new Chart(ctx, {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            window.performanceChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: data.processing_labels || [],
+                    labels: data.processing_rates?.labels || [],
                     datasets: [{
                         label: 'Emails Processed per Hour',
-                        data: data.emails_per_hour || [],
+                        data: data.processing_rates?.data || [],
                         borderColor: 'rgb(153, 102, 255)',
                         tension: 0.1
                     }]
@@ -1295,25 +1245,20 @@ function loadSystemPerformanceReport() {
                         }
                     }
                 }
-                });
-            } else {
-                console.error('performanceChart element not found');
-            }
+            });
             
             // Update worker activity chart
             if (window.workerActivityChart && typeof window.workerActivityChart.destroy === 'function') {
                 window.workerActivityChart.destroy();
             }
-            const workerEl = document.getElementById('workerActivityChart');
-            if (workerEl && workerEl.getContext) {
-                const ctx2 = workerEl.getContext('2d');
-                window.workerActivityChart = new Chart(ctx2, {
+            const ctx2 = document.getElementById('workerActivityChart').getContext('2d');
+            window.workerActivityChart = new Chart(ctx2, {
                 type: 'bar',
                 data: {
-                    labels: data.worker_labels || [],
+                    labels: data.worker_activity?.labels || [],
                     datasets: [{
-                        label: 'Worker Activity (active workers)',
-                        data: data.active_workers || [],
+                        label: 'Worker Activity',
+                        data: data.worker_activity?.data || [],
                         backgroundColor: 'rgba(255, 159, 64, 0.8)'
                     }]
                 },
@@ -1326,10 +1271,7 @@ function loadSystemPerformanceReport() {
                         }
                     }
                 }
-                });
-            } else {
-                console.error('workerActivityChart element not found');
-            }
+            });
         })
         .catch(error => {
             console.error('Error loading system performance report:', error);
@@ -1386,10 +1328,8 @@ function loadSecurityAccessReport() {
             if (window.securityChart && typeof window.securityChart.destroy === 'function') {
                 window.securityChart.destroy();
             }
-            const securityEl = document.getElementById('securityChart');
-            if (securityEl && securityEl.getContext) {
-                const ctx = securityEl.getContext('2d');
-                window.securityChart = new Chart(ctx, {
+            const ctx = document.getElementById('securityChart').getContext('2d');
+            window.securityChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: ['Successful Logins', 'Failed Logins', 'Password Changes'],
@@ -1407,10 +1347,7 @@ function loadSecurityAccessReport() {
                         }
                     }
                 }
-                });
-            } else {
-                console.error('securityChart element not found');
-            }
+            });
             
             // Update security events table
             const tbody = document.getElementById('securityEventsTableBody');
@@ -1470,10 +1407,8 @@ function loadDataQualityReport() {
             if (window.sizeDistributionChart && typeof window.sizeDistributionChart.destroy === 'function') {
                 window.sizeDistributionChart.destroy();
             }
-            const sizeEl = document.getElementById('sizeDistributionChart');
-            if (sizeEl && sizeEl.getContext) {
-                const ctx = sizeEl.getContext('2d');
-                window.sizeDistributionChart = new Chart(ctx, {
+            const ctx = document.getElementById('sizeDistributionChart').getContext('2d');
+            window.sizeDistributionChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: ['< 1KB', '1-10KB', '10-100KB', '100KB-1MB', '> 1MB'],
@@ -1514,36 +1449,36 @@ function loadDataQualityReport() {
 }
 
 // Event listeners for refresh buttons
-document.getElementById('refreshEmailVolume')?.addEventListener('click', loadEmailVolumeReport);
-document.getElementById('refreshAccountActivity')?.addEventListener('click', loadAccountActivityReport);
-document.getElementById('refreshSystemHealth')?.addEventListener('click', loadSystemHealthReport);
-document.getElementById('refreshAVStats')?.addEventListener('click', loadAVStatsReport);
-document.getElementById('refreshStorageUtilization')?.addEventListener('click', loadStorageUtilizationReport);
-document.getElementById('refreshRetentionPolicy')?.addEventListener('click', loadRetentionPolicyReport);
-document.getElementById('refreshSystemPerformance')?.addEventListener('click', loadSystemPerformanceReport);
-document.getElementById('refreshSecurityAccess')?.addEventListener('click', loadSecurityAccessReport);
-document.getElementById('refreshDataQuality')?.addEventListener('click', loadDataQualityReport);
+document.getElementById('refreshEmailVolume').addEventListener('click', loadEmailVolumeReport);
+document.getElementById('refreshAccountActivity').addEventListener('click', loadAccountActivityReport);
+document.getElementById('refreshSystemHealth').addEventListener('click', loadSystemHealthReport);
+document.getElementById('refreshAVStats').addEventListener('click', loadAVStatsReport);
+document.getElementById('refreshStorageUtilization').addEventListener('click', loadStorageUtilizationReport);
+document.getElementById('refreshRetentionPolicy').addEventListener('click', loadRetentionPolicyReport);
+document.getElementById('refreshSystemPerformance').addEventListener('click', loadSystemPerformanceReport);
+document.getElementById('refreshSecurityAccess').addEventListener('click', loadSecurityAccessReport);
+document.getElementById('refreshDataQuality').addEventListener('click', loadDataQualityReport);
 
 // Event listeners for date changes
-document.getElementById('emailVolumeStartDate')?.addEventListener('change', loadEmailVolumeReport);
-document.getElementById('emailVolumeEndDate')?.addEventListener('change', loadEmailVolumeReport);
-document.getElementById('accountActivityStartDate')?.addEventListener('change', loadAccountActivityReport);
-document.getElementById('accountActivityEndDate')?.addEventListener('change', loadAccountActivityReport);
-document.getElementById('systemHealthStartDate')?.addEventListener('change', loadSystemHealthReport);
-document.getElementById('systemHealthEndDate')?.addEventListener('change', loadSystemHealthReport);
-document.getElementById('avStartDate')?.addEventListener('change', loadAVStatsReport);
-document.getElementById('avEndDate')?.addEventListener('change', loadAVStatsReport);
-document.getElementById('storageStartDate')?.addEventListener('change', loadStorageUtilizationReport);
-document.getElementById('storageEndDate')?.addEventListener('change', loadStorageUtilizationReport);
-document.getElementById('retentionStartDate')?.addEventListener('change', loadRetentionPolicyReport);
-document.getElementById('retentionEndDate')?.addEventListener('change', loadRetentionPolicyReport);
-document.getElementById('performanceStartDate')?.addEventListener('change', loadSystemPerformanceReport);
-document.getElementById('performanceEndDate')?.addEventListener('change', loadSystemPerformanceReport);
-document.getElementById('securityStartDate')?.addEventListener('change', loadSecurityAccessReport);
-document.getElementById('securityEndDate')?.addEventListener('change', loadSecurityAccessReport);
+document.getElementById('emailVolumeStartDate').addEventListener('change', loadEmailVolumeReport);
+document.getElementById('emailVolumeEndDate').addEventListener('change', loadEmailVolumeReport);
+document.getElementById('accountActivityStartDate').addEventListener('change', loadAccountActivityReport);
+document.getElementById('accountActivityEndDate').addEventListener('change', loadAccountActivityReport);
+document.getElementById('systemHealthStartDate').addEventListener('change', loadSystemHealthReport);
+document.getElementById('systemHealthEndDate').addEventListener('change', loadSystemHealthReport);
+document.getElementById('avStartDate').addEventListener('change', loadAVStatsReport);
+document.getElementById('avEndDate').addEventListener('change', loadAVStatsReport);
+document.getElementById('storageStartDate').addEventListener('change', loadStorageUtilizationReport);
+document.getElementById('storageEndDate').addEventListener('change', loadStorageUtilizationReport);
+document.getElementById('retentionStartDate').addEventListener('change', loadRetentionPolicyReport);
+document.getElementById('retentionEndDate').addEventListener('change', loadRetentionPolicyReport);
+document.getElementById('performanceStartDate').addEventListener('change', loadSystemPerformanceReport);
+document.getElementById('performanceEndDate').addEventListener('change', loadSystemPerformanceReport);
+document.getElementById('securityStartDate').addEventListener('change', loadSecurityAccessReport);
+document.getElementById('securityEndDate').addEventListener('change', loadSecurityAccessReport);
 
-// Load all reports on window load (GridStack and DOM ready handled earlier)
-window.addEventListener('load', loadAllReports);
+// Load all reports on page load
+loadAllReports();
 
 // Check user role and show/hide admin-only reports
 fetch('/api/user/profile')
