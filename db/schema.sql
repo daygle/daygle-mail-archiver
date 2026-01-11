@@ -389,7 +389,7 @@ INSERT INTO permissions (name, description, category) VALUES
     ('view_emails', 'View and search emails', 'emails'),
     ('delete_emails', 'Delete emails from archive', 'emails'),
     ('export_emails', 'Export emails to external formats', 'emails'),
-    ('import_emails', 'Import emails from EML/MBOX/PST', 'emails'),
+    ('import_emails', 'Import emails from EML/MBOX', 'emails'),
     
     -- Quarantine Management
     ('view_quarantine', 'View quarantined emails', 'emails'),

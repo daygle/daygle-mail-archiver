@@ -17,8 +17,8 @@
 
     <form method="post" action="/emails/import" enctype="multipart/form-data">
       <div class="mb-3">
-        <label for="files" class="form-label">Choose EML, MBOX, PST, or ZIP files (ZIP may contain EML/MBX/PST)</label>
-        <input type="file" name="files" id="files" multiple accept=".eml,.mbox,.mbx,.pst,.zip,application/zip" class="form-control">
+        <label for="files" class="form-label">Choose EML or MBOX files (ZIP may contain EML/MBX)</label>
+        <input type="file" name="files" id="files" multiple accept=".eml,.mbox,.mbx,.zip,application/zip" class="form-control">
       </div>
 
       <div class="mb-3">
@@ -45,7 +45,7 @@
       </div>
     </form>
 
-    <p class="text-muted mt-3">Note: PST import requires optional dependencies (`pypff`). If not installed, PST files cannot be imported. ZIP files are supported and will be scanned for EML/MBX/PST entries.</p>
+    <p class="text-muted mt-3">Note: ZIP files are supported and will be scanned for EML/MBX entries. PST files are not supported.</p>
   </div>
 </div>
 

@@ -10,5 +10,3 @@ bcrypt
 requests
 pytz
 python-dotenv
-# Optional: PST import support. Installation may require system libpff.
-pypff

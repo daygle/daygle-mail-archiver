@@ -736,50 +736,8 @@ async def import_emails(request: Request, source: str = Form("import"), folder: 
                                         else:
                                             errors.append(f"{filename}:{inner_name} part {i}: failed to insert")
                                 elif inner_lower.endswith('.pst'):
-                                    # try pypff on embedded PST if available
-                                    try:
-                                        import pypff
-                                        pst = pypff.file()
-                                        pst.open_file_object(io.BytesIO(fcontent))
-
-                                        def _traverse_folder_pst(folder):
-                                            nonlocal imported
-                                            for i in range(folder.number_of_sub_messages):
-                                                try:
-                                                    message = folder.get_sub_message(i)
-                                                    raw = b""
-                                                    try:
-                                                        raw_full = message.get_email()
-                                                        if raw_full:
-                                                            raw = raw_full
-                                                    except Exception:
-                                                        try:
-                                                            transport = message.get_transport_headers()
-                                                            if transport:
-                                                                raw = transport
-                                                        except Exception:
-                                                            raw = b""
-
-                                                    if isinstance(raw, str):
-                                                        raw = raw.encode('utf-8', errors='replace')
-
-                                                    if _insert_raw_email(raw, request, source=source, folder=folder):
-                                                        imported += 1
-                                                except Exception:
-                                                    continue
-
-                                            for j in range(folder.number_of_sub_folders):
-                                                try:
-                                                    sub = folder.get_sub_folder(j)
-                                                    _traverse_folder_pst(sub)
-                                                except Exception:
-                                                    continue
-
-                                        root = pst.get_root_folder()
-                                        _traverse_folder_pst(root)
-                                        pst.close()
-                                    except Exception as e:
-                                        errors.append(f"{filename}:{inner_name}: PST import failed ({str(e)})")
+                                    # PST support removed; skip
+                                    continue
                                 else:
                                     # unsupported inner file, skip
                                     continue
@@ -789,50 +747,8 @@ async def import_emails(request: Request, source: str = Form("import"), folder: 
                     errors.append(f"{filename}: zip extraction failed ({str(e)})")
 
             elif lower.endswith(".pst"):
-                # PST import requires pypff (optional). Try to use it if available.
-                try:
-                    import pypff
-
-                    pst = pypff.file()
-                    pst.open_file_object(io.BytesIO(content))
-
-                    def _traverse_folder(folder):
-                        nonlocal imported
-                        for i in range(folder.number_of_sub_messages):
-                            try:
-                                message = folder.get_sub_message(i)
-                                raw = message.get_transport_headers() or b""
-                                # pypff message -> try to get RFC822 if available
-                                try:
-                                    raw_full = message.get_email()
-                                    if raw_full:
-                                        raw = raw_full
-                                except Exception:
-                                    pass
-
-                                if isinstance(raw, str):
-                                    raw = raw.encode("utf-8", errors="replace")
-
-                                if _insert_raw_email(raw, request, source=source, folder=folder):
-                                    imported += 1
-                                else:
-                                    errors.append(f"{filename}: failed to insert PST message")
-                            except Exception:
-                                continue
-
-                        # traverse subfolders
-                        for j in range(folder.number_of_sub_folders):
-                            try:
-                                sub = folder.get_sub_folder(j)
-                                _traverse_folder(sub)
-                            except Exception:
-                                continue
-
-                    root = pst.get_root_folder()
-                    _traverse_folder(root)
-                    pst.close()
-                except Exception as e:
-                    errors.append(f"{filename}: PST import not available or failed ({str(e)})")
+                # PST support removed — do not attempt to parse PST files
+                errors.append(f"{filename}: PST files are not supported")
 
             else:
                 errors.append(f"{filename}: unsupported file type")
