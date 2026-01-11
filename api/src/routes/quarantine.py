@@ -349,54 +349,56 @@ def restore_quarantine(request: Request, qid: int):
     raw = item.get('raw_email')
     f = _get_quarantine_fernet()
     if raw:
-            try:
-                data = raw
-                if f:
-                    data = f.decrypt(data)
-                # compute signature
-                try:
-                    from utils.email_parser import compute_signature
-                    sig = compute_signature(data)
-                except Exception:
-                    sig = None
+        try:
+            data = raw
+            if f:
+                data = f.decrypt(data)
 
-                # Insert or update email in emails table
-                execute(
-                    """
-                    UPDATE emails SET raw_email = :raw, signature = :signature, compressed = TRUE, quarantined = FALSE, quarantine_id = NULL, virus_scanned = TRUE, virus_detected = TRUE, virus_name = :vname, scan_timestamp = :qtime
-                    WHERE source = :source AND folder = :folder AND uid = :uid
-                    """,
-                    {
-                        'raw': data,
-                        'signature': sig,
-                        'vname': item.get('virus_name'),
-                        'qtime': item.get('quarantined_at'),
-                        'source': item.get('original_source'),
-                        'folder': item.get('original_folder'),
-                        'uid': item.get('original_uid')
-                    }
-                )
-                # If no row updated, insert a new row
-                execute(
-                    """
-                    INSERT INTO emails (source, folder, uid, subject, sender, recipients, date, raw_email, signature, compressed, virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined)
-                    VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, :signature, TRUE, TRUE, TRUE, :vname, :qtime, TRUE)
-                    ON CONFLICT (source, folder, uid) DO NOTHING
-                    """,
-                    {
-                        'source': item.get('original_source'),
-                        'folder': item.get('original_folder'),
-                        'uid': item.get('original_uid'),
-                        'subject': item.get('subject'),
-                        'sender': item.get('sender'),
-                        'recipients': item.get('recipients'),
-                        'date': item.get('date'),
-                        'raw_email': data,
-                        'signature': sig,
-                        'vname': item.get('virus_name'),
-                        'qtime': item.get('quarantined_at')
-                    }
-                )
+            # compute signature
+            try:
+                from utils.email_parser import compute_signature
+                sig = compute_signature(data)
+            except Exception:
+                sig = None
+
+            # Insert or update email in emails table
+            execute(
+                """
+                UPDATE emails SET raw_email = :raw, signature = :signature, compressed = TRUE, quarantined = FALSE, quarantine_id = NULL, virus_scanned = TRUE, virus_detected = TRUE, virus_name = :vname, scan_timestamp = :qtime
+                WHERE source = :source AND folder = :folder AND uid = :uid
+                """,
+                {
+                    'raw': data,
+                    'signature': sig,
+                    'vname': item.get('virus_name'),
+                    'qtime': item.get('quarantined_at'),
+                    'source': item.get('original_source'),
+                    'folder': item.get('original_folder'),
+                    'uid': item.get('original_uid')
+                }
+            )
+
+            # If no row updated, insert a new row
+            execute(
+                """
+                INSERT INTO emails (source, folder, uid, subject, sender, recipients, date, raw_email, signature, compressed, virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined)
+                VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, :signature, TRUE, TRUE, TRUE, :vname, :qtime, TRUE)
+                ON CONFLICT (source, folder, uid) DO NOTHING
+                """,
+                {
+                    'source': item.get('original_source'),
+                    'folder': item.get('original_folder'),
+                    'uid': item.get('original_uid'),
+                    'subject': item.get('subject'),
+                    'sender': item.get('sender'),
+                    'recipients': item.get('recipients'),
+                    'date': item.get('date'),
+                    'raw_email': data,
+                    'signature': sig,
+                    'vname': item.get('virus_name'),
+                    'qtime': item.get('quarantined_at')
+                }
+            )
         except Exception as e:
             log('error', 'Quarantine', f"Failed to restore quarantined email {qid}: {str(e)}", "")
             return RedirectResponse(f'/quarantine/{qid}', status_code=303)
