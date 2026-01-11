@@ -60,7 +60,7 @@
   <div class="card-body">
     <p class="text-muted">Export all emails for a selected fetch account in ZIP (EML files) or MBOX format.</p>
 
-    <form method="post" action="/emails/export">
+    <form id="export-form" method="post" action="/emails/export">
       <div class="row g-3 align-items-end">
         <div class="col-md-4">
           <label for="export-account" class="form-label">Fetch Account</label>
@@ -78,16 +78,19 @@
             <option value="zip">ZIP (EML files)</option>
           </select>
         </div>
-        <div class="col-md-auto">
-          <button type="submit" class="btn btn-secondary">
-            <i class="fas fa-file-export"></i>
-            <span>Export All Emails for Account</span>
-          </button>
-        </div>
       </div>
       <input type="hidden" name="q" value="">
       <input type="hidden" name="folder" value="">
     </form>
+  </div>
+  <div class="card-footer">
+    <div class="d-flex justify-content-end">
+      <a href="/emails" class="btn btn-secondary me-2">Cancel</a>
+      <button type="submit" form="export-form" class="btn btn-secondary">
+        <i class="fas fa-file-export"></i>
+        <span>Export All Emails for Account</span>
+      </button>
+    </div>
   </div>
 </div>
 
