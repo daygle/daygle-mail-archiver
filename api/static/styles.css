@@ -1918,6 +1918,19 @@ th.hide-mobile, td.hide-mobile, th.hide-sm, td.hide-sm {
 .gap-3 { gap: 1rem; }
 .gap-4 { gap: 2rem; }
 
+/* Fix: ensure `.hide-mobile` consistently hides table headers and cells
+   on small screens (<= 768px). This overrides duplicate/conflicting
+   definitions earlier in the file and targets both `th` and `td`. */
+th.hide-mobile, td.hide-mobile, .hide-mobile {
+    display: table-cell;
+}
+
+@media (max-width: 768px) {
+    th.hide-mobile, td.hide-mobile, .hide-mobile {
+        display: none !important;
+    }
+}
+
 .grid { display: grid; }
 .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
 .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
