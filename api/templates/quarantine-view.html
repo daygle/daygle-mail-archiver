@@ -1,21 +1,19 @@
 {% extends "base.html" %}
 
-{% block page_title %}Quarantine Message #{{ item.id }}{% endblock %}
+{% block page_title %}Quarantine View{% endblock %}
 
 {% block content %}
 <!-- Quarantine Message Details Card -->
 <div class="card mb-4">
-    <div class="card-header">
+    <div class="card-header d-flex justify-content-between align-items-center">
         <div class="card-title">
             <i class="fas fa-biohazard"></i>
             <span>Quarantine Message #{{ item.id }}</span>
         </div>
-        <div class="d-flex justify-content-end">
-            <a href="/quarantine" class="btn btn-secondary btn-sm">
-                <i class="fas fa-arrow-left"></i>
-                <span class="hide-mobile">Back</span>
-            </a>
-        </div>
+        <a href="/quarantine" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i>
+            <span class="hide-mobile">Back</span>
+        </a>
     </div>
     <div class="card-body">
         <!-- Quarantine Message Information -->

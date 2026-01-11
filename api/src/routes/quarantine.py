@@ -598,6 +598,101 @@ def delete_quarantine(request: Request, qid: int, mode: str = Form("db")):
     return RedirectResponse("/quarantine", status_code=303)
 
 
+@router.post("/quarantine/restore")
+def perform_bulk_restore(
+    request: Request,
+    ids: List[int] = Form(...),
+):
+    """
+    Bulk restore selected quarantined emails.
+    """
+    if not require_login(request):
+        return RedirectResponse("/login", status_code=303)
+
+    if not can_delete(request):  # Note: restore uses same permission as delete
+        request.session['flash'] = "You don't have permission to restore quarantined emails."
+        return RedirectResponse("/quarantine", status_code=303)
+
+    if not isinstance(ids, list):
+        ids = [ids]
+
+    restored = 0
+    for qid in ids:
+        try:
+            # Fetch quarantined item
+            item = query('SELECT * FROM quarantined_emails WHERE id = :id', {'id': qid}).mappings().first()
+            if not item:
+                continue
+
+            raw = item.get('raw_email')
+            f = _get_quarantine_fernet()
+            if raw:
+                try:
+                    data = raw
+                    if f:
+                        data = f.decrypt(data)
+
+                    # compute signature
+                    current_sig = compute_signature(data)
+
+                    # Insert into emails table
+                    execute('''
+                        INSERT INTO emails (
+                            source, folder, uid, subject, sender, recipients, date, raw_email, compressed, signature, created_at, virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined
+                        ) VALUES (
+                            :source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, :compressed, :signature, :created_at, :virus_scanned, :virus_detected, :virus_name, :scan_timestamp, :quarantined
+                        )
+                    ''', {
+                        'source': item.get('source'),
+                        'folder': item.get('folder'),
+                        'uid': item.get('uid'),
+                        'subject': item.get('subject'),
+                        'sender': item.get('sender'),
+                        'recipients': item.get('recipients'),
+                        'date': item.get('date'),
+                        'raw_email': data,
+                        'compressed': False,  # Store uncompressed for restored emails
+                        'signature': current_sig,
+                        'created_at': item.get('created_at'),
+                        'virus_scanned': item.get('virus_scanned'),
+                        'virus_detected': item.get('virus_detected'),
+                        'virus_name': item.get('virus_name'),
+                        'scan_timestamp': item.get('scan_timestamp'),
+                        'quarantined': False  # Mark as not quarantined
+                    })
+
+                    # Delete from quarantine
+                    execute('DELETE FROM quarantined_emails WHERE id = :id', {'id': qid})
+                    restored += 1
+
+                except Exception as e:
+                    log('error', 'Quarantine', f'Failed to restore quarantined email {qid}: {e}')
+                    continue
+
+        except Exception as e:
+            log('error', 'Quarantine', f'Failed to restore quarantined email {qid}: {e}')
+            continue
+
+    username = request.session.get("username", "unknown")
+    if restored > 0:
+        log('info', 'Quarantine', f"User '{username}' restored {restored} quarantined email(s) (IDs: {ids})", "")
+        request.session['flash'] = f"Successfully restored {restored} quarantined email(s)."
+        
+        # Create alert
+        try:
+            create_alert(
+                'Quarantined Emails Restored',
+                f'User {username} restored {restored} quarantined email(s)',
+                'quarantine_restored'
+            )
+        except Exception as e:
+            log('error', 'Quarantine', f"Failed to create restore alert: {str(e)}", "")
+    else:
+        request.session['flash'] = "No emails were restored."
+    
+    return RedirectResponse("/quarantine", status_code=303)
+
+
 @router.post("/quarantine/delete")
 def perform_bulk_delete(
     request: Request,

@@ -1,21 +1,19 @@
 {% extends "base.html" %}
 
-{% block page_title %}{{ email.subject or "(no subject)" }}{% endblock %}
+{% block page_title %}Email View{% endblock %}
 
 {% block content %}
 <!-- Email Metadata Card -->
 <div class="card mb-4">
-    <div class="card-header">
+    <div class="card-header d-flex justify-content-between align-items-center">
         <div class="card-title">
             <i class="fas fa-envelope-open"></i>
             <span>Email Details</span>
         </div>
-        <div class="d-flex justify-content-end">
-            <a href="/emails" class="btn btn-secondary btn-sm">
-                <i class="fas fa-arrow-left"></i>
-                <span class="hide-mobile">Back</span>
-            </a>
-        </div>
+        <a href="/emails" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i>
+            <span class="hide-mobile">Back</span>
+        </a>
     </div>
     <div class="card-body">
         <!-- Email Header Information -->
