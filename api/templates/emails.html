@@ -29,11 +29,11 @@
                 <div class="flex gap-2">
                     <button type="submit" class="btn btn-primary flex-1">
                         <i class="fas fa-search"></i>
-                        <span>Search</span>
+                        <span class="hide-mobile">Search</span>
                     </button>
                     <a href="/emails" class="btn btn-secondary">
                         <i class="fas fa-times"></i>
-                        <span>Clear</span>
+                        <span class="hide-mobile">Clear</span>
                     </a>
                 </div>
             </div>
@@ -51,16 +51,16 @@
         <div class="flex gap-2">
             <button id="toggleFilterBtn" class="btn btn-secondary btn-sm" onclick="toggleFilters()">
                 <i class="fas fa-filter"></i>
-                <span>Search & Filter</span>
+                <span class="hide-mobile">Search & Filter</span>
             </button>
             {% if request.session.role == 'administrator' %}
             <button type="button" class="btn btn-warning btn-sm" id="quarantine-selected-btn" disabled onclick="showQuarantineModal()">
                 <i class="fas fa-shield-virus"></i>
-                <span>Quarantine Selected</span>
+                <span class="hide-mobile">Quarantine Selected</span>
             </button>
             <button type="button" class="btn btn-danger btn-sm" id="delete-selected-btn" disabled onclick="showDeleteModal()">
                 <i class="fas fa-trash"></i>
-                <span>Delete Selected</span>
+                <span class="hide-mobile">Delete Selected</span>
             </button>
             {% endif %}
         </div>
@@ -150,7 +150,7 @@
                 {% if page > 1 %}
                 <a href="/emails?page={{ page - 1 }}&page_size={{ page_size }}&q={{ q }}&account={{ account }}&folder={{ folder }}" class="btn btn-secondary">
                     <i class="fas fa-chevron-left"></i>
-                    <span>Previous</span>
+                    <span class="hide-mobile">Previous</span>
                 </a>
                 {% endif %}
             </div>
@@ -160,7 +160,7 @@
             <div>
                 {% if (page * page_size) < total %}
                 <a href="/emails?page={{ page + 1 }}&page_size={{ page_size }}&q={{ q }}&account={{ account }}&folder={{ folder }}" class="btn btn-secondary">
-                    <span>Next</span>
+                    <span class="hide-mobile">Next</span>
                     <i class="fas fa-chevron-right"></i>
                 </a>
                 {% endif %}
@@ -190,12 +190,12 @@
             <form method="post" action="/emails/quarantine" id="quarantine-form" style="display: inline;">
                 <button type="submit" class="btn btn-warning">
                     <i class="fas fa-shield-virus"></i>
-                    <span>Quarantine Selected Emails</span>
+                    <span class="hide-mobile">Quarantine Selected Emails</span>
                 </button>
             </form>
             <button type="button" class="btn btn-secondary ms-2" onclick="hideQuarantineConfirmation()">
                 <i class="fas fa-times"></i>
-                <span>Cancel</span>
+                <span class="hide-mobile">Cancel</span>
             </button>
         </div>
     </div>
@@ -220,18 +220,18 @@
         <div style="display: grid; gap: 12px; margin-bottom: 20px;">
             <button type="button" class="btn btn-danger w-100" onclick="performDelete('db')">
                 <i class="fas fa-database"></i>
-                <span>Delete from Database Only</span>
+                <span class="hide-mobile">Delete from Database Only</span>
             </button>
             <button type="button" class="btn btn-warning w-100" onclick="performDelete('imap')">
                 <i class="fas fa-server"></i>
-                <span>Delete from Database and Mail Server</span>
+                <span class="hide-mobile">Delete from Database and Mail Server</span>
             </button>
         </div>
 
         <div class="text-center">
             <button type="button" class="btn btn-secondary" onclick="hideDeleteConfirmation()">
                 <i class="fas fa-times"></i>
-                <span>Cancel</span>
+                <span class="hide-mobile">Cancel</span>
             </button>
         </div>
     </div>

@@ -95,14 +95,14 @@
                         <td>
                             <strong>{{ role.display_name or (role.name | replace('_', ' ') | replace('-', ' ') | title) }}</strong>
                         </td>
-                        <td>
+                        <td class="hide-mobile">
                             {% if role.description %}
                                 {{ role.description }}
                             {% else %}
                                 <em class="text-muted">No description</em>
                             {% endif %}
                         </td>
-                        <td class="role-permissions">
+                        <td class="role-permissions hide-mobile">
                             {% if role.permissions %}
                                 {% for perm in role.permissions.split(', ') if perm %}
                                     <span class="badge bg-secondary">{{ perm | replace('_', ' ') | replace('-', ' ') | title }}</span>

@@ -13,15 +13,15 @@
         <div class="flex gap-2">
             <a href="/quarantine" class="btn btn-secondary btn-sm">
                 <i class="fas fa-arrow-left"></i>
-                <span>Back</span>
+                <span class="hide-mobile">Back</span>
             </a>
             {% if request.session.role == 'administrator' %}
             <form method="post" action="/quarantine/{{ item.id }}/restore" style="display:inline;">
-                <button class="btn btn-success btn-sm">Restore</button>
+                <button class="btn btn-success btn-sm"><span class="hide-mobile">Restore</span></button>
             </form>
             <button type="button" class="btn btn-danger btn-sm" onclick="showDeleteConfirmation()">
                 <i class="fas fa-trash"></i>
-                <span>Delete</span>
+                <span class="hide-mobile">Delete</span>
             </button>
             {% endif %}
         </div>
@@ -92,18 +92,18 @@
         <div style="display: grid; gap: 12px; margin-bottom: 20px;">
             <button type="button" class="btn btn-danger w-100" onclick="performDelete('db')">
                 <i class="fas fa-database"></i>
-                <span>Delete from Database Only</span>
+                <span class="hide-mobile">Delete from Database Only</span>
             </button>
             <button type="button" class="btn btn-warning w-100" onclick="performDelete('imap')">
                 <i class="fas fa-server"></i>
-                <span>Delete from Database and Mail Server</span>
+                <span class="hide-mobile">Delete from Database and Mail Server</span>
             </button>
         </div>
 
         <div class="text-center">
             <button type="button" class="btn btn-secondary" onclick="hideDeleteConfirmation()">
                 <i class="fas fa-times"></i>
-                <span>Cancel</span>
+                <span class="hide-mobile">Cancel</span>
             </button>
         </div>
     </div>

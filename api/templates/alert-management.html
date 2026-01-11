@@ -28,7 +28,7 @@
                 {% for trigger in triggers %}
                 <tr>
                     <td>{{ trigger.name }}</td>
-                    <td>{{ trigger.description or 'No description available' }}</td>
+                    <td class="hide-mobile">{{ trigger.description or 'No description available' }}</td>
                     <td>
                         <form method="post" action="/alert-management/triggers/update-severity" style="display: inline-block;">
                             <input type="hidden" name="trigger_id" value="{{ trigger.id }}">
