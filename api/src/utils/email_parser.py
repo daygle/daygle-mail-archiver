@@ -19,20 +19,40 @@ def parse_email(raw: bytes):
             for part in m.walk():
                 ctype = part.get_content_type()
                 disp = str(part.get("Content-Disposition") or "").lower()
-                content_id = part.get("Content-ID", "").strip("<>")
+                content_id = part.get("Content-ID", "")
+                if content_id:
+                    # Remove angle brackets if present
+                    content_id = content_id.strip("<>")
+                    # Extract just the local part before @ if present
+                    if '@' in content_id:
+                        content_id = content_id.split('@')[0]
 
                 # Handle embedded images
-                if content_id and ctype.startswith("image/"):
-                    try:
-                        image_data = part.get_payload(decode=True)
-                        if image_data:
-                            # Create data URL for the image
-                            encoded = base64.b64encode(image_data).decode('ascii')
-                            data_url = f"data:{ctype};base64,{encoded}"
-                            embedded_images[content_id] = data_url
-                    except Exception:
-                        pass
-                    continue
+                if ctype.startswith("image/"):
+                    # Check if this image has a Content-ID
+                    original_cid = part.get("Content-ID", "")
+                    if original_cid:
+                        try:
+                            image_data = part.get_payload(decode=True)
+                            if image_data and len(image_data) < 1024 * 1024:  # Skip images larger than 1MB
+                                # Create data URL for the image
+                                encoded = base64.b64encode(image_data).decode('ascii')
+                                data_url = f"data:{ctype};base64,{encoded}"
+                                
+                                # Store with cleaned content_id as key
+                                cleaned_cid = original_cid.strip("<>")
+                                if '@' in cleaned_cid:
+                                    cleaned_cid = cleaned_cid.split('@')[0]
+                                embedded_images[cleaned_cid] = data_url
+                                
+                                # Also store with original content_id variations for replacement
+                                embedded_images[original_cid] = data_url
+                                embedded_images[original_cid.strip("<>")] = data_url
+                        except Exception:
+                            pass
+                        continue
+                    # If no Content-ID, check if it's referenced in HTML (this is less reliable)
+                    # For now, we'll skip images without Content-ID
 
                 if "attachment" in disp:
                     continue
@@ -63,8 +83,24 @@ def parse_email(raw: bytes):
 
         # Replace cid: references with data URLs
         if html and embedded_images:
-            for cid, data_url in embedded_images.items():
-                html = html.replace(f'cid:{cid}', data_url)
+            import re
+            for cid_key, data_url in embedded_images.items():
+                # Use regex to replace various cid: formats more flexibly
+                # Escape special regex characters in cid_key
+                escaped_cid = re.escape(cid_key)
+                
+                # Replace cid: followed by the content-id in various formats
+                patterns = [
+                    r'cid:\s*' + escaped_cid,  # cid: followed by cid_key (possibly with spaces)
+                    r'cid:\s*<[^>]*' + re.escape(cid_key.split('@')[0]) + r'[^>]*>',  # cid:<...localpart...>
+                ]
+                
+                for pattern in patterns:
+                    html = re.sub(pattern, data_url, html, flags=re.IGNORECASE)
+            
+            # Add debug info to HTML
+            debug_info = f"<!-- Debug: Found {len(embedded_images)} embedded images -->"
+            html = debug_info + html
 
         return {"text": text, "html": html, "embedded_images": embedded_images}
 

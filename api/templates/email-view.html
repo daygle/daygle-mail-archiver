@@ -202,6 +202,13 @@
                     <i class="fas fa-info-circle"></i> Embedded images are displayed inline where available
                 </small>
             </div>
+            <!-- Debug info -->
+            <div class="mt-2">
+                <small class="text-muted">
+                    Debug: HTML length: {{ body.html | length }}, Contains 'cid:': {{ 'cid:' in body.html }}, Embedded images: {{ body.embedded_images | length }} keys: {{ body.embedded_images.keys() | list }}
+                    <br>HTML starts with: {{ body.html[:200] | truncate(100) }}
+                </small>
+            </div>
         {% else %}
             <pre style="background: var(--bg-secondary); padding: 16px; border-radius: var(--radius-md); overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;">{{ body.text }}</pre>
         {% endif %}
