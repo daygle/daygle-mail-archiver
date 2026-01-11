@@ -120,6 +120,23 @@ python init_db.py
 
 # Run development server
 python dev.py
+
+### Running tests
+
+- Install pytest locally (or in your virtualenv):
+  - `pip install pytest`
+
+- Run unit tests (no DB required):
+  - `pytest -q`
+
+- Run integration tests (Postgres required):
+  - `docker compose up -d db`
+  - `pytest -m integration -q`
+
+You can also run tests inside the `api` container (useful when you don't have dev deps installed locally):
+
+- `docker compose run --rm api pytest -q`
+
 ```
 
 The application will be available at `http://localhost:8000`
