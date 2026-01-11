@@ -435,14 +435,28 @@ const DashboardManager = {
         const cols = this.columns || 12;
         if (cols === 12) return widgets;
 
-        // Scale canonical 12-column coordinates to the current columns.
-        // e.g., when cols=2, factor = 2/12 = 0.1667 so w=3 -> round(3 * 0.1667) => 1
+        // For reduced-column displays (mobile/tablet) reflow widgets sequentially
+        // so they fill columns left-to-right then top-to-bottom. This avoids
+        // preserving canonical `x` positions which can cause collisions and
+        // leave many items stacked in the same column on narrow screens.
         const factor = cols / 12;
-        return widgets.map(w => {
+        // First, compute scaled widths (at least 1 cell wide)
+        const scaled = widgets.map(w => {
             const newW = Math.min(Math.max(1, Math.round(w.w * factor)), cols);
-            const newX = Math.min(Math.max(0, Math.round(w.x * factor)), cols - newW);
-            return Object.assign({}, w, { x: newX, w: newW });
+            return Object.assign({}, w, { w: newW });
         });
+
+        // Sort by original vertical then horizontal position to preserve logical order
+        scaled.sort((a, b) => (a.y - b.y) || (a.x - b.x));
+
+        // Assign positions sequentially across columns to avoid overlapping columns
+        const reflowed = scaled.map((w, idx) => {
+            const x = idx % cols;
+            const y = Math.floor(idx / cols);
+            return Object.assign({}, w, { x: x, y: y });
+        });
+
+        return reflowed;
     },
 
     init() {
