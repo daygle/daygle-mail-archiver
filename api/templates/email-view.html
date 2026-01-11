@@ -38,38 +38,88 @@
             {% endif %}
         </div>
     </div>
-    <div class="card-body" style="padding: 0;">
-        <div class="table-container">
-            <table class="table">
-                <tbody>
-                    <tr>
-                        <td class="col-left" style="background: var(--bg-secondary); font-weight: 600;">Subject</td>
-                        <td><strong>{{ email.subject or "(no subject)" }}</strong></td>
-                    </tr>
-                    <tr>
-                        <td style="background: var(--bg-secondary); font-weight: 600;">From</td>
-                        <td>{{ email.sender }}</td>
-                    </tr>
-                    <tr>
-                        <td style="background: var(--bg-secondary); font-weight: 600;">To</td>
-                        <td>{{ email.recipients }}</td>
-                    </tr>
-                    <tr>
-                        <td style="background: var(--bg-secondary); font-weight: 600;">Date</td>
-                        <td>{{ email.date_formatted or email.date }}</td>
-                    </tr>
-                    <tr>
-                        <td style="background: var(--bg-secondary); font-weight: 600;">Account</td>
-                        <td><span class="badge badge-primary">{{ email.source }}</span></td>
-                    </tr>
-                    <tr>
-                        <td style="background: var(--bg-secondary); font-weight: 600;">Folder</td>
-                        <td><span class="badge badge-secondary">{{ email.folder }}</span></td>
-                    </tr>
-                    {% if request.session.role == 'administrator' %}
-                    <tr>
-                        <td style="background: var(--bg-secondary); font-weight: 600;">Integrity</td>
-                        <td>
+    <div class="card-body">
+        <!-- Email Header Information -->
+        <div class="mb-4">
+            <h5 class="mb-3 text-primary">
+                <i class="fas fa-envelope-open-text me-2"></i>Email Information
+            </h5>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Subject</label>
+                        <div class="email-detail-value">
+                            <strong class="text-break">{{ email.subject or "(no subject)" }}</strong>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Date</label>
+                        <div class="email-detail-value">{{ email.date_formatted or email.date }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sender & Recipients -->
+        <div class="mb-4">
+            <h6 class="mb-3 text-muted">
+                <i class="fas fa-users me-2"></i>Participants
+            </h6>
+            <div class="row g-3">
+                <div class="col-12">
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">From</label>
+                        <div class="email-detail-value text-break">{{ email.sender }}</div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">To</label>
+                        <div class="email-detail-value text-break">{{ email.recipients }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account & Organization -->
+        <div class="mb-4">
+            <h6 class="mb-3 text-muted">
+                <i class="fas fa-folder-tree me-2"></i>Organization
+            </h6>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Account</label>
+                        <div class="email-detail-value">
+                            <span class="badge badge-primary">{{ email.source }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Folder</label>
+                        <div class="email-detail-value">
+                            <span class="badge badge-secondary">{{ email.folder }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security & Status -->
+        {% if request.session.role == 'administrator' or email.virus_scanned %}
+        <div class="mb-4">
+            <h6 class="mb-3 text-muted">
+                <i class="fas fa-shield-alt me-2"></i>Security & Status
+            </h6>
+            <div class="row g-3">
+                {% if request.session.role == 'administrator' %}
+                <div class="col-md-6">
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Integrity</label>
+                        <div class="email-detail-value">
                             {% if integrity == 'ok' %}
                             <span class="badge badge-success"><i class="fas fa-check"></i> Integrity OK</span>
                             {% elif integrity == 'modified' %}
@@ -79,13 +129,15 @@
                             {% else %}
                             <span class="badge badge-secondary"><i class="fas fa-question"></i> Unknown</span>
                             {% endif %}
-                        </td>
-                    </tr>
-                    {% endif %}
-                    {% if email.virus_scanned %}
-                    <tr>
-                        <td style="background: var(--bg-secondary); font-weight: 600;">Virus Scan</td>
-                        <td>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% if email.virus_scanned %}
+                <div class="col-md-6">
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Virus Scan</label>
+                        <div class="email-detail-value">
                             {% if email.virus_detected %}
                             <span class="badge badge-danger">
                                 <i class="fas fa-exclamation-triangle"></i> INFECTED: {{ email.virus_name }}
@@ -96,16 +148,17 @@
                             </span>
                             {% endif %}
                             {% if email.scan_timestamp %}
-                            <small class="text-secondary" style="margin-left: 8px;">
-                                (Scanned: {{ email.scan_timestamp_formatted or 'N/A' }})
+                            <br><small class="text-secondary">
+                                Scanned: {{ email.scan_timestamp_formatted or 'N/A' }}
                             </small>
                             {% endif %}
-                        </td>
-                    </tr>
-                    {% endif %}
-                </tbody>
-            </table>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
         </div>
+        {% endif %}
     </div>
 </div>
 

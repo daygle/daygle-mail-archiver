@@ -3216,3 +3216,44 @@ a:hover {
 .text-danger { color: var(--danger); }
 .text-secondary { color: var(--text-secondary); }
 .code-block { background: var(--bg-secondary); padding: 12px; border-radius: 6px; }
+
+/* Email Detail Layout */
+.email-detail-item {
+    margin-bottom: 12px;
+}
+
+.email-detail-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.email-detail-value {
+    font-size: 1rem;
+    color: var(--text-primary);
+    line-height: 1.4;
+}
+
+.email-detail-value strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* Responsive adjustments for email details */
+@media (max-width: 768px) {
+    .email-detail-item {
+        margin-bottom: 16px;
+    }
+
+    .email-detail-label {
+        font-size: 0.8rem;
+    }
+
+    .email-detail-value {
+        font-size: 0.95rem;
+    }
+}
