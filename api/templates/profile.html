@@ -28,6 +28,13 @@
                     <label for="email" class="form-label">Email</label>
                     <input id="email" class="form-control" name="email" type="email" value="{{ user.email or '' }}" placeholder="your.email@example.com">
                 </div>
+                <div class="alert alert-info mt-3">
+                    <div style="display: grid; gap: 8px;">
+                        <div><strong>Username:</strong> {{ user.username }}</div>
+                        <div><strong>Last Login:</strong> {{ user.last_login | format_user_datetime(request.session.user_id) if user.last_login else 'Never' }}</div>
+                        <div><strong>Account Created:</strong> {{ user.created_at | format_user_datetime(request.session.user_id) if user.created_at else '-' }}</div>
+                    </div>
+                </div>
                 <div style="display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end;">
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save"></i>
@@ -35,25 +42,6 @@
                     </button>
                 </div>
             </form>
-        </div>
-    </div>
-
-    <!-- Account Information Card -->
-    <div class="card">
-        <div class="card-header">
-            <div class="card-title">
-                <i class="fas fa-user"></i>
-                <span>Account Information</span>
-            </div>
-        </div>
-        <div class="card-body">
-            <div class="alert alert-info">
-                <div style="display: grid; gap: 8px;">
-                    <div><strong>Username:</strong> {{ user.username }}</div>
-                    <div><strong>Last Login:</strong> {{ user.last_login | format_user_datetime(request.session.user_id) if user.last_login else 'Never' }}</div>
-                    <div><strong>Account Created:</strong> {{ user.created_at | format_user_datetime(request.session.user_id) if user.created_at else '-' }}</div>
-                </div>
-            </div>
         </div>
     </div>
 </div>
