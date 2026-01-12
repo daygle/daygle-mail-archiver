@@ -264,7 +264,8 @@ CREATE TABLE IF NOT EXISTS logs (
     level TEXT NOT NULL DEFAULT 'info',
     source TEXT,
     message TEXT NOT NULL,
-    details TEXT
+    details TEXT,
+    ip_address INET
 );
 
 -- Indexes for logs queries (filtering by level and ordering by timestamp)
