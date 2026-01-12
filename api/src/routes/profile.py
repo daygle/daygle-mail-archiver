@@ -42,7 +42,7 @@ def profile_form(request: Request):
 
     user_id = request.session["user_id"]
     user = query("""
-        SELECT username, first_name, last_name, email, last_login, created_at, role, last_login_ip
+        SELECT username, first_name, last_name, email, last_login, created_at, role 
         FROM users WHERE id = :id
     """, {"id": user_id}).mappings().first()
 

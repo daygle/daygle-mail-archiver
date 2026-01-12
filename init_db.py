@@ -60,15 +60,9 @@ def init_database():
                 id SERIAL PRIMARY KEY,
                 username TEXT UNIQUE NOT NULL,
                 password_hash TEXT NOT NULL,
-                first_name TEXT,
-                last_name TEXT,
-                email TEXT,
-                email_notifications BOOLEAN DEFAULT TRUE,
-                enabled BOOLEAN NOT NULL DEFAULT TRUE,
                 role TEXT NOT NULL DEFAULT 'user',
                 created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-                last_login TIMESTAMP WITH TIME ZONE,
-                last_activity TIMESTAMP WITH TIME ZONE
+                last_login TIMESTAMP WITH TIME ZONE
             )
         '''))
 
@@ -107,14 +101,6 @@ def init_database():
 
         # Ensure theme_preference column exists (Postgres supports IF NOT EXISTS)
         conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS theme_preference TEXT NOT NULL DEFAULT 'system'"))
-        
-        # Ensure new user columns exist
-        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name TEXT"))
-        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name TEXT"))
-        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT"))
-        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS email_notifications BOOLEAN DEFAULT TRUE"))
-        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS enabled BOOLEAN DEFAULT TRUE"))
-        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_activity TIMESTAMP WITH TIME ZONE"))
 
         # Insert some default settings
         default_settings = [
@@ -122,14 +108,7 @@ def init_database():
             ('time_format', '%H:%M:%S'),
             ('timezone', 'UTC'),
             ('enable_alerts', 'true'),
-            ('setup_complete', 'false'),
-            ('page_size', '50'),
-            ('default_theme', 'system'),
-            ('enable_purge', 'false'),
-            ('retention_value', '1'),
-            ('retention_unit', 'years'),
-            ('retention_delete_from_mail_server', 'false'),
-            ('inactivity_timeout_minutes', '30')
+            ('setup_complete', 'false')
         ]
         for key, value in default_settings:
             conn.execute(text(f"INSERT INTO settings (key, value) VALUES ('{key}', '{value}') ON CONFLICT (key) DO NOTHING"))

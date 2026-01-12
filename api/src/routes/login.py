@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from typing import List
 
 from utils.db import query, execute
-from utils.logger import log, get_client_ip
+from utils.logger import log
 from utils.templates import templates
 from utils.email import send_email
 from utils.permissions import PermissionChecker
@@ -200,14 +200,14 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
             {"u": username}
         ).mappings().first()
     except Exception as e:
-        log("error", "Login", f"Database error during login for user {username}: {str(e)}", ip_address=get_client_ip(request))
+        log("error", "Login", f"Database error during login for user {username}: {str(e)}")
         return templates.TemplateResponse(
             "login.html",
             {"request": request, "error": "System error. Please try again."},
         )
 
     if not user:
-        log("warning", "Login", f"Failed login attempt for unknown user: {username}", ip_address=get_client_ip(request))
+        log("warning", "Login", f"Failed login attempt for unknown user: {username}")
         return templates.TemplateResponse(
             "login.html",
             {"request": request, "error": "Invalid credentials"},
@@ -215,14 +215,14 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
 
     # Check if account is locked
     if user["locked_until"] and user["locked_until"] > query("SELECT NOW()").scalar():
-        log("warning", "Login", f"Login attempt for locked account: {username}", ip_address=get_client_ip(request))
+        log("warning", "Login", f"Login attempt for locked account: {username}")
         return templates.TemplateResponse(
             "login.html",
             {"request": request, "error": "Account is temporarily locked due to too many failed login attempts. Use 'Forgot Password' to unlock your account."},
         )
 
     if not user["enabled"]:
-        log("warning", "Login", f"Failed login attempt for disabled user: {username}", ip_address=get_client_ip(request))
+        log("warning", "Login", f"Failed login attempt for disabled user: {username}")
         return templates.TemplateResponse(
             "login.html",
             {"request": request, "error": "This account has been disabled"},
@@ -244,7 +244,7 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
             request.session["global_theme"] = "system"
         request.session["permissions"] = load_user_permissions(user["id"])
         request.session["needs_password"] = True
-        log("info", "Login", f"User {username} initiated first login", ip_address=get_client_ip(request))
+        log("info", "Login", f"User {username} initiated first login")
         return RedirectResponse("/set-password", status_code=303)
 
     try:
@@ -269,12 +269,11 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
             
             # Update last_login timestamp
             try:
-                ip = get_client_ip(request)
-                execute("UPDATE users SET last_login = NOW(), last_login_ip = :ip, last_activity = NOW() WHERE id = :id", {"id": user["id"], "ip": ip})
+                execute("UPDATE users SET last_login = NOW() WHERE id = :id", {"id": user["id"]})
             except Exception as e:
                 log("error", "Login", f"Failed to update last_login for user {username}: {str(e)}")
             
-            log("info", "Login", f"User {username} logged in successfully", ip_address=get_client_ip(request))
+            log("info", "Login", f"User {username} logged in successfully")
             return RedirectResponse("/dashboard", status_code=303)
     except Exception as e:
         log("error", "Login", f"Password verification error for user {username}: {str(e)}")
@@ -294,7 +293,7 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
             "UPDATE users SET failed_login_attempts = :attempts, locked_until = NOW() + INTERVAL ':minutes minutes' WHERE id = :id",
             {"attempts": new_attempts, "minutes": lock_duration_minutes, "id": user["id"]}
         )
-        log("warning", "Login", f"Account locked for user {username} after {new_attempts} failed attempts", ip_address=get_client_ip(request))
+        log("warning", "Login", f"Account locked for user {username} after {new_attempts} failed attempts")
         return templates.TemplateResponse(
             "login.html",
             {"request": request, "error": f"Account locked due to too many failed attempts. Try again in {lock_duration_minutes} minutes."},
@@ -303,7 +302,7 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
         # Just increment attempts
         execute("UPDATE users SET failed_login_attempts = :attempts WHERE id = :id", {"attempts": new_attempts, "id": user["id"]})
         remaining_attempts = max_attempts - new_attempts
-        log("warning", "Login", f"Failed login attempt {new_attempts}/{max_attempts} for user: {username}", ip_address=get_client_ip(request))
+        log("warning", "Login", f"Failed login attempt {new_attempts}/{max_attempts} for user: {username}")
         return templates.TemplateResponse(
             "login.html",
             {"request": request, "error": f"Invalid credentials. {remaining_attempts} attempts remaining before account lockout."},
@@ -359,12 +358,6 @@ def set_password(request: Request, password: str = Form(...), confirm_password: 
     try:
         hash_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         execute("UPDATE users SET password_hash = :h WHERE id = :id", {"h": hash_pw, "id": user_id})
-        # Record last_login and IP for initial password set (treat as successful login)
-        try:
-            ip = get_client_ip(request)
-            execute("UPDATE users SET last_login = NOW(), last_login_ip = :ip, last_activity = NOW() WHERE id = :id", {"id": user_id, "ip": ip})
-        except Exception as e:
-            log("warning", "Login", f"Failed to set last_login for user {username}: {str(e)}")
         del request.session["needs_password"]
         
         log("info", "Login", f"User {username} successfully set their initial password")

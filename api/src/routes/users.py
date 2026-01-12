@@ -29,50 +29,15 @@ def list_users(request: Request):
     users = query("""
         SELECT u.id, u.username, u.first_name, u.last_name, u.email,
                COALESCE(u.email_notifications, TRUE) as email_notifications,
-               u.enabled, u.last_login, u.created_at, u.last_activity, u.last_login_ip,
-               COALESCE(NULLIF(STRING_AGG(r.display_name, ', '), ''), INITCAP(REGEXP_REPLACE(u.role, '[\-_]+', ' ', 'g'))) as roles
+               u.enabled, u.last_login, u.created_at,
+               COALESCE(NULLIF(STRING_AGG(r.display_name, ', '), ''), INITCAP(REGEXP_REPLACE(u.role, '[_\-]+', ' ', 'g'))) as roles
         FROM users u
         LEFT JOIN user_roles ur ON u.id = ur.user_id
         LEFT JOIN roles r ON ur.role_id = r.id
         GROUP BY u.id, u.username, u.first_name, u.last_name, u.email,
-                 u.email_notifications, u.enabled, u.last_login, u.created_at, u.last_activity, u.role
+                 u.email_notifications, u.enabled, u.last_login, u.created_at, u.role
         ORDER BY u.id
     """).mappings().all()
-    # Convert row mappings to plain dicts so we can add transient keys like 'is_online'
-    users = [dict(u) for u in users]
-
-    # Get inactivity timeout setting to determine online status
-    timeout_setting = query("SELECT value FROM settings WHERE key = 'inactivity_timeout_minutes'").scalar()
-    timeout_minutes = int(timeout_setting) if timeout_setting else 30
-    log("debug", "Users", f"Inactivity timeout: {timeout_minutes} minutes", "")
-    
-    # Process users to add online status
-    from datetime import datetime, timedelta, timezone
-    current_time = datetime.now(timezone.utc)
-    
-    for user in users:
-        last_activity = user.get('last_activity')
-        if last_activity:
-            # Convert string to datetime if needed
-            if isinstance(last_activity, str):
-                last_activity = datetime.fromisoformat(last_activity.replace('Z', '+00:00'))
-
-            # Normalize to timezone-aware UTC for safe comparison
-            if last_activity.tzinfo is None:
-                last_activity = last_activity.replace(tzinfo=timezone.utc)
-            else:
-                last_activity = last_activity.astimezone(timezone.utc)
-
-            # If timeout is 0 (no auto-logout), consider user always online if they have recent activity
-            # Otherwise, check within timeout period
-            if timeout_minutes == 0:
-                # Consider online if last_activity is within the last 24 hours (arbitrary but reasonable)
-                user['is_online'] = (current_time - last_activity) <= timedelta(hours=24)
-            else:
-                user['is_online'] = (current_time - last_activity) <= timedelta(minutes=timeout_minutes)
-        else:
-            user['is_online'] = False
-        log("debug", "Users", f"User {user['id']}: last_activity={last_activity}, is_online={user['is_online']}", "")
 
     # Get all available roles for the form (include display_name for UI)
     roles = query("SELECT id, name, display_name, description FROM roles ORDER BY COALESCE(display_name, name)").mappings().all()
@@ -194,19 +159,11 @@ def get_user(request: Request, user_id: int):
     if not require_login(request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    # Log that the API was called and the caller session info (safe access)
-    try:
-        caller_id = request.session.get("user_id") if "session" in request.scope else None
-        log("debug", "Users", f"get_user called for id={user_id} by session_user={caller_id}", "")
-    except Exception:
-        # Be defensive — if session access fails, continue and let authorization handle it
-        log("debug", "Users", f"get_user called for id={user_id} (session unavailable)", "")
-
     try:
         user = query("""
             SELECT id, username, first_name, last_name, email, role, 
                    COALESCE(email_notifications, TRUE) as email_notifications,
-                   enabled, last_login, created_at, last_login_ip
+                   enabled, last_login, created_at 
             FROM users 
             WHERE id = :id
         """, {"id": user_id}).mappings().first()
@@ -214,11 +171,8 @@ def get_user(request: Request, user_id: int):
         if not user:
             return JSONResponse({"error": "User not found"}, status_code=404)
         
-        # Get current user's ID for timezone conversion (safe access)
-        try:
-            current_user_id = int(request.session.get("user_id")) if "session" in request.scope and request.session.get("user_id") else None
-        except Exception:
-            current_user_id = None
+        # Get current user's ID for timezone conversion
+        current_user_id = int(request.session.get("user_id"))
         
         # Get assigned role ids for the user
         role_rows = query("SELECT role_id FROM user_roles WHERE user_id = :id", {"id": user_id}).mappings().all()
@@ -245,15 +199,10 @@ def get_user(request: Request, user_id: int):
             "email_notifications": user["email_notifications"],
             "enabled": user["enabled"],
             "last_login": format_datetime(user["last_login"], current_user_id) if user["last_login"] else None,
-            "last_login_ip": user.get("last_login_ip") if user.get("last_login_ip") else None,
             "created_at": format_datetime(user["created_at"], current_user_id) if user["created_at"] else None
         }
     except Exception as e:
-        admin_username = None
-        try:
-            admin_username = request.session.get("username") if "session" in request.scope else "unknown"
-        except Exception:
-            admin_username = "unknown"
+        admin_username = request.session.get("username", "unknown")
         log("error", "Users", f"Failed to fetch user {user_id} for admin '{admin_username}': {str(e)}", "")
         return JSONResponse({"error": "Failed to load user data"}, status_code=500)
 

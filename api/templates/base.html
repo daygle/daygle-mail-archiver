@@ -98,7 +98,6 @@
                     </a>
                     {% endif %}
                 </div>
-                {% endif %}
                 {% if 'manage_users' in request.session.get('permissions', []) or 'manage_roles' in request.session.get('permissions', []) or 'manage_global_settings' in request.session.get('permissions', []) or 'manage_alerts' in request.session.get('permissions', []) or 'view_logs' in request.session.get('permissions', []) %}
                 <div class="nav-section">
                     <div class="nav-section-title">System Management</div>
@@ -213,6 +212,7 @@
                         <span>Login</span>
                     </a>
                     {% endif %}
+                    {% endif %}
                 </div>
             </header>
 
@@ -286,9 +286,7 @@
             document.addEventListener('click', function(e) {
                 if (window.innerWidth <= 768) {
                     // Only close if clicking outside sidebar AND not on the toggle button
-                    const clickedOutsideSidebar = sidebar && !sidebar.contains(e.target);
-                    const clickedToggle = (mobileToggle && (e.target === mobileToggle || mobileToggle.contains(e.target)));
-                    if (clickedOutsideSidebar && !clickedToggle) {
+                    if (!sidebar.contains(e.target) && e.target !== mobileToggle && !mobileToggle.contains(e.target)) {
                         sidebar.classList.remove('mobile-open');
                     }
                 }
@@ -297,9 +295,7 @@
             // Also close on touch for mobile
             document.addEventListener('touchstart', function(e) {
                 if (window.innerWidth <= 768) {
-                    const touchedOutsideSidebar = sidebar && !sidebar.contains(e.target);
-                    const touchedToggle = (mobileToggle && (e.target === mobileToggle || mobileToggle.contains(e.target)));
-                    if (touchedOutsideSidebar && !touchedToggle) {
+                    if (!sidebar.contains(e.target) && e.target !== mobileToggle && !mobileToggle.contains(e.target)) {
                         sidebar.classList.remove('mobile-open');
                     }
                 }
@@ -328,11 +324,11 @@
             try { localStorage.setItem('theme', theme); } catch (e) {}
 
             if (theme === 'dark') {
-                if (themeIconLight) themeIconLight.style.display = 'none';
-                if (themeIconDark) themeIconDark.style.display = 'block';
+                themeIconLight.style.display = 'none';
+                themeIconDark.style.display = 'block';
             } else {
-                if (themeIconLight) themeIconLight.style.display = 'block';
-                if (themeIconDark) themeIconDark.style.display = 'none';
+                themeIconLight.style.display = 'block';
+                themeIconDark.style.display = 'none';
             }
 
             // Emit a global event so other parts of the UI (e.g. settings page) can react

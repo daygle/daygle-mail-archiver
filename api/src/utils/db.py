@@ -25,18 +25,6 @@ class MaterializedResult:
     def first(self):
         return self._rows[0] if self._rows else None
 
-    def scalar(self):
-        """Return the first column of the first row, or None if no rows.
-
-        This mirrors the convenience of SQLAlchemy's `Result.scalar()` used
-        elsewhere in the codebase (e.g. fetching single settings values).
-        """
-        first_row = self.first()
-        if first_row is None:
-            return None
-        # `first_row` is a mapping; return its first value
-        return next(iter(first_row.values()))
-
     def __iter__(self):
         return iter(self._rows)
 

@@ -56,7 +56,7 @@ class PermissionChecker:
             return self._permissions_cache
         except Exception as e:
             # Lazy import logger
-            from utils.logger import log, get_client_ip
+            from utils.logger import log
             log("error", "Permissions", f"Failed to load permissions for user {user_id}: {str(e)}")
             return []
 
@@ -105,7 +105,7 @@ def require_permission(permission: str):
         async def wrapper(request: Request, *args, **kwargs):
             checker = PermissionChecker(request)
             if not checker.has_permission(permission):
-                log("warning", "Security", f"Access denied for permission '{permission}' by user {request.session.get('username', 'unknown')}", ip_address=get_client_ip(request))
+                log("warning", "Security", f"Access denied for permission '{permission}' by user {request.session.get('username', 'unknown')}")
                 # Return 403 Forbidden
                 from fastapi.responses import JSONResponse
                 return JSONResponse(
@@ -123,7 +123,7 @@ def require_any_permission(permissions: List[str]):
         async def wrapper(request: Request, *args, **kwargs):
             checker = PermissionChecker(request)
             if not checker.has_any_permission(permissions):
-                log("warning", "Security", f"Access denied for any of permissions {permissions} by user {request.session.get('username', 'unknown')}", ip_address=get_client_ip(request))
+                log("warning", "Security", f"Access denied for any of permissions {permissions} by user {request.session.get('username', 'unknown')}")
                 from fastapi.responses import JSONResponse
                 return JSONResponse(
                     {"error": "Insufficient permissions", "required_any": permissions},
