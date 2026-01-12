@@ -38,6 +38,8 @@ def list_users(request: Request):
                  u.email_notifications, u.enabled, u.last_login, u.created_at, u.last_activity, u.role
         ORDER BY u.id
     """).mappings().all()
+    # Convert row mappings to plain dicts so we can add transient keys like 'is_online'
+    users = [dict(u) for u in users]
 
     # Get inactivity timeout setting to determine online status
     timeout_setting = query("SELECT value FROM settings WHERE key = 'inactivity_timeout_minutes'").scalar()
@@ -48,16 +50,16 @@ def list_users(request: Request):
     current_time = datetime.now()
     
     for user in users:
-        if user.last_activity:
+        last_activity = user.get('last_activity')
+        if last_activity:
             # Convert string to datetime if needed
-            last_activity = user.last_activity
             if isinstance(last_activity, str):
                 last_activity = datetime.fromisoformat(last_activity.replace('Z', '+00:00'))
-            
+
             # Consider user online if activity within timeout period
-            user.is_online = (current_time - last_activity) <= timedelta(minutes=timeout_minutes)
+            user['is_online'] = (current_time - last_activity) <= timedelta(minutes=timeout_minutes)
         else:
-            user.is_online = False
+            user['is_online'] = False
 
     # Get all available roles for the form (include display_name for UI)
     roles = query("SELECT id, name, display_name, description FROM roles ORDER BY COALESCE(display_name, name)").mappings().all()
