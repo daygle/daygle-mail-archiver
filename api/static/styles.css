@@ -821,7 +821,7 @@ textarea.form-control {
 .table-container {
     background: var(--bg-primary);
     border-radius: var(--radius-lg);
-    overflow: hidden;
+    overflow-x: auto;
     border: 1px solid var(--border-color);
 }
 
@@ -843,6 +843,7 @@ textarea.form-control {
     /* Remove extra vertical padding so it aligns with other cells */
     padding-top: 0 !important;
     padding-bottom: 0 !important;
+    max-width: 300px;
 }
 
 /* Badges rendered inline so they don't affect table intrinsic sizing */
