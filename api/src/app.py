@@ -64,6 +64,7 @@ async def activity_tracking_middleware(request: Request, call_next):
         request.url.path.startswith("/api/logout")):
         return await call_next(request)
     
+    print(f"DEBUG: session in scope: {'session' in request.scope}")
     # Check if SessionMiddleware has been applied (session is available)
     if "session" not in request.scope:
         return await call_next(request)
