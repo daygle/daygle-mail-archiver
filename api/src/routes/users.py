@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, Form
-from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.responses import RedirectResponse
 import bcrypt
 import re
 from typing import List
@@ -8,28 +8,25 @@ from utils.db import query, execute
 from utils.logger import log
 from utils.templates import templates
 from utils.timezone import format_datetime
+from utils.permissions import require_permission, PERMISSIONS
 
 router = APIRouter()
 
-def require_login(request: Request):
-    return "user_id" in request.session
-
 
 def flash(request: Request, message, category: str = "info"):
-    if isinstance(message, dict):
-        request.session["flash"] = message
-    else:
-        request.session["flash"] = {"message": message, "type": category}
+    request.session["flash"] = (
+        message if isinstance(message, dict) else {"message": message, "type": category}
+    )
 
 
+# ---------------------------------------------------------
+# LIST USERS
+# ---------------------------------------------------------
 @router.get("/users")
-def list_users(request: Request):
-    if not require_login(request):
-        return RedirectResponse("/login", status_code=303)
-
-    # TODO: replace with new permission system
-    # require_permission(request, "users.view")
-
+def list_users(
+    request: Request,
+    _=require_permission(PERMISSIONS["view_users"])
+):
     users = query("""
         SELECT 
             u.id, u.username, u.first_name, u.last_name, u.email,
@@ -56,9 +53,14 @@ def list_users(request: Request):
         {"request": request, "users": users, "roles": roles, "flash": msg},
     )
 
+
+# ---------------------------------------------------------
+# CREATE USER
+# ---------------------------------------------------------
 @router.post("/users/create")
 def create_user(
     request: Request,
+    _=require_permission(PERMISSIONS["manage_users"]),
     username: str = Form(...),
     password: str = Form(...),
     first_name: str = Form(""),
@@ -68,98 +70,80 @@ def create_user(
     email_notifications: bool = Form(True),
     enabled: bool = Form(True)
 ):
-    if not require_login(request):
-        return RedirectResponse("/login", status_code=303)
-    
     admin_username = request.session.get("username", "unknown")
-    
-    # Sanitize inputs
+
+    # Normalize input
     username = username.strip()
-    first_name = first_name.strip()
-    last_name = last_name.strip()
-    email = email.strip()
-    
-    # Validate username
-    if not username or len(username) < 3:
-        flash(request, "Username must be at least 3 characters long.", 'error')
+    first_name = first_name.strip() or None
+    last_name = last_name.strip() or None
+    email = email.strip() or None
+
+    # Username validation
+    if len(username) < 3:
+        flash(request, "Username must be at least 3 characters long.", "error")
         return RedirectResponse("/users", status_code=303)
-    
-    # Check username uniqueness
-    existing = query("SELECT id FROM users WHERE username = :u", {"u": username}).mappings().first()
-    if existing:
-        flash(request, f"Username '{username}' already exists.", 'error')
+
+    # Unique username
+    if query("SELECT id FROM users WHERE username = :u", {"u": username}).first():
+        flash(request, f"Username '{username}' already exists.", "error")
         return RedirectResponse("/users", status_code=303)
-    
-    # Validate password strength
-    if len(password) < 8:
-        flash(request, "Password must be at least 8 characters long.", 'error')
+
+    # Password validation
+    if (
+        len(password) < 8
+        or not re.search(r"[a-z]", password)
+        or not re.search(r"[A-Z]", password)
+        or not re.search(r"[0-9]", password)
+    ):
+        flash(request, "Password must include upper, lower, number and be 8+ chars.", "error")
         return RedirectResponse("/users", status_code=303)
-    
-    if not re.search(r"[a-z]", password):
-        flash(request, "Password must contain at least one lowercase letter.", 'error')
-        return RedirectResponse("/users", status_code=303)
-    
-    if not re.search(r"[A-Z]", password):
-        flash(request, "Password must contain at least one uppercase letter.", 'error')
-        return RedirectResponse("/users", status_code=303)
-    
-    if not re.search(r"[0-9]", password):
-        flash(request, "Password must contain at least one number.", 'error')
-        return RedirectResponse("/users", status_code=303)
-    
-    # Validate email format if provided
+
+    # Email validation
     if email and not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email):
-        flash(request, "Invalid email format.", 'error')
+        flash(request, "Invalid email format.", "error")
         return RedirectResponse("/users", status_code=303)
-    
-    # Validate that at least one role is selected
+
+    # Must have at least one role
     if not role_ids:
-        flash(request, "At least one role must be assigned to the user.", 'error')
+        flash(request, "At least one role must be assigned.", "error")
         return RedirectResponse("/users", status_code=303)
-    
+
     try:
-        hash_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        # Use RETURNING to obtain the new user's id
+        # Hash password
+        hash_pw = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+        # Create user
         new_user = query("""
             INSERT INTO users (username, password_hash, first_name, last_name, email, email_notifications, enabled)
-            VALUES (:u, :h, :fn, :ln, :e, :enf, :en) RETURNING id
+            VALUES (:u, :h, :fn, :ln, :e, :enf, :en)
+            RETURNING id
         """, {
             "u": username,
             "h": hash_pw,
-            "fn": first_name or None,
-            "ln": last_name or None,
-            "e": email or None,
+            "fn": first_name,
+            "ln": last_name,
+            "e": email,
             "enf": email_notifications,
             "en": enabled
         }).mappings().first()
-        user_id = new_user["id"] if new_user else None
 
-        # Assign roles to the user
+        user_id = new_user["id"]
+
+        # Assign roles
         for role_id in role_ids:
-            try:
-                execute("""
-                    INSERT INTO user_roles (user_id, role_id)
-                    VALUES (:user_id, :role_id)
-                """, {"user_id": user_id, "role_id": int(role_id)})
-            except Exception as e:
-                log("error", "Users", f"Failed to assign role {role_id} to user {username}: {str(e)}")
+            execute("""
+                INSERT INTO user_roles (user_id, role_id)
+                VALUES (:user_id, :role_id)
+            """, {"user_id": user_id, "role_id": int(role_id)})
 
-        # Keep legacy users.role in sync with the first assigned role slug (helps backward compatibility)
-        try:
-            first_role = query("SELECT name FROM roles WHERE id = :id", {"id": int(role_ids[0])}).mappings().first()
-            if first_role:
-                execute("UPDATE users SET role = :role WHERE id = :id", {"role": first_role["name"], "id": user_id})
-        except Exception as e:
-            log("warning", "Users", f"Failed to sync legacy role for user {user_id}: {str(e)}")
+        log("info", "Users", f"Admin '{admin_username}' created user '{username}' with roles {role_ids}")
+        flash(request, f"User '{username}' created successfully", "success")
 
-        log("info", "Users", f"Admin '{admin_username}' created new user '{username}' with {len(role_ids)} roles")
-        flash(request, f"User '{username}' created successfully", 'success')
-        return RedirectResponse("/users", status_code=303)
     except Exception as e:
-        log("error", "Users", f"Failed to create user '{username}' by admin '{admin_username}': {str(e)}", "")
-        flash(request, "User creation failed. Please try again.", 'error')
-    return RedirectResponse("/users", status_code=303)
+        log("error", "Users", f"Failed to create user '{username}': {str(e)}")
+        flash(request, "User creation failed. Please try again.", "error")
 
+    return RedirectResponse("/users", status_code=303)
 @router.get("/api/users/{user_id}")
 def get_user(request: Request, user_id: int):
     """API endpoint to get user details for editing"""
