@@ -671,7 +671,7 @@ def _quarantine_emails(ids: List[int], quarantined_by: str) -> int:
         try:
             # Get email data
             email = query("""
-                SELECT id, source, folder, uid, subject, sender, recipients, date, message_id, raw_email, compressed
+                SELECT id, source, folder, uid, subject, sender, recipients, date, message_id, raw_email, signature, compressed
                 FROM emails 
                 WHERE id = :id AND quarantined = FALSE
             """, {"id": email_id}).mappings().first()
