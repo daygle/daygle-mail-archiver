@@ -139,16 +139,12 @@
                                     <i class="fas fa-eye"></i>
                                 </a>
                                 {% if request.session.role == 'administrator' %}
-                                <form method="post" action="/quarantine/{{ i.id }}/restore" style="display:inline;">
-                                    <button class="btn btn-info btn-sm" type="submit" title="Restore">
-                                        <i class="fas fa-undo"></i>
-                                    </button>
-                                </form>
-                                <form method="post" action="/quarantine/{{ i.id }}/delete" style="display:inline;" onsubmit="return confirm('Delete this quarantined message permanently?');">
-                                    <button class="btn btn-danger btn-sm" type="submit" title="Delete">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
+                                <button type="button" class="btn btn-info btn-sm" title="Restore" onclick="submitQuarantineAction('restore', {{ i.id }})">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                                <button type="button" class="btn btn-danger btn-sm" title="Delete" onclick="confirmAndSubmitDelete({{ i.id }})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                                 {% endif %}
                             </div>
                         </td>
@@ -370,6 +366,20 @@
         // Submit the form
         document.body.appendChild(restoreForm);
         restoreForm.submit();
+    };
+
+    // Helper to submit single-item restore/delete via dynamically created form
+    window.submitQuarantineAction = function(action, id) {
+        const form = document.createElement('form');
+        form.method = 'post';
+        form.action = `/quarantine/${id}/${action}`;
+        document.body.appendChild(form);
+        form.submit();
+    };
+
+    window.confirmAndSubmitDelete = function(id) {
+        if (!confirm('Delete this quarantined message permanently?')) return;
+        submitQuarantineAction('delete', id);
     };
 })();
 </script>
