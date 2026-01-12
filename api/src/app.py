@@ -198,8 +198,15 @@ def health_check():
 
 @app.on_event("startup")
 async def startup_event():
-    """Log application startup"""
+    """Log application startup and ensure DB schema is up-to-date"""
     log("info", "System", "Daygle Mail Archiver API started", "")
+    try:
+        # Ensure last_activity exists on users table (fixes older DBs)
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_activity TIMESTAMPTZ"))
+            log("info", "System", "Ensured users.last_activity column exists", "")
+    except Exception as e:
+        log("warning", "System", f"Could not ensure users.last_activity column: {str(e)}", "")
 
 @app.on_event("shutdown")
 async def shutdown_event():
