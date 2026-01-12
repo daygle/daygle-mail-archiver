@@ -206,13 +206,29 @@ def list_quarantine(request: Request, q: str = None, virus: str = None, page: in
             raw_blob = ir.get('raw_email')
             compressed_flag = ir.get('compressed')
             data = raw_blob
-            if raw_blob is not None:
+
+            # Ensure bytes for DB blobs (memoryview) before decrypt/decompress
+            if isinstance(data, memoryview):
+                data = data.tobytes()
+            elif data is not None and not isinstance(data, (bytes, bytearray)):
+                try:
+                    data = bytes(data)
+                except Exception:
+                    pass
+
+            if data is not None:
+                decryption_successful = False
                 if fernet:
                     try:
-                        data = fernet.decrypt(raw_blob)
+                        data = fernet.decrypt(data)
+                        decryption_successful = True
                     except Exception:
-                        # If decryption fails, leave data as-is and mark unknown
+                        # Couldn't decrypt; mark as encrypted and skip signature check
                         data = raw_blob
+                        decryption_successful = False
+                else:
+                    decryption_successful = True
+
                 # attempt gzip decompression if appears gzipped
                 try:
                     if isinstance(data, (bytes, bytearray)) and len(data) >= 2 and data[:2] == b"\x1f\x8b":
@@ -222,12 +238,17 @@ def list_quarantine(request: Request, q: str = None, virus: str = None, page: in
                     pass
 
                 try:
-                    current_sig = compute_signature(data)
+                    if decryption_successful or not fernet:
+                        current_sig = compute_signature(data)
+                    else:
+                        current_sig = None
                 except Exception:
                     current_sig = None
 
                 if stored_sig is None:
                     integrity = 'no_signature'
+                elif not decryption_successful and fernet:
+                    integrity = 'encrypted'
                 elif current_sig is None:
                     integrity = 'unknown'
                 elif stored_sig == current_sig:
@@ -740,7 +761,7 @@ def perform_bulk_restore(
 @router.post("/quarantine/delete")
 def perform_bulk_delete(
     request: Request,
-    ids: List[int] = Form(...),
+    ids: List[int] = Form(None),
     mode: str = Form("db"),  # "db" or "imap"
 ):
     """

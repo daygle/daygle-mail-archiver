@@ -356,9 +356,9 @@
         const restoreForm = document.createElement('form');
         restoreForm.method = 'post';
         restoreForm.action = '/quarantine/restore';
-        
-        // Add selected IDs
-        const checkboxes = document.querySelectorAll('input[name="selected_emails"]:checked');
+
+        // Add selected IDs (use the same checkbox name used for items)
+        const checkboxes = document.querySelectorAll('input[name="ids"]:checked');
         checkboxes.forEach(checkbox => {
             const input = document.createElement('input');
             input.type = 'hidden';
@@ -366,7 +366,7 @@
             input.value = checkbox.value;
             restoreForm.appendChild(input);
         });
-        
+
         // Submit the form
         document.body.appendChild(restoreForm);
         restoreForm.submit();
