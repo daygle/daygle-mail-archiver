@@ -62,8 +62,13 @@ def list_users(request: Request):
             else:
                 last_activity = last_activity.astimezone(timezone.utc)
 
-            # Consider user online if activity within timeout period
-            user['is_online'] = (current_time - last_activity) <= timedelta(minutes=timeout_minutes)
+            # If timeout is 0 (no auto-logout), consider user always online if they have recent activity
+            # Otherwise, check within timeout period
+            if timeout_minutes == 0:
+                # Consider online if last_activity is within the last 24 hours (arbitrary but reasonable)
+                user['is_online'] = (current_time - last_activity) <= timedelta(hours=24)
+            else:
+                user['is_online'] = (current_time - last_activity) <= timedelta(minutes=timeout_minutes)
         else:
             user['is_online'] = False
 
