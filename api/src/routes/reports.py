@@ -8,7 +8,6 @@ from utils.db import query
 from utils.logger import log
 from utils.templates import templates
 from utils.timezone import convert_utc_to_user_timezone, get_user_timezone
-from utils.security import is_admin
 
 router = APIRouter()
 
@@ -25,16 +24,16 @@ def get_user_date_format(request: Request, date_only: bool = False) -> str:
         date_format = "%d/%m/%Y"
 
     # Override with user's date format if set
-    _sess_uid = request.session.get("user_id")
-    try:
-        user_id = int(_sess_uid) if _sess_uid is not None else None
-    except (TypeError, ValueError):
-        user_id = None
+    user_id = request.session.get("user_id")
     if user_id:
         try:
-            user = query("SELECT date_format FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+            # Convert user_id to int for database queries
+            user_id_int = int(user_id)
+            user = query("SELECT date_format FROM users WHERE id = :id", {"id": user_id_int}).mappings().first()
             if user and user["date_format"]:
                 date_format = user["date_format"]
+        except (ValueError, TypeError):
+            pass
         except Exception:
             pass
 
@@ -51,9 +50,13 @@ def get_user_date_format(request: Request, date_only: bool = False) -> str:
 
     if user_id:
         try:
-            user = query("SELECT time_format FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+            # Convert user_id to int for database queries
+            user_id_int = int(user_id)
+            user = query("SELECT time_format FROM users WHERE id = :id", {"id": user_id_int}).mappings().first()
             if user and user["time_format"]:
                 time_format = user["time_format"]
+        except (ValueError, TypeError):
+            pass
         except Exception:
             pass
 
@@ -101,11 +104,12 @@ def email_volume_report(request: Request, start_date: str = None, end_date: str 
         if start_dt > end_dt:
             return JSONResponse({"error": "start_date must be before end_date"}, status_code=400)
 
-        _sess_uid = request.session.get("user_id")
-        try:
-            user_id = int(_sess_uid) if _sess_uid is not None else None
-        except (TypeError, ValueError):
-            user_id = None
+        user_id = request.session.get("user_id")
+        if user_id is not None:
+            try:
+                user_id = int(user_id)
+            except (ValueError, TypeError):
+                user_id = None
         date_format = get_user_date_format(request, date_only=True)
 
         # Calculate period based on date range
@@ -194,11 +198,12 @@ def account_activity_report(request: Request, start_date: str = None, end_date: 
         if start_dt > end_dt:
             return JSONResponse({"error": "start_date must be before end_date"}, status_code=400)
 
-        _sess_uid = request.session.get("user_id")  # May be None for testing
-        try:
-            user_id = int(_sess_uid) if _sess_uid is not None else None
-        except (TypeError, ValueError):
-            user_id = None
+        user_id = request.session.get("user_id")  # May be None for testing
+        if user_id is not None:
+            try:
+                user_id = int(user_id)
+            except (ValueError, TypeError):
+                user_id = None
         date_format = get_user_date_format(request, date_only=True)
 
         # Get account sync data
@@ -390,11 +395,12 @@ def system_health_report(request: Request, start_date: str = None, end_date: str
         if start_dt > end_dt:
             return JSONResponse({"error": "start_date must be before end_date"}, status_code=400)
 
-        _sess_uid = request.session.get("user_id")
-        try:
-            user_id = int(_sess_uid) if _sess_uid is not None else None
-        except (TypeError, ValueError):
-            user_id = None
+        user_id = request.session.get("user_id")
+        if user_id is not None:
+            try:
+                user_id = int(user_id)
+            except (ValueError, TypeError):
+                user_id = None
         date_format = get_user_date_format(request, date_only=True)
 
         # Database growth over time (simplified - would need historical data for accurate growth)
@@ -527,11 +533,12 @@ def av_stats_report(request: Request, start_date: str = None, end_date: str = No
         if start_dt > end_dt:
             return JSONResponse({"error": "start_date must be before end_date"}, status_code=400)
 
-        _sess_uid = request.session.get("user_id")  # May be None for testing
-        try:
-            user_id = int(_sess_uid) if _sess_uid is not None else None
-        except (TypeError, ValueError):
-            user_id = None
+        user_id = request.session.get("user_id")  # May be None for testing
+        if user_id is not None:
+            try:
+                user_id = int(user_id)
+            except (ValueError, TypeError):
+                user_id = None
         date_format = get_user_date_format(request, date_only=True)
 
         # Calculate period based on date range for grouping (SQLite compatible)
@@ -1065,7 +1072,7 @@ def security_access_report(request: Request, start_date: str = None, end_date: s
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
     # Only administrators can view security reports
-    if not is_admin(request):
+    if request.session.get("role") != "administrator":
         return JSONResponse({"error": "Access denied"}, status_code=403)
 
     try:

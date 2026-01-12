@@ -41,12 +41,13 @@ def list_emails(
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    # Normalize session user id for timezone/formatting use
-    _sess_uid = request.session.get("user_id")
-    try:
-        user_id = int(_sess_uid) if _sess_uid is not None else None
-    except (TypeError, ValueError):
-        user_id = None
+    # Get user_id for timezone formatting
+    user_id = request.session.get("user_id")
+    if user_id is not None:
+        try:
+            user_id = int(user_id)
+        except (ValueError, TypeError):
+            user_id = None
 
     # Get page_size from user settings, fallback to global settings
     page_size = 50  # Default
@@ -386,12 +387,13 @@ def view_email(request: Request, email_id: int):
     if not row:
         return HTMLResponse("Email not found", status_code=404)
 
-    # Normalize session user id for timezone formatting
-    _sess_uid = request.session.get("user_id")
-    try:
-        user_id = int(_sess_uid) if _sess_uid is not None else None
-    except (TypeError, ValueError):
-        user_id = None
+    # Get user_id for timezone formatting
+    user_id = request.session.get("user_id")
+    if user_id is not None:
+        try:
+            user_id = int(user_id)
+        except (ValueError, TypeError):
+            user_id = None
 
     # Format timestamps according to user preferences
     row = dict(row)  # Convert to dict to make it mutable

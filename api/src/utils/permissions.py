@@ -19,11 +19,7 @@ class PermissionChecker:
         if self._permissions_cache is not None:
             return self._permissions_cache
 
-        _sess_uid = self.request.session.get("user_id")
-        try:
-            user_id = int(_sess_uid) if _sess_uid is not None else None
-        except (TypeError, ValueError):
-            user_id = None
+        user_id = self.request.session.get("user_id")
         if not user_id:
             return []
 
@@ -45,16 +41,10 @@ class PermissionChecker:
             if not self._permissions_cache:
                 user = query("SELECT role FROM users WHERE id = :user_id", {"user_id": user_id}).first()
                 if user and user.get("role"):
-                    # Normalize DB role string to canonical form
-                    try:
-                        from utils.security import normalize_role_str
-                        norm = normalize_role_str(user.get("role"))
-                    except Exception:
-                        norm = user.get("role")
-                    if norm == "administrator":
+                    if user["role"] == "administrator":
                         all_permissions = query("SELECT name FROM permissions").mappings().all()
                         self._permissions_cache = [p["name"] for p in all_permissions]
-                    elif norm == "read_only":
+                    elif user["role"] == "read_only":
                         # Read-only legacy role gets a limited set of view permissions
                         self._permissions_cache = [
                             "view_dashboard", "view_emails", "view_reports",
@@ -91,11 +81,7 @@ class PermissionChecker:
 
     def get_user_roles(self) -> List[Dict[str, Any]]:
         """Get all roles for the current user"""
-        _sess_uid = self.request.session.get("user_id")
-        try:
-            user_id = int(_sess_uid) if _sess_uid is not None else None
-        except (TypeError, ValueError):
-            user_id = None
+        user_id = self.request.session.get("user_id")
         if not user_id:
             return []
 

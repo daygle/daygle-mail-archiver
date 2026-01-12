@@ -7,7 +7,6 @@ from utils.db import query, execute
 from utils.logger import log
 from utils.config import get_config
 from utils.security import decrypt_password, can_delete
-from utils.permissions import PermissionChecker
 from cryptography.fernet import Fernet
 from utils.alerts import create_alert
 from utils.email_parser import compute_signature
@@ -125,28 +124,29 @@ def _delete_quarantined_from_mail_server_and_db(ids: List[int]) -> tuple[int, li
 @router.get('/quarantine', response_class=HTMLResponse)
 def list_quarantine(request: Request, q: str = None, virus: str = None, page: int = 1):
     # Require login first
-    if not require_login(request):
+    if not request.session.get('user_id'):
         request.session['flash'] = 'Please login to access Quarantine'
         return RedirectResponse('/login', status_code=303)
 
-    # Require permission to view quarantine
-    checker = PermissionChecker(request)
-    if not checker.has_permission('view_quarantine'):
-        from utils.security import get_role
-        log('warning', 'Quarantine', f"Unauthorized access attempt to /quarantine by user_id={request.session.get('user_id')} role={get_role(request)}")
-        request.session['flash'] = 'Access denied'
-        return RedirectResponse('/dashboard', status_code=303)
+    # Verify role from DB (more reliable than trusting session role)
+    try:
+        user = query('SELECT role FROM users WHERE id = :id', {'id': request.session.get('user_id')}).mappings().first()
+        if not user or user.get('role') not in ['administrator', 'read_only']:
+            log('warning', 'Quarantine', f"Unauthorized access attempt to /quarantine by user_id={request.session.get('user_id')} role={request.session.get('role')}")
+            request.session['flash'] = 'Access denied'
+            return RedirectResponse('/dashboard', status_code=303)
     except Exception as e:
         log('error', 'Quarantine', f"Failed to verify role: {e}")
         request.session['flash'] = 'Access denied'
         return RedirectResponse('/dashboard', status_code=303)
 
     # Get user_id for timezone formatting
-    _sess_uid = request.session.get('user_id')
-    try:
-        user_id = int(_sess_uid) if _sess_uid is not None else None
-    except (TypeError, ValueError):
-        user_id = None
+    user_id = request.session.get('user_id')
+    if user_id is not None:
+        try:
+            user_id = int(user_id)
+        except (ValueError, TypeError):
+            user_id = None
 
     # Pagination: determine page_size from user or global settings
     page_size = 50
@@ -289,15 +289,15 @@ def list_quarantine(request: Request, q: str = None, virus: str = None, page: in
 @router.get('/quarantine/{qid}', response_class=HTMLResponse)
 def view_quarantine(request: Request, qid: int):
     # Require login first
-    if not require_login(request):
+    if not request.session.get('user_id'):
         return RedirectResponse('/login', status_code=303)
 
-    # Require permission to view quarantine item
-    checker = PermissionChecker(request)
-    if not checker.has_permission('view_quarantine'):
-        from utils.security import get_role
-        log('warning', 'Quarantine', f"Unauthorized view attempt to /quarantine/{qid} by user_id={request.session.get('user_id')} role={get_role(request)}")
-        return RedirectResponse('/dashboard', status_code=303)
+    # Verify role from DB (more reliable than trusting session role)
+    try:
+        user = query('SELECT role FROM users WHERE id = :id', {'id': request.session.get('user_id')}).mappings().first()
+        if not user or user.get('role') not in ['administrator', 'read_only']:
+            log('warning', 'Quarantine', f"Unauthorized view attempt to /quarantine/{qid} by user_id={request.session.get('user_id')} role={request.session.get('role')}")
+            return RedirectResponse('/dashboard', status_code=303)
     except Exception as e:
         log('error', 'Quarantine', f"Failed to verify role: {e}")
         return RedirectResponse('/dashboard', status_code=303)
@@ -307,11 +307,12 @@ def view_quarantine(request: Request, qid: int):
         return RedirectResponse('/quarantine', status_code=303)
 
     # Get user_id for timezone formatting
-    _sess_uid = request.session.get("user_id")
-    try:
-        user_id = int(_sess_uid) if _sess_uid is not None else None
-    except (TypeError, ValueError):
-        user_id = None
+    user_id = request.session.get("user_id")
+    if user_id is not None:
+        try:
+            user_id = int(user_id)
+        except (ValueError, TypeError):
+            user_id = None
 
     # Format quarantined_at according to user preferences
     item = dict(item)  # Convert to dict to make it mutable
@@ -416,15 +417,15 @@ def quarantine_session(request: Request):
 @router.post('/quarantine/{qid}/restore')
 def restore_quarantine(request: Request, qid: int):
     # Require login first
-    if not require_login(request):
+    if not request.session.get('user_id'):
         return RedirectResponse('/login', status_code=303)
 
-    # Require permission to manage (restore) quarantined emails
-    checker = PermissionChecker(request)
-    if not checker.has_permission('manage_quarantine'):
-        from utils.security import get_role
-        log('warning', 'Quarantine', f"Unauthorized restore attempt to /quarantine/{qid}/restore by user_id={request.session.get('user_id')} role={get_role(request)}")
-        return RedirectResponse('/dashboard', status_code=303)
+    # Verify role from DB (more reliable than trusting session role)
+    try:
+        user = query('SELECT role FROM users WHERE id = :id', {'id': request.session.get('user_id')}).mappings().first()
+        if not user or user.get('role') != 'administrator':
+            log('warning', 'Quarantine', f"Unauthorized restore attempt to /quarantine/{qid}/restore by user_id={request.session.get('user_id')} role={request.session.get('role')}")
+            return RedirectResponse('/dashboard', status_code=303)
     except Exception as e:
         log('error', 'Quarantine', f"Failed to verify admin role: {e}")
         return RedirectResponse('/dashboard', status_code=303)
@@ -534,15 +535,15 @@ def delete_quarantine(request: Request, qid: int, mode: str = Form("db")):
     Delete quarantined email, optionally also from mail server.
     """
     # Require login first
-    if not require_login(request):
+    if not request.session.get('user_id'):
         return RedirectResponse('/login', status_code=303)
 
-    # Require permission to manage (delete) quarantined emails
-    checker = PermissionChecker(request)
-    if not checker.has_permission('manage_quarantine'):
-        from utils.security import get_role
-        log('warning', 'Quarantine', f"Unauthorized delete attempt to /quarantine/{qid}/delete by user_id={request.session.get('user_id')} role={get_role(request)}")
-        return RedirectResponse('/dashboard', status_code=303)
+    # Verify role from DB (more reliable than trusting session role)
+    try:
+        user = query('SELECT role FROM users WHERE id = :id', {'id': request.session.get('user_id')}).mappings().first()
+        if not user or user.get('role') != 'administrator':
+            log('warning', 'Quarantine', f"Unauthorized delete attempt to /quarantine/{qid}/delete by user_id={request.session.get('user_id')} role={request.session.get('role')}")
+            return RedirectResponse('/dashboard', status_code=303)
     except Exception as e:
         log('error', 'Quarantine', f"Failed to verify admin role: {e}")
         return RedirectResponse('/dashboard', status_code=303)

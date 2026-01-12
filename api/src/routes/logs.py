@@ -29,11 +29,7 @@ def logs(
         level = "all"
     
     # Get page_size from user settings, fallback to global settings
-    _sess_uid = request.session.get("user_id")
-    try:
-        user_id = int(_sess_uid) if _sess_uid is not None else None
-    except (TypeError, ValueError):
-        user_id = None
+    user_id = request.session.get("user_id")
     page_size = 50  # Default
     
     if user_id:

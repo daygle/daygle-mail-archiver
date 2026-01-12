@@ -7,7 +7,6 @@ from utils.db import query, execute
 from utils.logger import log
 from utils.templates import templates
 from utils.permissions import PermissionChecker
-from utils.security import is_admin
 from fastapi import Body
 
 router = APIRouter()
@@ -27,11 +26,7 @@ def get_user_profile(request: Request):
     if not require_login(request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
     
-    _sess_uid = request.session.get("user_id")
-    try:
-        user_id = int(_sess_uid) if _sess_uid is not None else None
-    except (TypeError, ValueError):
-        user_id = None
+    user_id = request.session.get("user_id")
     checker = PermissionChecker(request)
     permissions = checker.get_user_permissions()
     
@@ -45,11 +40,7 @@ def profile_form(request: Request):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    _sess_uid = request.session.get("user_id")
-    try:
-        user_id = int(_sess_uid) if _sess_uid is not None else None
-    except (TypeError, ValueError):
-        user_id = None
+    user_id = request.session["user_id"]
     user = query("""
         SELECT username, first_name, last_name, email, last_login, created_at, role 
         FROM users WHERE id = :id
@@ -72,11 +63,7 @@ def change_password(
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    _sess_uid = request.session.get("user_id")
-    try:
-        user_id = int(_sess_uid) if _sess_uid is not None else None
-    except (TypeError, ValueError):
-        user_id = None
+    user_id = request.session["user_id"]
     username = request.session.get("username", "unknown")
     
     user = query("SELECT password_hash FROM users WHERE id = :id", {"id": user_id}).mappings().first()
@@ -190,11 +177,7 @@ def user_settings_form(request: Request):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    _sess_uid = request.session.get("user_id")
-    try:
-        user_id = int(_sess_uid) if _sess_uid is not None else None
-    except (TypeError, ValueError):
-        user_id = None
+    user_id = request.session["user_id"]
     user = query("SELECT page_size, date_format, time_format, timezone, theme_preference, email_notifications, role FROM users WHERE id = :id", {"id": user_id}).mappings().first()
     current_page_size = user["page_size"] if user else 50
     current_date_format = user["date_format"] if user else "%d/%m/%Y"
@@ -232,11 +215,7 @@ def update_user_settings(request: Request, page_size: int = Form(...), date_form
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    _sess_uid = request.session.get("user_id")
-    try:
-        user_id = int(_sess_uid) if _sess_uid is not None else None
-    except (TypeError, ValueError):
-        user_id = None
+    user_id = request.session["user_id"]
     username = request.session.get("username", "unknown")
     
     # Get user role
@@ -265,7 +244,7 @@ def update_user_settings(request: Request, page_size: int = Form(...), date_form
                 changed_settings.append(f"timezone={timezone}")
             if current_settings.get("theme_preference") != theme:
                 changed_settings.append(f"theme={theme}")
-            if is_admin(request) and current_settings["email_notifications"] != email_notifications:
+            if user_role == "administrator" and current_settings["email_notifications"] != email_notifications:
                 changed_settings.append(f"email_notifications={email_notifications}")
 
         if not changed_settings:
@@ -273,12 +252,12 @@ def update_user_settings(request: Request, page_size: int = Form(...), date_form
             return RedirectResponse("/user-settings", status_code=303)
 
         # Only update email_notifications for administrators
-        if is_admin(request):
+        if user_role == "administrator":
             execute("UPDATE users SET page_size = :ps, date_format = :df, time_format = :tf, timezone = :tz, theme_preference = :theme, email_notifications = :en WHERE id = :id", 
-                {"ps": page_size, "df": date_format, "tf": time_format, "tz": timezone, "theme": theme, "en": email_notifications, "id": user_id})
+                    {"ps": page_size, "df": date_format, "tf": time_format, "tz": timezone, "theme": theme, "en": email_notifications, "id": user_id})
         else:
             execute("UPDATE users SET page_size = :ps, date_format = :df, time_format = :tf, timezone = :tz, theme_preference = :theme WHERE id = :id", 
-                {"ps": page_size, "df": date_format, "tf": time_format, "tz": timezone, "theme": theme, "id": user_id})
+                    {"ps": page_size, "df": date_format, "tf": time_format, "tz": timezone, "theme": theme, "id": user_id})
 
         # Update session variables
         request.session["page_size"] = page_size
@@ -310,11 +289,7 @@ def set_user_theme(request: Request, payload: dict = Body(...)):
     if theme not in ("light", "dark", "system"):
         return JSONResponse({"error": "Invalid theme"}, status_code=400)
 
-    _sess_uid = request.session.get("user_id")
-    try:
-        user_id = int(_sess_uid) if _sess_uid is not None else None
-    except (TypeError, ValueError):
-        user_id = None
+    user_id = request.session.get("user_id")
     try:
         execute("UPDATE users SET theme_preference = :theme WHERE id = :id", {"theme": theme, "id": user_id})
     except Exception as e:

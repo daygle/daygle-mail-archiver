@@ -73,12 +73,8 @@ def alerts_page(
     # Get user's date/time format
     date_format = get_user_date_format(request)
 
-    # Normalize session user id for timezone conversion
-    _sess_uid = request.session.get("user_id")
-    try:
-        user_id = int(_sess_uid) if _sess_uid is not None else None
-    except (TypeError, ValueError):
-        user_id = None
+    # Convert alert timestamps to user timezone
+    user_id = request.session.get("user_id")
     for alert in alerts:
         if alert["created_at"]:
             alert["created_at"] = convert_utc_to_user_timezone(alert["created_at"], user_id)
@@ -106,11 +102,7 @@ def acknowledge_alert_api(request: Request, alert_id: int):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    _sess_uid = request.session.get("user_id")
-    try:
-        user_id = int(_sess_uid) if _sess_uid is not None else None
-    except (TypeError, ValueError):
-        user_id = None
+    user_id = request.session.get("user_id")
     if not user_id:
         flash(request, "User not found", 'error')
         return RedirectResponse("/alerts", status_code=303)

@@ -26,7 +26,7 @@ def list_users(request: Request):
         return RedirectResponse("/login", status_code=303)
 
     # Get users with their assigned roles (use display_name for UI)
-    users = query(r"""
+    users = query("""
         SELECT u.id, u.username, u.first_name, u.last_name, u.email,
                COALESCE(u.email_notifications, TRUE) as email_notifications,
                u.enabled, u.last_login, u.created_at,
@@ -223,12 +223,7 @@ def update_user(
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    # Normalize session user id to int when available to ensure proper comparisons
-    _sess_uid = request.session.get("user_id")
-    try:
-        current_user_id = int(_sess_uid) if _sess_uid is not None else None
-    except (TypeError, ValueError):
-        current_user_id = None
+    current_user_id = request.session.get("user_id")
     admin_username = request.session.get("username", "unknown")
     
     # Sanitize inputs
@@ -275,14 +270,7 @@ def update_user(
         cmp_first = first_name or ""
         cmp_last = last_name or ""
         cmp_email = email or ""
-        # Normalize role strings for comparison (handles variants like 'Admin', 'read-only')
-        try:
-            from utils.security import normalize_role_str
-        except Exception:
-            normalize_role_str = lambda x: x
-
-        cmp_role_raw = role or (current.get('role') if current else 'administrator')
-        cmp_role = normalize_role_str(cmp_role_raw) if cmp_role_raw is not None else None
+        cmp_role = role or (current.get('role') if current else 'administrator')
         cmp_email_notifications = bool(email_notifications)
         cmp_enabled = True if user_id == current_user_id else bool(enabled)
         cmp_role_ids = [str(r) for r in role_ids]
@@ -294,7 +282,7 @@ def update_user(
             and (current.get('first_name') or '') == cmp_first
             and (current.get('last_name') or '') == cmp_last
             and (current.get('email') or '') == cmp_email
-            and (normalize_role_str(current.get('role') or '') or '') == (cmp_role or '')
+            and (current.get('role') or '') == cmp_role
             and bool(current.get('email_notifications')) == cmp_email_notifications
             and bool(current.get('enabled')) == cmp_enabled
             and set(current_role_ids) == set(cmp_role_ids)
@@ -390,12 +378,7 @@ def delete_user(request: Request, user_id: int):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    # Normalize session user id to int when available to ensure proper comparisons
-    _sess_uid = request.session.get("user_id")
-    try:
-        current_user_id = int(_sess_uid) if _sess_uid is not None else None
-    except (TypeError, ValueError):
-        current_user_id = None
+    current_user_id = request.session.get("user_id")
     admin_username = request.session.get("username", "unknown")
     
     if user_id == current_user_id:
@@ -424,12 +407,7 @@ def toggle_user_enabled(request: Request, user_id: int):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    # Normalize session user id to int when available to ensure proper comparisons
-    _sess_uid = request.session.get("user_id")
-    try:
-        current_user_id = int(_sess_uid) if _sess_uid is not None else None
-    except (TypeError, ValueError):
-        current_user_id = None
+    current_user_id = request.session.get("user_id")
     admin_username = request.session.get("username", "unknown")
     
     if user_id == current_user_id:
