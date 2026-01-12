@@ -56,8 +56,8 @@ def get_role(request: Request) -> str | None:
 
     try:
         row = query("SELECT role FROM users WHERE id = :id", {"id": user_id}).mappings().first()
-            if row and row.get('role'):
-                return normalize_role_str(row.get('role'))
+        if row and row.get('role'):
+            return normalize_role_str(row.get('role'))
     except Exception:
         pass
 
