@@ -5,7 +5,7 @@ from fastapi import APIRouter, Request, Form
 from fastapi.responses import RedirectResponse
 
 from utils.db import query
-from utils.security import encrypt_password, decrypt_password
+from utils.crypto import encrypt_password, decrypt_password
 from utils.logger import log
 from utils.templates import templates
 from imaplib import IMAP4, IMAP4_SSL
