@@ -269,7 +269,8 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
             
             # Update last_login timestamp
             try:
-                execute("UPDATE users SET last_login = NOW() WHERE id = :id", {"id": user["id"]})
+                ip = get_client_ip(request)
+                execute("UPDATE users SET last_login = NOW(), last_login_ip = :ip, last_activity = NOW() WHERE id = :id", {"id": user["id"], "ip": ip})
             except Exception as e:
                 log("error", "Login", f"Failed to update last_login for user {username}: {str(e)}")
             
@@ -358,6 +359,12 @@ def set_password(request: Request, password: str = Form(...), confirm_password: 
     try:
         hash_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         execute("UPDATE users SET password_hash = :h WHERE id = :id", {"h": hash_pw, "id": user_id})
+        # Record last_login and IP for initial password set (treat as successful login)
+        try:
+            ip = get_client_ip(request)
+            execute("UPDATE users SET last_login = NOW(), last_login_ip = :ip, last_activity = NOW() WHERE id = :id", {"id": user_id, "ip": ip})
+        except Exception as e:
+            log("warning", "Login", f"Failed to set last_login for user {username}: {str(e)}")
         del request.session["needs_password"]
         
         log("info", "Login", f"User {username} successfully set their initial password")

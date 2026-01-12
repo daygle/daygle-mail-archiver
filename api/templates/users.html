@@ -126,6 +126,7 @@
                             <th class="hide-mobile">Online</th>
                             <th class="hide-mobile">Created</th>
                             <th class="hide-mobile">Last Login</th>
+                            <th class="hide-mobile">Last Login IP</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -166,6 +167,7 @@
                                     <span style="color: var(--text-secondary);">Never</span>
                                 {% endif %}
                             </td>
+                            <td class="hide-mobile"><small>{{ user.last_login_ip or '-' }}</small></td>
                             <td>
                                 <div class="flex-gap-8">
                                     <button type="button" class="btn btn-secondary btn-sm" title="Edit" onclick="editUser({{ user.id }})">

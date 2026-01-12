@@ -187,6 +187,9 @@ async def startup_event():
         with engine.begin() as conn:
             conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_activity TIMESTAMPTZ"))
             log("info", "System", "Ensured users.last_activity column exists", "")
+            # Ensure we have a column to store the last login IP address
+            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_ip INET"))
+            log("info", "System", "Ensured users.last_login_ip column exists", "")
     except Exception as e:
         log("warning", "System", f"Could not ensure users.last_activity column: {str(e)}", "")
 

@@ -29,8 +29,8 @@ def list_users(request: Request):
     users = query("""
         SELECT u.id, u.username, u.first_name, u.last_name, u.email,
                COALESCE(u.email_notifications, TRUE) as email_notifications,
-               u.enabled, u.last_login, u.created_at, u.last_activity,
-               COALESCE(NULLIF(STRING_AGG(r.display_name, ', '), ''), INITCAP(REGEXP_REPLACE(u.role, '[\\-_]+', ' ', 'g'))) as roles
+               u.enabled, u.last_login, u.created_at, u.last_activity, u.last_login_ip,
+               COALESCE(NULLIF(STRING_AGG(r.display_name, ', '), ''), INITCAP(REGEXP_REPLACE(u.role, '[\-_]+', ' ', 'g'))) as roles
         FROM users u
         LEFT JOIN user_roles ur ON u.id = ur.user_id
         LEFT JOIN roles r ON ur.role_id = r.id
@@ -206,7 +206,7 @@ def get_user(request: Request, user_id: int):
         user = query("""
             SELECT id, username, first_name, last_name, email, role, 
                    COALESCE(email_notifications, TRUE) as email_notifications,
-                   enabled, last_login, created_at 
+                   enabled, last_login, created_at, last_login_ip
             FROM users 
             WHERE id = :id
         """, {"id": user_id}).mappings().first()
@@ -245,6 +245,7 @@ def get_user(request: Request, user_id: int):
             "email_notifications": user["email_notifications"],
             "enabled": user["enabled"],
             "last_login": format_datetime(user["last_login"], current_user_id) if user["last_login"] else None,
+            "last_login_ip": user.get("last_login_ip") if user.get("last_login_ip") else None,
             "created_at": format_datetime(user["created_at"], current_user_id) if user["created_at"] else None
         }
     except Exception as e:

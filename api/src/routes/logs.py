@@ -91,7 +91,7 @@ def logs(
     
     # Get paginated logs
     logs_query = f"""
-        SELECT id, timestamp, level, source, message, details
+        SELECT id, timestamp, level, source, message, details, ip_address
         FROM logs
         {where_clause}
         ORDER BY timestamp DESC
@@ -104,6 +104,7 @@ def logs(
     rows = [dict(r) for r in rows]
     for r in rows:
         r["source_label"] = r.get("source")
+        r["ip_address"] = r.get("ip_address")
 
     # Get distinct sources for filter dropdown
     sources_query = "SELECT DISTINCT source FROM logs ORDER BY source"
