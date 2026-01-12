@@ -44,9 +44,6 @@ app.add_middleware(
     https_only=False  # Set to True in production with HTTPS
 )
 
-# Activity Tracking Middleware (registered after SessionMiddleware)
-app.add_middleware(BaseHTTPMiddleware, dispatch=activity_tracking_middleware)
-
 # Security Headers Middleware
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
@@ -120,6 +117,10 @@ async def activity_tracking_middleware(request: Request, call_next):
     
     response = await call_next(request)
     return response
+
+# Register activity middleware (after function is defined)
+app.add_middleware(BaseHTTPMiddleware, dispatch=activity_tracking_middleware)
+
 # Global Exception Handler
 @app.exception_handler(500)
 async def internal_error_handler(request: Request, exc: Exception):
