@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block page_title %}About Daygle Mail Archiver{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Application Description -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-info-circle"></i>
+                        <span>About Daygle Mail Archiver</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h3 class="mb-16">A Deterministic Email Archiving System</h3>
+                            <p class="mb-16">
+                                Daygle Mail Archiver is a comprehensive email ingestion and archiving system designed for long-term retention,
+                                auditability, and operational reliability. It ingests emails from multiple sources and provides a clean,
+                                modern interface for browsing, managing, and analyzing archived email data.
+                            </p>
+
+                            <h4 class="mb-12">Key Features</h4>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="mb-16">
+                                        <li><strong>Multi-Source Support:</strong> IMAP/IMAPS, Gmail API, Office 365 Graph API</li>
+                                        <li><strong>Automatic Archiving:</strong> Continuous polling with delta sync</li>
+                                        <li><strong>Full-Text Search:</strong> Search across subjects, senders, and recipients</li>
+                                        <li><strong>Raw Email Storage:</strong> Complete RFC822 format with compression</li>
+                                        <li><strong>Retention Policies:</strong> Automatic purging based on configurable rules</li>
+                                        <li><strong>Virus Scanning:</strong> Integrated ClamAV with configurable actions</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="mb-16">
+                                        <li><strong>User Management:</strong> Multi-user system with role-based access</li>
+                                        <li><strong>OAuth2 Integration:</strong> Secure authentication for Gmail and Office 365</li>
+                                        <li><strong>Dashboard Analytics:</strong> Visual charts and customizable widgets</li>
+                                        <li><strong>Advanced Reporting:</strong> Email volume trends and system health</li>
+                                        <li><strong>Email Alerts:</strong> Configurable SMTP notifications</li>
+                                        <li><strong>Audit Logging:</strong> Complete audit trail of all actions</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <p class="mb-16">
+                                Built with explicit, maintainable configuration and modular backend logic, Daygle Mail Archiver
+                                ensures predictable behavior across all environments while providing enterprise-grade email archiving capabilities.
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <img src="/static/daygle-light.png" alt="Daygle Mail Archiver Logo" style="max-width: 200px; height: auto; margin-bottom: 24px;">
+                                <div class="mb-24">
+                                    <h5>Version 1.0.0</h5>
+                                    <p class="text-muted">Built with FastAPI & Modern UI</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GitHub Links -->
+            <div class="card mt-24">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fab fa-github"></i>
+                        <span>Project Links</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-16">
+                                <h5><i class="fas fa-external-link-alt me-8"></i>Main Repository</h5>
+                                <p>Access the complete source code, contribute to development, and report issues.</p>
+                                <a href="https://github.com/daygle/daygle-mail-archiver" target="_blank" class="btn btn-primary">
+                                    <i class="fab fa-github me-8"></i>View on GitHub
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-16">
+                                <h5><i class="fas fa-book me-8"></i>Documentation</h5>
+                                <p>Complete installation guides, configuration options, and troubleshooting resources.</p>
+                                <a href="https://github.com/daygle/daygle-mail-archiver/wiki" target="_blank" class="btn btn-outline-primary">
+                                    <i class="fas fa-external-link-alt me-8"></i>View Wiki
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-16">
+                        <div class="col-md-6">
+                            <div class="mb-16">
+                                <h5><i class="fas fa-bug me-8"></i>Report Issues</h5>
+                                <p>Found a bug or have a feature request? Let us know on GitHub.</p>
+                                <a href="https://github.com/daygle/daygle-mail-archiver/issues" target="_blank" class="btn btn-outline-secondary">
+                                    <i class="fas fa-bug me-8"></i>Report Issue
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-16">
+                                <h5><i class="fas fa-code-branch me-8"></i>Contribute</h5>
+                                <p>Help improve the project by contributing code or documentation.</p>
+                                <a href="https://github.com/daygle/daygle-mail-archiver/pulls" target="_blank" class="btn btn-outline-secondary">
+                                    <i class="fas fa-code-pull-request me-8"></i>View Pull Requests
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- License & Credits -->
+            <div class="card mt-24">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-balance-scale"></i>
+                        <span>License & Credits</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>License</h5>
+                            <p>This project is licensed under the MIT License. See the <a href="https://github.com/daygle/daygle-mail-archiver/blob/main/LICENSE" target="_blank">LICENSE</a> file for details.</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Credits</h5>
+                            <p>Built with modern web technologies including FastAPI, Bootstrap, Chart.js, and Font Awesome.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
