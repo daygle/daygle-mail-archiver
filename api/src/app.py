@@ -35,9 +35,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Activity Tracking Middleware
-app.add_middleware(BaseHTTPMiddleware, dispatch=activity_tracking_middleware)
-
 # Session Middleware
 app.add_middleware(
     SessionMiddleware,
@@ -46,6 +43,9 @@ app.add_middleware(
     same_site="lax",
     https_only=False  # Set to True in production with HTTPS
 )
+
+# Activity Tracking Middleware (registered after SessionMiddleware)
+app.add_middleware(BaseHTTPMiddleware, dispatch=activity_tracking_middleware)
 
 # Security Headers Middleware
 @app.middleware("http")
