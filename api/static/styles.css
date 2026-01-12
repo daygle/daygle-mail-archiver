@@ -844,12 +844,19 @@ textarea.form-control {
     padding-top: 0 !important;
     padding-bottom: 0 !important;
     max-width: 300px;
+    /* Allow long permission names/badges to wrap within the cell */
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 /* Badges rendered inline so they don't affect table intrinsic sizing */
 .role-permissions .badge {
     display: inline-block;
     margin: 0.25rem 0.5rem 0.25rem 0; /* vertical then horizontal spacing */
+    /* Ensure badges themselves can break/wrap on narrow cells */
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 /* Defensive: if a permissions-grid accidentally appears inside a table, reset its visual background */
