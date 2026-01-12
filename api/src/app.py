@@ -65,12 +65,14 @@ async def activity_tracking_middleware(request: Request, call_next):
         return await call_next(request)
     
     print(f"DEBUG: session in scope: {'session' in request.scope}")
-    # Check if SessionMiddleware has been applied (session is available)
-    # if "session" not in request.scope:
-    #     return await call_next(request)
-    
-    # Check if user is logged in
-    user_id = request.session.get("user_id")
+    # If SessionMiddleware hasn't added a session to scope, skip activity tracking
+    if "session" not in request.scope:
+        print("DEBUG: session missing from request.scope, skipping activity tracking")
+        return await call_next(request)
+
+    # Access session safely from scope to avoid AssertionError
+    session = request.scope.get("session", {})
+    user_id = session.get("user_id")
     print(f"DEBUG: Middleware for {request.url.path}, user_id: {user_id}")
     if user_id:
         try:
