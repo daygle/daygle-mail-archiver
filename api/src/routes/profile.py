@@ -7,6 +7,7 @@ from utils.db import query, execute
 from utils.logger import log
 from utils.templates import templates
 from utils.permissions import PermissionChecker
+from utils.security import is_admin
 from fastapi import Body
 
 router = APIRouter()
@@ -264,7 +265,7 @@ def update_user_settings(request: Request, page_size: int = Form(...), date_form
                 changed_settings.append(f"timezone={timezone}")
             if current_settings.get("theme_preference") != theme:
                 changed_settings.append(f"theme={theme}")
-            if user_role == "administrator" and current_settings["email_notifications"] != email_notifications:
+            if is_admin(request) and current_settings["email_notifications"] != email_notifications:
                 changed_settings.append(f"email_notifications={email_notifications}")
 
         if not changed_settings:
@@ -272,12 +273,12 @@ def update_user_settings(request: Request, page_size: int = Form(...), date_form
             return RedirectResponse("/user-settings", status_code=303)
 
         # Only update email_notifications for administrators
-        if user_role == "administrator":
+        if is_admin(request):
             execute("UPDATE users SET page_size = :ps, date_format = :df, time_format = :tf, timezone = :tz, theme_preference = :theme, email_notifications = :en WHERE id = :id", 
-                    {"ps": page_size, "df": date_format, "tf": time_format, "tz": timezone, "theme": theme, "en": email_notifications, "id": user_id})
+                {"ps": page_size, "df": date_format, "tf": time_format, "tz": timezone, "theme": theme, "en": email_notifications, "id": user_id})
         else:
             execute("UPDATE users SET page_size = :ps, date_format = :df, time_format = :tf, timezone = :tz, theme_preference = :theme WHERE id = :id", 
-                    {"ps": page_size, "df": date_format, "tf": time_format, "tz": timezone, "theme": theme, "id": user_id})
+                {"ps": page_size, "df": date_format, "tf": time_format, "tz": timezone, "theme": theme, "id": user_id})
 
         # Update session variables
         request.session["page_size"] = page_size

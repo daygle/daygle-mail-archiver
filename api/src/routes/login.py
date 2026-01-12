@@ -34,11 +34,17 @@ def load_user_permissions(user_id: int) -> List[str]:
         # Fallback: Check old role field for backward compatibility
         user = query("SELECT role FROM users WHERE id = :user_id", {"user_id": user_id}).first()
         if user and user["role"]:
-            if user["role"] == "administrator":
+            try:
+                from utils.security import normalize_role_str
+                norm = normalize_role_str(user.get("role"))
+            except Exception:
+                norm = user.get("role")
+
+            if norm == "administrator":
                 # Administrator gets all permissions
                 all_permissions = query("SELECT name FROM permissions").mappings().all()
                 return [p["name"] for p in all_permissions]
-            elif user["role"] == "read_only":
+            elif norm == "read_only":
                 # Read-only gets basic view permissions
                 return [
                     "view_dashboard", "view_emails", "view_reports",
@@ -256,7 +262,8 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
             request.session["date_format"] = user["date_format"] or "%d/%m/%Y"
             request.session["time_format"] = user["time_format"] or "%H:%M"
             request.session["timezone"] = user["timezone"] or "Australia/Melbourne"
-            request.session["role"] = user["role"] or "administrator"
+            from utils.security import normalize_role_str
+            request.session["role"] = normalize_role_str(user["role"] or "administrator")
             request.session["theme"] = user.get("theme_preference") or "system"
             # Load global default theme into session for use when user preference == 'system'
             try:

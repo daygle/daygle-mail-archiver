@@ -45,10 +45,16 @@ class PermissionChecker:
             if not self._permissions_cache:
                 user = query("SELECT role FROM users WHERE id = :user_id", {"user_id": user_id}).first()
                 if user and user.get("role"):
-                    if user["role"] == "administrator":
+                    # Normalize DB role string to canonical form
+                    try:
+                        from utils.security import normalize_role_str
+                        norm = normalize_role_str(user.get("role"))
+                    except Exception:
+                        norm = user.get("role")
+                    if norm == "administrator":
                         all_permissions = query("SELECT name FROM permissions").mappings().all()
                         self._permissions_cache = [p["name"] for p in all_permissions]
-                    elif user["role"] == "read_only":
+                    elif norm == "read_only":
                         # Read-only legacy role gets a limited set of view permissions
                         self._permissions_cache = [
                             "view_dashboard", "view_emails", "view_reports",
