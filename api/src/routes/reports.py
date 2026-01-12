@@ -69,13 +69,20 @@ def reports_page(request: Request):
         return RedirectResponse("/login", status_code=303)
 
     flash = request.session.pop("flash", None)
+    # Provide list of fetch accounts for filtering reports
+    try:
+        accounts_rows = query("SELECT name FROM fetch_accounts ORDER BY name").mappings().all()
+        accounts = [r["name"] for r in accounts_rows]
+    except Exception:
+        accounts = []
+
     return templates.TemplateResponse(
         "reports.html",
-        {"request": request, "flash": flash}
+        {"request": request, "flash": flash, "accounts": accounts}
     )
 
 @router.get("/api/reports/email-volume")
-def email_volume_report(request: Request, start_date: str = None, end_date: str = None):
+def email_volume_report(request: Request, start_date: str = None, end_date: str = None, account: str = None):
     """Get email volume report data"""
     if not require_login(request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
@@ -117,7 +124,8 @@ def email_volume_report(request: Request, start_date: str = None, end_date: str 
             period = "monthly"
             group_by = "DATE_TRUNC('month', created_at)"
 
-        results = query(f"""
+        # Build query with optional account filter
+        query_str = f"""
             SELECT
                 {group_by} as period_start,
                 COUNT(*) as email_count,
@@ -125,9 +133,15 @@ def email_volume_report(request: Request, start_date: str = None, end_date: str 
                 COUNT(DISTINCT source) as sources_count
             FROM emails
             WHERE created_at >= :start_date AND created_at <= :end_date
-            GROUP BY {group_by}
-            ORDER BY period_start
-        """, {"start_date": start_dt, "end_date": end_dt}).mappings().all()
+        """
+        params = {"start_date": start_dt, "end_date": end_dt}
+        if account:
+            query_str += " AND source = :account"
+            params["account"] = account
+
+        query_str += f" GROUP BY {group_by} ORDER BY period_start"
+
+        results = query(query_str, params).mappings().all()
 
         labels = []
         email_counts = []
@@ -496,7 +510,7 @@ def system_health_report(request: Request, start_date: str = None, end_date: str
 
 
 @router.get("/api/reports/av-stats")
-def av_stats_report(request: Request, start_date: str = None, end_date: str = None):
+def av_stats_report(request: Request, start_date: str = None, end_date: str = None, account: str = None):
     """Get anti-virus statistics report data"""
     # Temporarily disable auth for testing
     # if not require_login(request):
@@ -533,7 +547,7 @@ def av_stats_report(request: Request, start_date: str = None, end_date: str = No
         group_by = "DATE(created_at)"
 
         # Get AV statistics
-        av_results = query(f"""
+        query_str = f"""
             SELECT
                 {group_by} as period_start,
                 COUNT(CASE WHEN NOT virus_detected THEN 1 END) as clean_count,
@@ -541,19 +555,30 @@ def av_stats_report(request: Request, start_date: str = None, end_date: str = No
                 0 as rejected_count
             FROM emails
             WHERE created_at >= :start_date AND created_at <= :end_date
-            GROUP BY {group_by}
-            ORDER BY period_start
-        """, {"start_date": start_dt, "end_date": end_dt}).mappings().all()
+        """
+        params = {"start_date": start_dt, "end_date": end_dt}
+        if account:
+            query_str += " AND source = :account"
+            params["account"] = account
+        query_str += f" GROUP BY {group_by} ORDER BY period_start"
+
+        av_results = query(query_str, params).mappings().all()
 
         # Get total counts for the period
-        total_results = query("""
+        total_query = """
             SELECT
                 COUNT(CASE WHEN NOT virus_detected THEN 1 END) as total_clean,
                 COUNT(CASE WHEN virus_detected THEN 1 END) as total_quarantined,
                 0 as total_rejected
             FROM emails
             WHERE created_at >= :start_date AND created_at <= :end_date
-        """, {"start_date": start_dt, "end_date": end_dt}).mappings().first()
+        """
+        total_params = {"start_date": start_dt, "end_date": end_dt}
+        if account:
+            total_query += " AND source = :account"
+            total_params["account"] = account
+
+        total_results = query(total_query, total_params).mappings().first()
 
         labels = []
         clean_counts = []
@@ -598,7 +623,7 @@ def av_stats_report(request: Request, start_date: str = None, end_date: str = No
 
 
 @router.get("/api/reports/storage-utilization")
-def storage_utilization_report(request: Request, start_date: str = None, end_date: str = None):
+def storage_utilization_report(request: Request, start_date: str = None, end_date: str = None, account: str = None):
     """Get storage utilization report data"""
     if not require_login(request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
@@ -641,7 +666,7 @@ def storage_utilization_report(request: Request, start_date: str = None, end_dat
             group_by = "DATE_TRUNC('month', created_at)"
 
         # Storage growth over time
-        storage_results = query(f"""
+        storage_query = f"""
             SELECT
                 {group_by} as period_start,
                 COUNT(*) as email_count,
@@ -649,9 +674,14 @@ def storage_utilization_report(request: Request, start_date: str = None, end_dat
                 AVG(LENGTH(raw_email)) as avg_size_bytes
             FROM emails
             WHERE created_at >= :start_date AND created_at <= :end_date
-            GROUP BY {group_by}
-            ORDER BY period_start
-        """, {"start_date": start_dt, "end_date": end_dt}).mappings().all()
+        """
+        params = {"start_date": start_dt, "end_date": end_dt}
+        if account:
+            storage_query += " AND source = :account"
+            params["account"] = account
+        storage_query += f" GROUP BY {group_by} ORDER BY period_start"
+
+        storage_results = query(storage_query, params).mappings().all()
 
         storage_labels = []
         storage_sizes_mb = []
@@ -678,7 +708,7 @@ def storage_utilization_report(request: Request, start_date: str = None, end_dat
             avg_sizes_kb.append(round(avg_bytes / 1024, 2))
 
         # Overall statistics
-        overall_stats = query("""
+        overall_query = """
             SELECT
                 COUNT(*) as total_emails,
                 SUM(LENGTH(raw_email)) as total_size_bytes,
@@ -687,19 +717,30 @@ def storage_utilization_report(request: Request, start_date: str = None, end_dat
                 COUNT(CASE WHEN compressed THEN 1 END) as compressed_count,
                 COUNT(*) as total_count
             FROM emails
-        """).mappings().first()
+        """
+        overall_params = {}
+        if account:
+            overall_query += " WHERE source = :account"
+            overall_params["account"] = account
+
+        overall_stats = query(overall_query, overall_params).mappings().first()
 
         # Largest emails
-        largest_emails = query("""
+        largest_query = """
             SELECT
                 subject,
                 sender,
                 LENGTH(raw_email) as size_bytes,
                 created_at
             FROM emails
-            ORDER BY LENGTH(raw_email) DESC
-            LIMIT 10
-        """).mappings().all()
+        """
+        largest_params = {}
+        if account:
+            largest_query += " WHERE source = :account"
+            largest_params["account"] = account
+        largest_query += " ORDER BY LENGTH(raw_email) DESC LIMIT 10"
+
+        largest_emails = query(largest_query, largest_params).mappings().all()
 
         # Compression ratio (simplified - assumes original size would be ~1.5x compressed size)
         total_emails = int(overall_stats["total_count"] or 0)
@@ -743,7 +784,7 @@ def storage_utilization_report(request: Request, start_date: str = None, end_dat
 
 
 @router.get("/api/reports/retention-policy")
-def retention_policy_report(request: Request, start_date: str = None, end_date: str = None):
+def retention_policy_report(request: Request, start_date: str = None, end_date: str = None, account: str = None):
     """Get retention policy effectiveness report data"""
     if not require_login(request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
@@ -774,7 +815,7 @@ def retention_policy_report(request: Request, start_date: str = None, end_date: 
         date_format = get_user_date_format(request, date_only=True)
 
         # Deletion statistics
-        deletion_results = query("""
+        deletion_query = """
             SELECT
                 deletion_date,
                 deletion_type,
@@ -782,9 +823,14 @@ def retention_policy_report(request: Request, start_date: str = None, end_date: 
                 SUM(CASE WHEN deleted_from_mail_server THEN count ELSE 0 END) as deleted_from_server
             FROM deletion_stats
             WHERE deletion_date >= :start_date AND deletion_date <= :end_date
-            GROUP BY deletion_date, deletion_type
-            ORDER BY deletion_date
-        """, {"start_date": start_dt.date(), "end_date": end_dt.date()}).mappings().all()
+        """
+        deletion_params = {"start_date": start_dt.date(), "end_date": end_dt.date()}
+        if account:
+            deletion_query += " AND source = :account"
+            deletion_params["account"] = account
+        deletion_query += " GROUP BY deletion_date, deletion_type ORDER BY deletion_date"
+
+        deletion_results = query(deletion_query, deletion_params).mappings().all()
 
         # Organise deletion data
         deletion_labels = []
@@ -1155,14 +1201,14 @@ def security_access_report(request: Request, start_date: str = None, end_date: s
 
 
 @router.get("/api/reports/data-quality")
-def data_quality_report(request: Request):
+def data_quality_report(request: Request, account: str = None):
     """Get data quality report data"""
     if not require_login(request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
     try:
         # Email completeness metrics
-        completeness_results = query("""
+        completeness_query = """
             SELECT
                 COUNT(*) as total_emails,
                 COUNT(CASE WHEN subject IS NULL OR subject = '' THEN 1 END) as missing_subjects,
@@ -1171,10 +1217,16 @@ def data_quality_report(request: Request):
                 COUNT(CASE WHEN virus_scanned = FALSE THEN 1 END) as unscanned_emails,
                 COUNT(CASE WHEN virus_detected = TRUE THEN 1 END) as virus_detected
             FROM emails
-        """).mappings().first()
+        """
+        completeness_params = {}
+        if account:
+            completeness_query += " WHERE source = :account"
+            completeness_params["account"] = account
+
+        completeness_results = query(completeness_query, completeness_params).mappings().first()
 
         # Size distribution
-        size_results = query("""
+        size_query = """
             SELECT
                 COUNT(CASE WHEN LENGTH(raw_email) < 1024 THEN 1 END) as under_1kb,
                 COUNT(CASE WHEN LENGTH(raw_email) >= 1024 AND LENGTH(raw_email) < 10240 THEN 1 END) as kb_1_10,
@@ -1182,19 +1234,29 @@ def data_quality_report(request: Request):
                 COUNT(CASE WHEN LENGTH(raw_email) >= 102400 AND LENGTH(raw_email) < 1048576 THEN 1 END) as kb_100_1024,
                 COUNT(CASE WHEN LENGTH(raw_email) >= 1048576 THEN 1 END) as over_1mb
             FROM emails
-        """).mappings().first()
+        """
+        size_params = {}
+        if account:
+            size_query += " WHERE source = :account"
+            size_params["account"] = account
+
+        size_results = query(size_query, size_params).mappings().first()
 
         # Duplicate detection (simplified - same subject, sender, date within 1 minute)
-        duplicate_results = query("""
+        duplicate_query = """
             SELECT COUNT(*) as potential_duplicates
             FROM (
                 SELECT subject, sender, DATE(created_at), COUNT(*) as dup_count
                 FROM emails
                 WHERE subject IS NOT NULL AND sender IS NOT NULL
-                GROUP BY subject, sender, DATE(created_at)
-                HAVING COUNT(*) > 1
-            ) duplicates
-        """).mappings().first()
+        """
+        duplicate_params = {}
+        if account:
+            duplicate_query += " AND source = :account"
+            duplicate_params["account"] = account
+        duplicate_query += " GROUP BY subject, sender, DATE(created_at) HAVING COUNT(*) > 1 ) duplicates"
+
+        duplicate_results = query(duplicate_query, duplicate_params).mappings().first()
 
         # Processing issues
         issue_results = query("""

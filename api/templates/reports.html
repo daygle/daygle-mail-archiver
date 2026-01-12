@@ -4,26 +4,34 @@
 
 {% block content %}
 <div class="container-fluid">
+    <!-- Global Report Controls -->
+    <div class="report-section">
+        <div class="report-header">
+            <h2 class="report-title">Report Filters</h2>
+            <div class="report-controls">
+                <select id="globalAccount" class="form-select form-select-sm me-2">
+                    <option value="">All Accounts</option>
+                    {% for a in accounts %}
+                    <option value="{{ a }}">{{ a }}</option>
+                    {% endfor %}
+                </select>
+                <div class="date-range-controls">
+                    <label for="globalStartDate" class="form-label me-2">From:</label>
+                    <input type="date" id="globalStartDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
+                    <label for="globalEndDate" class="form-label mx-2">To:</label>
+                    <input type="date" id="globalEndDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
+                    <button id="refreshAllReports" class="btn btn-outline-primary btn-sm ms-2">
+                        <i class="fas fa-sync-alt"></i> Refresh All
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Email Volume Report -->
     <div class="report-section">
         <div class="report-header">
             <h2 class="report-title">Email Volume Report</h2>
-            <div class="report-controls">
-                <select id="emailVolumePeriod" class="form-select form-select-sm me-2">
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                </select>
-                <div class="date-range-controls">
-                    <label for="emailVolumeStartDate" class="form-label me-2">From:</label>
-                    <input type="date" id="emailVolumeStartDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
-                    <label for="emailVolumeEndDate" class="form-label mx-2">To:</label>
-                    <input type="date" id="emailVolumeEndDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
-                    <button id="refreshEmailVolume" class="btn btn-outline-primary btn-sm ms-2">
-                        <i class="fas fa-sync-alt"></i> Refresh
-                    </button>
-                </div>
-            </div>
         </div>
         <div class="report-card">
             <div class="chart-container">
@@ -36,17 +44,6 @@
     <div class="report-section">
         <div class="report-header">
             <h2 class="report-title">Account Activity Report</h2>
-            <div class="report-controls">
-                <div class="date-range-controls">
-                    <label for="accountActivityStartDate" class="form-label me-2">From:</label>
-                    <input type="date" id="accountActivityStartDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
-                    <label for="accountActivityEndDate" class="form-label mx-2">To:</label>
-                    <input type="date" id="accountActivityEndDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
-                    <button id="refreshAccountActivity" class="btn btn-outline-primary btn-sm ms-2">
-                        <i class="fas fa-sync-alt"></i> Refresh
-                    </button>
-                </div>
-            </div>
         </div>
         <div class="report-card">
             <div class="metric-grid">
@@ -89,17 +86,6 @@
     <div class="report-section">
         <div class="report-header">
             <h2 class="report-title">Anti-Virus Statistics</h2>
-            <div class="report-controls">
-                <div class="date-range-controls">
-                    <label for="avStartDate" class="form-label me-2">From:</label>
-                    <input type="date" id="avStartDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
-                    <label for="avEndDate" class="form-label mx-2">To:</label>
-                    <input type="date" id="avEndDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
-                    <button id="refreshAVStats" class="btn btn-outline-primary btn-sm ms-2">
-                        <i class="fas fa-sync-alt"></i> Refresh
-                    </button>
-                </div>
-            </div>
         </div>
         <div class="report-card">
             <div class="metric-grid">
@@ -126,17 +112,6 @@
     <div class="report-section">
         <div class="report-header">
             <h2 class="report-title">System Health Report</h2>
-            <div class="report-controls">
-                <div class="date-range-controls">
-                    <label for="systemHealthStartDate" class="form-label me-2">From:</label>
-                    <input type="date" id="systemHealthStartDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
-                    <label for="systemHealthEndDate" class="form-label mx-2">To:</label>
-                    <input type="date" id="systemHealthEndDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
-                    <button id="refreshSystemHealth" class="btn btn-outline-primary btn-sm ms-2">
-                        <i class="fas fa-sync-alt"></i> Refresh
-                    </button>
-                </div>
-            </div>
         </div>
         <div class="report-card">
             <div class="metric-grid">
@@ -159,17 +134,6 @@
     <div class="report-section">
         <div class="report-header">
             <h2 class="report-title">Storage Utilization Report</h2>
-            <div class="report-controls">
-                <div class="date-range-controls">
-                    <label for="storageStartDate" class="form-label me-2">From:</label>
-                    <input type="date" id="storageStartDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
-                    <label for="storageEndDate" class="form-label mx-2">To:</label>
-                    <input type="date" id="storageEndDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
-                    <button id="refreshStorageUtilization" class="btn btn-outline-primary btn-sm ms-2">
-                        <i class="fas fa-sync-alt"></i> Refresh
-                    </button>
-                </div>
-            </div>
         </div>
         <div class="report-card">
             <div class="metric-grid">
@@ -215,17 +179,6 @@
     <div class="report-section">
         <div class="report-header">
             <h2 class="report-title">Retention Policy Effectiveness</h2>
-            <div class="report-controls">
-                <div class="date-range-controls">
-                    <label for="retentionStartDate" class="form-label me-2">From:</label>
-                    <input type="date" id="retentionStartDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
-                    <label for="retentionEndDate" class="form-label mx-2">To:</label>
-                    <input type="date" id="retentionEndDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
-                    <button id="refreshRetentionPolicy" class="btn btn-outline-primary btn-sm ms-2">
-                        <i class="fas fa-sync-alt"></i> Refresh
-                    </button>
-                </div>
-            </div>
         </div>
         <div class="report-card">
             <div class="metric-grid">
@@ -275,17 +228,6 @@
     <div class="report-section">
         <div class="report-header">
             <h2 class="report-title">System Performance Report</h2>
-            <div class="report-controls">
-                <div class="date-range-controls">
-                    <label for="performanceStartDate" class="form-label me-2">From:</label>
-                    <input type="date" id="performanceStartDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
-                    <label for="performanceEndDate" class="form-label mx-2">To:</label>
-                    <input type="date" id="performanceEndDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
-                    <button id="refreshSystemPerformance" class="btn btn-outline-primary btn-sm ms-2">
-                        <i class="fas fa-sync-alt"></i> Refresh
-                    </button>
-                </div>
-            </div>
         </div>
         <div class="report-card">
             <div class="metric-grid">
@@ -315,17 +257,6 @@
     <div class="report-section" id="securityReportSection" style="display: none;">
         <div class="report-header">
             <h2 class="report-title">Security & Access Report</h2>
-            <div class="report-controls">
-                <div class="date-range-controls">
-                    <label for="securityStartDate" class="form-label me-2">From:</label>
-                    <input type="date" id="securityStartDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
-                    <label for="securityEndDate" class="form-label mx-2">To:</label>
-                    <input type="date" id="securityEndDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
-                    <button id="refreshSecurityAccess" class="btn btn-outline-primary btn-sm ms-2">
-                        <i class="fas fa-sync-alt"></i> Refresh
-                    </button>
-                </div>
-            </div>
         </div>
         <div class="report-card">
             <div class="metric-grid">
@@ -387,9 +318,6 @@
     <div class="report-section">
         <div class="report-header">
             <h2 class="report-title">Data Quality Report</h2>
-            <button id="refreshDataQuality" class="btn btn-outline-primary btn-sm ms-2">
-                <i class="fas fa-sync-alt"></i> Refresh
-            </button>
         </div>
         <div class="report-card">
             <div class="metric-grid">
@@ -657,22 +585,10 @@ function initializeCharts() {
 
 // Load all reports
 function loadAllReports() {
-    loadEmailVolumeReport();
-    loadAccountActivityReport();
-    loadSystemHealthReport();
-    loadAVStatsReport();
-    loadStorageUtilizationReport();
-    loadRetentionPolicyReport();
-    loadSystemPerformanceReport();
-    loadDataQualityReport();
-}
-
-// Email Volume Report
-function loadEmailVolumeReport() {
-    let startDate = document.getElementById('emailVolumeStartDate').value;
-    let endDate = document.getElementById('emailVolumeEndDate').value;
-
-    // Set default dates if not provided
+    // Set default dates on global controls if not already set
+    let startDate = document.getElementById('globalStartDate').value;
+    let endDate = document.getElementById('globalEndDate').value;
+    
     if (!startDate || !endDate) {
         const today = new Date();
         const thirtyDaysAgo = new Date();
@@ -681,23 +597,45 @@ function loadEmailVolumeReport() {
         
         if (!startDate) {
             startDate = formatDate(thirtyDaysAgo);
-            document.getElementById('emailVolumeStartDate').value = startDate;
+            document.getElementById('globalStartDate').value = startDate;
         }
         if (!endDate) {
             endDate = formatDate(today);
-            document.getElementById('emailVolumeEndDate').value = endDate;
+            document.getElementById('globalEndDate').value = endDate;
         }
     }
 
+    loadEmailVolumeReport();
+    loadAccountActivityReport();
+    loadSystemHealthReport();
+    loadAVStatsReport();
+    loadStorageUtilizationReport();
+    loadRetentionPolicyReport();
+    loadSystemPerformanceReport();
+    loadSecurityAccessReport();
+    loadDataQualityReport();
+}
+
+// Email Volume Report
+function loadEmailVolumeReport() {
+    let startDate = document.getElementById('globalStartDate').value;
+    let endDate = document.getElementById('globalEndDate').value;
+    let account = document.getElementById('globalAccount').value;
+
     // Validate date range
     if (new Date(startDate) > new Date(endDate)) {
-        showReportMessageForInput(document.getElementById('emailVolumeStartDate'), 'Invalid date range: start date must be on or before end date', 'warning');
+        showReportMessageForInput(document.getElementById('globalStartDate'), 'Invalid date range: start date must be on or before end date', 'warning');
         return;
     } else {
-        clearReportMessageForInput(document.getElementById('emailVolumeStartDate'));
+        clearReportMessageForInput(document.getElementById('globalStartDate'));
     }
 
-    fetch(`/api/reports/email-volume?start_date=${startDate}&end_date=${endDate}`)
+    let url = `/api/reports/email-volume?start_date=${startDate}&end_date=${endDate}`;
+    if (account) {
+        url += `&account=${encodeURIComponent(account)}`;
+    }
+
+    fetch(url)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -730,32 +668,15 @@ function loadEmailVolumeReport() {
 
 // Account Activity Report
 function loadAccountActivityReport() {
-    let startDate = document.getElementById('accountActivityStartDate').value;
-    let endDate = document.getElementById('accountActivityEndDate').value;
-
-    // Set default dates if not provided
-    if (!startDate || !endDate) {
-        const today = new Date();
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(today.getDate() - 30);
-        const formatDate = (date) => date.toISOString().split('T')[0];
-        
-        if (!startDate) {
-            startDate = formatDate(thirtyDaysAgo);
-            document.getElementById('accountActivityStartDate').value = startDate;
-        }
-        if (!endDate) {
-            endDate = formatDate(today);
-            document.getElementById('accountActivityEndDate').value = endDate;
-        }
-    }
+    let startDate = document.getElementById('globalStartDate').value;
+    let endDate = document.getElementById('globalEndDate').value;
 
     // Validate date range
     if (new Date(startDate) > new Date(endDate)) {
-        showReportMessageForInput(document.getElementById('accountActivityStartDate'), 'Invalid date range: start date must be on or before end date', 'warning');
+        showReportMessageForInput(document.getElementById('globalStartDate'), 'Invalid date range: start date must be on or before end date', 'warning');
         return;
     } else {
-        clearReportMessageForInput(document.getElementById('accountActivityStartDate'));
+        clearReportMessageForInput(document.getElementById('globalStartDate'));
     }
 
     fetch(`/api/reports/account-activity?start_date=${startDate}&end_date=${endDate}`)
@@ -840,32 +761,15 @@ function loadAccountActivityReport() {
 
 // System Health Report
 function loadSystemHealthReport() {
-    let startDate = document.getElementById('systemHealthStartDate').value;
-    let endDate = document.getElementById('systemHealthEndDate').value;
-
-    // Set default dates if not provided
-    if (!startDate || !endDate) {
-        const today = new Date();
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(today.getDate() - 30);
-        const formatDate = (date) => date.toISOString().split('T')[0];
-        
-        if (!startDate) {
-            startDate = formatDate(thirtyDaysAgo);
-            document.getElementById('systemHealthStartDate').value = startDate;
-        }
-        if (!endDate) {
-            endDate = formatDate(today);
-            document.getElementById('systemHealthEndDate').value = endDate;
-        }
-    }
+    let startDate = document.getElementById('globalStartDate').value;
+    let endDate = document.getElementById('globalEndDate').value;
 
     // Validate date range
     if (new Date(startDate) > new Date(endDate)) {
-        showReportMessageForInput(document.getElementById('systemHealthStartDate'), 'Invalid date range: start date must be on or before end date', 'warning');
+        showReportMessageForInput(document.getElementById('globalStartDate'), 'Invalid date range: start date must be on or before end date', 'warning');
         return;
     } else {
-        clearReportMessageForInput(document.getElementById('systemHealthStartDate'));
+        clearReportMessageForInput(document.getElementById('globalStartDate'));
     }
 
     fetch(`/api/reports/system-health?start_date=${startDate}&end_date=${endDate}`)
@@ -908,35 +812,24 @@ function loadSystemHealthReport() {
 
 // Anti-Virus Statistics Report
 function loadAVStatsReport() {
-    let startDate = document.getElementById('avStartDate').value;
-    let endDate = document.getElementById('avEndDate').value;
-
-    // Set default dates if not provided
-    if (!startDate || !endDate) {
-        const today = new Date();
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(today.getDate() - 30);
-        const formatDate = (date) => date.toISOString().split('T')[0];
-        
-        if (!startDate) {
-            startDate = formatDate(thirtyDaysAgo);
-            document.getElementById('avStartDate').value = startDate;
-        }
-        if (!endDate) {
-            endDate = formatDate(today);
-            document.getElementById('avEndDate').value = endDate;
-        }
-    }
+    let startDate = document.getElementById('globalStartDate').value;
+    let endDate = document.getElementById('globalEndDate').value;
+    let account = document.getElementById('globalAccount').value;
 
     // Validate date range
     if (new Date(startDate) > new Date(endDate)) {
-        showReportMessageForInput(document.getElementById('avStartDate'), 'Invalid date range: start date must be on or before end date', 'warning');
+        showReportMessageForInput(document.getElementById('globalStartDate'), 'Invalid date range: start date must be on or before end date', 'warning');
         return;
     } else {
-        clearReportMessageForInput(document.getElementById('avStartDate'));
+        clearReportMessageForInput(document.getElementById('globalStartDate'));
     }
 
-    fetch(`/api/reports/av-stats?start_date=${startDate}&end_date=${endDate}`)
+    let url = `/api/reports/av-stats?start_date=${startDate}&end_date=${endDate}`;
+    if (account) {
+        url += `&account=${encodeURIComponent(account)}`;
+    }
+
+    fetch(url)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -980,37 +873,28 @@ function loadAVStatsReport() {
 
 // Load Storage Utilization Report
 function loadStorageUtilizationReport() {
-    let startDate = document.getElementById('storageStartDate').value;
-    let endDate = document.getElementById('storageEndDate').value;
-    
-    // Set default dates if not provided
-    if (!startDate || !endDate) {
-        const today = new Date();
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(today.getDate() - 30);
-        const formatDate = (date) => date.toISOString().split('T')[0];
-        
-        if (!startDate) {
-            startDate = formatDate(thirtyDaysAgo);
-            document.getElementById('storageStartDate').value = startDate;
-        }
-        if (!endDate) {
-            endDate = formatDate(today);
-            document.getElementById('storageEndDate').value = endDate;
-        }
-    }
+    let startDate = document.getElementById('globalStartDate').value;
+    let endDate = document.getElementById('globalEndDate').value;
+    let account = document.getElementById('globalAccount').value;
     
     // Validate date range
     if (new Date(startDate) > new Date(endDate)) {
-        showReportMessageForInput(document.getElementById('storageStartDate'), 'Invalid date range: start date must be on or before end date', 'warning');
+        showReportMessageForInput(document.getElementById('globalStartDate'), 'Invalid date range: start date must be on or before end date', 'warning');
         return;
     } else {
-        clearReportMessageForInput(document.getElementById('storageStartDate'));
+        clearReportMessageForInput(document.getElementById('globalStartDate'));
     }
     
     let url = '/api/reports/storage-utilization';
+    let params = [];
     if (startDate && endDate) {
-        url += `?start_date=${startDate}&end_date=${endDate}`;
+        params.push(`start_date=${startDate}&end_date=${endDate}`);
+    }
+    if (account) {
+        params.push(`account=${encodeURIComponent(account)}`);
+    }
+    if (params.length > 0) {
+        url += '?' + params.join('&');
     }
     
     fetch(url)
@@ -1075,37 +959,28 @@ function loadStorageUtilizationReport() {
 
 // Load Retention Policy Report
 function loadRetentionPolicyReport() {
-    let startDate = document.getElementById('retentionStartDate').value;
-    let endDate = document.getElementById('retentionEndDate').value;
-    
-    // Set default dates if not provided
-    if (!startDate || !endDate) {
-        const today = new Date();
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(today.getDate() - 30);
-        const formatDate = (date) => date.toISOString().split('T')[0];
-        
-        if (!startDate) {
-            startDate = formatDate(thirtyDaysAgo);
-            document.getElementById('retentionStartDate').value = startDate;
-        }
-        if (!endDate) {
-            endDate = formatDate(today);
-            document.getElementById('retentionEndDate').value = endDate;
-        }
-    }
+    let startDate = document.getElementById('globalStartDate').value;
+    let endDate = document.getElementById('globalEndDate').value;
+    let account = document.getElementById('globalAccount').value;
     
     // Validate date range
     if (new Date(startDate) > new Date(endDate)) {
-        showReportMessageForInput(document.getElementById('retentionStartDate'), 'Invalid date range: start date must be on or before end date', 'warning');
+        showReportMessageForInput(document.getElementById('globalStartDate'), 'Invalid date range: start date must be on or before end date', 'warning');
         return;
     } else {
-        clearReportMessageForInput(document.getElementById('retentionStartDate'));
+        clearReportMessageForInput(document.getElementById('globalStartDate'));
     }
     
     let url = '/api/reports/retention-policy';
+    let params = [];
     if (startDate && endDate) {
-        url += `?start_date=${startDate}&end_date=${endDate}`;
+        params.push(`start_date=${startDate}&end_date=${endDate}`);
+    }
+    if (account) {
+        params.push(`account=${encodeURIComponent(account)}`);
+    }
+    if (params.length > 0) {
+        url += '?' + params.join('&');
     }
     
     fetch(url)
@@ -1176,32 +1051,15 @@ function loadRetentionPolicyReport() {
 
 // Load System Performance Report
 function loadSystemPerformanceReport() {
-    let startDate = document.getElementById('performanceStartDate').value;
-    let endDate = document.getElementById('performanceEndDate').value;
-    
-    // Set default dates if not provided
-    if (!startDate || !endDate) {
-        const today = new Date();
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(today.getDate() - 30);
-        const formatDate = (date) => date.toISOString().split('T')[0];
-        
-        if (!startDate) {
-            startDate = formatDate(thirtyDaysAgo);
-            document.getElementById('performanceStartDate').value = startDate;
-        }
-        if (!endDate) {
-            endDate = formatDate(today);
-            document.getElementById('performanceEndDate').value = endDate;
-        }
-    }
+    let startDate = document.getElementById('globalStartDate').value;
+    let endDate = document.getElementById('globalEndDate').value;
     
     // Validate date range
     if (new Date(startDate) > new Date(endDate)) {
-        showReportMessageForInput(document.getElementById('performanceStartDate'), 'Invalid date range: start date must be on or before end date', 'warning');
+        showReportMessageForInput(document.getElementById('globalStartDate'), 'Invalid date range: start date must be on or before end date', 'warning');
         return;
     } else {
-        clearReportMessageForInput(document.getElementById('performanceStartDate'));
+        clearReportMessageForInput(document.getElementById('globalStartDate'));
     }
     
     let url = '/api/reports/system-performance';
@@ -1280,32 +1138,15 @@ function loadSystemPerformanceReport() {
 
 // Load Security & Access Report
 function loadSecurityAccessReport() {
-    let startDate = document.getElementById('securityStartDate').value;
-    let endDate = document.getElementById('securityEndDate').value;
-    
-    // Set default dates if not provided
-    if (!startDate || !endDate) {
-        const today = new Date();
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(today.getDate() - 30);
-        const formatDate = (date) => date.toISOString().split('T')[0];
-        
-        if (!startDate) {
-            startDate = formatDate(thirtyDaysAgo);
-            document.getElementById('securityStartDate').value = startDate;
-        }
-        if (!endDate) {
-            endDate = formatDate(today);
-            document.getElementById('securityEndDate').value = endDate;
-        }
-    }
+    let startDate = document.getElementById('globalStartDate').value;
+    let endDate = document.getElementById('globalEndDate').value;
     
     // Validate date range
     if (new Date(startDate) > new Date(endDate)) {
-        showReportMessageForInput(document.getElementById('securityStartDate'), 'Invalid date range: start date must be on or before end date', 'warning');
+        showReportMessageForInput(document.getElementById('globalStartDate'), 'Invalid date range: start date must be on or before end date', 'warning');
         return;
     } else {
-        clearReportMessageForInput(document.getElementById('securityStartDate'));
+        clearReportMessageForInput(document.getElementById('globalStartDate'));
     }
     
     let url = '/api/reports/security-access';
@@ -1387,7 +1228,12 @@ function loadSecurityAccessReport() {
 
 // Load Data Quality Report
 function loadDataQualityReport() {
-    fetch('/api/reports/data-quality')
+    let account = document.getElementById('globalAccount').value;
+    let url = '/api/reports/data-quality';
+    if (account) {
+        url += `?account=${encodeURIComponent(account)}`;
+    }
+    fetch(url)
         .then(response => response.json())
         .then(data => {
             // Update metrics
@@ -1449,33 +1295,36 @@ function loadDataQualityReport() {
 }
 
 // Event listeners for refresh buttons
-document.getElementById('refreshEmailVolume').addEventListener('click', loadEmailVolumeReport);
-document.getElementById('refreshAccountActivity').addEventListener('click', loadAccountActivityReport);
-document.getElementById('refreshSystemHealth').addEventListener('click', loadSystemHealthReport);
-document.getElementById('refreshAVStats').addEventListener('click', loadAVStatsReport);
-document.getElementById('refreshStorageUtilization').addEventListener('click', loadStorageUtilizationReport);
-document.getElementById('refreshRetentionPolicy').addEventListener('click', loadRetentionPolicyReport);
-document.getElementById('refreshSystemPerformance').addEventListener('click', loadSystemPerformanceReport);
-document.getElementById('refreshSecurityAccess').addEventListener('click', loadSecurityAccessReport);
-document.getElementById('refreshDataQuality').addEventListener('click', loadDataQualityReport);
+document.getElementById('refreshAllReports').addEventListener('click', loadAllReports);
 
-// Event listeners for date changes
-document.getElementById('emailVolumeStartDate').addEventListener('change', loadEmailVolumeReport);
-document.getElementById('emailVolumeEndDate').addEventListener('change', loadEmailVolumeReport);
-document.getElementById('accountActivityStartDate').addEventListener('change', loadAccountActivityReport);
-document.getElementById('accountActivityEndDate').addEventListener('change', loadAccountActivityReport);
-document.getElementById('systemHealthStartDate').addEventListener('change', loadSystemHealthReport);
-document.getElementById('systemHealthEndDate').addEventListener('change', loadSystemHealthReport);
-document.getElementById('avStartDate').addEventListener('change', loadAVStatsReport);
-document.getElementById('avEndDate').addEventListener('change', loadAVStatsReport);
-document.getElementById('storageStartDate').addEventListener('change', loadStorageUtilizationReport);
-document.getElementById('storageEndDate').addEventListener('change', loadStorageUtilizationReport);
-document.getElementById('retentionStartDate').addEventListener('change', loadRetentionPolicyReport);
-document.getElementById('retentionEndDate').addEventListener('change', loadRetentionPolicyReport);
-document.getElementById('performanceStartDate').addEventListener('change', loadSystemPerformanceReport);
-document.getElementById('performanceEndDate').addEventListener('change', loadSystemPerformanceReport);
-document.getElementById('securityStartDate').addEventListener('change', loadSecurityAccessReport);
-document.getElementById('securityEndDate').addEventListener('change', loadSecurityAccessReport);
+// Event listeners for global controls
+document.getElementById('globalStartDate').addEventListener('change', () => {
+    loadEmailVolumeReport();
+    loadAccountActivityReport();
+    loadSystemHealthReport();
+    loadAVStatsReport();
+    loadStorageUtilizationReport();
+    loadRetentionPolicyReport();
+    loadSystemPerformanceReport();
+    loadSecurityAccessReport();
+});
+document.getElementById('globalEndDate').addEventListener('change', () => {
+    loadEmailVolumeReport();
+    loadAccountActivityReport();
+    loadSystemHealthReport();
+    loadAVStatsReport();
+    loadStorageUtilizationReport();
+    loadRetentionPolicyReport();
+    loadSystemPerformanceReport();
+    loadSecurityAccessReport();
+});
+document.getElementById('globalAccount').addEventListener('change', () => {
+    loadEmailVolumeReport();
+    loadAVStatsReport();
+    loadStorageUtilizationReport();
+    loadRetentionPolicyReport();
+    loadDataQualityReport();
+});
 
 // Load all reports on page load
 loadAllReports();
