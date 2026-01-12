@@ -1136,8 +1136,19 @@ function loadSecurityAccessReport() {
     }
     
     fetch(url)
-        .then(response => response.json())
+        .then(response => {
+            if (response.status === 403) {
+                // Hide the security report section if access is denied
+                document.getElementById('securityReportSection').style.display = 'none';
+                return;
+            }
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            if (!data) return; // Skip if 403 handled above
             // Clear any previous validation messages for this section
             clearReportMessageForInput(document.getElementById('globalStartDate'));
             
