@@ -66,8 +66,8 @@ async def activity_tracking_middleware(request: Request, call_next):
     
     print(f"DEBUG: session in scope: {'session' in request.scope}")
     # Check if SessionMiddleware has been applied (session is available)
-    if "session" not in request.scope:
-        return await call_next(request)
+    # if "session" not in request.scope:
+    #     return await call_next(request)
     
     # Check if user is logged in
     user_id = request.session.get("user_id")
@@ -76,16 +76,12 @@ async def activity_tracking_middleware(request: Request, call_next):
         try:
             with engine.begin() as conn:
                 # Update last_activity timestamp (store as UTC) using named params
-                try:
-                    conn.execute(
-                        text("UPDATE users SET last_activity = :ts WHERE id = :id"),
-                        {"ts": datetime.now(timezone.utc), "id": user_id}
-                    )
-                    print(f"DEBUG: Updated last_activity for user {user_id}")
-                    log("debug", "System", f"Updated last_activity for user {user_id}", "")
-                except Exception as e:
-                    print(f"ERROR: Failed to update last_activity for user {user_id}: {str(e)}")
-                    log("error", "System", f"Failed to update last_activity for user {user_id}: {str(e)}", "")
+                conn.execute(
+                    text("UPDATE users SET last_activity = :ts WHERE id = :id"),
+                    {"ts": datetime.now(timezone.utc), "id": user_id}
+                )
+                print(f"DEBUG: Updated last_activity for user {user_id}")
+                log("debug", "System", f"Updated last_activity for user {user_id}", "")
                 
                 # Check for inactivity timeout
                 result = conn.execute(text("SELECT value FROM settings WHERE key = 'inactivity_timeout_minutes'"))
@@ -103,24 +99,21 @@ async def activity_tracking_middleware(request: Request, call_next):
                             last_activity = last_activity_result[0]
                             if isinstance(last_activity, str):
                                 last_activity = datetime.fromisoformat(last_activity.replace('Z', '+00:00'))
-
+                            
                             # Normalize to timezone-aware UTC to compare with current time
                             if last_activity.tzinfo is None:
                                 last_activity = last_activity.replace(tzinfo=timezone.utc)
                             else:
                                 last_activity = last_activity.astimezone(timezone.utc)
-
+                            
                             if datetime.now(timezone.utc) - last_activity > timedelta(minutes=timeout_minutes):
                                 # User is inactive, log them out
                                 request.session.clear()
                                 log("info", "System", f"User {user_id} automatically logged out due to inactivity", "")
                                 return RedirectResponse("/login?message=Session expired due to inactivity", status_code=303)
         except Exception as e:
-            log("error", "System", f"Error in activity tracking middleware: {str(e)}", "")
-    
-    response = await call_next(request)
-    return response
-
+            print(f"ERROR: Exception in activity middleware for user {user_id}: {str(e)}")
+            log("error", "System", f"Error in activity tracking middleware for user {user_id}: {str(e)}", "")
 # Global Exception Handler
 @app.exception_handler(500)
 async def internal_error_handler(request: Request, exc: Exception):
