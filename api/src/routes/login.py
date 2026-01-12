@@ -178,7 +178,7 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
         return templates.TemplateResponse("login.html", {"request": request, "error": "Invalid credentials"})
 
     # Account lockout
-    now = query("SELECT NOW()").first()[0]
+    now = query("SELECT NOW() AS now").mappings().first()["now"]
     if user["locked_until"] and user["locked_until"] > now:
         return templates.TemplateResponse(
             "login.html",
