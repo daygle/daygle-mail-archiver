@@ -324,11 +324,11 @@
             try { localStorage.setItem('theme', theme); } catch (e) {}
 
             if (theme === 'dark') {
-                themeIconLight.style.display = 'none';
-                themeIconDark.style.display = 'block';
+                if (themeIconLight) themeIconLight.style.display = 'none';
+                if (themeIconDark) themeIconDark.style.display = 'block';
             } else {
-                themeIconLight.style.display = 'block';
-                themeIconDark.style.display = 'none';
+                if (themeIconLight) themeIconLight.style.display = 'block';
+                if (themeIconDark) themeIconDark.style.display = 'none';
             }
 
             // Emit a global event so other parts of the UI (e.g. settings page) can react
