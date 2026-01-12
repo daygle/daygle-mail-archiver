@@ -837,23 +837,24 @@ textarea.form-control {
 }
 
 .role-permissions {
-    /* Keep normal table-cell behavior so table sizing is calculated correctly */
-    display: table-cell;
-    vertical-align: middle;
+    /* Use flexbox to allow badges to wrap while maintaining alignment */
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
     /* Remove extra vertical padding so it aligns with other cells */
     padding-top: 0 !important;
     padding-bottom: 0 !important;
     max-width: 300px;
-    /* Allow long permission names/badges to wrap within the cell */
+    /* Ensure the container allows wrapping */
     white-space: normal;
-    overflow-wrap: anywhere;
-    word-break: break-word;
 }
 
 /* Badges rendered inline so they don't affect table intrinsic sizing */
 .role-permissions .badge {
     display: inline-block;
-    margin: 0.25rem 0.5rem 0.25rem 0; /* vertical then horizontal spacing */
+    /* Margin removed since flex gap handles spacing */
     /* Ensure badges themselves can break/wrap on narrow cells */
     white-space: normal;
     overflow-wrap: anywhere;
