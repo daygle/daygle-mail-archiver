@@ -17,14 +17,13 @@
 
     <form id="import-form" method="post" action="/emails/import" enctype="multipart/form-data">
       <div class="mb-3">
-        <label for="files" class="form-label">Choose EML or MBOX files (ZIP may contain EML/MBX)</label>
+        <label for="files" class="form-label">Select EML or MBOX files to import (ZIP files containing EML/MBOX are supported)</label>
         <input type="file" name="files" id="files" multiple accept=".eml,.mbox,.mbx,.zip,application/zip" class="form-control">
       </div>
 
       <div class="mb-3">
-        <label for="source" class="form-label">Assign to Fetch Account</label>
+        <label for="source" class="form-label">Fetch Account</label>
         <select name="source" id="source" class="form-select">
-          <option value="import">Select a fetch account</option>
           {% for a in accounts %}
           <option value="{{ a }}">{{ a }}</option>
           {% endfor %}
@@ -41,7 +40,10 @@
   </div>
   <div class="card-footer">
     <div class="d-flex justify-content-end">
-      <a href="/emails" class="btn btn-secondary me-2">Cancel</a>
+      <a href="/emails" class="btn btn-secondary me-2">
+        <i class="fas fa-times"></i>
+        <span>Cancel</span>
+      </a>
       <button type="submit" form="import-form" class="btn btn-primary">
         <i class="fas fa-upload"></i>
         <span>Upload and Import</span>
@@ -61,23 +63,20 @@
     <p class="text-muted">Export all emails for a selected fetch account in ZIP (EML files) or MBOX format.</p>
 
     <form id="export-form" method="post" action="/emails/export">
-      <div class="row g-3 align-items-end">
-        <div class="col-md-4">
-          <label for="export-account" class="form-label">Fetch Account</label>
-          <select name="account" id="export-account" class="form-select" required>
-            <option value="">Select a fetch account</option>
-            {% for a in accounts %}
-            <option value="{{ a }}">{{ a }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="col-md-3">
-          <label for="export-format" class="form-label">Format</label>
-          <select name="format" id="export-format" class="form-select">
-            <option value="mbox">MBOX</option>
-            <option value="zip">ZIP (EML files)</option>
-          </select>
-        </div>
+      <div class="mb-3">
+        <label for="export-account" class="form-label">Fetch Account</label>
+        <select name="account" id="export-account" class="form-select" required>
+          {% for a in accounts %}
+          <option value="{{ a }}">{{ a }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="mb-3">
+        <label for="export-format" class="form-label">Format</label>
+        <select name="format" id="export-format" class="form-select">
+          <option value="mbox">MBOX</option>
+          <option value="zip">ZIP (EML files)</option>
+        </select>
       </div>
       <input type="hidden" name="q" value="">
       <input type="hidden" name="folder" value="">
