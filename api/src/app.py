@@ -34,6 +34,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Activity Tracking Middleware
+app.add_middleware(BaseHTTPMiddleware, dispatch=activity_tracking_middleware)
+
 # Session Middleware
 app.add_middleware(
     SessionMiddleware,
@@ -54,7 +57,6 @@ async def add_security_headers(request: Request, call_next):
     return response
 
 # Activity Tracking and Auto-Logout Middleware
-@app.middleware("http")
 async def activity_tracking_middleware(request: Request, call_next):
     print(f"DEBUG: Activity middleware called for {request.url.path}")
     # Skip activity tracking for static files, health checks, and login/logout endpoints
@@ -114,6 +116,9 @@ async def activity_tracking_middleware(request: Request, call_next):
         except Exception as e:
             print(f"ERROR: Exception in activity middleware for user {user_id}: {str(e)}")
             log("error", "System", f"Error in activity tracking middleware for user {user_id}: {str(e)}", "")
+    
+    response = await call_next(request)
+    return response
 # Global Exception Handler
 @app.exception_handler(500)
 async def internal_error_handler(request: Request, exc: Exception):
