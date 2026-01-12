@@ -69,6 +69,7 @@ async def activity_tracking_middleware(request: Request, call_next):
     
     # Check if user is logged in
     user_id = request.session.get("user_id")
+    print(f"DEBUG: Middleware for {request.url.path}, user_id: {user_id}")
     if user_id:
         try:
             with engine.begin() as conn:
@@ -78,8 +79,10 @@ async def activity_tracking_middleware(request: Request, call_next):
                         text("UPDATE users SET last_activity = :ts WHERE id = :id"),
                         {"ts": datetime.now(timezone.utc), "id": user_id}
                     )
+                    print(f"DEBUG: Updated last_activity for user {user_id}")
                     log("debug", "System", f"Updated last_activity for user {user_id}", "")
                 except Exception as e:
+                    print(f"ERROR: Failed to update last_activity for user {user_id}: {str(e)}")
                     log("error", "System", f"Failed to update last_activity for user {user_id}: {str(e)}", "")
                 
                 # Check for inactivity timeout
