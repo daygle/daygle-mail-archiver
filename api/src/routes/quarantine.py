@@ -451,16 +451,26 @@ def restore_quarantine(request: Request, qid: int):
             except Exception:
                 sig = None
 
+            # Prefer stored signature if present (preserve original), otherwise use computed
+            sig_to_store = item.get('signature') or sig
+            compressed_flag = item.get('compressed') if item.get('compressed') is not None else False
+            vname = item.get('virus_name')
+            vdetected = True if vname else False
+            vscanned = True
+
             # Insert or update email in emails table
             execute(
                 """
-                UPDATE emails SET raw_email = :raw, signature = :signature, compressed = TRUE, quarantined = FALSE, quarantine_id = NULL, virus_scanned = TRUE, virus_detected = TRUE, virus_name = :vname, scan_timestamp = :qtime
+                UPDATE emails SET raw_email = :raw, signature = :signature, compressed = :compressed, quarantined = FALSE, quarantine_id = NULL, virus_scanned = :vscanned, virus_detected = :vdetected, virus_name = :vname, scan_timestamp = :qtime
                 WHERE source = :source AND folder = :folder AND uid = :uid
                 """,
                 {
                     'raw': data,
-                    'signature': sig,
-                    'vname': item.get('virus_name'),
+                    'signature': sig_to_store,
+                    'compressed': compressed_flag,
+                    'vname': vname,
+                    'vdetected': vdetected,
+                    'vscanned': vscanned,
                     'qtime': item.get('quarantined_at'),
                     'source': item.get('original_source'),
                     'folder': item.get('original_folder'),
@@ -472,7 +482,7 @@ def restore_quarantine(request: Request, qid: int):
             execute(
                 """
                 INSERT INTO emails (source, folder, uid, subject, sender, recipients, date, raw_email, signature, compressed, virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined)
-                VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, :signature, TRUE, TRUE, TRUE, :vname, :qtime, TRUE)
+                VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, :signature, :compressed, :vscanned, :vdetected, :vname, :qtime, :quarantined)
                 ON CONFLICT (source, folder, uid) DO NOTHING
                 """,
                 {
@@ -484,9 +494,13 @@ def restore_quarantine(request: Request, qid: int):
                     'recipients': item.get('recipients'),
                     'date': item.get('date'),
                     'raw_email': data,
-                    'signature': sig,
-                    'vname': item.get('virus_name'),
-                    'qtime': item.get('quarantined_at')
+                    'signature': sig_to_store,
+                    'compressed': compressed_flag,
+                    'vname': vname,
+                    'vdetected': vdetected,
+                    'vscanned': vscanned,
+                    'qtime': item.get('quarantined_at'),
+                    'quarantined': False
                 }
             )
         except Exception as e:
