@@ -6,10 +6,12 @@ from fastapi.responses import RedirectResponse, JSONResponse
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.cors import CORSMiddleware
 import logging
+from datetime import datetime, timedelta
 
 from routes import emails, fetch_accounts, global_settings, login, users, profile, logs, dashboard, worker_status, oauth, donate, help, about, reports, alerts, alert_management, quarantine, roles
 from utils.logger import log
 from utils.config import get_config
+from utils.db import get_db_connection
 
 # Configuration
 SESSION_SECRET = get_config("SESSION_SECRET", "change-me")
@@ -48,6 +50,61 @@ async def add_security_headers(request: Request, call_next):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
+
+# Activity Tracking and Auto-Logout Middleware
+@app.middleware("http")
+async def activity_tracking_middleware(request: Request, call_next):
+    # Skip activity tracking for static files, health checks, and login/logout endpoints
+    if (request.url.path.startswith("/static/") or 
+        request.url.path in ["/health", "/login", "/logout"] or
+        request.url.path.startswith("/api/login") or
+        request.url.path.startswith("/api/logout")):
+        return await call_next(request)
+    
+    # Check if user is logged in
+    user_id = request.session.get("user_id")
+    if user_id:
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            # Update last_activity timestamp
+            cursor.execute(
+                "UPDATE users SET last_activity = %s WHERE id = %s",
+                (datetime.now(), user_id)
+            )
+            conn.commit()
+            
+            # Check for inactivity timeout
+            cursor.execute("SELECT value FROM settings WHERE key = 'inactivity_timeout_minutes'")
+            timeout_result = cursor.fetchone()
+            if timeout_result:
+                timeout_minutes = int(timeout_result[0])
+                if timeout_minutes > 0:
+                    # Check if user has been inactive too long
+                    cursor.execute(
+                        "SELECT last_activity FROM users WHERE id = %s",
+                        (user_id,)
+                    )
+                    last_activity_result = cursor.fetchone()
+                    if last_activity_result and last_activity_result[0]:
+                        last_activity = last_activity_result[0]
+                        if isinstance(last_activity, str):
+                            last_activity = datetime.fromisoformat(last_activity.replace('Z', '+00:00'))
+                        
+                        if datetime.now() - last_activity > timedelta(minutes=timeout_minutes):
+                            # User is inactive, log them out
+                            request.session.clear()
+                            log("info", "System", f"User {user_id} automatically logged out due to inactivity", "")
+                            return RedirectResponse("/login?message=Session expired due to inactivity", status_code=303)
+            
+            cursor.close()
+            conn.close()
+        except Exception as e:
+            log("error", "System", f"Error in activity tracking middleware: {str(e)}", "")
+    
+    response = await call_next(request)
     return response
 
 # Global Exception Handler

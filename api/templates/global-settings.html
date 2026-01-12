@@ -74,6 +74,12 @@
                 <small class="form-text">Global default theme for users who have not set a personal preference (users' own preference overrides this)</small>
             </div>
 
+            <div class="form-group mt-3">
+                <label for="inactivity_timeout_minutes" class="form-label">Auto-Logout Inactivity Timeout</label>
+                <input id="inactivity_timeout_minutes" class="form-control" name="inactivity_timeout_minutes" type="number" value="{{ settings.inactivity_timeout_minutes or '30' }}" min="0" max="1440">
+                <small class="form-text">Minutes of inactivity before automatically logging out users (0 to disable)</small>
+            </div>
+
             <!-- Update checking has been removed from the web UI -->
             <!-- Manual and automatic update checks are expected to be performed outside the web interface -->
 

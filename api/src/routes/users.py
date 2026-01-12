@@ -29,15 +29,35 @@ def list_users(request: Request):
     users = query("""
         SELECT u.id, u.username, u.first_name, u.last_name, u.email,
                COALESCE(u.email_notifications, TRUE) as email_notifications,
-               u.enabled, u.last_login, u.created_at,
-               COALESCE(NULLIF(STRING_AGG(r.display_name, ', '), ''), INITCAP(REGEXP_REPLACE(u.role, '[_\-]+', ' ', 'g'))) as roles
+               u.enabled, u.last_login, u.created_at, u.last_activity,
+               COALESCE(NULLIF(STRING_AGG(r.display_name, ', '), ''), INITCAP(REGEXP_REPLACE(u.role, r'[_\-]+', ' ', 'g'))) as roles
         FROM users u
         LEFT JOIN user_roles ur ON u.id = ur.user_id
         LEFT JOIN roles r ON ur.role_id = r.id
         GROUP BY u.id, u.username, u.first_name, u.last_name, u.email,
-                 u.email_notifications, u.enabled, u.last_login, u.created_at, u.role
+                 u.email_notifications, u.enabled, u.last_login, u.created_at, u.last_activity, u.role
         ORDER BY u.id
     """).mappings().all()
+
+    # Get inactivity timeout setting to determine online status
+    timeout_setting = query("SELECT value FROM settings WHERE key = 'inactivity_timeout_minutes'").scalar()
+    timeout_minutes = int(timeout_setting) if timeout_setting else 30
+    
+    # Process users to add online status
+    from datetime import datetime, timedelta
+    current_time = datetime.now()
+    
+    for user in users:
+        if user.last_activity:
+            # Convert string to datetime if needed
+            last_activity = user.last_activity
+            if isinstance(last_activity, str):
+                last_activity = datetime.fromisoformat(last_activity.replace('Z', '+00:00'))
+            
+            # Consider user online if activity within timeout period
+            user.is_online = (current_time - last_activity) <= timedelta(minutes=timeout_minutes)
+        else:
+            user.is_online = False
 
     # Get all available roles for the form (include display_name for UI)
     roles = query("SELECT id, name, display_name, description FROM roles ORDER BY COALESCE(display_name, name)").mappings().all()

@@ -129,6 +129,7 @@ CREATE TABLE IF NOT EXISTS users (
     email_notifications BOOLEAN NOT NULL DEFAULT TRUE,
     enabled BOOLEAN NOT NULL DEFAULT TRUE,
     last_login TIMESTAMPTZ,
+    last_activity TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     -- Security fields
     failed_login_attempts INTEGER NOT NULL DEFAULT 0,
@@ -207,6 +208,7 @@ INSERT INTO settings (key, value) VALUES ('retention_value', '1') ON CONFLICT (k
 INSERT INTO settings (key, value) VALUES ('retention_unit', 'years') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('retention_delete_from_mail_server', 'false') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('setup_complete', 'false') ON CONFLICT (key) DO NOTHING;
+INSERT INTO settings (key, value) VALUES ('inactivity_timeout_minutes', '30') ON CONFLICT (key) DO NOTHING;
 -- ClamAV settings
 INSERT INTO settings (key, value) VALUES ('clamav_enabled', 'true') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('clamav_host', 'clamav') ON CONFLICT (key) DO NOTHING;
