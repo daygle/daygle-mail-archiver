@@ -44,6 +44,7 @@ def list_users(request: Request):
     # Get inactivity timeout setting to determine online status
     timeout_setting = query("SELECT value FROM settings WHERE key = 'inactivity_timeout_minutes'").scalar()
     timeout_minutes = int(timeout_setting) if timeout_setting else 30
+    log("debug", "Users", f"Inactivity timeout: {timeout_minutes} minutes", "")
     
     # Process users to add online status
     from datetime import datetime, timedelta, timezone
@@ -71,6 +72,7 @@ def list_users(request: Request):
                 user['is_online'] = (current_time - last_activity) <= timedelta(minutes=timeout_minutes)
         else:
             user['is_online'] = False
+        log("debug", "Users", f"User {user['id']}: last_activity={last_activity}, is_online={user['is_online']}", "")
 
     # Get all available roles for the form (include display_name for UI)
     roles = query("SELECT id, name, display_name, description FROM roles ORDER BY COALESCE(display_name, name)").mappings().all()

@@ -78,6 +78,7 @@ async def activity_tracking_middleware(request: Request, call_next):
                         text("UPDATE users SET last_activity = :ts WHERE id = :id"),
                         {"ts": datetime.now(timezone.utc), "id": user_id}
                     )
+                    log("debug", "System", f"Updated last_activity for user {user_id}", "")
                 except Exception as e:
                     log("error", "System", f"Failed to update last_activity for user {user_id}: {str(e)}", "")
                 
