@@ -14,33 +14,40 @@ router = APIRouter()
 def require_login(request: Request):
     return "user_id" in request.session
 
-def flash(request: Request, message, category: str = 'info'):
+
+def flash(request: Request, message, category: str = "info"):
     if isinstance(message, dict):
         request.session["flash"] = message
     else:
         request.session["flash"] = {"message": message, "type": category}
+
 
 @router.get("/users")
 def list_users(request: Request):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    # Get users with their assigned roles (use display_name for UI)
+    # TODO: replace with new permission system
+    # require_permission(request, "users.view")
+
     users = query("""
-        SELECT u.id, u.username, u.first_name, u.last_name, u.email,
-               COALESCE(u.email_notifications, TRUE) as email_notifications,
-               u.enabled, u.last_login, u.created_at,
-               COALESCE(NULLIF(STRING_AGG(r.display_name, ', '), ''), INITCAP(REGEXP_REPLACE(u.role, '[_\-]+', ' ', 'g'))) as roles
+        SELECT 
+            u.id, u.username, u.first_name, u.last_name, u.email,
+            COALESCE(u.email_notifications, TRUE) AS email_notifications,
+            u.enabled, u.last_login, u.created_at,
+            STRING_AGG(r.display_name, ', ') AS roles
         FROM users u
         LEFT JOIN user_roles ur ON u.id = ur.user_id
         LEFT JOIN roles r ON ur.role_id = r.id
-        GROUP BY u.id, u.username, u.first_name, u.last_name, u.email,
-                 u.email_notifications, u.enabled, u.last_login, u.created_at, u.role
+        GROUP BY u.id
         ORDER BY u.id
     """).mappings().all()
 
-    # Get all available roles for the form (include display_name for UI)
-    roles = query("SELECT id, name, display_name, description FROM roles ORDER BY COALESCE(display_name, name)").mappings().all()
+    roles = query("""
+        SELECT id, name, display_name, description
+        FROM roles
+        ORDER BY COALESCE(display_name, name)
+    """).mappings().all()
 
     msg = request.session.pop("flash", None)
 
