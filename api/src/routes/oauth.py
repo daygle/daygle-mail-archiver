@@ -7,7 +7,7 @@ from datetime import datetime, timezone, timedelta
 
 from utils.db import query, execute
 from utils.logger import log
-from utils.security import encrypt_password
+from utils.crypto import encrypt_password
 from utils.templates import templates
 
 router = APIRouter()
