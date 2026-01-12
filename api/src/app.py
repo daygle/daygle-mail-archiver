@@ -56,6 +56,7 @@ async def add_security_headers(request: Request, call_next):
 # Activity Tracking and Auto-Logout Middleware
 @app.middleware("http")
 async def activity_tracking_middleware(request: Request, call_next):
+    print(f"DEBUG: Activity middleware called for {request.url.path}")
     # Skip activity tracking for static files, health checks, and login/logout endpoints
     if (request.url.path.startswith("/static/") or 
         request.url.path in ["/health", "/login", "/logout"] or
