@@ -194,6 +194,14 @@ def get_user(request: Request, user_id: int):
     if not require_login(request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
+    # Log that the API was called and the caller session info (safe access)
+    try:
+        caller_id = request.session.get("user_id") if "session" in request.scope else None
+        log("debug", "Users", f"get_user called for id={user_id} by session_user={caller_id}", "")
+    except Exception:
+        # Be defensive — if session access fails, continue and let authorization handle it
+        log("debug", "Users", f"get_user called for id={user_id} (session unavailable)", "")
+
     try:
         user = query("""
             SELECT id, username, first_name, last_name, email, role, 
@@ -206,8 +214,11 @@ def get_user(request: Request, user_id: int):
         if not user:
             return JSONResponse({"error": "User not found"}, status_code=404)
         
-        # Get current user's ID for timezone conversion
-        current_user_id = int(request.session.get("user_id"))
+        # Get current user's ID for timezone conversion (safe access)
+        try:
+            current_user_id = int(request.session.get("user_id")) if "session" in request.scope and request.session.get("user_id") else None
+        except Exception:
+            current_user_id = None
         
         # Get assigned role ids for the user
         role_rows = query("SELECT role_id FROM user_roles WHERE user_id = :id", {"id": user_id}).mappings().all()
@@ -237,7 +248,11 @@ def get_user(request: Request, user_id: int):
             "created_at": format_datetime(user["created_at"], current_user_id) if user["created_at"] else None
         }
     except Exception as e:
-        admin_username = request.session.get("username", "unknown")
+        admin_username = None
+        try:
+            admin_username = request.session.get("username") if "session" in request.scope else "unknown"
+        except Exception:
+            admin_username = "unknown"
         log("error", "Users", f"Failed to fetch user {user_id} for admin '{admin_username}': {str(e)}", "")
         return JSONResponse({"error": "Failed to load user data"}, status_code=500)
 
