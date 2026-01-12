@@ -196,15 +196,15 @@
             <div class="metric-grid">
                 <div class="metric-card">
                     <div class="metric-value" id="totalManualDeletions">-</div>
-                    <div class="metric-label">Manual Deletions</div>
+                    <div class="metric-label">Manual Email Deletions</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-value" id="totalRetentionDeletions">-</div>
-                    <div class="metric-label">Retention Deletions</div>
+                    <div class="metric-label">Retention Email Deletions</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-value" id="totalServerDeletions">-</div>
-                    <div class="metric-label">Deleted from Server</div>
+                    <div class="metric-label">Email Deleted from Mail Server</div>
                 </div>
             </div>
             <div class="chart-container">
@@ -983,7 +983,7 @@ function loadRetentionPolicyReport() {
             window.retentionChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: ['Manual Deletions', 'Retention Deletions', 'Server Deletions'],
+                    labels: ['Manual Email Deletions', 'Retention Email Deletions', 'Email Deleted from Mail Server'],
                     datasets: [{
                         label: 'Deletions',
                         data: [data.manual_deletions || 0, data.retention_deletions || 0, data.server_deletions || 0],
