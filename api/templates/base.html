@@ -286,7 +286,9 @@
             document.addEventListener('click', function(e) {
                 if (window.innerWidth <= 768) {
                     // Only close if clicking outside sidebar AND not on the toggle button
-                    if (!sidebar.contains(e.target) && e.target !== mobileToggle && !mobileToggle.contains(e.target)) {
+                    const clickedOutsideSidebar = sidebar && !sidebar.contains(e.target);
+                    const clickedToggle = (mobileToggle && (e.target === mobileToggle || mobileToggle.contains(e.target)));
+                    if (clickedOutsideSidebar && !clickedToggle) {
                         sidebar.classList.remove('mobile-open');
                     }
                 }
@@ -295,7 +297,9 @@
             // Also close on touch for mobile
             document.addEventListener('touchstart', function(e) {
                 if (window.innerWidth <= 768) {
-                    if (!sidebar.contains(e.target) && e.target !== mobileToggle && !mobileToggle.contains(e.target)) {
+                    const touchedOutsideSidebar = sidebar && !sidebar.contains(e.target);
+                    const touchedToggle = (mobileToggle && (e.target === mobileToggle || mobileToggle.contains(e.target)));
+                    if (touchedOutsideSidebar && !touchedToggle) {
                         sidebar.classList.remove('mobile-open');
                     }
                 }
