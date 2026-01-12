@@ -104,9 +104,11 @@
                         </td>
                         <td class="role-permissions hide-mobile">
                             {% if role.permissions %}
-                                {% for perm in role.permissions.split(', ') if perm %}
-                                    <span class="badge bg-secondary">{{ perm | replace('_', ' ') | replace('-', ' ') | title }}</span>
-                                {% endfor %}
+                                <div class="permissions-wrapper">
+                                    {% for perm in role.permissions.split(', ') if perm %}
+                                        <span class="badge bg-secondary">{{ perm | replace('_', ' ') | replace('-', ' ') | title }}</span>
+                                    {% endfor %}
+                                </div>
                             {% else %}
                                 <em class="text-muted">No permissions</em>
                             {% endif %}
