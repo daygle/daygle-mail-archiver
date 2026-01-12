@@ -30,7 +30,7 @@ def list_users(request: Request):
         SELECT u.id, u.username, u.first_name, u.last_name, u.email,
                COALESCE(u.email_notifications, TRUE) as email_notifications,
                u.enabled, u.last_login, u.created_at, u.last_activity,
-               COALESCE(NULLIF(STRING_AGG(r.display_name, ', '), ''), INITCAP(REGEXP_REPLACE(u.role, r'[_\-]+', ' ', 'g'))) as roles
+               COALESCE(NULLIF(STRING_AGG(r.display_name, ', '), ''), INITCAP(REGEXP_REPLACE(u.role, '[\\-_]+', ' ', 'g'))) as roles
         FROM users u
         LEFT JOIN user_roles ur ON u.id = ur.user_id
         LEFT JOIN roles r ON ur.role_id = r.id

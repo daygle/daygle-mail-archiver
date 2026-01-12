@@ -63,6 +63,10 @@ async def activity_tracking_middleware(request: Request, call_next):
         request.url.path.startswith("/api/logout")):
         return await call_next(request)
     
+    # Check if SessionMiddleware has been applied (session is available)
+    if "session" not in request.scope:
+        return await call_next(request)
+    
     # Check if user is logged in
     user_id = request.session.get("user_id")
     if user_id:
