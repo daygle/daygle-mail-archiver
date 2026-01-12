@@ -6,7 +6,7 @@ from fastapi.responses import RedirectResponse, JSONResponse
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.cors import CORSMiddleware
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy import text
 
 from routes import emails, fetch_accounts, global_settings, login, users, profile, logs, dashboard, worker_status, oauth, donate, help, about, reports, alerts, alert_management, quarantine, roles
@@ -72,10 +72,10 @@ async def activity_tracking_middleware(request: Request, call_next):
     if user_id:
         try:
             with engine.begin() as conn:
-                # Update last_activity timestamp
+                # Update last_activity timestamp (store as UTC)
                 conn.execute(
                     text("UPDATE users SET last_activity = %s WHERE id = %s"),
-                    (datetime.now(), user_id)
+                    (datetime.now(timezone.utc), user_id)
                 )
                 
                 # Check for inactivity timeout
@@ -94,8 +94,14 @@ async def activity_tracking_middleware(request: Request, call_next):
                             last_activity = last_activity_result[0]
                             if isinstance(last_activity, str):
                                 last_activity = datetime.fromisoformat(last_activity.replace('Z', '+00:00'))
-                            
-                            if datetime.now() - last_activity > timedelta(minutes=timeout_minutes):
+
+                            # Normalize to timezone-aware UTC to compare with current time
+                            if last_activity.tzinfo is None:
+                                last_activity = last_activity.replace(tzinfo=timezone.utc)
+                            else:
+                                last_activity = last_activity.astimezone(timezone.utc)
+
+                            if datetime.now(timezone.utc) - last_activity > timedelta(minutes=timeout_minutes):
                                 # User is inactive, log them out
                                 request.session.clear()
                                 log("info", "System", f"User {user_id} automatically logged out due to inactivity", "")

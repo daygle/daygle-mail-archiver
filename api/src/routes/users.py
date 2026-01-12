@@ -46,8 +46,8 @@ def list_users(request: Request):
     timeout_minutes = int(timeout_setting) if timeout_setting else 30
     
     # Process users to add online status
-    from datetime import datetime, timedelta
-    current_time = datetime.now()
+    from datetime import datetime, timedelta, timezone
+    current_time = datetime.now(timezone.utc)
     
     for user in users:
         last_activity = user.get('last_activity')
@@ -55,6 +55,12 @@ def list_users(request: Request):
             # Convert string to datetime if needed
             if isinstance(last_activity, str):
                 last_activity = datetime.fromisoformat(last_activity.replace('Z', '+00:00'))
+
+            # Normalize to timezone-aware UTC for safe comparison
+            if last_activity.tzinfo is None:
+                last_activity = last_activity.replace(tzinfo=timezone.utc)
+            else:
+                last_activity = last_activity.astimezone(timezone.utc)
 
             # Consider user online if activity within timeout period
             user['is_online'] = (current_time - last_activity) <= timedelta(minutes=timeout_minutes)
