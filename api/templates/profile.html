@@ -4,6 +4,7 @@
 
 {% block content %}
 <div class="grid grid-cols-1 gap-4 mb-4">
+
     <!-- Personal Information Card -->
     <div class="card">
         <div class="card-header">
@@ -12,39 +13,86 @@
                 <span>Personal Information</span>
             </div>
         </div>
+
         <div class="card-body">
             <form method="post" action="/profile/update-info">
+
                 <div class="grid grid-cols-2 gap-3">
                     <div class="form-group">
                         <label for="first_name" class="form-label">First Name</label>
-                        <input id="first_name" class="form-control" name="first_name" value="{{ user.first_name or '' }}" placeholder="First name">
+                        <input id="first_name"
+                               class="form-control"
+                               name="first_name"
+                               value="{{ user.first_name or '' }}"
+                               placeholder="First name">
                     </div>
+
                     <div class="form-group">
                         <label for="last_name" class="form-label">Last Name</label>
-                        <input id="last_name" class="form-control" name="last_name" value="{{ user.last_name or '' }}" placeholder="Last name">
+                        <input id="last_name"
+                               class="form-control"
+                               name="last_name"
+                               value="{{ user.last_name or '' }}"
+                               placeholder="Last name">
                     </div>
                 </div>
+
                 <div class="form-group mt-3">
                     <label for="email" class="form-label">Email</label>
-                    <input id="email" class="form-control" name="email" type="email" value="{{ user.email or '' }}" placeholder="your.email@example.com">
+                    <input id="email"
+                           class="form-control"
+                           name="email"
+                           type="email"
+                           value="{{ user.email or '' }}"
+                           placeholder="your.email@example.com">
                 </div>
+
+                <!-- Account Info -->
                 <div class="alert alert-info mt-3">
                     <div style="display: grid; gap: 8px;">
+
                         <div><strong>Username:</strong> {{ user.username }}</div>
-                        <div><strong>Role:</strong> {{ user.role or '-' }}</div>
-                        <div><strong>Last Login:</strong> {{ user.last_login | format_user_datetime(request.session.user_id) if user.last_login else 'Never' }}</div>
-                        <div><strong>Account Created:</strong> {{ user.created_at | format_user_datetime(request.session.user_id) if user.created_at else '-' }}</div>
+
+                        <div>
+                            <strong>Roles:</strong>
+                            {% if user.roles %}
+                                {{ user.roles | join(', ') }}
+                            {% else %}
+                                <em>No roles assigned</em>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <strong>Last Login:</strong>
+                            {% if user.last_login %}
+                                {{ user.last_login | format_user_datetime(request.session.user_id) }}
+                            {% else %}
+                                Never
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <strong>Account Created:</strong>
+                            {% if user.created_at %}
+                                {{ user.created_at | format_user_datetime(request.session.user_id) }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </div>
+
                     </div>
                 </div>
+
                 <div style="display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end;">
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save"></i>
                         <span>Update Information</span>
                     </button>
                 </div>
+
             </form>
         </div>
     </div>
-</div>
 
+</div>
 {% endblock %}

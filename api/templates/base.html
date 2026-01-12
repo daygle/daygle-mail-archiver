@@ -64,7 +64,14 @@
                     </a>
                 </div>
 
-                {% if request.session.role == 'administrator' or request.session.role == 'read_only' %}
+                {% if
+                    'manage_fetch_accounts' in request.session.get('permissions', []) or
+                    'view_worker_status' in request.session.get('permissions', []) or
+                    'view_reports' in request.session.get('permissions', []) or
+                    'view_quarantine' in request.session.get('permissions', []) or
+                    'import_emails' in request.session.get('permissions', []) or
+                    'export_emails' in request.session.get('permissions', [])
+                %}
                 <div class="nav-section">
                     <div class="nav-section-title">Operations & Monitoring</div>
                     {% if 'manage_fetch_accounts' in request.session.get('permissions', []) %}

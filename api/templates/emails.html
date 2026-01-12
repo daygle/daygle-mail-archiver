@@ -57,7 +57,8 @@
                 <i class="fas fa-file-import"></i>
                 <span class="hide-mobile">Import</span>
             </a>
-            {% if request.session.role == 'administrator' %}
+
+            {% if 'delete_emails' in request.session.get('permissions', []) %}
             <button type="button" class="btn btn-warning btn-sm" id="quarantine-selected-btn" disabled onclick="showQuarantineModal()">
                 <i class="fas fa-shield-virus"></i>
                 <span class="hide-mobile">Quarantine Selected</span>
@@ -69,13 +70,14 @@
             {% endif %}
         </div>
     </div>
+
     <div class="card-body" style="padding: 0;">
         <form method="post" action="/emails/delete" id="emails-bulk-form">
             <div class="table-container">
                 <table class="table">
                     <thead>
                         <tr>
-                            {% if request.session.role == 'administrator' %}
+                            {% if 'delete_emails' in request.session.get('permissions', []) %}
                             <th class="col-small">
                                 <input type="checkbox" id="select-all" class="form-check-input">
                             </th>
@@ -92,14 +94,16 @@
                             </th>
                         </tr>
                     </thead>
+
                     <tbody>
                         {% for email in emails %}
                         <tr>
-                            {% if request.session.role == 'administrator' %}
+                            {% if 'delete_emails' in request.session.get('permissions', []) %}
                             <td>
                                 <input type="checkbox" name="ids" value="{{ email.id }}" class="form-check-input email-checkbox">
                             </td>
                             {% endif %}
+
                             <td>{{ email.date_formatted or email.date }}</td>
                             <td class="hide-mobile">
                                 <span class="badge badge-primary">{{ email.source }}</span>
@@ -142,9 +146,10 @@
                             </td>
                         </tr>
                         {% endfor %}
+
                         {% if emails|length == 0 %}
                         <tr>
-                            <td colspan="{% if request.session.role == 'administrator' %}9{% else %}8{% endif %}" class="text-center empty-state">
+                            <td colspan="{% if 'delete_emails' in request.session.get('permissions', []) %}9{% else %}8{% endif %}" class="text-center empty-state">
                                 <div>
                                     <i class="fas fa-inbox empty-icon"></i>
                                     <p>No emails found.</p>
@@ -157,7 +162,7 @@
             </div>
         </form>
     </div>
-    
+
     <!-- Pagination -->
     {% if page > 1 or (page * page_size) < total %}
     <div class="card-footer">
@@ -170,9 +175,9 @@
                 </a>
                 {% endif %}
             </div>
-            
+
             <span class="text-secondary">Page {{ page }} of {{ (total / page_size) | round(0, 'ceil') | int }}</span>
-            
+
             <div>
                 {% if (page * page_size) < total %}
                 <a href="/emails?page={{ page + 1 }}&page_size={{ page_size }}&q={{ q }}&account={{ account }}&folder={{ folder }}" class="btn btn-secondary">
@@ -186,7 +191,7 @@
     {% endif %}
 </div>
 
-<!-- Quarantine Confirmation Section (Initially Hidden) -->
+<!-- Quarantine Confirmation Section -->
 <div id="quarantine-confirmation" class="card" style="display: none; margin-top: 24px;">
     <div class="card-header">
         <div class="card-title">
@@ -217,7 +222,7 @@
     </div>
 </div>
 
-<!-- Delete Confirmation Section (Initially Hidden) -->
+<!-- Delete Confirmation Section -->
 <div id="delete-confirmation" class="card" style="display: none; margin-top: 24px;">
     <div class="card-header">
         <div class="card-title">
@@ -265,14 +270,12 @@
     function updateButtons() {
       const checkedBoxes = Array.from(checkboxes).filter(cb => cb.checked);
       const anyChecked = checkedBoxes.length > 0;
-    if (quarantineBtn) quarantineBtn.disabled = !anyChecked;
-    if (deleteBtn) deleteBtn.disabled = !anyChecked;
-      
-      // Update quarantine form with selected IDs
+
+      if (quarantineBtn) quarantineBtn.disabled = !anyChecked;
+      if (deleteBtn) deleteBtn.disabled = !anyChecked;
+
       if (quarantineForm) {
-        // Clear existing inputs
         quarantineForm.querySelectorAll('input[name="ids"]').forEach(input => input.remove());
-        // Add new inputs
         checkedBoxes.forEach(cb => {
           const input = document.createElement('input');
           input.type = 'hidden';
@@ -296,91 +299,74 @@
 
     updateButtons();
 
-    // Filter toggle function
     window.toggleFilters = function() {
       const filterCard = document.getElementById('filterCard');
       const toggleBtn = document.getElementById('toggleFilterBtn');
-      
-            if (filterCard.style.display === 'none') {
-                filterCard.style.display = 'block';
-                toggleBtn.innerHTML = '<i class="fas fa-times"></i><span class="hide-mobile">Hide Filters</span>';
-            } else {
-                filterCard.style.display = 'none';
-                toggleBtn.innerHTML = '<i class="fas fa-filter"></i><span class="hide-mobile">Search & Filter</span>';
-            }
+
+      if (filterCard.style.display === 'none') {
+          filterCard.style.display = 'block';
+          toggleBtn.innerHTML = '<i class="fas fa-times"></i><span class="hide-mobile">Hide Filters</span>';
+      } else {
+          filterCard.style.display = 'none';
+          toggleBtn.innerHTML = '<i class="fas fa-filter"></i><span class="hide-mobile">Search & Filter</span>';
+      }
     };
 
-    // Show filter card if any filters are active
     const hasFilters = {{ 'true' if q or account or folder else 'false' }};
     if (hasFilters) {
       toggleFilters();
     }
 
-    // Quarantine confirmation functions
     window.showQuarantineModal = function() {
       const checkedBoxes = Array.from(checkboxes).filter(cb => cb.checked);
       const count = checkedBoxes.length;
-      
+
       if (count === 0) return;
-      
+
       document.getElementById('quarantine-count').textContent = count;
       document.getElementById('quarantine-plural').textContent = count === 1 ? '' : 's';
-      
-      // Hide table section and show quarantine confirmation
+
       document.getElementById('filterCard').style.display = 'none';
       document.querySelector('.card').style.display = 'none';
       document.getElementById('quarantine-confirmation').style.display = 'block';
-      
-      // Scroll to top
+
       window.scrollTo(0, 0);
     };
 
     window.hideQuarantineConfirmation = function() {
-      // Show table section and hide quarantine confirmation
       document.getElementById('quarantine-confirmation').style.display = 'none';
       document.querySelector('.card').style.display = 'block';
-      
-      // Scroll to top
       window.scrollTo(0, 0);
     };
 
-    // Delete confirmation functions
     window.showDeleteModal = function() {
       const checkedBoxes = Array.from(checkboxes).filter(cb => cb.checked);
       const count = checkedBoxes.length;
-      
+
       if (count === 0) return;
-      
+
       document.getElementById('delete-count').textContent = count;
       document.getElementById('delete-plural').textContent = count === 1 ? '' : 's';
-      
-      // Hide table section and show delete confirmation
+
       document.getElementById('filterCard').style.display = 'none';
       document.querySelector('.card').style.display = 'none';
       document.getElementById('delete-confirmation').style.display = 'block';
-      
-      // Scroll to top
+
       window.scrollTo(0, 0);
     };
 
     window.hideDeleteConfirmation = function() {
-      // Show table section and hide delete confirmation
       document.getElementById('delete-confirmation').style.display = 'none';
       document.querySelector('.card').style.display = 'block';
-      
-      // Scroll to top
       window.scrollTo(0, 0);
     };
 
     window.performDelete = function(mode) {
-      // Add hidden input for mode
       const modeInput = document.createElement('input');
       modeInput.type = 'hidden';
       modeInput.name = 'mode';
       modeInput.value = mode;
       bulkForm.appendChild(modeInput);
-      
-      // Submit the form
       bulkForm.submit();
     };
   })();

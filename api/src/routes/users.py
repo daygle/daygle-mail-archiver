@@ -198,230 +198,241 @@ def get_user(
             f"Failed to fetch user {user_id} for admin '{admin_username}': {str(e)}")
         return JSONResponse({"error": "Failed to load user data"}, status_code=500)
 
+# ---------------------------------------------------------
+# UPDATE USER
+# ---------------------------------------------------------
 @router.post("/users/{user_id}/update")
 def update_user(
     request: Request,
     user_id: int,
+    _=require_permission(PERMISSIONS["manage_users"]),
     username: str = Form(...),
     first_name: str = Form(""),
     last_name: str = Form(""),
     email: str = Form(""),
-    role: str = Form("administrator"),
     role_ids: List[str] = Form([]),
     email_notifications: bool = Form(True),
     enabled: bool = Form(False),
     password: str = Form("")
 ):
-    if not require_login(request):
-        return RedirectResponse("/login", status_code=303)
-
-    current_user_id = request.session.get("user_id")
     admin_username = request.session.get("username", "unknown")
-    
-    # Sanitize inputs
+    current_user_id = int(request.session.get("user_id"))
+
+    # Normalize input
     username = username.strip()
-    first_name = first_name.strip()
-    last_name = last_name.strip()
-    email = email.strip()
-    
+    first_name = first_name.strip() or None
+    last_name = last_name.strip() or None
+    email = email.strip() or None
+
     # Validate username
-    if not username or len(username) < 3:
-        flash(request, "Username must be at least 3 characters long.", 'error')
+    if len(username) < 3:
+        flash(request, "Username must be at least 3 characters long.", "error")
         return RedirectResponse("/users", status_code=303)
-    
-    # Check username uniqueness (excluding current user)
-    existing = query(
-        "SELECT id FROM users WHERE username = :u AND id != :id",
-        {"u": username, "id": user_id}
-    ).mappings().first()
+
+    # Unique username check
+    existing = query("""
+        SELECT id FROM users
+        WHERE username = :u AND id != :id
+    """, {"u": username, "id": user_id}).mappings().first()
+
     if existing:
-        flash(request, f"Username '{username}' already exists.", 'error')
+        flash(request, f"Username '{username}' already exists.", "error")
         return RedirectResponse("/users", status_code=303)
-    
-    # Validate email format if provided
+
+    # Email validation
     if email and not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email):
-        flash(request, "Invalid email format.", 'error')
+        flash(request, "Invalid email format.", "error")
         return RedirectResponse("/users", status_code=303)
-    
-    # Validate that at least one role is selected
+
+    # Must have at least one role
     if not role_ids:
-        flash(request, "At least one role must be assigned to the user.", 'error')
+        flash(request, "At least one role must be assigned.", "error")
         return RedirectResponse(f"/users/{user_id}/edit", status_code=303)
-    
+
     try:
-        # Fetch current user values to detect no-op
-        current = query(
-            "SELECT username, first_name, last_name, email, role, email_notifications, enabled FROM users WHERE id = :id",
-            {"id": user_id},
-        ).mappings().first()
-        role_rows = query("SELECT role_id FROM user_roles WHERE user_id = :id", {"id": user_id}).mappings().all()
-        current_role_ids = [str(r["role_id"]) for r in role_rows]
+        # Fetch current user values
+        current = query("""
+            SELECT username, first_name, last_name, email,
+                   email_notifications, enabled
+            FROM users
+            WHERE id = :id
+        """, {"id": user_id}).mappings().first()
 
-        # Normalize inputs for comparison
-        cmp_username = username
-        cmp_first = first_name or ""
-        cmp_last = last_name or ""
-        cmp_email = email or ""
-        cmp_role = role or (current.get('role') if current else 'administrator')
-        cmp_email_notifications = bool(email_notifications)
-        cmp_enabled = True if user_id == current_user_id else bool(enabled)
-        cmp_role_ids = [str(r) for r in role_ids]
+        current_role_rows = query("""
+            SELECT role_id FROM user_roles WHERE user_id = :id
+        """, {"id": user_id}).mappings().all()
 
+        current_role_ids = {str(r["role_id"]) for r in current_role_rows}
+        new_role_ids = {str(r) for r in role_ids}
+
+        # Detect no-op
         if (
             not password
             and current
-            and current.get('username') == cmp_username
-            and (current.get('first_name') or '') == cmp_first
-            and (current.get('last_name') or '') == cmp_last
-            and (current.get('email') or '') == cmp_email
-            and (current.get('role') or '') == cmp_role
-            and bool(current.get('email_notifications')) == cmp_email_notifications
-            and bool(current.get('enabled')) == cmp_enabled
-            and set(current_role_ids) == set(cmp_role_ids)
+            and current["username"] == username
+            and (current["first_name"] or None) == first_name
+            and (current["last_name"] or None) == last_name
+            and (current["email"] or None) == email
+            and bool(current["email_notifications"]) == bool(email_notifications)
+            and bool(current["enabled"]) == (True if user_id == current_user_id else bool(enabled))
+            and current_role_ids == new_role_ids
         ):
-            flash(request, "No changes detected.", 'info')
+            flash(request, "No changes detected.", "info")
             return RedirectResponse("/users", status_code=303)
 
+        # Password update
         if password:
-            # Validate password strength if changing
-            if len(password) < 8:
-                flash(request, "Password must be at least 8 characters long.", 'error')
+            if (
+                len(password) < 8
+                or not re.search(r"[a-z]", password)
+                or not re.search(r"[A-Z]", password)
+                or not re.search(r"[0-9]", password)
+            ):
+                flash(request, "Password must include upper, lower, number and be 8+ chars.", "error")
                 return RedirectResponse("/users", status_code=303)
-            
-            if not re.search(r"[a-z]", password):
-                flash(request, "Password must contain at least one lowercase letter.", 'error')
-                return RedirectResponse("/users", status_code=303)
-            
-            if not re.search(r"[A-Z]", password):
-                flash(request, "Password must contain at least one uppercase letter.", 'error')
-                return RedirectResponse("/users", status_code=303)
-            
-            if not re.search(r"[0-9]", password):
-                flash(request, "Password must contain at least one number.", 'error')
-                return RedirectResponse("/users", status_code=303)
-            
-            # Update with new password
-            hash_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+            hash_pw = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
             execute("""
-                UPDATE users 
-                SET username = :u, first_name = :fn, last_name = :ln, 
-                    email = :e, role = :r, email_notifications = :enf, enabled = :en, password_hash = :h
+                UPDATE users
+                SET username = :u, first_name = :fn, last_name = :ln,
+                    email = :e, email_notifications = :enf,
+                    enabled = :en, password_hash = :h
                 WHERE id = :id
             """, {
                 "u": username,
                 "fn": first_name,
                 "ln": last_name,
                 "e": email,
-                "r": role,
                 "enf": email_notifications,
-                "en": enabled if user_id != current_user_id else True,
+                "en": True if user_id == current_user_id else enabled,
                 "h": hash_pw,
                 "id": user_id
             })
-            log("warning", "Users", f"Admin '{admin_username}' updated user '{username}' (ID: {user_id}) including password reset", "")
+
+            log("warning", "Users",
+                f"Admin '{admin_username}' updated user '{username}' (ID: {user_id}) including password reset")
+
         else:
-            # Update without password change
+            # Update without password
             execute("""
-                UPDATE users 
-                SET username = :u, first_name = :fn, last_name = :ln, 
-                    email = :e, role = :r, email_notifications = :enf, enabled = :en
+                UPDATE users
+                SET username = :u, first_name = :fn, last_name = :ln,
+                    email = :e, email_notifications = :enf,
+                    enabled = :en
                 WHERE id = :id
             """, {
                 "u": username,
                 "fn": first_name,
                 "ln": last_name,
                 "e": email,
-                "r": role,
                 "enf": email_notifications,
-                "en": enabled if user_id != current_user_id else True,
+                "en": True if user_id == current_user_id else enabled,
                 "id": user_id
             })
-            log("info", "Users", f"Admin '{admin_username}' updated user '{username}' (ID: {user_id})", "")
 
-            # Update role assignments (user_roles)
-            try:
-                execute("DELETE FROM user_roles WHERE user_id = :id", {"id": user_id})
-                if role_ids:
-                    for rid in role_ids:
-                        try:
-                            execute("INSERT INTO user_roles (user_id, role_id) VALUES (:user_id, :role_id)", {"user_id": user_id, "role_id": int(rid)})
-                        except Exception as e:
-                            log("error", "Users", f"Failed to assign role {rid} to user {username}: {str(e)}")
-                # Sync legacy users.role with the first selected role if provided
-                try:
-                    if role_ids:
-                        first_role = query("SELECT name FROM roles WHERE id = :id", {"id": int(role_ids[0])}).mappings().first()
-                        if first_role:
-                            execute("UPDATE users SET role = :role WHERE id = :id", {"role": first_role["name"], "id": user_id})
-                except Exception as e:
-                    log("warning", "Users", f"Failed to sync legacy role for user {user_id}: {str(e)}")
-            except Exception as e:
-                log("warning", "Users", f"Failed to update role assignments for user {user_id}: {str(e)}")
+            log("info", "Users",
+                f"Admin '{admin_username}' updated user '{username}' (ID: {user_id})")
 
-            flash(request, "User updated successfully.", 'success')
+        # Update role assignments
+        execute("DELETE FROM user_roles WHERE user_id = :id", {"id": user_id})
+        for rid in new_role_ids:
+            execute("""
+                INSERT INTO user_roles (user_id, role_id)
+                VALUES (:user_id, :role_id)
+            """, {"user_id": user_id, "role_id": int(rid)})
+
+        flash(request, "User updated successfully.", "success")
+
     except Exception as e:
-        log("error", "Users", f"Failed to update user {user_id} by admin '{admin_username}': {str(e)}", "")
-        flash(request, "User update failed. Please try again.", 'error')
-    
+        log("error", "Users",
+            f"Failed to update user {user_id} by admin '{admin_username}': {str(e)}")
+        flash(request, "User update failed. Please try again.", "error")
+
     return RedirectResponse("/users", status_code=303)
 
-@router.post("/users/{user_id}/delete")
-def delete_user(request: Request, user_id: int):
-    if not require_login(request):
-        return RedirectResponse("/login", status_code=303)
 
-    current_user_id = request.session.get("user_id")
+# ---------------------------------------------------------
+# DELETE USER
+# ---------------------------------------------------------
+@router.post("/users/{user_id}/delete")
+def delete_user(
+    request: Request,
+    user_id: int,
+    _=require_permission(PERMISSIONS["manage_users"])
+):
+    current_user_id = int(request.session.get("user_id"))
     admin_username = request.session.get("username", "unknown")
-    
+
     if user_id == current_user_id:
-        flash(request, "Cannot delete your own account.", 'error')
+        flash(request, "You cannot delete your own account.", "error")
         return RedirectResponse("/users", status_code=303)
 
     try:
-        # Get username before deletion for logging
-        user = query("SELECT username FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+        user = query("""
+            SELECT username FROM users WHERE id = :id
+        """, {"id": user_id}).mappings().first()
+
         username = user["username"] if user else f"ID {user_id}"
 
         execute("DELETE FROM users WHERE id = :id", {"id": user_id})
-        log("info", "Users", f"Admin '{admin_username}' deleted user '{username}' (ID: {user_id})", "")
-        flash(request, "User deleted successfully.", 'success')
+
+        log("info", "Users",
+            f"Admin '{admin_username}' deleted user '{username}' (ID: {user_id})")
+
+        flash(request, "User deleted successfully.", "success")
+
     except Exception as e:
-        error_msg = str(e).lower()
-        if "foreign key" in error_msg:
-            flash(request, "Cannot delete user due to existing references. Please reassign or clear their data first.", 'error')
-        else:
-            flash(request, "User deletion failed. Please try again.", 'error')
-        log("error", "Users", f"Failed to delete user {user_id} by admin '{admin_username}': {str(e)}", "")
+        log("error", "Users",
+            f"Failed to delete user {user_id} by admin '{admin_username}': {str(e)}")
+        flash(request, "User deletion failed. Please try again.", "error")
+
     return RedirectResponse("/users", status_code=303)
 
-@router.post("/users/{user_id}/toggle")
-def toggle_user_enabled(request: Request, user_id: int):
-    if not require_login(request):
-        return RedirectResponse("/login", status_code=303)
 
-    current_user_id = request.session.get("user_id")
+# ---------------------------------------------------------
+# TOGGLE USER ENABLED
+# ---------------------------------------------------------
+@router.post("/users/{user_id}/toggle")
+def toggle_user_enabled(
+    request: Request,
+    user_id: int,
+    _=require_permission(PERMISSIONS["manage_users"])
+):
+    current_user_id = int(request.session.get("user_id"))
     admin_username = request.session.get("username", "unknown")
-    
+
     if user_id == current_user_id:
-        flash(request, "Cannot disable your own account.", 'error')
+        flash(request, "You cannot disable your own account.", "error")
         return RedirectResponse("/users", status_code=303)
 
     try:
-        # Get username for logging
-        user = query("SELECT username, enabled FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+        user = query("""
+            SELECT username, enabled
+            FROM users
+            WHERE id = :id
+        """, {"id": user_id}).mappings().first()
+
         if not user:
-            flash(request, "User not found.", 'error')
+            flash(request, "User not found.", "error")
             return RedirectResponse("/users", status_code=303)
-        
-        # Toggle the enabled status
-        execute(
-            "UPDATE users SET enabled = NOT enabled WHERE id = :id",
-            {"id": user_id}
-        )
+
+        execute("""
+            UPDATE users
+            SET enabled = NOT enabled
+            WHERE id = :id
+        """, {"id": user_id})
+
         new_status = "disabled" if user["enabled"] else "enabled"
-        log("info", "Users", f"Admin '{admin_username}' {new_status} user '{user['username']}' (ID: {user_id})", "")
-        flash(request, "User status updated successfully.", 'success')
+
+        log("info", "Users",
+            f"Admin '{admin_username}' {new_status} user '{user['username']}' (ID: {user_id})")
+
+        flash(request, "User status updated successfully.", "success")
+
     except Exception as e:
-        log("error", "Users", f"Failed to toggle user {user_id} by admin '{admin_username}': {str(e)}", "")
-        flash(request, "User status update failed. Please try again.", 'error')
+        log("error", "Users",
+            f"Failed to toggle user {user_id} by admin '{admin_username}': {str(e)}")
+        flash(request, "User status update failed. Please try again.", "error")
+
     return RedirectResponse("/users", status_code=303)

@@ -246,32 +246,34 @@ async function editUser(userId) {
         }
 
         const user = await response.json();
-        
         if (user.error) {
             alert('Error loading user: ' + user.error);
             return;
         }
-        
+
         const formCard = document.getElementById('userFormCard');
         const usersListCard = document.getElementById('usersListCard');
         const form = document.getElementById('userForm');
-        
-        // Populate the form (guard against missing elements)
-        const setIfExists = (id, value) => { const el = document.getElementById(id); if (el) el.value = value; };
+
+        const setIfExists = (id, value) => {
+            const el = document.getElementById(id);
+            if (el) el.value = value;
+        };
+
         setIfExists('user_id', user.id);
         setIfExists('username', user.username);
         setIfExists('first_name', user.first_name || '');
         setIfExists('last_name', user.last_name || '');
         setIfExists('email', user.email || '');
         setIfExists('email_notifications', user.email_notifications ? 'true' : 'false');
-        // Legacy role field (if present) and enabled field may not exist in the form
-        const roleEl = document.getElementById('role');
-        if (roleEl) { roleEl.value = user.role || 'administrator'; }
-        const enabledEl = document.getElementById('enabled');
-        if (enabledEl) { enabledEl.value = user.enabled ? 'true' : 'false'; }
-        setIfExists('password', '');
-        const pwEl = document.getElementById('password'); if (pwEl) pwEl.required = false;
-        
+
+        // Password field
+        const pwEl = document.getElementById('password');
+        if (pwEl) {
+            pwEl.value = '';
+            pwEl.required = false;
+        }
+
         // Populate role checkboxes
         const roleIds = user.role_ids || [];
         const roleCheckboxes = document.querySelectorAll('input[name="role_ids"]');
@@ -279,27 +281,26 @@ async function editUser(userId) {
             cb.checked = roleIds.includes(parseInt(cb.value));
         });
 
-        // Display read-only info
+        // Read-only info
         document.getElementById('last_login').textContent = user.last_login || 'Never';
         document.getElementById('created_at').textContent = user.created_at || '-';
         document.getElementById('userInfoAlert').style.display = 'block';
-        
-        // Update UI text
+
+        // UI updates
         document.getElementById('formTitle').textContent = 'Edit User';
         document.getElementById('formIcon').className = 'fas fa-user-edit';
         document.getElementById('submitIcon').className = 'fas fa-save';
         document.getElementById('submitText').textContent = 'Save Changes';
-        document.getElementById('passwordLabel').innerHTML = '<small style="color: var(--text-secondary);">(leave blank to keep current)</small>';
-        
-        // Set form action
+        document.getElementById('passwordLabel').innerHTML =
+            '<small style="color: var(--text-secondary);">(leave blank to keep current)</small>';
+
         form.action = `/users/${userId}/update`;
-        
-        // Hide users table and show form
+
         usersListCard.style.display = 'none';
         formCard.style.display = 'block';
-        
-        // Scroll to top
+
         window.scrollTo({ top: 0, behavior: 'smooth' });
+
     } catch (error) {
         console.error('Error loading user:', error);
         alert('Failed to load user details');

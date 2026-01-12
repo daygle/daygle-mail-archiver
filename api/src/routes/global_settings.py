@@ -5,29 +5,30 @@ from utils.db import query, execute
 from utils.logger import log
 from utils.templates import templates
 from utils.email import test_smtp_connection
+from utils.permissions import require_permission, PERMISSIONS
 
 router = APIRouter()
 
-def require_login(request: Request):
-    return "user_id" in request.session
 
-def flash(request: Request, message, category: str = 'info'):
-    if isinstance(message, dict):
-        request.session["flash"] = message
-    else:
-        request.session["flash"] = {"message": message, "type": category}
+def flash(request: Request, message, category: str = "info"):
+    request.session["flash"] = (
+        message if isinstance(message, dict) else {"message": message, "type": category}
+    )
 
+
+# ---------------------------------------------------------
+# GLOBAL SETTINGS FORM
+# ---------------------------------------------------------
 @router.get("/global-settings")
-def settings_form(request: Request):
-    if not require_login(request):
-        return RedirectResponse("/login", status_code=303)
-
+def settings_form(
+    request: Request,
+    _=require_permission(PERMISSIONS["manage_global_settings"])
+):
     rows = query("SELECT key, value FROM settings").mappings().all()
     settings = {r["key"]: r["value"] for r in rows}
 
-    # Update session with current global theme setting
-    current_global_theme = settings.get('default_theme', 'system')
-    request.session["global_theme"] = current_global_theme
+    # Sync global theme into session
+    request.session["global_theme"] = settings.get("default_theme", "system")
 
     msg = request.session.pop("flash", None)
 
@@ -36,9 +37,14 @@ def settings_form(request: Request):
         {"request": request, "settings": settings, "flash": msg},
     )
 
+
+# ---------------------------------------------------------
+# SAVE GLOBAL SETTINGS
+# ---------------------------------------------------------
 @router.post("/global-settings")
 def save_settings(
     request: Request,
+    _=require_permission(PERMISSIONS["manage_global_settings"]),
     page_size: int = Form(...),
     date_format: str = Form("%d/%m/%Y"),
     time_format: str = Form("%H:%M"),
@@ -65,139 +71,102 @@ def save_settings(
     smtp_from_email: str = Form(""),
     smtp_from_name: str = Form("Daygle Mail Archiver"),
 ):
-    if not require_login(request):
-        return RedirectResponse("/login", status_code=303)
-
-
-    # Fetch existing settings before updating
+    # Load old settings
     rows = query("SELECT key, value FROM settings").mappings().all()
     old_settings = {r["key"]: r["value"] for r in rows}
 
     try:
-        # Sanitize default_theme
-        default_theme = default_theme if default_theme in ('system', 'light', 'dark') else 'system'
+        # Sanitize theme
+        default_theme = default_theme if default_theme in ("system", "light", "dark") else "system"
 
         settings_data = [
-            ('page_size', str(page_size)),
-            ('date_format', date_format),
-            ('time_format', time_format),
-            ('timezone', timezone),
-            ('default_theme', default_theme),
-            ('enable_purge', str(enable_purge).lower()),
-            ('retention_value', str(retention_value)),
-            ('retention_unit', retention_unit),
-            ('retention_delete_from_mail_server', str(retention_delete_from_mail_server).lower()),
-            ('clamav_enabled', str(clamav_enabled).lower()),
-            ('clamav_host', clamav_host),
-            ('clamav_port', str(clamav_port)),
-            ('clamav_action', clamav_action),
-            ('clamav_quarantine_in_db', str(clamav_quarantine_in_db).lower()),
-            ('clamav_quarantine_retention_days', str(clamav_quarantine_retention_days)),
-            ('clamav_max_file_size', str(clamav_max_file_size)),
-            ('clamav_quarantine_encrypt', str(clamav_quarantine_encrypt).lower()),
-            ('smtp_enabled', str(smtp_enabled).lower()),
-            ('smtp_host', smtp_host),
-            ('smtp_port', str(smtp_port)),
-            ('smtp_username', smtp_username),
-            ('smtp_password', smtp_password),
-            ('smtp_use_tls', str(smtp_use_tls).lower()),
-            ('smtp_from_email', smtp_from_email),
-            ('smtp_from_name', smtp_from_name),
+            ("page_size", str(page_size)),
+            ("date_format", date_format),
+            ("time_format", time_format),
+            ("timezone", timezone),
+            ("default_theme", default_theme),
+            ("enable_purge", str(enable_purge).lower()),
+            ("retention_value", str(retention_value)),
+            ("retention_unit", retention_unit),
+            ("retention_delete_from_mail_server", str(retention_delete_from_mail_server).lower()),
+            ("clamav_enabled", str(clamav_enabled).lower()),
+            ("clamav_host", clamav_host),
+            ("clamav_port", str(clamav_port)),
+            ("clamav_action", clamav_action),
+            ("clamav_quarantine_in_db", str(clamav_quarantine_in_db).lower()),
+            ("clamav_quarantine_retention_days", str(clamav_quarantine_retention_days)),
+            ("clamav_max_file_size", str(clamav_max_file_size)),
+            ("clamav_quarantine_encrypt", str(clamav_quarantine_encrypt).lower()),
+            ("smtp_enabled", str(smtp_enabled).lower()),
+            ("smtp_host", smtp_host),
+            ("smtp_port", str(smtp_port)),
+            ("smtp_username", smtp_username),
+            ("smtp_password", smtp_password),
+            ("smtp_use_tls", str(smtp_use_tls).lower()),
+            ("smtp_from_email", smtp_from_email),
+            ("smtp_from_name", smtp_from_name),
         ]
-        # Build new settings dict for comparison
+
         new_settings = {k: v for (k, v) in settings_data}
 
-        # Determine if anything changed
+        # Detect changes
         changed_keys = [k for k, v in new_settings.items() if old_settings.get(k) != v]
         if not changed_keys:
-            flash(request, "No changes detected.", 'info')
+            flash(request, "No changes detected.", "info")
             return RedirectResponse("/global-settings", status_code=303)
 
         # Apply updates
         for key, value in settings_data:
-            execute(
-                """
+            execute("""
                 INSERT INTO settings (key, value)
                 VALUES (:key, :value)
                 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
-                """,
-                {"key": key, "value": value},
-            )
+            """, {"key": key, "value": value})
 
-        # Update session variables
+        # Sync session
         request.session["date_format"] = date_format
         request.session["time_format"] = time_format
         request.session["timezone"] = timezone
-        # Update immediate global theme for current session (affects admin who saved settings)
         request.session["global_theme"] = default_theme
 
-        # Log change for default_theme if it changed
-        try:
-            if old_settings.get('default_theme') != default_theme:
-                log("info", "Settings", f"User '{request.session.get('username', 'unknown')}' changed default_theme to {default_theme}", "")
-        except Exception:
-            pass
-    except Exception as e:
-        log("error", "Settings", f"Failed to save settings: {str(e)}", "")
-        flash(request, f"Failed to save settings: {str(e)}", 'error')
+        flash(request, "Settings updated successfully.", "success")
         return RedirectResponse("/global-settings", status_code=303)
 
-    # Log only changed fields
-    username = request.session.get("username", "unknown")
-    changed_fields = []
-    
-    new_settings = {
-        'page_size': str(page_size),
-        'date_format': date_format,
-        'time_format': time_format,
-        'timezone': timezone,
-        'enable_purge': str(enable_purge).lower(),
-        'retention_value': str(retention_value),
-        'retention_unit': retention_unit,
-        'retention_delete_from_mail_server': str(retention_delete_from_mail_server).lower(),
-        'clamav_enabled': str(clamav_enabled).lower(),
-        'clamav_host': clamav_host,
-        'clamav_port': str(clamav_port),
-        'clamav_action': clamav_action,
-        'smtp_enabled': str(smtp_enabled).lower(),
-        'smtp_host': smtp_host,
-        'smtp_port': str(smtp_port),
-        'smtp_username': smtp_username,
-        'smtp_password': smtp_password,
-        'smtp_use_tls': str(smtp_use_tls).lower(),
-        'smtp_from_email': smtp_from_email,
-        'smtp_from_name': smtp_from_name,
-    }
+    except Exception as e:
+        log("error", "Settings", f"Failed to save settings: {str(e)}")
+        flash(request, f"Failed to save settings: {str(e)}", "error")
+        return RedirectResponse("/global-settings", status_code=303)
 
-    flash(request, "Settings updated successfully.", 'success')
-    return RedirectResponse("/global-settings", status_code=303)
 
+# ---------------------------------------------------------
+# TEST SMTP
+# ---------------------------------------------------------
 @router.post("/api/test-smtp")
-def test_smtp(request: Request):
-    """Test SMTP connection and send a test email to the current user"""
-    if not require_login(request):
-        flash(request, "You must be logged in to test SMTP.", 'error')
-        return RedirectResponse("/login", status_code=303)
-
+def test_smtp(
+    request: Request,
+    _=require_permission(PERMISSIONS["manage_global_settings"])
+):
     try:
-        # Get current user's email address
         user_id = request.session.get("user_id")
-        if not user_id:
-            flash(request, "User session not found.", 'error')
-            return RedirectResponse("/global-settings", status_code=303)
-        
-        user = query("SELECT email FROM users WHERE id = :id", {"id": int(user_id)}).mappings().first()
+        user = query("""
+            SELECT email
+            FROM users
+            WHERE id = :id
+        """, {"id": user_id}).mappings().first()
+
         if not user or not user.get("email"):
-            flash(request, "Your account does not have an email address configured.", 'error')
+            flash(request, "Your account does not have an email address configured.", "error")
             return RedirectResponse("/global-settings", status_code=303)
 
         success, message = test_smtp_connection(user["email"], int(user_id))
+
         if success:
-            flash(request, f"SMTP test successful: {message}", 'success')
+            flash(request, f"SMTP test successful: {message}", "success")
         else:
-            flash(request, f"SMTP test failed: {message}", 'error')
+            flash(request, f"SMTP test failed: {message}", "error")
+
     except Exception as e:
-        log("error", "Settings", f"SMTP test failed: {str(e)}", "")
-        flash(request, f"SMTP test failed: {str(e)}", 'error')
-    
+        log("error", "Settings", f"SMTP test failed: {str(e)}")
+        flash(request, f"SMTP test failed: {str(e)}", "error")
+
     return RedirectResponse("/global-settings", status_code=303)
