@@ -144,40 +144,38 @@ def create_user(
         flash(request, "User creation failed. Please try again.", "error")
 
     return RedirectResponse("/users", status_code=303)
+
 @router.get("/api/users/{user_id}")
-def get_user(request: Request, user_id: int):
+def get_user(
+    request: Request,
+    user_id: int,
+    _=require_permission(PERMISSIONS["view_users"])
+):
     """API endpoint to get user details for editing"""
-    if not require_login(request):
-        return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
     try:
         user = query("""
-            SELECT id, username, first_name, last_name, email, role, 
-                   COALESCE(email_notifications, TRUE) as email_notifications,
-                   enabled, last_login, created_at 
-            FROM users 
+            SELECT id, username, first_name, last_name, email,
+                   COALESCE(email_notifications, TRUE) AS email_notifications,
+                   enabled, last_login, created_at
+            FROM users
             WHERE id = :id
         """, {"id": user_id}).mappings().first()
-        
+
         if not user:
             return JSONResponse({"error": "User not found"}, status_code=404)
-        
-        # Get current user's ID for timezone conversion
-        current_user_id = int(request.session.get("user_id"))
-        
-        # Get assigned role ids for the user
-        role_rows = query("SELECT role_id FROM user_roles WHERE user_id = :id", {"id": user_id}).mappings().all()
-        role_ids = [r["role_id"] for r in role_rows]
 
-        # If no role assignments exist, try to map legacy users.role to new role id if possible
-        if not role_ids and user.get("role"):
-            try:
-                legacy = user["role"]
-                mapped = query("SELECT id FROM roles WHERE name = :name", {"name": legacy}).mappings().first()
-                if mapped:
-                    role_ids = [mapped["id"]]
-            except Exception:
-                pass
+        # Current user's ID for timezone conversion
+        current_user_id = int(request.session.get("user_id"))
+
+        # Get assigned role IDs
+        role_rows = query("""
+            SELECT role_id
+            FROM user_roles
+            WHERE user_id = :id
+        """, {"id": user_id}).mappings().all()
+
+        role_ids = [r["role_id"] for r in role_rows]
 
         return {
             "id": user["id"],
@@ -185,16 +183,19 @@ def get_user(request: Request, user_id: int):
             "first_name": user["first_name"] or "",
             "last_name": user["last_name"] or "",
             "email": user["email"] or "",
-            "role": user["role"] or "administrator",
             "role_ids": role_ids,
             "email_notifications": user["email_notifications"],
             "enabled": user["enabled"],
-            "last_login": format_datetime(user["last_login"], current_user_id) if user["last_login"] else None,
-            "created_at": format_datetime(user["created_at"], current_user_id) if user["created_at"] else None
+            "last_login": format_datetime(user["last_login"], current_user_id)
+                if user["last_login"] else None,
+            "created_at": format_datetime(user["created_at"], current_user_id)
+                if user["created_at"] else None
         }
+
     except Exception as e:
         admin_username = request.session.get("username", "unknown")
-        log("error", "Users", f"Failed to fetch user {user_id} for admin '{admin_username}': {str(e)}", "")
+        log("error", "Users",
+            f"Failed to fetch user {user_id} for admin '{admin_username}': {str(e)}")
         return JSONResponse({"error": "Failed to load user data"}, status_code=500)
 
 @router.post("/users/{user_id}/update")
