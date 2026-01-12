@@ -11,7 +11,7 @@ from imaplib import IMAP4, IMAP4_SSL
 from utils.db import query, execute
 from utils.email_parser import decompress, parse_email
 from utils.email_parser import compute_signature
-from utils.security import decrypt_password, can_delete
+from utils.crypto import decrypt_password
 from utils.logger import log
 from utils.templates import templates
 from utils.timezone import format_datetime
@@ -533,10 +533,6 @@ def quarantine_single_email(request: Request, email_id: int):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
     
-    if not can_delete(request):
-        flash(request, "You don't have permission to quarantine emails.", 'error')
-        return RedirectResponse(f"/emails/{email_id}", status_code=303)
-
     quarantined = _quarantine_emails([email_id], request.session.get("username", "unknown"))
     
     username = request.session.get("username", "unknown")
@@ -575,10 +571,6 @@ def perform_delete(
     """
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
-    
-    if not can_delete(request):
-        flash(request, "You don't have permission to delete emails.", 'error')
-        return RedirectResponse("/emails", status_code=303)
 
     if not isinstance(ids, list):
         ids = [ids]
@@ -628,10 +620,6 @@ def perform_quarantine(
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
     
-    if not can_delete(request):  # Assuming quarantine requires same permission as delete
-        flash(request, "You don't have permission to quarantine emails.", 'error')
-        return RedirectResponse("/emails", status_code=303)
-
     if not isinstance(ids, list):
         ids = [ids]
 

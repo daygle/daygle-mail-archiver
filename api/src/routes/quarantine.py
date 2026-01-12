@@ -6,7 +6,6 @@ from utils.templates import templates
 from utils.db import query, execute
 from utils.logger import log
 from utils.config import get_config
-from utils.security import decrypt_password, can_delete
 from cryptography.fernet import Fernet
 from utils.alerts import create_alert
 from utils.email_parser import compute_signature
@@ -573,10 +572,6 @@ def delete_quarantine(request: Request, qid: int, mode: str = Form("db")):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    if not can_delete(request):
-        request.session['flash'] = "You don't have permission to restore quarantined emails."
-        return RedirectResponse("/quarantine", status_code=303)
-
     if not isinstance(ids, list):
         ids = [ids]
 
@@ -688,10 +683,6 @@ def perform_bulk_restore(
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    if not can_delete(request):  # Note: restore uses same permission as delete
-        request.session['flash'] = "You don't have permission to restore quarantined emails."
-        return RedirectResponse("/quarantine", status_code=303)
-
     if not isinstance(ids, list):
         ids = [ids]
 
@@ -783,10 +774,6 @@ def perform_bulk_delete(
     """
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
-
-    if not can_delete(request):
-        request.session['flash'] = "You don't have permission to delete quarantined emails."
-        return RedirectResponse("/quarantine", status_code=303)
 
     if not isinstance(ids, list):
         ids = [ids]
