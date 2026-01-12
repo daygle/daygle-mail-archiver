@@ -26,7 +26,7 @@ def list_users(request: Request):
         return RedirectResponse("/login", status_code=303)
 
     # Get users with their assigned roles (use display_name for UI)
-    users = query("""
+    users = query(r"""
         SELECT u.id, u.username, u.first_name, u.last_name, u.email,
                COALESCE(u.email_notifications, TRUE) as email_notifications,
                u.enabled, u.last_login, u.created_at,
