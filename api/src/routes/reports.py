@@ -814,7 +814,7 @@ def retention_policy_report(request: Request, start_date: str = None, end_date: 
                 user_id = None
         date_format = get_user_date_format(request, date_only=True)
 
-        # Deletion statistics
+        # Deletion statistics (retention policy is global, not per-account)
         deletion_query = """
             SELECT
                 deletion_date,
@@ -825,9 +825,7 @@ def retention_policy_report(request: Request, start_date: str = None, end_date: 
             WHERE deletion_date >= :start_date AND deletion_date <= :end_date
         """
         deletion_params = {"start_date": start_dt.date(), "end_date": end_dt.date()}
-        if account:
-            deletion_query += " AND source = :account"
-            deletion_params["account"] = account
+        # Note: Account filtering removed since retention policy is global
         deletion_query += " GROUP BY deletion_date, deletion_type ORDER BY deletion_date"
 
         deletion_results = query(deletion_query, deletion_params).mappings().all()
@@ -867,7 +865,7 @@ def retention_policy_report(request: Request, start_date: str = None, end_date: 
             server_deletions.append(deletion_by_date[label]["server"])
 
         # Current email age distribution
-        age_results = query("""
+        age_query = """
             SELECT
                 CASE
                     WHEN created_at >= CURRENT_DATE - INTERVAL '30 days' THEN '0-30 days'
@@ -878,6 +876,12 @@ def retention_policy_report(request: Request, start_date: str = None, end_date: 
                 END as age_range,
                 COUNT(*) as email_count
             FROM emails
+        """
+        age_params = {}
+        if account:
+            age_query += " WHERE source = :account"
+            age_params["account"] = account
+        age_query += """
             GROUP BY
                 CASE
                     WHEN created_at >= CURRENT_DATE - INTERVAL '30 days' THEN '0-30 days'
@@ -887,7 +891,8 @@ def retention_policy_report(request: Request, start_date: str = None, end_date: 
                     ELSE '1+ years'
                 END
             ORDER BY MIN(created_at)
-        """).mappings().all()
+        """
+        age_results = query(age_query, age_params).mappings().all()
 
         age_distribution = []
         for row in age_results:
