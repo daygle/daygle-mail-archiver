@@ -19,7 +19,11 @@ class PermissionChecker:
         if self._permissions_cache is not None:
             return self._permissions_cache
 
-        user_id = self.request.session.get("user_id")
+        _sess_uid = self.request.session.get("user_id")
+        try:
+            user_id = int(_sess_uid) if _sess_uid is not None else None
+        except (TypeError, ValueError):
+            user_id = None
         if not user_id:
             return []
 
@@ -81,7 +85,11 @@ class PermissionChecker:
 
     def get_user_roles(self) -> List[Dict[str, Any]]:
         """Get all roles for the current user"""
-        user_id = self.request.session.get("user_id")
+        _sess_uid = self.request.session.get("user_id")
+        try:
+            user_id = int(_sess_uid) if _sess_uid is not None else None
+        except (TypeError, ValueError):
+            user_id = None
         if not user_id:
             return []
 

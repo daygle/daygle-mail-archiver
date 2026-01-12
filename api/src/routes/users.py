@@ -223,7 +223,12 @@ def update_user(
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    current_user_id = request.session.get("user_id")
+    # Normalize session user id to int when available to ensure proper comparisons
+    _sess_uid = request.session.get("user_id")
+    try:
+        current_user_id = int(_sess_uid) if _sess_uid is not None else None
+    except (TypeError, ValueError):
+        current_user_id = None
     admin_username = request.session.get("username", "unknown")
     
     # Sanitize inputs
@@ -378,7 +383,12 @@ def delete_user(request: Request, user_id: int):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    current_user_id = request.session.get("user_id")
+    # Normalize session user id to int when available to ensure proper comparisons
+    _sess_uid = request.session.get("user_id")
+    try:
+        current_user_id = int(_sess_uid) if _sess_uid is not None else None
+    except (TypeError, ValueError):
+        current_user_id = None
     admin_username = request.session.get("username", "unknown")
     
     if user_id == current_user_id:
@@ -407,7 +417,12 @@ def toggle_user_enabled(request: Request, user_id: int):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    current_user_id = request.session.get("user_id")
+    # Normalize session user id to int when available to ensure proper comparisons
+    _sess_uid = request.session.get("user_id")
+    try:
+        current_user_id = int(_sess_uid) if _sess_uid is not None else None
+    except (TypeError, ValueError):
+        current_user_id = None
     admin_username = request.session.get("username", "unknown")
     
     if user_id == current_user_id:

@@ -17,11 +17,30 @@ def decrypt_password(t: str) -> str:
 # Role-based access control helpers
 def is_admin(request: Request) -> bool:
     """Check if the current user is an administrator"""
-    return request.session.get("role") == "administrator"
+    r = request.session.get("role")
+    if not r:
+        return False
+    try:
+        rs = str(r).lower()
+    except Exception:
+        return False
+    # Normalize common variants
+    rs = rs.replace('-', '_')
+    if rs == 'admin':
+        rs = 'administrator'
+    return rs == 'administrator'
 
 def is_read_only(request: Request) -> bool:
     """Check if the current user has read-only access"""
-    return request.session.get("role") == "read_only"
+    r = request.session.get("role")
+    if not r:
+        return False
+    try:
+        rs = str(r).lower()
+    except Exception:
+        return False
+    rs = rs.replace('-', '_')
+    return rs == 'read_only'
 
 def require_admin(request: Request):
     """Require administrator role - redirects if not admin"""

@@ -181,17 +181,21 @@ def test_smtp(request: Request):
 
     try:
         # Get current user's email address
-        user_id = request.session.get("user_id")
+        _sess_uid = request.session.get("user_id")
+        try:
+            user_id = int(_sess_uid) if _sess_uid is not None else None
+        except (TypeError, ValueError):
+            user_id = None
         if not user_id:
             flash(request, "User session not found.", 'error')
             return RedirectResponse("/global-settings", status_code=303)
         
-        user = query("SELECT email FROM users WHERE id = :id", {"id": int(user_id)}).mappings().first()
+        user = query("SELECT email FROM users WHERE id = :id", {"id": user_id}).mappings().first()
         if not user or not user.get("email"):
             flash(request, "Your account does not have an email address configured.", 'error')
             return RedirectResponse("/global-settings", status_code=303)
 
-        success, message = test_smtp_connection(user["email"], int(user_id))
+        success, message = test_smtp_connection(user["email"], user_id)
         if success:
             flash(request, f"SMTP test successful: {message}", 'success')
         else:
