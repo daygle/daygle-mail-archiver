@@ -160,52 +160,85 @@ def edit_role_form(
         },
     )
 
+from utils.permissions import require_permission, PERMISSIONS
+
+
+# ---------------------------------------------------------
+# UPDATE ROLE
+# ---------------------------------------------------------
 @router.post("/roles/{role_id}/update")
 def update_role(
     request: Request,
     role_id: int,
+    _=require_permission(PERMISSIONS["manage_roles"]),
     name: str = Form(...),
     description: str = Form(""),
-    permission_ids: List[str] = Form([])
+    permission_ids: List[str] = Form([]),
 ):
     """Update an existing role"""
-    if not require_admin(request):
-        return JSONResponse({"error": "Unauthorized"}, status_code=403)
+
+    # Fetch role and check system-role protection
+    role = query("""
+        SELECT id, name, display_name, description, is_system_role
+        FROM roles
+        WHERE id = :role_id
+    """, {"role_id": role_id}).mappings().first()
+
+    if not role:
+        flash(request, "Role not found.", "error")
+        return RedirectResponse("/roles", status_code=303)
+
+    if role["is_system_role"]:
+        flash(request, "System roles cannot be modified.", "error")
+        return RedirectResponse("/roles", status_code=303)
 
     try:
-        # Normalize and validate role name
-        display_name = re.sub(r'[_\-]+', ' ', name.strip()).title()
-        slug = re.sub(r'[\s\-]+', '_', display_name).lower()
-        if not display_name or len(display_name) < 2:
-            flash(request, "Role name must be at least 2 characters long", 'error')
+        raw = name.strip()
+
+        # Clean display name
+        display_name = re.sub(r"[_-]+", " ", raw).strip().title()
+
+        # Clean slug
+        slug = re.sub(r"[\s-]+", "_", raw).lower()
+
+        if len(display_name) < 2:
+            flash(request, "Role name must be at least 2 characters long.", "error")
             return RedirectResponse(f"/roles/{role_id}/edit", status_code=303)
 
-        # Check if role slug already exists (excluding current role)
+        # Check uniqueness (excluding current role)
         existing = query("""
             SELECT id FROM roles
             WHERE name = :name AND id != :role_id
         """, {"name": slug, "role_id": role_id}).first()
 
         if existing:
-            flash(request, f"Role '{display_name}' already exists", 'error')
+            flash(request, f"Role '{display_name}' already exists.", "error")
             return RedirectResponse(f"/roles/{role_id}/edit", status_code=303)
 
-        # Fetch current role and permissions to detect no-op
-        current_role = query("SELECT name, display_name, description FROM roles WHERE id = :role_id", {"role_id": role_id}).mappings().first()
-        current_perms = query("SELECT permission_id FROM role_permissions WHERE role_id = :role_id", {"role_id": role_id}).mappings().all()
-        current_perm_ids = [p["permission_id"] for p in current_perms]
+        # Current permissions
+        current_perm_ids = [
+            p["permission_id"]
+            for p in query("""
+                SELECT permission_id
+                FROM role_permissions
+                WHERE role_id = :role_id
+            """, {"role_id": role_id}).mappings().all()
+        ]
 
-        # Compare normalized values
-        new_display = display_name
-        new_desc = description.strip() or None
-        new_perm_set = set(int(p) for p in permission_ids) if permission_ids else set()
+        new_perm_set = {int(p) for p in permission_ids}
         current_perm_set = set(current_perm_ids)
 
-        if current_role and current_role.get('display_name') == new_display and (current_role.get('description') or None) == new_desc and new_perm_set == current_perm_set and current_role.get('name') == slug:
-            flash(request, "No changes detected.", 'info')
+        # Detect no-op
+        if (
+            role["display_name"] == display_name
+            and (role["description"] or None) == (description.strip() or None)
+            and role["name"] == slug
+            and new_perm_set == current_perm_set
+        ):
+            flash(request, "No changes detected.", "info")
             return RedirectResponse("/roles", status_code=303)
 
-        # Update the role
+        # Update role
         execute("""
             UPDATE roles
             SET name = :name, display_name = :display_name, description = :description
@@ -213,66 +246,78 @@ def update_role(
         """, {
             "name": slug,
             "display_name": display_name,
-            "description": new_desc,
-            "role_id": role_id
+            "description": description.strip() or None,
+            "role_id": role_id,
         })
 
-        # Remove existing permissions
+        # Replace permissions
         execute("DELETE FROM role_permissions WHERE role_id = :role_id", {"role_id": role_id})
 
-        # Add new permissions
-        if permission_ids:
-            for perm_id in permission_ids:
-                try:
-                    execute("""
-                        INSERT INTO role_permissions (role_id, permission_id)
-                        VALUES (:role_id, :permission_id)
-                    """, {"role_id": role_id, "permission_id": int(perm_id)})
-                except Exception as e:
-                    log("error", "Roles", f"Failed to add permission {perm_id} to role {role_id}: {str(e)}")
+        for perm_id in new_perm_set:
+            execute("""
+                INSERT INTO role_permissions (role_id, permission_id)
+                VALUES (:role_id, :permission_id)
+            """, {"role_id": role_id, "permission_id": perm_id})
 
-        log("info", "Roles", f"Updated role '{name}' with {len(permission_ids)} permissions")
-        flash(request, f"Role '{name}' updated successfully", 'success')
+        flash(request, f"Role '{display_name}' updated successfully.", "success")
+        log("info", "Roles", f"Updated role '{display_name}' with {len(new_perm_set)} permissions")
         return RedirectResponse("/roles", status_code=303)
 
     except Exception as e:
         log("error", "Roles", f"Failed to update role {role_id}: {str(e)}")
-        flash(request, "Failed to update role", 'error')
+        flash(request, "Failed to update role.", "error")
         return RedirectResponse(f"/roles/{role_id}/edit", status_code=303)
 
+
+# ---------------------------------------------------------
+# DELETE ROLE
+# ---------------------------------------------------------
 @router.post("/roles/{role_id}/delete")
-def delete_role(request: Request, role_id: int):
+def delete_role(
+    request: Request,
+    role_id: int,
+    _=require_permission(PERMISSIONS["manage_roles"])
+):
     """Delete a role"""
-    if not require_admin(request):
-        return JSONResponse({"error": "Unauthorized"}, status_code=403)
+
+    # Fetch role and check system-role protection
+    role = query("""
+        SELECT id, name, is_system_role
+        FROM roles
+        WHERE id = :role_id
+    """, {"role_id": role_id}).mappings().first()
+
+    if not role:
+        flash(request, "Role not found.", "error")
+        return RedirectResponse("/roles", status_code=303)
+
+    if role["is_system_role"]:
+        flash(request, "System roles cannot be deleted.", "error")
+        return RedirectResponse("/roles", status_code=303)
 
     try:
-        # Check if role is in use
-        users_with_role = query("""
-            SELECT COUNT(*) as count
+        # Check if role is assigned to users
+        count = query("""
+            SELECT COUNT(*) AS count
             FROM user_roles
             WHERE role_id = :role_id
-        """, {"role_id": role_id}).first()
+        """, {"role_id": role_id}).mappings().first()
 
-        if users_with_role and users_with_role["count"] > 0:
-            flash(request, "Cannot delete role that is assigned to users", 'error')
+        if count and count["count"] > 0:
+            flash(request, "Cannot delete a role that is assigned to users.", "error")
             return RedirectResponse("/roles", status_code=303)
 
-        # Get role name for logging
-        role = query("SELECT name FROM roles WHERE id = :role_id", {"role_id": role_id}).first()
-        role_name = role["name"] if role else "Unknown"
-
-        # Delete role permissions first
+        # Delete permissions
         execute("DELETE FROM role_permissions WHERE role_id = :role_id", {"role_id": role_id})
 
-        # Delete the role
+        # Delete role
         execute("DELETE FROM roles WHERE id = :role_id", {"role_id": role_id})
 
-        log("info", "Roles", f"Deleted role '{role_name}'")
-        flash(request, f"Role '{role_name}' deleted successfully", 'success')
+        flash(request, f"Role '{role['name']}' deleted successfully.", "success")
+        log("info", "Roles", f"Deleted role '{role['name']}'")
         return RedirectResponse("/roles", status_code=303)
 
     except Exception as e:
         log("error", "Roles", f"Failed to delete role {role_id}: {str(e)}")
-        flash(request, "Failed to delete role", 'error')
+        flash(request, "Failed to delete role.", "error")
         return RedirectResponse("/roles", status_code=303)
