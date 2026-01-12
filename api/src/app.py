@@ -72,11 +72,14 @@ async def activity_tracking_middleware(request: Request, call_next):
     if user_id:
         try:
             with engine.begin() as conn:
-                # Update last_activity timestamp (store as UTC)
-                conn.execute(
-                    text("UPDATE users SET last_activity = %s WHERE id = %s"),
-                    (datetime.now(timezone.utc), user_id)
-                )
+                # Update last_activity timestamp (store as UTC) using named params
+                try:
+                    conn.execute(
+                        text("UPDATE users SET last_activity = :ts WHERE id = :id"),
+                        {"ts": datetime.now(timezone.utc), "id": user_id}
+                    )
+                except Exception as e:
+                    log("error", "System", f"Failed to update last_activity for user {user_id}: {str(e)}", "")
                 
                 # Check for inactivity timeout
                 result = conn.execute(text("SELECT value FROM settings WHERE key = 'inactivity_timeout_minutes'"))
@@ -86,8 +89,8 @@ async def activity_tracking_middleware(request: Request, call_next):
                     if timeout_minutes > 0:
                         # Check if user has been inactive too long
                         result = conn.execute(
-                            text("SELECT last_activity FROM users WHERE id = %s"),
-                            (user_id,)
+                            text("SELECT last_activity FROM users WHERE id = :id"),
+                            {"id": user_id}
                         )
                         last_activity_result = result.fetchone()
                         if last_activity_result and last_activity_result[0]:
