@@ -4,24 +4,36 @@
 
 {% block content %}
 <div class="container-fluid">
-    <!-- Global Report Controls -->
-    <div class="report-section">
-        <div class="report-header">
-            <h2 class="report-title">Report Filters</h2>
-            <div class="report-controls">
-                <select id="globalAccount" class="form-select form-select-sm me-2">
-                    <option value="">All Accounts</option>
-                    {% for a in accounts %}
-                    <option value="{{ a }}">{{ a }}</option>
-                    {% endfor %}
-                </select>
-                <div class="date-range-controls">
-                    <label for="globalStartDate" class="form-label me-2">From:</label>
-                    <input type="date" id="globalStartDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
-                    <label for="globalEndDate" class="form-label mx-2">To:</label>
-                    <input type="date" id="globalEndDate" class="form-control form-control-sm d-inline-block" style="width: auto;">
-                    <button id="refreshAllReports" class="btn btn-outline-primary btn-sm ms-2">
-                        <i class="fas fa-sync-alt"></i> Refresh All
+    <!-- Report Filters Card -->
+    <div class="card mb-4">
+        <div class="card-header flex-between">
+            <div class="card-title">
+                <i class="fas fa-filter"></i>
+                <span>Report Filters</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row align-items-end">
+                <div class="col-md-3">
+                    <label for="globalAccount" class="form-label">Account</label>
+                    <select id="globalAccount" class="form-select">
+                        <option value="">All Accounts</option>
+                        {% for a in accounts %}
+                        <option value="{{ a }}">{{ a }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="globalStartDate" class="form-label">From Date</label>
+                    <input type="date" id="globalStartDate" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label for="globalEndDate" class="form-label">To Date</label>
+                    <input type="date" id="globalEndDate" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <button id="refreshAllReports" class="btn btn-primary w-100">
+                        <i class="fas fa-sync-alt me-2"></i>Refresh All Reports
                     </button>
                 </div>
             </div>
