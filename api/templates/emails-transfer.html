@@ -96,4 +96,38 @@
   </div>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const importForm = document.getElementById('import-form');
+  const importButton = document.querySelector('button[form="import-form"]');
+  const filesInput = document.getElementById('files');
+  const sourceSelect = document.getElementById('source');
+
+  // Disable button initially
+  importButton.disabled = true;
+
+  function validateForm() {
+    const filesSelected = filesInput.files.length > 0;
+    const accountSelected = sourceSelect.value !== '';
+    const validFiles = Array.from(filesInput.files).every(file => {
+      const ext = file.name.toLowerCase().split('.').pop();
+      return ['eml', 'mbox', 'mbx', 'zip'].includes(ext);
+    });
+
+    importButton.disabled = !(filesSelected && accountSelected && validFiles);
+  }
+
+  filesInput.addEventListener('change', validateForm);
+  sourceSelect.addEventListener('change', validateForm);
+
+  // Also validate on form submit to prevent invalid submissions
+  importForm.addEventListener('submit', function(e) {
+    if (importButton.disabled) {
+      e.preventDefault();
+      showToast('Please select valid files and a fetch account.', 'danger');
+    }
+  });
+});
+</script>
+
 {% endblock %}
