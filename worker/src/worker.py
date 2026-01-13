@@ -779,7 +779,6 @@ def purge_old_emails():
     try:
         settings = get_settings()
         retention_days = int(settings.get('clamav_quarantine_retention_days', '90'))
-        from datetime import timedelta
         quarantine_cutoff = datetime.now(timezone.utc) - timedelta(days=retention_days)
 
         # Get quarantined emails to delete (with source, folder, uid for mail server deletion)
