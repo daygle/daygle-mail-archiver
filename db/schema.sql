@@ -461,9 +461,9 @@ INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r, permissions p
 WHERE r.name = 'email_manager' AND p.name IN (
-    'view_dashboard', 'view_emails', 'delete_emails', 'export_emails',
+    'view_dashboard', 'view_emails', 'delete_emails', 'export_emails', 'import_emails',
     'view_quarantine', 'manage_quarantine', 'view_reports', 'export_reports',
-    'view_fetch_accounts', 'view_worker_status', 'view_alerts', 'manage_own_profile'
+    'view_fetch_accounts', 'manage_fetch_accounts', 'view_worker_status', 'view_alerts', 'manage_own_profile'
 )
 ON CONFLICT DO NOTHING;
 
@@ -472,7 +472,7 @@ INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r, permissions p
 WHERE r.name = 'auditor' AND p.name IN (
-    'view_dashboard', 'view_emails', 'view_quarantine', 'view_reports', 'export_reports',
+    'view_dashboard', 'view_emails', 'view_quarantine', 'view_reports', 'export_reports', 'view_security_reports',
     'view_worker_status', 'view_logs', 'view_alerts', 'manage_own_profile'
 )
 ON CONFLICT DO NOTHING;
