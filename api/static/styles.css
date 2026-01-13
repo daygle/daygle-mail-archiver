@@ -196,21 +196,6 @@ button:focus-visible,
 /* Show/hide logos based on theme */
 /* daygle.png = black/dark logo, show in light theme */
 /* daygle-light.png = white/light logo, show in dark theme */
-[data-theme="light"] .logo-dark {
-    display: inline-block;
-}
-
-[data-theme="light"] .logo-light {
-    display: none;
-}
-
-[data-theme="dark"] .logo-dark {
-    display: none;
-}
-
-[data-theme="dark"] .logo-light {
-    display: inline-block;
-}
 
 .brand-text {
     font-size: 1.125rem;
@@ -2706,16 +2691,12 @@ a:hover {
     text-align: center;
     margin-bottom: 32px;
     position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
 }
 
 .auth-logo {
     height: 48px;
     width: auto;
     margin-bottom: 16px;
-    display: block;
 }
 
 .auth-title {

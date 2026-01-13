@@ -27,8 +27,7 @@
     <div class="auth-container">
         <div class="auth-card wide">
             <div class="auth-header">
-                <img src="/static/daygle.png" alt="Daygle" class="auth-logo logo-dark">
-                <img src="/static/daygle-light.png" alt="Daygle" class="auth-logo logo-light">
+                <img id="logo" src="/static/daygle.png" alt="Daygle" class="auth-logo">
                 <h1 class="auth-title large">Welcome to Daygle Mail Archiver</h1>
                 <p class="auth-subtitle large">Let's set up your administrator account to get started</p>
             </div>
@@ -169,15 +168,26 @@
                 }
             }
 
+            function updateLogo(theme) {
+                const logo = document.getElementById('logo');
+                if (theme === 'dark') {
+                    logo.src = '/static/daygle-light.png';
+                } else {
+                    logo.src = '/static/daygle.png';
+                }
+            }
+
             function applyTheme(theme) {
                 document.documentElement.setAttribute('data-theme', theme);
                 localStorage.setItem('theme', theme);
                 updateThemeIcons(theme);
+                updateLogo(theme);
             }
 
             // Initialise theme icons
             const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
             updateThemeIcons(currentTheme);
+            updateLogo(currentTheme);
 
             // Theme toggle click handler
             themeToggle.addEventListener('click', function() {
