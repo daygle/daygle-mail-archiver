@@ -42,29 +42,6 @@ app.add_middleware(
     https_only=False  # Set to True in production with HTTPS
 )
 
-# User Activity Middleware
-class UserActivityMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request, call_next):
-        # Skip activity update for these paths
-        skip_paths = ["/login", "/logout", "/setup", "/health", "/static", "/403", "/about", "/help"]
-        if any(request.url.path.startswith(path) for path in skip_paths):
-            return await call_next(request)
-        
-        # Update last_seen for authenticated users
-        user_id = request.session.get("user_id")
-        if user_id:
-            try:
-                from utils.db import execute
-                execute("UPDATE users SET last_seen = NOW() WHERE id = :id", {"id": user_id})
-            except Exception as e:
-                # Don't fail the request if activity update fails
-                from utils.logger import log
-                log("error", "Activity", f"Failed to update last_seen for user {user_id}: {str(e)}")
-        
-        return await call_next(request)
-
-app.add_middleware(UserActivityMiddleware)
-
 # Security Headers Middleware
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):

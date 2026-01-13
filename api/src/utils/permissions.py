@@ -19,7 +19,20 @@ class PermissionChecker:
     def __init__(self, request: Request):
         self.request = request
         self._permissions_cache: Optional[List[str]] = None
+        self._update_last_seen()
         self._check_auto_logout()
+
+    # -----------------------------
+    # Update last seen
+    # -----------------------------
+    def _update_last_seen(self):
+        """Update the user's last_seen timestamp."""
+        user_id = self.request.session.get("user_id")
+        if user_id:
+            try:
+                execute("UPDATE users SET last_seen = NOW() WHERE id = :id", {"id": user_id})
+            except Exception as e:
+                log("error", "Activity", f"Failed to update last_seen for user {user_id}: {str(e)}")
 
     # -----------------------------
     # Auto-logout check
