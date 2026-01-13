@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/static/vendor/fontawesome/all.min.css">
     <link rel="stylesheet" href="/static/vendor/bootstrap/bootstrap.min.css">
     <link rel="stylesheet" href="/static/styles.css">
+    {% block extra_css %}{% endblock %}
     <script>
         (function(){
             // Expose server-side theme preference to client and prefer a locally saved theme.
@@ -38,7 +39,7 @@
             }
         })();
     </script>
-    {% block extra_css %}{% endblock %}
+</head>
 </head>
 <body>
     <div class="app-container">
