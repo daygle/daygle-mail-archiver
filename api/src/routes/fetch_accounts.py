@@ -210,8 +210,8 @@ def edit_account(request: Request, id: int):
 @router.post("/fetch-accounts/{id}/edit")
 def update_account(
     request: Request,
-    _=require_permission(PERMISSIONS["manage_fetch_accounts"]),
     id: int,
+    _=require_permission(PERMISSIONS["manage_fetch_accounts"]),
     name: str = Form(...),
     account_type: str = Form("imap"),
     host: str = Form(""),
@@ -308,7 +308,7 @@ def update_account(
 
 
 @router.post("/fetch-accounts/{id}/delete")
-def delete_account(request: Request, _=require_permission(PERMISSIONS["manage_fetch_accounts"]), id: int, mode: str = Form(...)):
+def delete_account(request: Request, id: int, _=require_permission(PERMISSIONS["manage_fetch_accounts"]), mode: str = Form(...)):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
