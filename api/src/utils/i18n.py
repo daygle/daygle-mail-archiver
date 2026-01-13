@@ -1,13 +1,24 @@
 import os
+import logging
+from pathlib import Path
 from babel.support import Translations
 
+
 def get_gettext(lang='en'):
+    """Return a gettext function for `lang`.
+
+    Loads compiled `.mo` files from the project's `api/locales` directory.
+    Falls back to a small hardcoded dictionary if loading fails.
+    """
     try:
-        locales_dir = os.path.join(os.path.dirname(__file__), '..', 'locales')
-        trans = Translations.load(locales_dir, [lang])
+        # file is at api/src/utils/i18n.py -> go up two levels to api/
+        base_dir = Path(__file__).resolve().parents[2]
+        locales_dir = str(base_dir / 'locales')
+        trans = Translations.load(locales_dir, [lang], domain='messages')
         return trans.gettext
     except Exception as e:
-        # Fallback to hardcoded
+        logging.debug(f"i18n: failed to load translations for {lang}: {e}")
+        # Fallback to small in-code dictionaries while .mo loading is fixed
         if lang == 'es':
             translations = {
                 "Display & Formatting Settings": "Configuración de visualización y formato",
