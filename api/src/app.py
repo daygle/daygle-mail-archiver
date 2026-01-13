@@ -81,7 +81,7 @@ async def add_security_headers(request: Request, call_next):
 @app.middleware("http")
 async def set_locale(request: Request, call_next):
     # Get language from session, default to 'en'
-    lang = request.session.get('language', 'en')
+    lang = request.session.get('language', 'en') if "session" in request.scope else 'en'
     # Set locale for gettext
     try:
         locale.setlocale(locale.LC_ALL, lang + '.UTF-8' if lang != 'en' else 'C.UTF-8' if os.name != 'nt' else 'English_United States.1252')  # Adjust for Windows if needed
@@ -115,6 +115,9 @@ async def check_setup_completion(request: Request, call_next):
 @app.middleware("http")
 async def update_last_seen(request: Request, call_next):
     response = await call_next(request)
+
+    if "session" not in request.scope:
+        return response
 
     user_id = request.session.get("user_id")
     if not user_id:
