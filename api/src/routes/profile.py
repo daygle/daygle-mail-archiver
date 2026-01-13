@@ -7,6 +7,7 @@ from utils.db import query, execute
 from utils.logger import log
 from utils.templates import templates
 from utils.permissions import require_permission, PERMISSIONS
+from utils.i18n import get_gettext
 
 router = APIRouter()
 
@@ -244,6 +245,9 @@ def user_settings_form(
 
     msg = request.session.pop("flash", None)
 
+    lang = request.session.get('language', 'en') if "session" in request.scope else 'en'
+    _ = get_gettext(lang)
+
     return templates.TemplateResponse("user-settings.html", {
         "request": request,
         "flash": msg,
@@ -254,7 +258,8 @@ def user_settings_form(
         "theme": current_theme,
         "avatar_color": current_avatar_color,
         "email_notifications": current_email_notifications,
-        "language": current_language
+        "language": current_language,
+        "_": _
     })
 
 

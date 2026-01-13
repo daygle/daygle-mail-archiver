@@ -61,8 +61,23 @@ def init_database():
                 username TEXT UNIQUE NOT NULL,
                 password_hash TEXT NOT NULL,
                 role TEXT NOT NULL DEFAULT 'user',
+                page_size INTEGER NOT NULL DEFAULT 50,
+                date_format TEXT NOT NULL DEFAULT '%d/%m/%Y',
+                time_format TEXT NOT NULL DEFAULT '%H:%M',
+                timezone TEXT NOT NULL DEFAULT 'Australia/Melbourne',
+                theme_preference TEXT NOT NULL DEFAULT 'system',
+                email_notifications BOOLEAN NOT NULL DEFAULT TRUE,
+                language TEXT NOT NULL DEFAULT 'en',
+                enabled BOOLEAN NOT NULL DEFAULT TRUE,
+                last_login TIMESTAMP WITH TIME ZONE,
+                last_login_ip TEXT,
+                last_seen TIMESTAMP WITH TIME ZONE,
+                avatar_color TEXT NOT NULL DEFAULT '#007bff',
                 created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-                last_login TIMESTAMP WITH TIME ZONE
+                failed_login_attempts INTEGER NOT NULL DEFAULT 0,
+                locked_until TIMESTAMP WITH TIME ZONE,
+                password_reset_token TEXT,
+                password_reset_expires TIMESTAMP WITH TIME ZONE
             )
         '''))
 

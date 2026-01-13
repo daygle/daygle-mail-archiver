@@ -76,25 +76,6 @@ async def add_security_headers(request: Request, call_next):
     return response
 
 # ---------------------------------------------------------
-# Internationalization Middleware
-# ---------------------------------------------------------
-@app.middleware("http")
-async def set_locale(request: Request, call_next):
-    # Get language from session, default to 'en'
-    lang = request.session.get('language', 'en') if "session" in request.scope else 'en'
-    # Set locale for gettext
-    try:
-        locale.setlocale(locale.LC_ALL, lang + '.UTF-8' if lang != 'en' else 'C.UTF-8' if os.name != 'nt' else 'English_United States.1252')  # Adjust for Windows if needed
-        trans = gettext.translation('messages', localedir=os.path.join(os.path.dirname(__file__), '..', 'locales'), languages=[lang], fallback=True)
-        trans.install(names=['gettext', '_', 'ngettext'])  # Install _ as global for templates
-    except (FileNotFoundError, locale.Error):
-        # Fallback to default
-        gettext.install('messages', localedir=os.path.join(os.path.dirname(__file__), '..', 'locales'), names=['gettext', '_', 'ngettext'])
-
-    response = await call_next(request)
-    return response
-
-# ---------------------------------------------------------
 # Setup Completion Middleware
 # ---------------------------------------------------------
 @app.middleware("http")
