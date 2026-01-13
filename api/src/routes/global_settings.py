@@ -70,6 +70,7 @@ def save_settings(
     smtp_use_tls: bool = Form(True),
     smtp_from_email: str = Form(""),
     smtp_from_name: str = Form("Daygle Mail Archiver"),
+    auto_logout_minutes: int = Form(60),
 ):
     # Load old settings
     rows = query("SELECT key, value FROM settings").mappings().all()
@@ -105,6 +106,7 @@ def save_settings(
             ("smtp_use_tls", str(smtp_use_tls).lower()),
             ("smtp_from_email", smtp_from_email),
             ("smtp_from_name", smtp_from_name),
+            ("auto_logout_minutes", str(auto_logout_minutes)),
         ]
 
         new_settings = {k: v for (k, v) in settings_data}

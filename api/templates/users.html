@@ -124,6 +124,7 @@
                             <th>Email</th>
                             <th class="hide-mobile">Roles</th>
                             <th>Status</th>
+                            <th class="hide-mobile">Online</th>
                             <th class="hide-mobile">Created</th>
                             <th class="hide-mobile">Last Login</th>
                             <th class="hide-mobile">Last Login IP</th>
@@ -150,6 +151,13 @@
                                     <span class="badge badge-success"><i class="fas fa-check"></i> Enabled</span>
                                 {% else %}
                                     <span class="badge badge-danger"><i class="fas fa-times"></i> Disabled</span>
+                                {% endif %}
+                            </td>
+                            <td class="hide-mobile">
+                                {% if user.online_status == 'online' %}
+                                    <span class="badge badge-success"><i class="fas fa-circle"></i> Online</span>
+                                {% else %}
+                                    <span class="badge badge-secondary"><i class="fas fa-circle"></i> Offline</span>
                                 {% endif %}
                             </td>
                             <td class="hide-mobile"><small>{{ user.created_at | format_user_datetime(request.session.user_id) }}</small></td>
@@ -188,7 +196,7 @@
                         {% endfor %}
                         {% if users|length == 0 %}
                         <tr>
-                            <td colspan="9" class="text-center empty-state">
+                            <td colspan="10" class="text-center empty-state">
                                 <div>
                                     <i class="fas fa-users empty-icon"></i>
                                     <p>No users found.</p>

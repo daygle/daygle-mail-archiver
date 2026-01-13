@@ -129,6 +129,7 @@ CREATE TABLE IF NOT EXISTS users (
     enabled BOOLEAN NOT NULL DEFAULT TRUE,
     last_login TIMESTAMPTZ,
     last_login_ip TEXT,
+    last_seen TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     failed_login_attempts INTEGER NOT NULL DEFAULT 0,
     locked_until TIMESTAMPTZ,
@@ -227,6 +228,9 @@ INSERT INTO settings (key, value) VALUES ('clamav_quarantine_retention_days', '9
 INSERT INTO settings (key, value) VALUES ('clamav_max_file_size', '10485760') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('clamav_quarantine_encrypt', 'false') ON CONFLICT (key) DO NOTHING;
 
+-- User session settings
+INSERT INTO settings (key, value) VALUES ('auto_logout_minutes', '60') ON CONFLICT (key) DO NOTHING;
+
 -- Quarantined emails table - stores raw bytes for messages quarantined by ClamAV
 CREATE TABLE IF NOT EXISTS quarantined_emails (
     id SERIAL PRIMARY KEY,
@@ -253,6 +257,10 @@ CREATE INDEX IF NOT EXISTS quarantined_emails_quarantined_at_idx ON quarantined_
 -- Add optional foreign key on emails to reference quarantine record (nullable)
 ALTER TABLE emails
     ADD COLUMN IF NOT EXISTS quarantine_id INTEGER REFERENCES quarantined_emails(id) ON DELETE SET NULL;
+
+-- Add last_seen column to users table for online/offline tracking
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS last_seen TIMESTAMPTZ;
 
 -- ----------------------------
 -- logs

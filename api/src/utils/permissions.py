@@ -19,6 +19,43 @@ class PermissionChecker:
     def __init__(self, request: Request):
         self.request = request
         self._permissions_cache: Optional[List[str]] = None
+        self._check_auto_logout()
+
+    # -----------------------------
+    # Auto-logout check
+    # -----------------------------
+    def _check_auto_logout(self):
+        """Check if user should be auto-logged out due to inactivity."""
+        user_id = self.request.session.get("user_id")
+        if not user_id:
+            return
+
+        try:
+            # Get auto-logout setting
+            setting = query("SELECT value FROM settings WHERE key = 'auto_logout_minutes'").mappings().first()
+            if not setting:
+                return
+            
+            minutes = int(setting["value"])
+            if minutes <= 0:
+                return  # Auto-logout disabled
+
+            # Check user's last_seen
+            user = query("SELECT last_seen FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+            if not user or not user["last_seen"]:
+                return
+
+            from datetime import datetime, timedelta
+            import pytz
+            now = datetime.now(pytz.UTC)
+            if now - user["last_seen"] > timedelta(minutes=minutes):
+                # Auto-logout
+                username = self.request.session.get("username", "unknown")
+                log("info", "Security", f"Auto-logout due to inactivity for user {username}")
+                self.request.session.clear()
+                
+        except Exception as e:
+            log("error", "Auto-logout", f"Failed to check auto-logout for user {user_id}: {str(e)}")
 
     # -----------------------------
     # Internal loading

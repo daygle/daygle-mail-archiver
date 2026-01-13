@@ -27,18 +27,27 @@ def list_users(
     request: Request,
     _=require_permission(PERMISSIONS["view_users"])
 ):
+    # Get auto-logout setting for online/offline calculation
+    auto_logout_setting = query("SELECT value FROM settings WHERE key = 'auto_logout_minutes'").mappings().first()
+    auto_logout_minutes = int(auto_logout_setting["value"]) if auto_logout_setting else 60
+
     users = query("""
         SELECT 
             u.id, u.username, u.first_name, u.last_name, u.email,
             COALESCE(u.email_notifications, TRUE) AS email_notifications,
-            u.enabled, u.last_login, u.last_login_ip, u.created_at,
-            STRING_AGG(r.display_name, ', ') AS roles
+            u.enabled, u.last_login, u.last_login_ip, u.created_at, u.last_seen,
+            STRING_AGG(r.display_name, ', ') AS roles,
+            CASE 
+                WHEN u.last_seen IS NULL THEN 'offline'
+                WHEN NOW() - u.last_seen > INTERVAL ':minutes minutes' THEN 'offline'
+                ELSE 'online'
+            END AS online_status
         FROM users u
         LEFT JOIN user_roles ur ON u.id = ur.user_id
         LEFT JOIN roles r ON ur.role_id = r.id
         GROUP BY u.id
         ORDER BY u.id
-    """).mappings().all()
+    """, {"minutes": auto_logout_minutes}).mappings().all()
 
     roles = query("""
         SELECT id, name, display_name, description

@@ -74,6 +74,12 @@
                 <small class="form-text">Global default theme for users who have not set a personal preference (users' own preference overrides this)</small>
             </div>
 
+            <div class="form-group mt-3">
+                <label for="auto_logout_minutes" class="form-label">Auto Logout (minutes)</label>
+                <input id="auto_logout_minutes" class="form-control" name="auto_logout_minutes" type="number" value="{{ settings.auto_logout_minutes or '60' }}" min="0" max="1440">
+                <small class="form-text">Automatically log out users after this many minutes of inactivity. Set to 0 to disable auto-logout.</small>
+            </div>
+
             <!-- Update checking has been removed from the web UI -->
             <!-- Manual and automatic update checks are expected to be performed outside the web interface -->
 
