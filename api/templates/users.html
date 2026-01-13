@@ -84,6 +84,8 @@
                 <small>
                     <strong>Last Login:</strong> <span id="last_login">-</span><br>
                     <strong>Last Login IP:</strong> <span id="last_login_ip">-</span><br>
+                    <strong>Last Seen:</strong> <span id="last_seen">-</span><br>
+                    <strong>Online Status:</strong> <span id="online_status">-</span><br>
                     <strong>Created:</strong> <span id="created_at">-</span>
                 </small>
             </div>
@@ -223,6 +225,13 @@ function showCreateUserForm() {
     document.getElementById('password').required = true;
     document.getElementById('userInfoAlert').style.display = 'none';
     
+    // Reset account info fields
+    document.getElementById('last_login').textContent = '-';
+    document.getElementById('last_login_ip').textContent = '-';
+    document.getElementById('last_seen').textContent = '-';
+    document.getElementById('online_status').textContent = '-';
+    document.getElementById('created_at').textContent = '-';
+    
     // Update UI text
     document.getElementById('formTitle').textContent = 'Create New User';
     document.getElementById('formIcon').className = 'fas fa-user-plus';
@@ -301,6 +310,8 @@ async function editUser(userId) {
         // Read-only info
         document.getElementById('last_login').textContent = user.last_login || 'Never';
         document.getElementById('last_login_ip').textContent = user.last_login_ip || '-';
+        document.getElementById('last_seen').textContent = user.last_seen || 'Never';
+        document.getElementById('online_status').textContent = user.online_status === 'online' ? 'Online' : 'Offline';
         document.getElementById('created_at').textContent = user.created_at || '-';
         document.getElementById('userInfoAlert').style.display = 'block';
 

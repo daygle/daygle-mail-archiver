@@ -163,10 +163,14 @@ def get_user(
     """API endpoint to get user details for editing"""
 
     try:
+        # Get auto-logout setting for online/offline calculation
+        auto_logout_setting = query("SELECT value FROM settings WHERE key = 'auto_logout_minutes'").mappings().first()
+        auto_logout_minutes = int(auto_logout_setting["value"]) if auto_logout_setting else 60
+
         user = query("""
             SELECT id, username, first_name, last_name, email,
                    COALESCE(email_notifications, TRUE) AS email_notifications,
-                   enabled, last_login, last_login_ip, created_at
+                   enabled, last_login, last_login_ip, created_at, last_seen
             FROM users
             WHERE id = :id
         """, {"id": user_id}).mappings().first()
@@ -186,6 +190,14 @@ def get_user(
 
         role_ids = [r["role_id"] for r in role_rows]
 
+        # Calculate online status
+        online_status = "offline"
+        if user["last_seen"]:
+            # Use the same logic as in the users list
+            now_check = query("SELECT CASE WHEN NOW() - :last_seen > INTERVAL ':minutes minutes' THEN 'offline' ELSE 'online' END AS status", 
+                            {"last_seen": user["last_seen"], "minutes": auto_logout_minutes}).mappings().first()
+            online_status = now_check["status"]
+
         return {
             "id": user["id"],
             "username": user["username"],
@@ -199,7 +211,10 @@ def get_user(
                 if user["last_login"] else None,
             "last_login_ip": user["last_login_ip"] or None,
             "created_at": format_datetime(user["created_at"], current_user_id)
-                if user["created_at"] else None
+                if user["created_at"] else None,
+            "last_seen": format_datetime(user["last_seen"], current_user_id)
+                if user["last_seen"] else None,
+            "online_status": online_status
         }
 
     except Exception as e:
