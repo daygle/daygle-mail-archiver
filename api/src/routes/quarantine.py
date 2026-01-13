@@ -10,6 +10,7 @@ from cryptography.fernet import Fernet
 from utils.alerts import create_alert
 from utils.email_parser import compute_signature
 from utils.timezone import format_datetime
+from utils.permissions import PermissionChecker
 
 router = APIRouter()
 
