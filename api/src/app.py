@@ -7,11 +7,28 @@ from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.cors import CORSMiddleware
 import logging
 
-from routes import emails, fetch_accounts, global_settings, login, users, profile, logs, dashboard, worker_status, oauth, donate, help, about, reports, alerts, alert_management, quarantine, roles
+from routes import (
+    emails, fetch_accounts, global_settings, login, users, profile, logs,
+    dashboard, worker_status, oauth, donate, help, about, reports, alerts,
+    alert_management, quarantine, roles
+)
 from utils.logger import log
 from utils.config import get_config
+from utils.db import execute  # <-- Needed for last_seen updates
 
+# ---------------------------------------------------------
+# Helper: Extract client IP safely (proxy-aware)
+# ---------------------------------------------------------
+def get_client_ip(request: Request) -> str:
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host
+
+
+# ---------------------------------------------------------
 # Configuration
+# ---------------------------------------------------------
 SESSION_SECRET = get_config("SESSION_SECRET", "change-me")
 if SESSION_SECRET == "change-me":
     logging.warning("⚠️  SESSION_SECRET is set to default value. Please set a secure secret in production!")
@@ -22,27 +39,31 @@ app = FastAPI(
     version="1.0.0"
 )
 
-from starlette.middleware.base import BaseHTTPMiddleware
-
-# CORS Middleware (configure based on your needs)
+# ---------------------------------------------------------
+# CORS Middleware
+# ---------------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure this properly for production
+    allow_origins=["*"],  # Configure properly for production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# ---------------------------------------------------------
 # Session Middleware
+# ---------------------------------------------------------
 app.add_middleware(
     SessionMiddleware,
     secret_key=SESSION_SECRET,
     max_age=86400,  # 24 hours
     same_site="lax",
-    https_only=False  # Set to True in production with HTTPS
+    https_only=False  # Set to True in production
 )
 
+# ---------------------------------------------------------
 # Security Headers Middleware
+# ---------------------------------------------------------
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
     response = await call_next(request)
@@ -52,23 +73,49 @@ async def add_security_headers(request: Request, call_next):
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     return response
 
+# ---------------------------------------------------------
 # Setup Completion Middleware
+# ---------------------------------------------------------
 @app.middleware("http")
 async def check_setup_completion(request: Request, call_next):
-    # Skip setup completion check for these paths
     skip_paths = ["/setup", "/login", "/health", "/static", "/403", "/about", "/help"]
     if any(request.url.path.startswith(path) for path in skip_paths):
         return await call_next(request)
-    
-    # Check if setup is complete
+
     from routes.login import is_setup_complete
     if not is_setup_complete():
-        from fastapi.responses import RedirectResponse
         return RedirectResponse("/setup", status_code=303)
-    
+
     return await call_next(request)
 
-# Global Exception Handler
+# ---------------------------------------------------------
+# NEW: Last Seen + IP Tracking Middleware
+# ---------------------------------------------------------
+@app.middleware("http")
+async def update_last_seen(request: Request, call_next):
+    response = await call_next(request)
+
+    user_id = request.session.get("user_id")
+    if user_id:
+        try:
+            ip = get_client_ip(request)
+            await execute(
+                """
+                UPDATE users
+                SET last_seen = NOW(),
+                    last_login_ip = :ip
+                WHERE id = :uid
+                """,
+                {"uid": user_id, "ip": ip}
+            )
+        except Exception as e:
+            logging.error(f"Failed to update last_seen: {e}")
+
+    return response
+
+# ---------------------------------------------------------
+# Global Exception Handlers
+# ---------------------------------------------------------
 @app.exception_handler(500)
 async def internal_error_handler(request: Request, exc: Exception):
     log("error", "System", f"Internal server error: {str(exc)}", "")
@@ -79,28 +126,21 @@ async def internal_error_handler(request: Request, exc: Exception):
 
 @app.exception_handler(404)
 async def not_found_handler(request: Request, exc: Exception):
-    # Redirect to login for authenticated pages, otherwise return JSON
     if request.url.path.startswith("/api/"):
-        return JSONResponse(
-            status_code=404,
-            content={"error": "Endpoint not found"}
-        )
+        return JSONResponse(status_code=404, content={"error": "Endpoint not found"})
     return RedirectResponse("/login", status_code=303)
 
-# Static files - handle both Docker (running from /app) and local (running from src/)
+# ---------------------------------------------------------
+# Static Files
+# ---------------------------------------------------------
 BASE_DIR = Path(__file__).parent
 if (BASE_DIR / "static").exists():
-    # Running from Docker (/app/app.py with /app/static)
     static_dir = BASE_DIR / "static"
 else:
-    # Running locally from src/ with ../static
     static_dir = BASE_DIR.parent / "static"
 
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
-# Serve Font Awesome webfonts at the path the vendor CSS expects
-# This avoids moving binary font files - requests to /static/vendor/webfonts/
-# will be served from the existing fontawesome/webfonts directory.
 fa_webfonts_dir = static_dir / "vendor" / "fontawesome" / "webfonts"
 if fa_webfonts_dir.exists():
     app.mount(
@@ -109,7 +149,9 @@ if fa_webfonts_dir.exists():
         name="fa_webfonts",
     )
 
+# ---------------------------------------------------------
 # Routers
+# ---------------------------------------------------------
 app.include_router(login.router)
 app.include_router(dashboard.router)
 app.include_router(emails.router)
@@ -129,9 +171,11 @@ app.include_router(help.router)
 app.include_router(about.router)
 app.include_router(quarantine.router)
 
+# ---------------------------------------------------------
+# Root + Utility Endpoints
+# ---------------------------------------------------------
 @app.get("/")
 def root():
-    """Redirect root to dashboard or setup"""
     from routes.login import is_setup_complete
     if not is_setup_complete():
         return RedirectResponse("/setup", status_code=303)
@@ -139,25 +183,24 @@ def root():
 
 @app.get("/403")
 def forbidden(request: Request):
-    """Forbidden access page"""
     from utils.templates import templates
     return templates.TemplateResponse("403.html", {"request": request})
 
 @app.get("/health")
 def health_check():
-    """Health check endpoint for monitoring"""
     return {
         "status": "healthy",
         "service": "daygle-mail-archiver",
         "version": "1.0.0"
     }
 
+# ---------------------------------------------------------
+# Startup / Shutdown Logging
+# ---------------------------------------------------------
 @app.on_event("startup")
 async def startup_event():
-    """Log application startup"""
     log("info", "System", "Daygle Mail Archiver API started", "")
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    """Log application shutdown"""
     log("info", "System", "Daygle Mail Archiver API shutting down", "")
