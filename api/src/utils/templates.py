@@ -11,7 +11,7 @@ BASE_DIR = Path(__file__).parent.parent
 templates_dir = BASE_DIR / "templates" if (BASE_DIR / "templates").exists() else BASE_DIR.parent / "templates"
 
 # Create templates instance
-templates = Jinja2Templates(directory=str(templates_dir), extensions=['jinja2.ext.i18n'])
+templates = Jinja2Templates(directory=str(templates_dir))
 
 # Enable gettext in Jinja2 (but we'll pass _ per request)
 # templates.env.install_gettext_callables(gettext.gettext, gettext.ngettext, newstyle=True)

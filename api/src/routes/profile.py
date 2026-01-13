@@ -259,7 +259,7 @@ def user_settings_form(
         "avatar_color": current_avatar_color,
         "email_notifications": current_email_notifications,
         "language": current_language,
-        "_": _
+        "gettext": _
     })
 
 
