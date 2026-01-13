@@ -50,6 +50,22 @@ async def add_security_headers(request: Request, call_next):
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     return response
 
+# Setup Completion Middleware
+@app.middleware("http")
+async def check_setup_completion(request: Request, call_next):
+    # Skip setup completion check for these paths
+    skip_paths = ["/setup", "/login", "/health", "/static", "/403", "/about", "/help"]
+    if any(request.url.path.startswith(path) for path in skip_paths):
+        return await call_next(request)
+    
+    # Check if setup is complete
+    from routes.login import is_setup_complete
+    if not is_setup_complete():
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse("/setup", status_code=303)
+    
+    return await call_next(request)
+
 # Global Exception Handler
 @app.exception_handler(500)
 async def internal_error_handler(request: Request, exc: Exception):
@@ -113,7 +129,10 @@ app.include_router(quarantine.router)
 
 @app.get("/")
 def root():
-    """Redirect root to dashboard"""
+    """Redirect root to dashboard or setup"""
+    from routes.login import is_setup_complete
+    if not is_setup_complete():
+        return RedirectResponse("/setup", status_code=303)
     return RedirectResponse("/dashboard", status_code=303)
 
 @app.get("/403")
