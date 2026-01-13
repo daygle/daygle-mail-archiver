@@ -1064,15 +1064,15 @@ def system_performance_report(request: Request, start_date: str = None, end_date
         log("error", "Reports", f"Failed to fetch system performance report for user '{username}': {str(e)}", "")
         return JSONResponse({"error": "Failed to load data"}, status_code=500)
 
-
 @router.get("/api/reports/security-access")
 def security_access_report(request: Request, start_date: str = None, end_date: str = None):
     """Get security and access report data"""
     if not require_login(request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
-    # Only administrators can view security reports
-    if request.session.get("role") != "administrator":
+    # Permission-based access control (replaces legacy role check)
+    checker = PermissionChecker(request)
+    if not checker.has_permission("view_security_reports"):
         return JSONResponse({"error": "Access denied"}, status_code=403)
 
     try:
@@ -1098,6 +1098,7 @@ def security_access_report(request: Request, start_date: str = None, end_date: s
                 user_id = int(user_id)
             except (ValueError, TypeError):
                 user_id = None
+
         date_format = get_user_date_format(request, date_only=True)
         datetime_format = get_user_date_format(request)
 
@@ -1110,7 +1111,7 @@ def security_access_report(request: Request, start_date: str = None, end_date: s
                 COUNT(CASE WHEN message LIKE '%password changed%' THEN 1 END) as password_changes
             FROM logs
             WHERE source = 'Auth'
-            AND timestamp >= :start_date AND timestamp <= :end_date
+              AND timestamp >= :start_date AND timestamp <= :end_date
             GROUP BY DATE(timestamp)
             ORDER BY event_date
         """, {"start_date": start_dt, "end_date": end_dt}).mappings().all()
@@ -1138,7 +1139,7 @@ def security_access_report(request: Request, start_date: str = None, end_date: s
                 details
             FROM logs
             WHERE source = 'Auth'
-            AND timestamp >= NOW() - INTERVAL '24 hours'
+              AND timestamp >= NOW() - INTERVAL '24 hours'
             ORDER BY timestamp DESC
             LIMIT 50
         """).mappings().all()
@@ -1153,20 +1154,21 @@ def security_access_report(request: Request, start_date: str = None, end_date: s
                 "timestamp": event_time,
                 "level": event["level"],
                 "message": event["message"],
-                "details": event["details"]
+                "details": event["details"],
             })
 
-        # User activity summary
+        # User activity summary (role removed – no dependency on users.role)
         user_activity = query("""
             SELECT
                 u.username,
-                u.role,
                 u.last_login,
                 COUNT(l.id) as recent_actions
             FROM users u
-            LEFT JOIN logs l ON l.source = 'Auth' AND l.message LIKE '%' || u.username || '%'
-                AND l.timestamp >= :start_date AND l.timestamp <= :end_date
-            GROUP BY u.id, u.username, u.role, u.last_login
+            LEFT JOIN logs l
+              ON l.source = 'Auth'
+             AND l.message LIKE '%' || u.username || '%'
+             AND l.timestamp >= :start_date AND l.timestamp <= :end_date
+            GROUP BY u.id, u.username, u.last_login
             ORDER BY u.last_login DESC NULLS LAST
         """, {"start_date": start_dt, "end_date": end_dt}).mappings().all()
 
@@ -1178,9 +1180,9 @@ def security_access_report(request: Request, start_date: str = None, end_date: s
 
             formatted_users.append({
                 "username": user["username"],
-                "role": user["role"],
+                # role removed – could add RBAC-derived fields here if needed
                 "last_login": last_login,
-                "recent_actions": int(user["recent_actions"] or 0)
+                "recent_actions": int(user["recent_actions"] or 0),
             })
 
         # Calculate totals
@@ -1197,13 +1199,12 @@ def security_access_report(request: Request, start_date: str = None, end_date: s
             "total_failed_logins": total_failed,
             "total_password_changes": total_changes,
             "recent_security_events": formatted_events,
-            "user_activity": formatted_users
+            "user_activity": formatted_users,
         }
     except Exception as e:
         username = request.session.get("username", "unknown")
         log("error", "Reports", f"Failed to fetch security access report for user '{username}': {str(e)}", "")
         return JSONResponse({"error": "Failed to load data"}, status_code=500)
-
 
 @router.get("/api/reports/data-quality")
 def data_quality_report(request: Request, account: str = None):

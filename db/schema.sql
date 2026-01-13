@@ -400,6 +400,7 @@ INSERT INTO permissions (name, description, category) VALUES
     -- Reports & Analytics
     ('view_reports', 'View system reports and analytics', 'reports'),
     ('export_reports', 'Export reports to external formats', 'reports'),
+    ('view_security_reports', 'View security and access audit reports', 'reports'),
     
     -- Account Management
     ('view_fetch_accounts', 'View email fetch account configurations', 'system'),

@@ -3,6 +3,9 @@
 {% block page_title %}Reports{% endblock %}
 
 {% block content %}
+<script>
+    window.userPermissions = {{ request.session.permissions | tojson }};
+</script>
 <div class="container-fluid">
     <!-- Report Filters Card -->
     <div class="card mb-4">
@@ -265,7 +268,7 @@
         </div>
     </div>
 
-    <!-- Security & Access Report (Admin Only) -->
+    <!-- Security & Access Report (Permission Controlled) -->
     <div class="report-section" id="securityReportSection" style="display: none;">
         <div class="report-header">
             <h2 class="report-title">Security & Access Report</h2>
@@ -285,9 +288,11 @@
                     <div class="metric-label">Password Changes</div>
                 </div>
             </div>
+
             <div class="chart-container">
                 <canvas id="securityChart"></canvas>
             </div>
+
             <div class="row mt-4">
                 <div class="col-md-6">
                     <h5>Recent Security Events (Last 24h)</h5>
@@ -300,11 +305,11 @@
                                     <th>Event</th>
                                 </tr>
                             </thead>
-                            <tbody id="securityEventsTableBody">
-                            </tbody>
+                            <tbody id="securityEventsTableBody"></tbody>
                         </table>
                     </div>
                 </div>
+
                 <div class="col-md-6">
                     <h5>User Activity Summary</h5>
                     <div class="table-responsive">
@@ -312,13 +317,11 @@
                             <thead>
                                 <tr>
                                     <th>Username</th>
-                                    <th>Role</th>
                                     <th>Last Login</th>
                                     <th>Recent Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="userActivityTableBody">
-                            </tbody>
+                            <tbody id="userActivityTableBody"></tbody>
                         </table>
                     </div>
                 </div>
@@ -1124,7 +1127,11 @@ function loadSecurityAccessReport() {
     
     // Validate date range
     if (new Date(startDate) > new Date(endDate)) {
-        showReportMessageForInput(document.getElementById('globalStartDate'), 'Invalid date range: start date must be on or before end date', 'warning');
+        showReportMessageForInput(
+            document.getElementById('globalStartDate'),
+            'Invalid date range: start date must be on or before end date',
+            'warning'
+        );
         return;
     } else {
         clearReportMessageForInput(document.getElementById('globalStartDate'));
@@ -1149,13 +1156,17 @@ function loadSecurityAccessReport() {
         })
         .then(data => {
             if (!data) return; // Skip if 403 handled above
+
             // Clear any previous validation messages for this section
             clearReportMessageForInput(document.getElementById('globalStartDate'));
             
             // Update metrics
-            document.getElementById('totalSuccessfulLogins').textContent = data.total_successful_logins || '-';
-            document.getElementById('totalFailedLogins').textContent = data.total_failed_logins || '-';
-            document.getElementById('totalPasswordChanges').textContent = data.total_password_changes || '-';
+            document.getElementById('totalSuccessfulLogins').textContent =
+                data.total_successful_logins || '-';
+            document.getElementById('totalFailedLogins').textContent =
+                data.total_failed_logins || '-';
+            document.getElementById('totalPasswordChanges').textContent =
+                data.total_password_changes || '-';
             
             // Update security chart
             if (window.securityChart && typeof window.securityChart.destroy === 'function') {
@@ -1167,8 +1178,16 @@ function loadSecurityAccessReport() {
                 data: {
                     labels: ['Successful Logins', 'Failed Logins', 'Password Changes'],
                     datasets: [{
-                        data: [data.total_successful_logins || 0, data.total_failed_logins || 0, data.total_password_changes || 0],
-                        backgroundColor: ['rgba(75, 192, 192, 0.8)', 'rgba(255, 99, 132, 0.8)', 'rgba(54, 162, 235, 0.8)']
+                        data: [
+                            data.total_successful_logins || 0,
+                            data.total_failed_logins || 0,
+                            data.total_password_changes || 0
+                        ],
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.8)',
+                            'rgba(255, 99, 132, 0.8)',
+                            'rgba(54, 162, 235, 0.8)'
+                        ]
                     }]
                 },
                 options: {
@@ -1197,7 +1216,7 @@ function loadSecurityAccessReport() {
                 });
             }
             
-            // Update user activity table
+            // Update user activity table (role removed)
             const tbody2 = document.getElementById('userActivityTableBody');
             tbody2.innerHTML = '';
             if (data.user_activity) {
@@ -1205,7 +1224,6 @@ function loadSecurityAccessReport() {
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td>${user.username || '-'}</td>
-                        <td>${user.role || '-'}</td>
                         <td>${user.last_login || '-'}</td>
                         <td>${user.recent_actions || '-'}</td>
                     `;
@@ -1321,17 +1339,11 @@ document.getElementById('globalAccount').addEventListener('change', () => {
 // Load all reports on page load
 loadAllReports();
 
-// Check user role and show/hide admin-only reports
-fetch('/api/user/profile')
-    .then(response => response.json())
-    .then(data => {
-        if (data.role === 'administrator') {
-            document.getElementById('securityReportSection').style.display = 'block';
-            loadSecurityAccessReport(); // Load security report for admins
-        }
-    })
-    .catch(error => {
-        console.error('Error checking user role:', error);
-    });
+document.addEventListener('DOMContentLoaded', function () {
+    if (window.userPermissions && window.userPermissions.includes("view_security_reports")) {
+        document.getElementById("securityReportSection").style.display = "block";
+        loadSecurityAccessReport(); // Load security report for users with permission
+    }
+});
 </script>
 {% endblock %}
