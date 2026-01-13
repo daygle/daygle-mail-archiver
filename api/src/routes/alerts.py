@@ -7,7 +7,7 @@ from utils.logger import log
 from utils.templates import templates
 from utils.alerts import create_alert, get_alerts, acknowledge_alert, get_unacknowledged_count
 from utils.timezone import convert_utc_to_user_timezone
-from utils.permissions import PermissionChecker
+from utils.permissions import PermissionChecker, require_permission, PERMISSIONS
 from routes.reports import get_user_date_format
 
 router = APIRouter()
@@ -21,6 +21,7 @@ def flash(request: Request, message: str, category: str = 'info'):
 @router.get("/alerts")
 def alerts_page(
     request: Request,
+    _=require_permission(PERMISSIONS["view_alerts"]),
     page: int = 1,
     alert_type: Optional[str] = None,
     show_acknowledged: bool = False
@@ -28,11 +29,6 @@ def alerts_page(
     """Alerts page"""
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
-
-    # RBAC: require permission to view alerts
-    checker = PermissionChecker(request)
-    if not checker.has_permission("view_alerts"):
-        return RedirectResponse("/403", status_code=303)
 
     # Validate parameters
     page = max(1, page)
@@ -109,7 +105,7 @@ def acknowledge_alert_api(request: Request, alert_id: int):
 
     # RBAC: require permission to acknowledge alerts
     checker = PermissionChecker(request)
-    if not checker.has_permission("acknowledge_alerts"):
+    if not checker.has_permission("manage_alerts"):
         return JSONResponse({"error": "Forbidden"}, status_code=403)
 
     user_id = request.session.get("user_id")

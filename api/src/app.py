@@ -116,6 +116,12 @@ def root():
     """Redirect root to dashboard"""
     return RedirectResponse("/dashboard", status_code=303)
 
+@app.get("/403")
+def forbidden(request: Request):
+    """Forbidden access page"""
+    from utils.templates import templates
+    return templates.TemplateResponse("403.html", {"request": request})
+
 @app.get("/health")
 def health_check():
     """Health check endpoint for monitoring"""

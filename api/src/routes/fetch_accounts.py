@@ -8,6 +8,7 @@ from utils.db import query
 from utils.crypto import encrypt_password, decrypt_password
 from utils.logger import log
 from utils.templates import templates
+from utils.permissions import require_permission, PERMISSIONS
 from imaplib import IMAP4, IMAP4_SSL
 
 router = APIRouter()
@@ -30,7 +31,7 @@ def flash(request: Request, message: str, category: str = 'info'):
 
 
 @router.get("/fetch-accounts")
-def list_accounts(request: Request, page: int = 1):
+def list_accounts(request: Request, _=require_permission(PERMISSIONS["view_fetch_accounts"]), page: int = 1):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 

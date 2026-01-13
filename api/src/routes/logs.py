@@ -3,7 +3,7 @@ from fastapi.responses import RedirectResponse
 
 from utils.db import query
 from utils.templates import templates
-from utils.permissions import PermissionChecker
+from utils.permissions import PermissionChecker, require_permission, PERMISSIONS
 
 router = APIRouter()
 
@@ -17,6 +17,7 @@ def require_login(request: Request):
 @router.get("/logs")
 def logs(
     request: Request,
+    _=require_permission(PERMISSIONS["view_logs"]),
     level: str = "all",
     page: int = 1,
     search: str = "",
@@ -27,11 +28,6 @@ def logs(
     # Require login
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
-
-    # RBAC: require view_logs permission
-    checker = PermissionChecker(request)
-    if not checker.has_permission("view_logs"):
-        return RedirectResponse("/403", status_code=303)
 
     # Validate log level
     if level not in ALLOWED_LOG_LEVELS:

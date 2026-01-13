@@ -16,7 +16,7 @@ from utils.logger import log
 from utils.templates import templates
 from utils.timezone import format_datetime
 from utils.alerts import create_alert
-from utils.permissions import PermissionChecker
+from utils.permissions import PermissionChecker, require_permission, PERMISSIONS
 from utils.clamav_scanner import ClamAVScanner
 
 router = APIRouter()
@@ -33,6 +33,7 @@ def flash(request: Request, message: str, category: str = 'info'):
 @router.get("/emails", response_class=HTMLResponse)
 def list_emails(
     request: Request,
+    _=require_permission(PERMISSIONS["view_emails"]),
     page: int = 1,
     q: str | None = None,
     account: str | None = None,

@@ -10,7 +10,7 @@ from cryptography.fernet import Fernet
 from utils.alerts import create_alert
 from utils.email_parser import compute_signature
 from utils.timezone import format_datetime
-from utils.permissions import PermissionChecker
+from utils.permissions import PermissionChecker, require_permission, PERMISSIONS
 
 router = APIRouter()
 
@@ -122,22 +122,11 @@ def _delete_quarantined_from_mail_server_and_db(ids: List[int]) -> tuple[int, li
 
 
 @router.get('/quarantine', response_class=HTMLResponse)
-def list_quarantine(request: Request, q: str = None, virus: str = None, page: int = 1):
+def list_quarantine(request: Request, _=require_permission(PERMISSIONS["view_quarantine"]), q: str = None, virus: str = None, page: int = 1):
     # Require login first
     if not request.session.get('user_id'):
         request.session['flash'] = 'Please login to access Quarantine'
         return RedirectResponse('/login', status_code=303)
-
-    # RBAC: require permission to view quarantine
-    try:
-        checker = PermissionChecker(request)
-        if not checker.has_permission("view_quarantine"):
-            log('warning', 'Quarantine',
-                f"Unauthorized access attempt to /quarantine by user_id={request.session.get('user_id')}")
-            request.session['flash'] = 'Access denied'
-            return RedirectResponse('/dashboard', status_code=303)
-    except Exception as e:
-        log('error', 'Quarantine', f"Failed to verify permissions: {e}")
         request.session['flash'] = 'Access denied'
         return RedirectResponse('/dashboard', status_code=303)
 

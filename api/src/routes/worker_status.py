@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from utils.db import query
 from utils.logger import log
 from utils.templates import templates
+from utils.permissions import require_permission, PERMISSIONS
 
 router = APIRouter()
 
@@ -18,7 +19,7 @@ def require_login(request: Request):
 
 
 @router.get("/worker-status", response_class=HTMLResponse)
-def worker_status(request: Request):
+def worker_status(request: Request, _=require_permission(PERMISSIONS["view_worker_status"])):
     """Display worker status for all fetch accounts"""
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)

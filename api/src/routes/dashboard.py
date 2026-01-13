@@ -9,7 +9,7 @@ from utils.db import query, engine
 from utils.logger import log
 from utils.templates import templates
 from utils.timezone import convert_utc_to_user_timezone, get_user_timezone
-from utils.permissions import PermissionChecker
+from utils.permissions import PermissionChecker, require_permission, PERMISSIONS
 
 router = APIRouter()
 
@@ -76,7 +76,7 @@ def get_user_date_format(request: Request, date_only: bool = False) -> str:
 
 
 @router.get("/dashboard", response_class=HTMLResponse)
-def dashboard(request: Request):
+def dashboard(request: Request, _=require_permission(PERMISSIONS["view_dashboard"])):
     """Dashboard page with charts"""
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
