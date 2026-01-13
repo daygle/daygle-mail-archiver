@@ -14,7 +14,7 @@ from routes import (
 )
 from utils.logger import log
 from utils.config import get_config
-from utils.db import execute  # <-- Needed for last_seen updates
+from utils.db import query, execute
 
 # ---------------------------------------------------------
 # Helper: Extract client IP safely (proxy-aware)
@@ -96,20 +96,40 @@ async def update_last_seen(request: Request, call_next):
     response = await call_next(request)
 
     user_id = request.session.get("user_id")
-    if user_id:
-        try:
-            ip = get_client_ip(request)
-            execute(
-                """
-                UPDATE users
-                SET last_seen = NOW(),
-                    last_login_ip = :ip
-                WHERE id = :uid
-                """,
-                {"uid": user_id, "ip": ip}
-            )
-        except Exception as e:
-            logging.error(f"Failed to update last_seen: {e}")
+    if not user_id:
+        return response
+
+    try:
+        # Auto-logout check
+        setting = query("SELECT value FROM settings WHERE key = 'auto_logout_minutes'").mappings().first()
+        if setting:
+            minutes = int(setting["value"])
+            if minutes > 0:
+                user = query("SELECT last_seen FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+                if user and user["last_seen"]:
+                    from datetime import datetime, timedelta
+                    import pytz
+                    now = datetime.now(pytz.UTC)
+                    if now - user["last_seen"] > timedelta(minutes=minutes):
+                        username = request.session.get("username", "unknown")
+                        log("info", "Security", f"Auto-logout due to inactivity for user {username}")
+                        request.session.clear()
+                        return RedirectResponse("/login", status_code=303)
+
+        # Update last_seen + IP
+        ip = get_client_ip(request)
+        execute(
+            """
+            UPDATE users
+            SET last_seen = NOW(),
+                last_login_ip = :ip
+            WHERE id = :uid
+            """,
+            {"uid": user_id, "ip": ip}
+        )
+
+    except Exception as e:
+        logging.error(f"Failed to update last_seen or auto-logout: {e}")
 
     return response
 
