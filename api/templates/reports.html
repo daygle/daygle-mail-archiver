@@ -3,9 +3,13 @@
 {% block page_title %}Reports{% endblock %}
 
 {% block content %}
+{% set perms = request.session.permissions or [] %}
+
 <script>
-    window.userPermissions = {{ request.session.permissions | tojson }};
+    // Expose permissions to JS
+    window.userPermissions = {{ perms | tojson }};
 </script>
+
 <div class="container-fluid">
     <!-- Report Filters Card -->
     <div class="card mb-4">
@@ -90,8 +94,7 @@
                             <th>Heartbeat</th>
                         </tr>
                     </thead>
-                    <tbody id="accountTableBody">
-                    </tbody>
+                    <tbody id="accountTableBody"></tbody>
                 </table>
             </div>
         </div>
@@ -183,8 +186,7 @@
                             <th>Date</th>
                         </tr>
                     </thead>
-                    <tbody id="largestEmailsTableBody">
-                    </tbody>
+                    <tbody id="largestEmailsTableBody"></tbody>
                 </table>
             </div>
         </div>
@@ -224,8 +226,7 @@
                                     <th>Email Count</th>
                                 </tr>
                             </thead>
-                            <tbody id="ageDistributionTableBody">
-                            </tbody>
+                            <tbody id="ageDistributionTableBody"></tbody>
                         </table>
                     </div>
                 </div>
@@ -353,6 +354,7 @@
                     <div class="metric-label">System Error Rate</div>
                 </div>
             </div>
+
             <div class="row mt-4">
                 <div class="col-md-6">
                     <h5>Email Size Distribution</h5>

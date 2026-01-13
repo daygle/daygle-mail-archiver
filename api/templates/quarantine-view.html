@@ -3,6 +3,8 @@
 {% block page_title %}Quarantine View{% endblock %}
 
 {% block content %}
+{% set perms = request.session.permissions or [] %}
+
 <!-- Quarantine Message Details Card -->
 <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
@@ -16,6 +18,7 @@
         </a>
     </div>
     <div class="card-body">
+
         <!-- Quarantine Information -->
         <div class="mb-4">
             <h5 class="mb-3 text-primary">
@@ -37,19 +40,22 @@
                     </div>
                 </div>
             </div>
+
             <div class="row g-3 mt-2">
                 <div class="col-12">
                     <div class="email-detail-item">
                         <label class="email-detail-label">Message ID</label>
                         <div class="email-detail-value">
-                            <code class="text-break">{{ item.message_id or headers.get('message_id') or headers.get('Message-ID') or "(no message id)" }}</code>
+                            <code class="text-break">
+                                {{ item.message_id or headers.get('message_id') or headers.get('Message-ID') or "(no message id)" }}
+                            </code>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Sender & Recipients -->
+        <!-- Sender -->
         <div class="mb-4">
             <h6 class="mb-3 text-muted">
                 <i class="fas fa-users me-2"></i>Participants
@@ -70,24 +76,29 @@
                 <i class="fas fa-shield-alt me-2"></i>Security Information
             </h6>
             <div class="row g-3">
+
                 <div class="col-md-6">
                     <div class="email-detail-item">
                         <label class="email-detail-label">Virus Detected</label>
                         <div class="email-detail-value">
                             {% if item.virus_name %}
-                            <span class="badge bg-danger"><i class="fas fa-exclamation-triangle"></i> {{ item.virus_name }}</span>
+                            <span class="badge bg-danger">
+                                <i class="fas fa-exclamation-triangle"></i> {{ item.virus_name }}
+                            </span>
                             {% else %}
                             <span class="badge bg-secondary">No virus detected</span>
                             {% endif %}
                         </div>
                     </div>
                 </div>
+
                 <div class="col-md-6">
                     <div class="email-detail-item">
                         <label class="email-detail-label">Reason</label>
                         <div class="email-detail-value">{{ item.reason or 'Not specified' }}</div>
                     </div>
                 </div>
+
                 <div class="col-12">
                     <div class="email-detail-item">
                         <label class="email-detail-label">Integrity Status</label>
@@ -106,22 +117,33 @@
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
+
     </div>
-    {% if request.session.role == 'administrator' %}
+
+    <!-- RBAC Footer Buttons -->
+    {% if 'restore_quarantine' in perms or 'delete_quarantine' in perms %}
     <div class="card-footer">
         <div class="d-flex justify-content-end gap-2 flex-wrap">
+
+            {% if 'restore_quarantine' in perms %}
             <form method="post" action="/quarantine/{{ item.id }}/restore" style="display:inline;">
                 <button type="submit" class="btn btn-success btn-sm flex-shrink-1 w-auto">
                     <i class="fas fa-undo"></i>
                     <span class="hide-mobile">Restore</span>
                 </button>
             </form>
+            {% endif %}
+
+            {% if 'delete_quarantine' in perms %}
             <button type="button" class="btn btn-danger btn-sm flex-shrink-1 w-auto" onclick="showDeleteConfirmation()">
                 <i class="fas fa-trash"></i>
                 <span class="hide-mobile">Delete</span>
             </button>
+            {% endif %}
+
         </div>
     </div>
     {% endif %}
@@ -153,7 +175,7 @@
     </div>
 </div>
 
-<!-- Raw Preview Card (Fallback) -->
+<!-- Raw Preview Card -->
 <div class="card mt-4">
     <div class="card-header">
         <div class="card-title">
@@ -170,7 +192,7 @@
     </div>
 </div>
 
-<!-- Delete Confirmation Section (Initially Hidden) -->
+<!-- Delete Confirmation Section -->
 <div id="delete-confirmation" class="card" style="display: none;">
     <div class="card-header">
         <div class="card-title">
@@ -208,46 +230,37 @@
 
 <script>
   function showDeleteConfirmation() {
-    // Hide all cards and show delete confirmation
     document.querySelectorAll('.card').forEach(function(card) {
       if (card.id !== 'delete-confirmation') {
         card.style.display = 'none';
       }
     });
     document.getElementById('delete-confirmation').style.display = 'block';
-    
-    // Scroll to top
     window.scrollTo(0, 0);
   }
 
   function hideDeleteConfirmation() {
-    // Show all cards and hide delete confirmation
     document.querySelectorAll('.card').forEach(function(card) {
       if (card.id !== 'delete-confirmation') {
         card.style.display = 'block';
       }
     });
     document.getElementById('delete-confirmation').style.display = 'none';
-    
-    // Scroll to top
     window.scrollTo(0, 0);
   }
 
   function performDelete(mode) {
-    // Create form with mode
     const form = document.createElement('form');
     form.method = 'post';
     form.action = '/quarantine/{{ item.id }}/delete';
     form.style.display = 'none';
 
-    // Add mode input
     const modeInput = document.createElement('input');
     modeInput.type = 'hidden';
     modeInput.name = 'mode';
     modeInput.value = mode;
     form.appendChild(modeInput);
 
-    // Add form to body and submit
     document.body.appendChild(form);
     form.submit();
   }

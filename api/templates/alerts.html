@@ -3,6 +3,8 @@
 {% block page_title %}Alerts{% endblock %}
 
 {% block content %}
+{% set perms = request.session.permissions or [] %}
+
 <!-- Filters Card (Initially Hidden) -->
 <div id="filterCard" class="card mb-4" style="display: none;">
     <div class="card-header flex-between">
@@ -27,6 +29,7 @@
                         <option value="success" {% if alert_type == 'success' %}selected{% endif %}>Success</option>
                     </select>
                 </div>
+
                 <div class="col-md-3">
                     <label class="form-label">&nbsp;</label>
                     <div class="form-check">
@@ -37,6 +40,7 @@
                         </label>
                     </div>
                 </div>
+
                 <div class="col-md-3">
                     <label class="form-label">&nbsp;</label>
                     <div class="d-flex gap-2">
@@ -50,6 +54,7 @@
                         </a>
                     </div>
                 </div>
+
                 <div class="col-md-3">
                     <div class="text-end">
                         <div class="h5 mb-0">{{ unacknowledged_count }}</div>
@@ -68,16 +73,19 @@
             <i class="fas fa-bell"></i>
             <span>System Alerts</span>
         </div>
+
         <div class="d-flex gap-2">
             <button id="toggleFilterBtn" class="btn btn-secondary btn-sm" onclick="toggleFilters()">
                 <i class="fas fa-filter"></i>
                 <span class="hide-mobile">Filter Alerts</span>
             </button>
+
             <button class="btn btn-secondary btn-sm" onclick="refreshAlerts()">
                 <i class="fas fa-sync-alt"></i>
                 <span class="hide-mobile">Refresh</span>
             </button>
-            {% if request.session.role == 'administrator' %}
+
+            {% if 'manage_alerts' in perms %}
             <button class="btn btn-primary btn-sm" onclick="createTestAlert()">
                 <i class="fas fa-plus"></i>
                 <span class="hide-mobile">Create Test Alert</span>
@@ -85,21 +93,26 @@
             {% endif %}
         </div>
     </div>
+
     <div class="card-body">
         {% for alert in alerts %}
         <div class="card alert-item {{ alert.alert_type }} {% if alert.acknowledged %}acknowledged{% endif %}">
             <div class="card-body">
+
                 <div class="alert-header">
                     <div class="d-flex align-items-center gap-2">
                         <span class="alert-badge {{ alert.alert_type }}">{{ alert.alert_type }}</span>
                         <h5 class="alert-title mb-0">{{ alert.title }}</h5>
+
                         {% if alert.acknowledged %}
                         <i class="fas fa-check-circle text-success" title="Acknowledged"></i>
                         {% endif %}
+
                         {% if alert.email_sent %}
                         <i class="fas fa-envelope text-primary" title="Email sent"></i>
                         {% endif %}
                     </div>
+
                     <div class="alert-actions">
                         {% if not alert.acknowledged %}
                         <button class="btn btn-sm btn-outline-primary" onclick="acknowledgeAlert({{ alert.id }})">
@@ -128,6 +141,7 @@
                         {% endif %}
                     </small>
                 </div>
+
             </div>
         </div>
         {% endfor %}
@@ -146,6 +160,7 @@
     <!-- Pagination -->
     {% if total_pages > 1 %}
     <div class="pagination">
+
         {% if page > 1 %}
         <a href="?page={{ page - 1 }}{% if alert_type %}&alert_type={{ alert_type }}{% endif %}{% if show_acknowledged %}&show_acknowledged=1{% endif %}" class="page-link">
             <i class="fas fa-chevron-left"></i>
@@ -162,34 +177,34 @@
             <i class="fas fa-chevron-right"></i>
         </a>
         {% endif %}
+
     </div>
     {% endif %}
 </div>
 
 <script>
-// Filter toggle function
+// Filter toggle
 window.toggleFilters = function() {
   const filterCard = document.getElementById('filterCard');
   const toggleBtn = document.getElementById('toggleFilterBtn');
 
-    if (filterCard.style.display === 'none') {
-        filterCard.style.display = 'block';
-        toggleBtn.innerHTML = '<i class="fas fa-times"></i><span class="hide-mobile">Hide Filters</span>';
-    } else {
-        filterCard.style.display = 'none';
-        toggleBtn.innerHTML = '<i class="fas fa-filter"></i><span class="hide-mobile">Filter Alerts</span>';
-    }
+  if (filterCard.style.display === 'none') {
+      filterCard.style.display = 'block';
+      toggleBtn.innerHTML = '<i class="fas fa-times"></i><span class="hide-mobile">Hide Filters</span>';
+  } else {
+      filterCard.style.display = 'none';
+      toggleBtn.innerHTML = '<i class="fas fa-filter"></i><span class="hide-mobile">Filter Alerts</span>';
+  }
 };
 
-// Show filter card if any filters are active
+// Auto-show filters if active
 const hasFilters = {{ 'true' if alert_type or show_acknowledged else 'false' }};
 if (hasFilters) {
   toggleFilters();
 }
 
-// Acknowledge an alert
+// Acknowledge alert
 function acknowledgeAlert(alertId) {
-    // Create and submit a form to acknowledge the alert
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = `/api/alerts/${alertId}/acknowledge`;
@@ -202,7 +217,7 @@ function refreshAlerts() {
     window.location.reload();
 }
 
-// Auto-refresh unacknowledged count in header
+// Update unacknowledged badge
 function updateUnacknowledgedBadge() {
     fetch('/api/alerts/unacknowledged-count')
         .then(response => response.json())
@@ -220,7 +235,6 @@ function updateUnacknowledgedBadge() {
         .catch(error => console.error('Error updating badge:', error));
 }
 
-// Update badge every 30 seconds
 setInterval(updateUnacknowledgedBadge, 30000);
 
 // Create test alert
@@ -242,7 +256,6 @@ function createTestAlert() {
         'success': 'This is a test success alert to demonstrate the alerting system.'
     };
 
-    // Create and submit a form to create the test alert
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = '/api/alerts';
@@ -266,4 +279,5 @@ function createTestAlert() {
     form.submit();
 }
 </script>
+
 {% endblock %}

@@ -3,6 +3,8 @@
 {% block page_title %}Emails{% endblock %}
 
 {% block content %}
+{% set perms = request.session.permissions or [] %}
+
 <!-- Filters Card (Initially Hidden) -->
 <div id="filterCard" class="card mb-4" style="display: none;">
     <div class="card-header flex-between">
@@ -53,12 +55,13 @@
                 <i class="fas fa-filter"></i>
                 <span class="hide-mobile">Search & Filter</span>
             </button>
+
             <a href="/emails/import" class="btn btn-primary btn-sm">
                 <i class="fas fa-file-import"></i>
                 <span class="hide-mobile">Import</span>
             </a>
 
-            {% if 'delete_emails' in request.session.get('permissions', []) %}
+            {% if 'delete_emails' in perms %}
             <button type="button" class="btn btn-warning btn-sm" id="quarantine-selected-btn" disabled onclick="showQuarantineModal()">
                 <i class="fas fa-shield-virus"></i>
                 <span class="hide-mobile">Quarantine Selected</span>
@@ -77,7 +80,7 @@
                 <table class="table">
                     <thead>
                         <tr>
-                            {% if 'delete_emails' in request.session.get('permissions', []) %}
+                            {% if 'delete_emails' in perms %}
                             <th class="col-small">
                                 <input type="checkbox" id="select-all" class="form-check-input">
                             </th>
@@ -98,7 +101,7 @@
                     <tbody>
                         {% for email in emails %}
                         <tr>
-                            {% if 'delete_emails' in request.session.get('permissions', []) %}
+                            {% if 'delete_emails' in perms %}
                             <td>
                                 <input type="checkbox" name="ids" value="{{ email.id }}" class="form-check-input email-checkbox">
                             </td>
@@ -149,7 +152,7 @@
 
                         {% if emails|length == 0 %}
                         <tr>
-                            <td colspan="{% if 'delete_emails' in request.session.get('permissions', []) %}9{% else %}8{% endif %}" class="text-center empty-state">
+                            <td colspan="{% if 'delete_emails' in perms %}9{% else %}8{% endif %}" class="text-center empty-state">
                                 <div>
                                     <i class="fas fa-inbox empty-icon"></i>
                                     <p>No emails found.</p>
@@ -205,9 +208,9 @@
             <span>You are about to quarantine <strong id="quarantine-count">0</strong> email<span id="quarantine-plural">s</span>.</span>
         </div>
 
-        <p style="margin-top: 20px; margin-bottom: 20px;"><strong>This will move the selected emails to quarantine for review.</strong></p>
+        <p><strong>This will move the selected emails to quarantine for review.</strong></p>
 
-        <div class="text-center" style="margin-top: 20px;">
+        <div class="text-center">
             <form method="post" action="/emails/quarantine" id="quarantine-form" style="display: inline;">
                 <button type="submit" class="btn btn-warning">
                     <i class="fas fa-shield-virus"></i>
@@ -236,7 +239,7 @@
             <span>You are about to delete <strong id="delete-count">0</strong> email<span id="delete-plural">s</span>.</span>
         </div>
 
-        <p style="margin-top: 20px; margin-bottom: 20px;"><strong>Choose how you want to delete them:</strong></p>
+        <p><strong>Choose how you want to delete them:</strong></p>
 
         <div style="display: grid; gap: 12px; margin-bottom: 20px;">
             <button type="button" class="btn btn-danger w-100" onclick="performDelete('db')">
