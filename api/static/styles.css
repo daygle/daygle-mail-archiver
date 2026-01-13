@@ -1256,7 +1256,7 @@ textarea.form-control {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+    background-color: #8b5cf6;
     color: white;
     display: flex;
     align-items: center;
@@ -2940,7 +2940,7 @@ a:hover {
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background-color: var(--accent-primary);
+    /* background-color: var(--accent-primary); */ /* Removed to allow inline styles */
     color: white;
     display: flex;
     align-items: center;
