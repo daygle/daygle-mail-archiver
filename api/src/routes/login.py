@@ -183,7 +183,7 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
         user = query("""
             SELECT id, username, password_hash, date_format, time_format,
                    timezone, theme_preference, enabled,
-                   failed_login_attempts, locked_until
+                   failed_login_attempts, locked_until, avatar_color
             FROM users
             WHERE username = :u
         """, {"u": username}).mappings().first()
@@ -223,6 +223,7 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
         request.session["time_format"] = user["time_format"] or "%H:%M"
         request.session["timezone"] = user["timezone"] or "Australia/Melbourne"
         request.session["theme"] = user.get("theme_preference") or "system"
+        request.session["avatar_color"] = user.get("avatar_color") or "#007bff"
         request.session["needs_password"] = True
         request.session["permissions"] = load_user_permissions(user["id"])
         return RedirectResponse("/set-password", status_code=303)
@@ -243,6 +244,7 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
             request.session["time_format"] = user["time_format"] or "%H:%M"
             request.session["timezone"] = user["timezone"] or "Australia/Melbourne"
             request.session["theme"] = user.get("theme_preference") or "system"
+            request.session["avatar_color"] = user.get("avatar_color") or "#007bff"
             request.session["permissions"] = load_user_permissions(user["id"])
 
             return RedirectResponse("/dashboard", status_code=303)

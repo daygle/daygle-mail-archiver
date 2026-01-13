@@ -218,7 +218,7 @@ def user_settings_form(
 
     user = query("""
         SELECT page_size, date_format, time_format, timezone,
-               theme_preference, email_notifications
+               theme_preference, email_notifications, avatar_color
         FROM users
         WHERE id = :id
     """, {"id": user_id}).mappings().first()
@@ -230,6 +230,7 @@ def user_settings_form(
     current_timezone = user["timezone"] or "Australia/Melbourne"
     current_theme = user.get("theme_preference") or "system"
     current_email_notifications = user["email_notifications"]
+    current_avatar_color = user.get("avatar_color") or "#007bff"
 
     # Sync session
     request.session["page_size"] = current_page_size
@@ -237,6 +238,7 @@ def user_settings_form(
     request.session["time_format"] = current_time_format
     request.session["timezone"] = current_timezone
     request.session["theme"] = current_theme
+    request.session["avatar_color"] = current_avatar_color
 
     msg = request.session.pop("flash", None)
 
@@ -248,6 +250,7 @@ def user_settings_form(
         "time_format": current_time_format,
         "timezone": current_timezone,
         "theme": current_theme,
+        "avatar_color": current_avatar_color,
         "email_notifications": current_email_notifications
     })
 
@@ -264,6 +267,7 @@ def update_user_settings(
     time_format: str = Form(...),
     timezone: str = Form("Australia/Melbourne"),
     theme: str = Form("system"),
+    avatar_color: str = Form("#007bff"),
     email_notifications: bool = Form(True)
 ):
     user_id = request.session["user_id"]
@@ -277,7 +281,7 @@ def update_user_settings(
     try:
         current = query("""
             SELECT page_size, date_format, time_format, timezone,
-                   theme_preference, email_notifications
+                   theme_preference, email_notifications, avatar_color
             FROM users
             WHERE id = :id
         """, {"id": user_id}).mappings().first()
@@ -294,6 +298,8 @@ def update_user_settings(
             changed.append(f"timezone={timezone}")
         if current.get("theme_preference") != theme:
             changed.append(f"theme={theme}")
+        if current.get("avatar_color") != avatar_color:
+            changed.append(f"avatar_color={avatar_color}")
         if current["email_notifications"] != email_notifications:
             changed.append(f"email_notifications={email_notifications}")
 
@@ -305,7 +311,7 @@ def update_user_settings(
             UPDATE users
             SET page_size = :ps, date_format = :df, time_format = :tf,
                 timezone = :tz, theme_preference = :theme,
-                email_notifications = :en
+                avatar_color = :ac, email_notifications = :en
             WHERE id = :id
         """, {
             "ps": page_size,
@@ -313,6 +319,7 @@ def update_user_settings(
             "tf": time_format,
             "tz": timezone,
             "theme": theme,
+            "ac": avatar_color,
             "en": email_notifications,
             "id": user_id
         })
@@ -323,6 +330,7 @@ def update_user_settings(
         request.session["time_format"] = time_format
         request.session["timezone"] = timezone
         request.session["theme"] = theme
+        request.session["avatar_color"] = avatar_color
 
         log("info", "Settings", f"User '{username}' updated settings ({', '.join(changed)})")
         flash(request, "User settings updated successfully.", "success")

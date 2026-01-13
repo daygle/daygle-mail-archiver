@@ -75,6 +75,23 @@
                 </select>
                 <small class="form-text">Your personal theme preference; this overrides the global default.</small>
             </div>
+
+            <div class="form-group mt-3">
+                <label for="avatar_color" class="form-label">Avatar Color</label>
+                <select id="avatar_color" class="form-select" name="avatar_color">
+                    <option value="#007bff" {% if avatar_color == '#007bff' or not avatar_color %}selected{% endif %}>🔵 Blue</option>
+                    <option value="#28a745" {% if avatar_color == '#28a745' %}selected{% endif %}>🟢 Green</option>
+                    <option value="#dc3545" {% if avatar_color == '#dc3545' %}selected{% endif %}>🔴 Red</option>
+                    <option value="#ffc107" {% if avatar_color == '#ffc107' %}selected{% endif %}>🟡 Yellow</option>
+                    <option value="#6f42c1" {% if avatar_color == '#6f42c1' %}selected{% endif %}>🟣 Purple</option>
+                    <option value="#e83e8c" {% if avatar_color == '#e83e8c' %}selected{% endif %}>🩷 Pink</option>
+                    <option value="#fd7e14" {% if avatar_color == '#fd7e14' %}selected{% endif %}>🟠 Orange</option>
+                    <option value="#20c997" {% if avatar_color == '#20c997' %}selected{% endif %}>🟢 Teal</option>
+                    <option value="#6c757d" {% if avatar_color == '#6c757d' %}selected{% endif %}>⚫ Gray</option>
+                    <option value="#17a2b8" {% if avatar_color == '#17a2b8' %}selected{% endif %}>🔵 Cyan</option>
+                </select>
+                <small class="form-text">Choose the color for your user avatar in the top navigation.</small>
+            </div>
         </div>
         <div class="card-footer form-actions">
             <button type="submit" class="btn btn-primary">

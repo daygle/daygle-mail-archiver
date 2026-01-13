@@ -182,7 +182,7 @@
                     </div>
                     <div class="user-menu">
                         <button type="button" class="user-menu-button" id="userMenuButton">
-                            <div class="user-avatar">
+                            <div class="user-avatar" style="background-color: {{ request.session.get('avatar_color', '#007bff') }};">
                                 {{ request.session.username[0]|upper }}
                             </div>
                             <span class="user-name">{{ request.session.username }}</span>

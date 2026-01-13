@@ -130,6 +130,7 @@ CREATE TABLE IF NOT EXISTS users (
     last_login TIMESTAMPTZ,
     last_login_ip TEXT,
     last_seen TIMESTAMPTZ,
+    avatar_color TEXT NOT NULL DEFAULT '#007bff',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     failed_login_attempts INTEGER NOT NULL DEFAULT 0,
     locked_until TIMESTAMPTZ,
@@ -261,6 +262,10 @@ ALTER TABLE emails
 -- Add last_seen column to users table for online/offline tracking
 ALTER TABLE users
     ADD COLUMN IF NOT EXISTS last_seen TIMESTAMPTZ;
+
+-- Add avatar_color column to users table for user avatar customization
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS avatar_color TEXT NOT NULL DEFAULT '#007bff';
 
 -- ----------------------------
 -- logs
