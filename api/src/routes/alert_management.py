@@ -4,25 +4,19 @@ from fastapi.responses import RedirectResponse
 from utils.db import query, execute
 from utils.logger import log
 from utils.templates import templates
-from utils.permissions import PermissionChecker
+from utils.permissions import PermissionChecker, require_permission, PERMISSIONS
 
 router = APIRouter()
 
 def require_login(request: Request):
     return "user_id" in request.session
 
-def require_admin(request: Request):
-    if not require_login(request):
-        return False
-    checker = PermissionChecker(request)
-    return checker.has_permission("manage_alerts")
-
 def flash(request: Request, message: str, category: str = 'info'):
     request.session["flash"] = {"message": message, "type": category}
 
 @router.get("/alert-management")
-def alert_management_form(request: Request):
-    if not require_admin(request):
+def alert_management_form(request: Request, _=require_permission(PERMISSIONS["manage_alerts"])):
+    if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
     # Set unacknowledged alerts count for bell icon
@@ -52,8 +46,8 @@ def alert_management_form(request: Request):
     )
 
 @router.post("/alert-management/triggers/update")
-def update_trigger_status(request: Request, trigger_id: int = Form(...), enabled: bool = Form(...)):
-    if not require_admin(request):
+def update_trigger_status(request: Request, _=require_permission(PERMISSIONS["manage_alerts"]), trigger_id: int = Form(...), enabled: bool = Form(...)):
+    if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
     try:
@@ -73,8 +67,8 @@ def update_trigger_status(request: Request, trigger_id: int = Form(...), enabled
         return RedirectResponse("/alert-management", status_code=303)
 
 @router.post("/alert-management/triggers/update-severity")
-def update_trigger_severity(request: Request, trigger_id: int = Form(...), alert_type: str = Form(...)):
-    if not require_admin(request):
+def update_trigger_severity(request: Request, _=require_permission(PERMISSIONS["manage_alerts"]), trigger_id: int = Form(...), alert_type: str = Form(...)):
+    if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
     # Validate alert_type
