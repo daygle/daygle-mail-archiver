@@ -137,7 +137,6 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- Index on email for lookups
 CREATE INDEX IF NOT EXISTS users_email_idx ON users(email);
-CREATE INDEX IF NOT EXISTS users_role_idx ON users(role);
 
 -- Default administrator user will be created during initial setup wizard
 
