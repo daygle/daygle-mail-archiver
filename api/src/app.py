@@ -99,7 +99,7 @@ async def update_last_seen(request: Request, call_next):
     if user_id:
         try:
             ip = get_client_ip(request)
-            await execute(
+            execute(
                 """
                 UPDATE users
                 SET last_seen = NOW(),
