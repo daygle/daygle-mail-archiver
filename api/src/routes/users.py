@@ -262,6 +262,22 @@ def update_user(
             SELECT role_id FROM user_roles WHERE user_id = :id
         """, {"id": user_id}).mappings().all()
 
+        # Prevent self‑lockout: user cannot remove their own admin-level access
+        if user_id == current_user_id:
+            # Check if the new role set still includes a role with manage_users permission
+            admin_roles = query("""
+                SELECT rp.role_id
+                FROM role_permissions rp
+                JOIN permissions p ON p.id = rp.permission_id
+                WHERE p.name = 'manage_users'
+            """).mappings().all()
+
+            admin_role_ids = {str(r["role_id"]) for r in admin_roles}
+
+            if not (new_role_ids & admin_role_ids):
+                flash(request, "You cannot remove your own administrative access.", "error")
+                return RedirectResponse("/users", status_code=303)
+
         current_role_ids = {str(r["role_id"]) for r in current_role_rows}
         new_role_ids = {str(r) for r in role_ids}
 

@@ -221,9 +221,16 @@ def _send_alert_email(alert_id: int, alert_type: str, title: str, message: str) 
 
         # Get admin users with email addresses and email notifications enabled
         admin_users = query("""
-            SELECT email FROM users
-            WHERE role = 'administrator' AND email IS NOT NULL AND email != '' AND enabled = TRUE 
-            AND email_notifications = TRUE
+            SELECT u.email
+            FROM users u
+            JOIN user_roles ur ON ur.user_id = u.id
+            JOIN role_permissions rp ON rp.role_id = ur.role_id
+            JOIN permissions p ON p.id = rp.permission_id
+            WHERE p.name = 'manage_global_settings'
+            AND u.email IS NOT NULL
+            AND u.email != ''
+            AND u.enabled = TRUE
+            AND u.email_notifications = TRUE
         """).mappings().all()
 
         recipients = [user["email"] for user in admin_users]

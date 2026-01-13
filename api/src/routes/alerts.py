@@ -29,6 +29,11 @@ def alerts_page(
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
+    # RBAC: require permission to view alerts
+    checker = PermissionChecker(request)
+    if not checker.has_permission("view_alerts"):
+        return RedirectResponse("/403", status_code=303)
+
     # Validate parameters
     page = max(1, page)
     page_size = 50
@@ -102,6 +107,11 @@ def acknowledge_alert_api(request: Request, alert_id: int):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
+    # RBAC: require permission to acknowledge alerts
+    checker = PermissionChecker(request)
+    if not checker.has_permission("acknowledge_alerts"):
+        return JSONResponse({"error": "Forbidden"}, status_code=403)
+
     user_id = request.session.get("user_id")
     if not user_id:
         flash(request, "User not found", 'error')
@@ -127,6 +137,11 @@ def get_unacknowledged_count_api(request: Request):
     """Get count of unacknowledged alerts"""
     if not require_login(request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    # RBAC: require permission to view alerts
+    checker = PermissionChecker(request)
+    if not checker.has_permission("view_alerts"):
+        return JSONResponse({"error": "Forbidden"}, status_code=403)
 
     try:
         count = get_unacknowledged_count()
