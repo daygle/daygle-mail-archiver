@@ -342,7 +342,7 @@
             try { window.dispatchEvent(new CustomEvent('theme-changed', { detail: { theme: theme } })); } catch (e) {}
         }
 
-        // Persist theme to server and show user feedback — call this only on explicit user action
+        // Persist theme to server and show user feedback - call this only on explicit user action
         function persistTheme(theme) {
             try {
                 if (window.__isLoggedIn) {
@@ -376,16 +376,16 @@
         }
         
         if (savedLocalTheme && savedLocalTheme !== 'system') {
-            // User has a locally stored explicit preference — honor it
+            // User has a locally stored explicit preference - honor it
             setTheme(savedLocalTheme);
         } else if (serverTheme && serverTheme !== 'system') {
             // honor explicit user preference stored on server
             setTheme(serverTheme);
         } else if (serverTheme === 'system' && serverGlobalTheme && serverGlobalTheme !== 'system') {
-            // user prefers 'system' — use the global default if configured
+            // user prefers 'system' - use the global default if configured
             setTheme(serverGlobalTheme);
         } else if (serverTheme === 'system' || (serverTheme === '' && serverGlobalTheme === 'system')) {
-            // user or global setting is 'system' — follow browser preference
+            // user or global setting is 'system' - follow browser preference
             setTheme(getSystemTheme());
         } else {
             const savedTheme = savedLocalTheme || 'light';

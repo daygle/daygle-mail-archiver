@@ -3075,7 +3075,7 @@ a:hover {
     margin-bottom: 1rem;
 }
 
-/* Account Activity table — ensure dark theme background and grey text */
+/* Account Activity table - ensure dark theme background and grey text */
 [data-theme="dark"] .account-activity-table,
 [data-theme="dark"] .account-activity-table th,
 [data-theme="dark"] .account-activity-table td {

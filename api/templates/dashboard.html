@@ -34,7 +34,7 @@
 
 <!-- API Unreachable Banner (hidden by default) -->
 <div id="api-unreachable-banner" class="alert alert-warning d-none">
-    <span id="api-unreachable-message">API unreachable — retrying...</span>
+    <span id="api-unreachable-message">API unreachable - retrying...</span>
     <button id="api-retry-now" class="btn btn-sm btn-primary ml-1rem">Retry now</button>
 </div>
 
@@ -354,7 +354,7 @@ const DashboardManager = {
             await this.loadAllData();
         } catch (e) {
             // keep banner and message
-            this.showApiBanner('API still unreachable — retrying...');
+            this.showApiBanner('API still unreachable - retrying...');
         }
     },
 
@@ -376,7 +376,7 @@ const DashboardManager = {
                 return data;
             } catch (err) {
                 attempt += 1;
-                this.showApiBanner(`API unreachable — retrying (attempt ${attempt} of ${retries})`);
+                this.showApiBanner(`API unreachable - retrying (attempt ${attempt} of ${retries})`);
                 if (attempt > retries) {
                     // Keep the banner visible and bubble error
                     throw err;

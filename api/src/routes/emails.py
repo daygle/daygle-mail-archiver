@@ -354,7 +354,7 @@ async def import_emails(request: Request, source: str = Form("import"), folder: 
                     errors.append(f"{filename}: zip extraction failed ({str(e)})")
 
             elif lower.endswith(".pst"):
-                # PST support removed — do not attempt to parse PST files
+                # PST support removed - do not attempt to parse PST files
                 errors.append(f"{filename}: PST files are not supported")
 
             else:

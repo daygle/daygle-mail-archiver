@@ -97,7 +97,7 @@ else:
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 # Serve Font Awesome webfonts at the path the vendor CSS expects
-# This avoids moving binary font files — requests to /static/vendor/webfonts/
+# This avoids moving binary font files - requests to /static/vendor/webfonts/
 # will be served from the existing fontawesome/webfonts directory.
 fa_webfonts_dir = static_dir / "vendor" / "fontawesome" / "webfonts"
 if fa_webfonts_dir.exists():

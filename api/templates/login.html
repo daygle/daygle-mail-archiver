@@ -96,7 +96,7 @@
         window.addEventListener('load', function(){ setTimeout(revealAuth, 50); });
         if (document.readyState === 'complete') { setTimeout(revealAuth, 50); }
 
-        // Global error handler for auth pages — prefer to show toasts when available
+        // Global error handler for auth pages - prefer to show toasts when available
         function showAuthError(msg){
             try{
                 if(window.createToast){

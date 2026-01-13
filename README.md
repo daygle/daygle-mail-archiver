@@ -2,7 +2,7 @@
 
 Daygle Mail Archiver is a deterministic email ingestion and archiving system designed for long‑term retention, auditability, and operational reliability. It ingests emails from multiple sources (IMAP, Gmail API, Office 365 Graph API), stores messages in a structured database, and exposes a clean UI for browsing, retention policy management, and administrative control.
 
-This project is built with explicit, maintainable configuration, modular backend logic, and a modernised UI — ensuring predictable behaviour across all environments.
+This project is built with explicit, maintainable configuration, modular backend logic, and a modernised UI - ensuring predictable behaviour across all environments.
 
 ---
 
@@ -144,7 +144,7 @@ The application will be available at `http://localhost:8000`
 ### Development Features
 
 - **Auto-reload**: Code changes automatically restart the server
-- **PostgreSQL (recommended)**: Use the same database type as production for parity — start the DB container (`docker compose up -d db`) and set `DB_DSN` to a PostgreSQL DSN (see `.env-dev.example`).
+- **PostgreSQL (recommended)**: Use the same database type as production for parity - start the DB container (`docker compose up -d db`) and set `DB_DSN` to a PostgreSQL DSN (see `.env-dev.example`).
 - **Environment variables**: Configuration via `.env` file
 - **Debug logging**: Detailed logs for troubleshooting
 
