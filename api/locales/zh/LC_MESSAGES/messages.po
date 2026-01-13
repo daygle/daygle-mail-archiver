@@ -1,0 +1,26 @@
+# Chinese translations for Daygle Mail Archiver
+msgid ""
+msgstr ""
+"Language: zh\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "Display & Formatting Settings"
+msgstr "显示和格式设置"
+
+msgid "Configure how content is displayed throughout the application"
+msgstr "配置整个应用程序中内容的显示方式"
+
+msgid "Items Per Page"
+msgstr "每页项目数"
+
+msgid "Number of emails to display per page in lists"
+msgstr "列表中每页显示的电子邮件数量"
+
+msgid "Date Format"
+msgstr "日期格式"
+
+msgid "Language"
+msgstr "语言"
+
+msgid "Interface language"
+msgstr "界面语言"

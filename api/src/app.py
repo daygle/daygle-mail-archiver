@@ -6,6 +6,8 @@ from fastapi.responses import RedirectResponse, JSONResponse
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.cors import CORSMiddleware
 import logging
+import gettext
+import locale
 
 from routes import (
     emails, fetch_accounts, global_settings, login, users, profile, logs,
@@ -71,6 +73,25 @@ async def add_security_headers(request: Request, call_next):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
+
+# ---------------------------------------------------------
+# Internationalization Middleware
+# ---------------------------------------------------------
+@app.middleware("http")
+async def set_locale(request: Request, call_next):
+    # Get language from session, default to 'en'
+    lang = request.session.get('language', 'en')
+    # Set locale for gettext
+    try:
+        locale.setlocale(locale.LC_ALL, lang + '.UTF-8' if lang != 'en' else 'C.UTF-8' if os.name != 'nt' else 'English_United States.1252')  # Adjust for Windows if needed
+        trans = gettext.translation('messages', localedir=os.path.join(os.path.dirname(__file__), '..', 'locales'), languages=[lang], fallback=True)
+        trans.install(names=['gettext', '_', 'ngettext'])  # Install _ as global for templates
+    except (FileNotFoundError, locale.Error):
+        # Fallback to default
+        gettext.install('messages', localedir=os.path.join(os.path.dirname(__file__), '..', 'locales'), names=['gettext', '_', 'ngettext'])
+
+    response = await call_next(request)
     return response
 
 # ---------------------------------------------------------

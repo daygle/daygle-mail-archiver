@@ -126,6 +126,7 @@ CREATE TABLE IF NOT EXISTS users (
     timezone TEXT NOT NULL DEFAULT 'Australia/Melbourne',
     theme_preference TEXT NOT NULL DEFAULT 'system',
     email_notifications BOOLEAN NOT NULL DEFAULT TRUE,
+    language TEXT NOT NULL DEFAULT 'en',
     enabled BOOLEAN NOT NULL DEFAULT TRUE,
     last_login TIMESTAMPTZ,
     last_login_ip TEXT,

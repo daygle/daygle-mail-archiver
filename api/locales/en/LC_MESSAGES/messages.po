@@ -1,0 +1,26 @@
+# English translations for Daygle Mail Archiver
+msgid ""
+msgstr ""
+"Language: en\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "Display & Formatting Settings"
+msgstr "Display & Formatting Settings"
+
+msgid "Configure how content is displayed throughout the application"
+msgstr "Configure how content is displayed throughout the application"
+
+msgid "Items Per Page"
+msgstr "Items Per Page"
+
+msgid "Number of emails to display per page in lists"
+msgstr "Number of emails to display per page in lists"
+
+msgid "Date Format"
+msgstr "Date Format"
+
+msgid "Language"
+msgstr "Language"
+
+msgid "Interface language"
+msgstr "Interface language"

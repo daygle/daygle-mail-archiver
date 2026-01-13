@@ -4,6 +4,7 @@ Shared Jinja2 templates configuration with custom filters
 from pathlib import Path
 from fastapi.templating import Jinja2Templates
 from utils.timezone import convert_utc_to_user_timezone, format_datetime
+import gettext
 
 
 # Determine templates directory
@@ -12,6 +13,9 @@ templates_dir = BASE_DIR / "templates" if (BASE_DIR / "templates").exists() else
 
 # Create templates instance
 templates = Jinja2Templates(directory=str(templates_dir))
+
+# Enable gettext in Jinja2
+templates.env.install_gettext_callables(gettext.gettext, gettext.ngettext, newstyle=True)
 
 
 # Custom Jinja2 filters

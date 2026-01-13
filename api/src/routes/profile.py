@@ -218,7 +218,7 @@ def user_settings_form(
 
     user = query("""
         SELECT page_size, date_format, time_format, timezone,
-               theme_preference, email_notifications, avatar_color
+               theme_preference, email_notifications, avatar_color, language
         FROM users
         WHERE id = :id
     """, {"id": user_id}).mappings().first()
@@ -231,6 +231,7 @@ def user_settings_form(
     current_theme = user.get("theme_preference") or "system"
     current_email_notifications = user["email_notifications"]
     current_avatar_color = user.get("avatar_color") or "#007bff"
+    current_language = user.get("language") or "en"
 
     # Sync session
     request.session["page_size"] = current_page_size
@@ -239,6 +240,7 @@ def user_settings_form(
     request.session["timezone"] = current_timezone
     request.session["theme"] = current_theme
     request.session["avatar_color"] = current_avatar_color
+    request.session["language"] = current_language
 
     msg = request.session.pop("flash", None)
 
@@ -251,7 +253,8 @@ def user_settings_form(
         "timezone": current_timezone,
         "theme": current_theme,
         "avatar_color": current_avatar_color,
-        "email_notifications": current_email_notifications
+        "email_notifications": current_email_notifications,
+        "language": current_language
     })
 
 
@@ -268,7 +271,8 @@ def update_user_settings(
     timezone: str = Form("Australia/Melbourne"),
     theme: str = Form("system"),
     avatar_color: str = Form("#007bff"),
-    email_notifications: bool = Form(True)
+    email_notifications: bool = Form(True),
+    language: str = Form("en")
 ):
     user_id = request.session["user_id"]
     username = request.session.get("username", "unknown")
@@ -281,7 +285,7 @@ def update_user_settings(
     try:
         current = query("""
             SELECT page_size, date_format, time_format, timezone,
-                   theme_preference, email_notifications, avatar_color
+                   theme_preference, email_notifications, avatar_color, language
             FROM users
             WHERE id = :id
         """, {"id": user_id}).mappings().first()
@@ -302,6 +306,8 @@ def update_user_settings(
             changed.append(f"avatar_color={avatar_color}")
         if current["email_notifications"] != email_notifications:
             changed.append(f"email_notifications={email_notifications}")
+        if current.get("language") != language:
+            changed.append(f"language={language}")
 
         if not changed:
             flash(request, "No changes detected.", "info")
@@ -311,7 +317,7 @@ def update_user_settings(
             UPDATE users
             SET page_size = :ps, date_format = :df, time_format = :tf,
                 timezone = :tz, theme_preference = :theme,
-                avatar_color = :ac, email_notifications = :en
+                avatar_color = :ac, email_notifications = :en, language = :lang
             WHERE id = :id
         """, {
             "ps": page_size,
@@ -321,6 +327,7 @@ def update_user_settings(
             "theme": theme,
             "ac": avatar_color,
             "en": email_notifications,
+            "lang": language,
             "id": user_id
         })
 
@@ -331,6 +338,7 @@ def update_user_settings(
         request.session["timezone"] = timezone
         request.session["theme"] = theme
         request.session["avatar_color"] = avatar_color
+        request.session["language"] = language
 
         log("info", "Settings", f"User '{username}' updated settings ({', '.join(changed)})")
         flash(request, "User settings updated successfully.", "success")
