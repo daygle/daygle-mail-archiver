@@ -120,8 +120,15 @@ def setup_wizard_submit(
 
         user_id = new_user["id"]
 
-        # Assign administrator role
-        admin_role = query("SELECT id FROM roles WHERE name = 'administrator'").mappings().first()
+        # Assign administrator role based on RBAC permission (manage_users)
+        admin_role = query("""
+            SELECT r.id
+            FROM roles r
+            JOIN role_permissions rp ON rp.role_id = r.id
+            JOIN permissions p ON p.id = rp.permission_id
+            WHERE p.name = 'manage_users'
+        """).mappings().first()
+
         if admin_role:
             execute("""
                 INSERT INTO user_roles (user_id, role_id)

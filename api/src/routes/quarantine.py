@@ -127,15 +127,16 @@ def list_quarantine(request: Request, q: str = None, virus: str = None, page: in
         request.session['flash'] = 'Please login to access Quarantine'
         return RedirectResponse('/login', status_code=303)
 
-    # Verify role from DB (more reliable than trusting session role)
+    # RBAC: require permission to view quarantine
     try:
-        user = query('SELECT role FROM users WHERE id = :id', {'id': request.session.get('user_id')}).mappings().first()
-        if not user or user.get('role') not in ['administrator', 'read_only']:
-            log('warning', 'Quarantine', f"Unauthorized access attempt to /quarantine by user_id={request.session.get('user_id')} role={request.session.get('role')}")
+        checker = PermissionChecker(request)
+        if not checker.has_permission("view_quarantine"):
+            log('warning', 'Quarantine',
+                f"Unauthorized access attempt to /quarantine by user_id={request.session.get('user_id')}")
             request.session['flash'] = 'Access denied'
             return RedirectResponse('/dashboard', status_code=303)
     except Exception as e:
-        log('error', 'Quarantine', f"Failed to verify role: {e}")
+        log('error', 'Quarantine', f"Failed to verify permissions: {e}")
         request.session['flash'] = 'Access denied'
         return RedirectResponse('/dashboard', status_code=303)
 
@@ -172,41 +173,54 @@ def list_quarantine(request: Request, q: str = None, virus: str = None, page: in
     # Build query with optional filters
     where_clauses = []
     params = {}
-    
+
     if q:
         where_clauses.append("(subject ILIKE :q OR sender ILIKE :q OR recipients ILIKE :q)")
         params['q'] = f'%{q}%'
-    
+
     if virus:
         where_clauses.append("virus_name ILIKE :virus")
         params['virus'] = f'%{virus}%'
-    
+
     where_sql = " AND ".join(where_clauses) if where_clauses else ""
     if where_sql:
         where_sql = f"WHERE {where_sql}"
+
     # Get total count for pagination
-    total_row = query(f'SELECT COUNT(*) as total FROM quarantined_emails {where_sql}', params).mappings().first()
+    total_row = query(
+        f'SELECT COUNT(*) as total FROM quarantined_emails {where_sql}',
+        params
+    ).mappings().first()
     total = int(total_row['total'] or 0) if total_row else 0
 
     rows = query(
-        f'SELECT id, subject, sender, recipients, virus_name, quarantined_at, expires_at, raw_email, compressed, signature FROM quarantined_emails {where_sql} ORDER BY quarantined_at DESC LIMIT :limit OFFSET :offset',
+        f'''
+        SELECT id, subject, sender, recipients, virus_name,
+               quarantined_at, expires_at, raw_email, compressed, signature
+        FROM quarantined_emails
+        {where_sql}
+        ORDER BY quarantined_at DESC
+        LIMIT :limit OFFSET :offset
+        ''',
         {**params, 'limit': page_size, 'offset': offset}
     ).mappings().all()
 
     total_pages = (total + page_size - 1) // page_size if page_size else 1
+
     # Compute integrity for each quarantined item if possible
     processed = []
     fernet = _get_quarantine_fernet()
+
     for r in rows:
         ir = dict(r)
         integrity = 'unknown'
+
         try:
             stored_sig = ir.get('signature')
             raw_blob = ir.get('raw_email')
-            compressed_flag = ir.get('compressed')
             data = raw_blob
 
-            # Ensure bytes for DB blobs (memoryview) before decrypt/decompress
+            # Ensure bytes for DB blobs (memoryview)
             if isinstance(data, memoryview):
                 data = data.tobytes()
             elif data is not None and not isinstance(data, (bytes, bytearray)):
@@ -217,18 +231,18 @@ def list_quarantine(request: Request, q: str = None, virus: str = None, page: in
 
             if data is not None:
                 decryption_successful = False
+
                 if fernet:
                     try:
                         data = fernet.decrypt(data)
                         decryption_successful = True
                     except Exception:
-                        # Couldn't decrypt; mark as encrypted and skip signature check
                         data = raw_blob
                         decryption_successful = False
                 else:
                     decryption_successful = True
 
-                # attempt gzip decompression if appears gzipped
+                # Gzip decompression if needed
                 try:
                     if isinstance(data, (bytes, bytearray)) and len(data) >= 2 and data[:2] == b"\x1f\x8b":
                         import gzip as _gzip
@@ -256,72 +270,76 @@ def list_quarantine(request: Request, q: str = None, virus: str = None, page: in
                     integrity = 'modified'
             else:
                 integrity = 'no_raw'
+
         except Exception:
             integrity = 'unknown'
 
         ir.pop('raw_email', None)
         ir.pop('compressed', None)
         ir['integrity'] = integrity
-        
-        # Format quarantined_at according to user preferences
-        if ir["quarantined_at"] and hasattr(ir["quarantined_at"], 'strftime'):  # Check if it's a datetime object
+
+        # Format quarantined_at
+        if ir["quarantined_at"] and hasattr(ir["quarantined_at"], 'strftime'):
             ir["quarantined_at_formatted"] = format_datetime(ir["quarantined_at"], user_id)
         else:
-            ir["quarantined_at_formatted"] = ir["quarantined_at"]  # Keep as string if already formatted
-        
+            ir["quarantined_at_formatted"] = ir["quarantined_at"]
+
         processed.append(ir)
 
     msg = request.session.pop('flash', None)
 
-    return templates.TemplateResponse('quarantine.html', {
-        'request': request,
-        'items': processed,
-        'q': q or '',
-        'virus': virus or '',
-        'page': page,
-        'page_size': page_size,
-        'total': total,
-        'total_pages': total_pages,
-        'flash': msg
-    })
+    return templates.TemplateResponse(
+        'quarantine.html',
+        {
+            'request': request,
+            'items': processed,
+            'q': q or '',
+            'virus': virus or '',
+            'page': page,
+            'page_size': page_size,
+            'total': total,
+            'total_pages': total_pages,
+            'flash': msg
+        }
+    )
 
 @router.get('/quarantine/{qid}', response_class=HTMLResponse)
 def view_quarantine(request: Request, qid: int):
-    # Require login first
+    # Require login
     if not request.session.get('user_id'):
         return RedirectResponse('/login', status_code=303)
 
-    # Verify role from DB (more reliable than trusting session role)
+    # RBAC: require permission to view quarantine
     try:
-        user = query('SELECT role FROM users WHERE id = :id', {'id': request.session.get('user_id')}).mappings().first()
-        if not user or user.get('role') not in ['administrator', 'read_only']:
-            log('warning', 'Quarantine', f"Unauthorized view attempt to /quarantine/{qid} by user_id={request.session.get('user_id')} role={request.session.get('role')}")
+        checker = PermissionChecker(request)
+        if not checker.has_permission("view_quarantine"):
+            log('warning', 'Quarantine',
+                f"Unauthorized view attempt to /quarantine/{qid} by user_id={request.session.get('user_id')}")
             return RedirectResponse('/dashboard', status_code=303)
     except Exception as e:
-        log('error', 'Quarantine', f"Failed to verify role: {e}")
+        log('error', 'Quarantine', f"Failed to verify permissions: {e}")
         return RedirectResponse('/dashboard', status_code=303)
 
+    # Fetch quarantined item
     item = query('SELECT * FROM quarantined_emails WHERE id = :id', {'id': qid}).mappings().first()
     if not item:
         return RedirectResponse('/quarantine', status_code=303)
 
-    # Get user_id for timezone formatting
+    # Timezone formatting
     user_id = request.session.get("user_id")
-    if user_id is not None:
-        try:
-            user_id = int(user_id)
-        except (ValueError, TypeError):
-            user_id = None
+    try:
+        user_id = int(user_id)
+    except Exception:
+        user_id = None
 
-    # Format quarantined_at according to user preferences
-    item = dict(item)  # Convert to dict to make it mutable
-    if item["quarantined_at"] and hasattr(item["quarantined_at"], 'strftime'):  # Check if it's a datetime object
+    item = dict(item)
+    if item["quarantined_at"] and hasattr(item["quarantined_at"], 'strftime'):
         item["quarantined_at_formatted"] = format_datetime(item["quarantined_at"], user_id)
     else:
-        item["quarantined_at_formatted"] = item["quarantined_at"]  # Keep as string if already formatted
+        item["quarantined_at_formatted"] = item["quarantined_at"]
 
+    # Process raw email for preview, headers, body, integrity
     raw = item.get('raw_email')
-    # DB drivers may return a memoryview for bytea fields; ensure we have bytes
     if isinstance(raw, memoryview):
         raw = raw.tobytes()
     elif raw is not None and not isinstance(raw, (bytes, bytearray)):
@@ -329,40 +347,40 @@ def view_quarantine(request: Request, qid: int):
             raw = bytes(raw)
         except Exception:
             pass
+
     f = _get_quarantine_fernet()
     preview = None
     integrity = 'unknown'
     current_sig = None
     headers = {}
     body = {}
-    
+
     if raw:
-        decryption_successful = False
         try:
             data = raw
+            decryption_successful = False
+
             if f:
                 try:
                     data = f.decrypt(data)
                     decryption_successful = True
                 except Exception:
-                    # If decryption fails, try to decompress as-is (might be unencrypted)
                     data = raw
                     decryption_successful = False
             else:
-                decryption_successful = True  # No encryption to worry about
-            
-            # If data appears to be gzipped, decompress
+                decryption_successful = True
+
+            # Gzip decompress if needed
             try:
                 if isinstance(data, (bytes, bytearray)) and len(data) >= 2 and data[:2] == b"\x1f\x8b":
                     import gzip as _gzip
                     data = _gzip.decompress(data)
             except Exception:
                 pass
-            
-            # Set preview from the processed data
+
             preview = data[:10000].decode(errors='replace') if isinstance(data, (bytes, bytearray)) else str(data)
-            
-            # Try to parse email for headers and body
+
+            # Parse email
             try:
                 from utils.email_parser import parse_email
                 parsed = parse_email(data)
@@ -370,10 +388,9 @@ def view_quarantine(request: Request, qid: int):
                 body = parsed.get('body', {})
             except Exception as parse_e:
                 log('warning', 'Quarantine', f'Failed to parse email content for quarantine item {qid}: {parse_e}')
-                # Keep empty headers and body, but we still have preview
-            
-            # compute integrity
-            if decryption_successful or not f:  # Only compute integrity if we could decrypt or there was no encryption
+
+            # Integrity check
+            if decryption_successful or not f:
                 try:
                     current_sig = compute_signature(data)
                     stored_sig = item.get('signature')
@@ -388,45 +405,46 @@ def view_quarantine(request: Request, qid: int):
                 except Exception:
                     integrity = 'unknown'
             else:
-                integrity = 'encrypted'  # Cannot verify integrity of encrypted content without key
-                
+                integrity = 'encrypted'
+
         except Exception as e:
             log('error', 'Quarantine', f'Failed to process quarantined email {qid}: {e}')
             preview = '[Could not decrypt or render content]'
             integrity = 'unknown'
 
-    # attach integrity fields to item for template
-    item = dict(item)
     item['integrity'] = integrity
     item['current_signature'] = current_sig
 
-    return templates.TemplateResponse('quarantine-view.html', {'request': request, 'item': item, 'preview': preview, 'headers': headers, 'body': body})
-
+    return templates.TemplateResponse(
+        'quarantine-view.html',
+        {'request': request, 'item': item, 'preview': preview, 'headers': headers, 'body': body}
+    )
 
 @router.get('/quarantine/_session')
 def quarantine_session(request: Request):
     """Debugging endpoint: returns current session keys for troubleshooting auth issues."""
     try:
         # Only return a limited set of session keys to avoid leaking secrets
-        keys = {k: request.session.get(k) for k in ('user_id', 'username', 'role')}
+        keys = {k: request.session.get(k) for k in ('user_id', 'username', 'permissions')}
         return JSONResponse({'session': keys})
     except Exception as e:
         log('error', 'Quarantine', f'Failed to read session for debug: {e}')
         return JSONResponse({'error': 'failed to read session'})
 @router.post('/quarantine/{qid}/restore')
 def restore_quarantine(request: Request, qid: int):
-    # Require login first
+    # Require login
     if not request.session.get('user_id'):
         return RedirectResponse('/login', status_code=303)
 
-    # Verify role from DB (more reliable than trusting session role)
+    # RBAC: require permission to restore quarantine
     try:
-        user = query('SELECT role FROM users WHERE id = :id', {'id': request.session.get('user_id')}).mappings().first()
-        if not user or user.get('role') != 'administrator':
-            log('warning', 'Quarantine', f"Unauthorized restore attempt to /quarantine/{qid}/restore by user_id={request.session.get('user_id')} role={request.session.get('role')}")
+        checker = PermissionChecker(request)
+        if not checker.has_permission("restore_quarantine"):
+            log('warning', 'Quarantine',
+                f"Unauthorized restore attempt to /quarantine/{qid}/restore by user_id={request.session.get('user_id')}")
             return RedirectResponse('/dashboard', status_code=303)
     except Exception as e:
-        log('error', 'Quarantine', f"Failed to verify admin role: {e}")
+        log('error', 'Quarantine', f"Failed to verify permissions: {e}")
         return RedirectResponse('/dashboard', status_code=303)
 
     # Fetch quarantined item
@@ -434,33 +452,34 @@ def restore_quarantine(request: Request, qid: int):
     if not item:
         return RedirectResponse('/quarantine', status_code=303)
 
-    # Restore the email
     raw = item.get('raw_email')
     f = _get_quarantine_fernet()
+
     if raw:
         try:
             data = raw
             if f:
                 data = f.decrypt(data)
 
-            # compute signature
+            # Compute signature
             try:
-                from utils.email_parser import compute_signature
                 sig = compute_signature(data)
             except Exception:
                 sig = None
 
-            # Prefer stored signature if present (preserve original), otherwise use computed
             sig_to_store = item.get('signature') or sig
             compressed_flag = item.get('compressed') if item.get('compressed') is not None else False
             vname = item.get('virus_name')
             vdetected = True if vname else False
             vscanned = True
 
-            # Insert or update email in emails table
+            # Update existing email
             execute(
                 """
-                UPDATE emails SET raw_email = :raw, signature = :signature, compressed = :compressed, quarantined = FALSE, quarantine_id = NULL, virus_scanned = :vscanned, virus_detected = :vdetected, virus_name = :vname, scan_timestamp = :qtime
+                UPDATE emails SET raw_email = :raw, signature = :signature, compressed = :compressed,
+                    quarantined = FALSE, quarantine_id = NULL,
+                    virus_scanned = :vscanned, virus_detected = :vdetected, virus_name = :vname,
+                    scan_timestamp = :qtime
                 WHERE source = :source AND folder = :folder AND uid = :uid
                 """,
                 {
@@ -477,11 +496,15 @@ def restore_quarantine(request: Request, qid: int):
                 }
             )
 
-            # If no row updated, insert a new row
+            # Insert if not exists
             execute(
                 """
-                INSERT INTO emails (source, folder, uid, subject, sender, recipients, date, raw_email, signature, compressed, virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined)
-                VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, :signature, :compressed, :vscanned, :vdetected, :vname, :qtime, :quarantined)
+                INSERT INTO emails (source, folder, uid, subject, sender, recipients, date,
+                    raw_email, signature, compressed, virus_scanned, virus_detected, virus_name,
+                    scan_timestamp, quarantined)
+                VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date,
+                    :raw_email, :signature, :compressed, :vscanned, :vdetected, :vname,
+                    :qtime, FALSE)
                 ON CONFLICT (source, folder, uid) DO NOTHING
                 """,
                 {
@@ -498,23 +521,30 @@ def restore_quarantine(request: Request, qid: int):
                     'vname': vname,
                     'vdetected': vdetected,
                     'vscanned': vscanned,
-                    'qtime': item.get('quarantined_at'),
-                    'quarantined': False
+                    'qtime': item.get('quarantined_at')
                 }
             )
+
         except Exception as e:
-            log('error', 'Quarantine', f"Failed to restore quarantined email {qid}: {str(e)}", "")
+            log('error', 'Quarantine', f"Failed to restore quarantined email {qid}: {str(e)}")
             return RedirectResponse(f'/quarantine/{qid}', status_code=303)
 
     # Delete quarantine record
     execute('DELETE FROM quarantined_emails WHERE id = :id', {'id': qid})
-    # Clear quarantine flag on emails table
-    execute('UPDATE emails SET quarantined = FALSE, quarantine_id = NULL WHERE source = :source AND folder = :folder AND uid = :uid', {'source': item.get('original_source'), 'folder': item.get('original_folder'), 'uid': item.get('original_uid')})
+    execute(
+        'UPDATE emails SET quarantined = FALSE, quarantine_id = NULL '
+        'WHERE source = :source AND folder = :folder AND uid = :uid',
+        {
+            'source': item.get('original_source'),
+            'folder': item.get('original_folder'),
+            'uid': item.get('original_uid')
+        }
+    )
 
     username = request.session.get("username", "unknown")
-    log('info', 'Quarantine', f"User '{username}' restored quarantined email {qid}", "")
-    
-    # Create alert for security monitoring
+    log('info', 'Quarantine', f"User '{username}' restored quarantined email {qid}")
+
+    # Create alert
     try:
         create_alert(
             'warning',
@@ -524,7 +554,7 @@ def restore_quarantine(request: Request, qid: int):
             'quarantine_restored'
         )
     except Exception as e:
-        log('error', 'Quarantine', f"Failed to create restore alert: {str(e)}", "")
+        log('error', 'Quarantine', f"Failed to create restore alert: {str(e)}")
 
     return RedirectResponse('/quarantine', status_code=303)
 
@@ -533,75 +563,111 @@ def delete_quarantine(request: Request, qid: int, mode: str = Form("db")):
     """
     Delete quarantined email, optionally also from mail server.
     """
-    # Require login first
+    # Require login
     if not request.session.get('user_id'):
         return RedirectResponse('/login', status_code=303)
 
-    # Verify role from DB (more reliable than trusting session role)
+    # RBAC: require permission to delete quarantine
     try:
-        user = query('SELECT role FROM users WHERE id = :id', {'id': request.session.get('user_id')}).mappings().first()
-        if not user or user.get('role') != 'administrator':
-            log('warning', 'Quarantine', f"Unauthorized delete attempt to /quarantine/{qid}/delete by user_id={request.session.get('user_id')} role={request.session.get('role')}")
+        checker = PermissionChecker(request)
+        if not checker.has_permission("delete_quarantine"):
+            log('warning', 'Quarantine',
+                f"Unauthorized delete attempt to /quarantine/{qid}/delete "
+                f"by user_id={request.session.get('user_id')}")
             return RedirectResponse('/dashboard', status_code=303)
     except Exception as e:
-        log('error', 'Quarantine', f"Failed to verify admin role: {e}")
+        log('error', 'Quarantine', f"Failed to verify permissions: {e}")
         return RedirectResponse('/dashboard', status_code=303)
 
     # Check if quarantined email exists
-    item = query('SELECT id FROM quarantined_emails WHERE id = :id', {'id': qid}).mappings().first()
+    item = query(
+        'SELECT id FROM quarantined_emails WHERE id = :id',
+        {'id': qid}
+    ).mappings().first()
+
     if not item:
         request.session['flash'] = f"Quarantined email #{qid} not found."
         return RedirectResponse('/quarantine', status_code=303)
 
+    username = request.session.get("username", "unknown")
+
+    # Delete only from DB
     if mode == "db":
         execute('DELETE FROM quarantined_emails WHERE id = :id', {'id': qid})
-        username = request.session.get("username", "unknown")
-        log("warning", "Quarantine", f"User '{username}' deleted quarantined email {qid} from database", "")
+        log("warning", "Quarantine",
+            f"User '{username}' deleted quarantined email {qid} from database")
         request.session['flash'] = "Quarantined email deleted from database."
         return RedirectResponse('/quarantine', status_code=303)
 
+    # Delete from IMAP + DB
     elif mode == "imap":
         deleted, errors = _delete_quarantined_from_mail_server_and_db([qid])
 
-        username = request.session.get("username", "unknown")
         if errors:
             error_text = " | ".join(errors)
-            log("warning", "Quarantine", f"User '{username}' deleted quarantined email {qid} from IMAP and database with errors", error_text)
-            request.session['flash'] = f"Deleted quarantined email from database and mail server. Some errors occurred: {error_text}"
-        
-    if not require_login(request):
-        return RedirectResponse("/login", status_code=303)
+            log("warning", "Quarantine",
+                f"User '{username}' deleted quarantined email {qid} from IMAP and DB with errors: {error_text}")
+            request.session['flash'] = (
+                f"Deleted quarantined email from database and mail server. "
+                f"Some errors occurred: {error_text}"
+            )
+        else:
+            log("warning", "Quarantine",
+                f"User '{username}' deleted quarantined email {qid} from IMAP and database")
+            request.session['flash'] = "Quarantined email deleted from mail server and database."
+
+        return RedirectResponse('/quarantine', status_code=303)
+
+@router.post("/quarantine/restore")
+def perform_bulk_restore(request: Request, ids: List[int] = Form(...)):
+    # Require login
+    if not request.session.get('user_id'):
+        return RedirectResponse('/login', status_code=303)
+
+    # RBAC: require permission to restore quarantine
+    try:
+        checker = PermissionChecker(request)
+        if not checker.has_permission("restore_quarantine"):
+            log('warning', 'Quarantine',
+                f"Unauthorized bulk restore attempt by user_id={request.session.get('user_id')}")
+            return RedirectResponse('/dashboard', status_code=303)
+    except Exception as e:
+        log('error', 'Quarantine', f"Failed to verify permissions: {e}")
+        return RedirectResponse('/dashboard', status_code=303)
 
     if not isinstance(ids, list):
         ids = [ids]
 
     restored = 0
+    username = request.session.get("username", "unknown")
+
     for qid in ids:
         try:
-            # Fetch quarantined item
             item = query('SELECT * FROM quarantined_emails WHERE id = :id', {'id': qid}).mappings().first()
             if not item:
                 continue
 
             raw = item.get('raw_email')
             f = _get_quarantine_fernet()
+
             if raw:
                 try:
                     data = raw
                     if f:
                         data = f.decrypt(data)
 
-                    # compute signature
                     try:
-                        from utils.email_parser import compute_signature
                         sig = compute_signature(data)
                     except Exception:
                         sig = None
 
-                    # Insert or update email in emails table
+                    # Update existing email
                     execute(
                         """
-                        UPDATE emails SET raw_email = :raw, signature = :signature, compressed = TRUE, quarantined = FALSE, quarantine_id = NULL, virus_scanned = TRUE, virus_detected = TRUE, virus_name = :vname, scan_timestamp = :qtime
+                        UPDATE emails SET raw_email = :raw, signature = :signature, compressed = TRUE,
+                            quarantined = FALSE, quarantine_id = NULL,
+                            virus_scanned = TRUE, virus_detected = TRUE, virus_name = :vname,
+                            scan_timestamp = :qtime
                         WHERE source = :source AND folder = :folder AND uid = :uid
                         """,
                         {
@@ -614,11 +680,16 @@ def delete_quarantine(request: Request, qid: int, mode: str = Form("db")):
                             'uid': item.get('original_uid')
                         }
                     )
-                    # If no row updated, insert a new row
+
+                    # Insert if not exists
                     execute(
                         """
-                        INSERT INTO emails (source, folder, uid, subject, sender, recipients, date, raw_email, signature, compressed, virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined)
-                        VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, :signature, TRUE, TRUE, TRUE, :vname, :qtime, TRUE)
+                        INSERT INTO emails (source, folder, uid, subject, sender, recipients, date,
+                            raw_email, signature, compressed, virus_scanned, virus_detected,
+                            virus_name, scan_timestamp, quarantined)
+                        VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date,
+                            :raw_email, :signature, TRUE, TRUE, TRUE,
+                            :vname, :qtime, FALSE)
                         ON CONFLICT (source, folder, uid) DO NOTHING
                         """,
                         {
@@ -636,24 +707,30 @@ def delete_quarantine(request: Request, qid: int, mode: str = Form("db")):
                         }
                     )
                 except Exception:
-                    # If restore fails, do not delete quarantine
                     continue
 
             # Delete quarantine record
             execute('DELETE FROM quarantined_emails WHERE id = :id', {'id': qid})
-            # Clear quarantine flag on emails table
-            execute('UPDATE emails SET quarantined = FALSE, quarantine_id = NULL WHERE source = :source AND folder = :folder AND uid = :uid', {'source': item.get('original_source'), 'folder': item.get('original_folder'), 'uid': item.get('original_uid')})
+            execute(
+                'UPDATE emails SET quarantined = FALSE, quarantine_id = NULL '
+                'WHERE source = :source AND folder = :folder AND uid = :uid',
+                {
+                    'source': item.get('original_source'),
+                    'folder': item.get('original_folder'),
+                    'uid': item.get('original_uid')
+                }
+            )
 
             restored += 1
+
         except Exception as e:
             log('error', 'Quarantine', f'Failed to restore quarantined email {qid}: {e}')
             continue
 
     if restored > 0:
-        username = request.session.get("username", "unknown")
-        log('info', 'Quarantine', f"User '{username}' restored {restored} quarantined email(s) (IDs: {ids})", "")
-        
-        # Create alert for security monitoring
+        log('info', 'Quarantine',
+            f"User '{username}' restored {restored} quarantined email(s) (IDs: {ids})")
+
         try:
             create_alert(
                 'warning',
@@ -663,105 +740,13 @@ def delete_quarantine(request: Request, qid: int, mode: str = Form("db")):
                 'quarantine_restored'
             )
         except Exception as e:
-            log('error', 'Quarantine', f"Failed to create restore alert: {str(e)}", "")
-        
+            log('error', 'Quarantine', f"Failed to create restore alert: {str(e)}")
+
         request.session['flash'] = f"Restored {restored} quarantined email(s)."
     else:
         request.session['flash'] = "No emails were restored."
-    
+
     return RedirectResponse("/quarantine", status_code=303)
-
-
-@router.post("/quarantine/restore")
-def perform_bulk_restore(
-    request: Request,
-    ids: List[int] = Form(...),
-):
-    """
-    Bulk restore selected quarantined emails.
-    """
-    if not require_login(request):
-        return RedirectResponse("/login", status_code=303)
-
-    if not isinstance(ids, list):
-        ids = [ids]
-
-    restored = 0
-    for qid in ids:
-        try:
-            # Fetch quarantined item
-            item = query('SELECT * FROM quarantined_emails WHERE id = :id', {'id': qid}).mappings().first()
-            if not item:
-                continue
-
-            raw = item.get('raw_email')
-            f = _get_quarantine_fernet()
-            if raw:
-                try:
-                    data = raw
-                    if f:
-                        data = f.decrypt(data)
-
-                    # compute signature
-                    current_sig = compute_signature(data)
-
-                    # Insert into emails table
-                    execute('''
-                        INSERT INTO emails (
-                            source, folder, uid, subject, sender, recipients, date, raw_email, compressed, signature, created_at, virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined
-                        ) VALUES (
-                            :source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, :compressed, :signature, :created_at, :virus_scanned, :virus_detected, :virus_name, :scan_timestamp, :quarantined
-                        )
-                    ''', {
-                        'source': item.get('source'),
-                        'folder': item.get('folder'),
-                        'uid': item.get('uid'),
-                        'subject': item.get('subject'),
-                        'sender': item.get('sender'),
-                        'recipients': item.get('recipients'),
-                        'date': item.get('date'),
-                        'raw_email': data,
-                        'compressed': False,  # Store uncompressed for restored emails
-                        'signature': current_sig,
-                        'created_at': item.get('created_at'),
-                        'virus_scanned': item.get('virus_scanned'),
-                        'virus_detected': item.get('virus_detected'),
-                        'virus_name': item.get('virus_name'),
-                        'scan_timestamp': item.get('scan_timestamp'),
-                        'quarantined': False  # Mark as not quarantined
-                    })
-
-                    # Delete from quarantine
-                    execute('DELETE FROM quarantined_emails WHERE id = :id', {'id': qid})
-                    restored += 1
-
-                except Exception as e:
-                    log('error', 'Quarantine', f'Failed to restore quarantined email {qid}: {e}')
-                    continue
-
-        except Exception as e:
-            log('error', 'Quarantine', f'Failed to restore quarantined email {qid}: {e}')
-            continue
-
-    username = request.session.get("username", "unknown")
-    if restored > 0:
-        log('info', 'Quarantine', f"User '{username}' restored {restored} quarantined email(s) (IDs: {ids})", "")
-        request.session['flash'] = f"Successfully restored {restored} quarantined email(s)."
-        
-        # Create alert
-        try:
-            create_alert(
-                'Quarantined Emails Restored',
-                f'User {username} restored {restored} quarantined email(s)',
-                'quarantine_restored'
-            )
-        except Exception as e:
-            log('error', 'Quarantine', f"Failed to create restore alert: {str(e)}", "")
-    else:
-        request.session['flash'] = "No emails were restored."
-    
-    return RedirectResponse("/quarantine", status_code=303)
-
 
 @router.post("/quarantine/delete")
 def perform_bulk_delete(
@@ -772,8 +757,20 @@ def perform_bulk_delete(
     """
     Bulk delete selected quarantined emails.
     """
+    # Require login
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
+
+    # RBAC: require permission to delete quarantine
+    try:
+        checker = PermissionChecker(request)
+        if not checker.has_permission("delete_quarantine"):
+            log('warning', 'Quarantine',
+                f"Unauthorized bulk delete attempt by user_id={request.session.get('user_id')}")
+            return RedirectResponse('/dashboard', status_code=303)
+    except Exception as e:
+        log('error', 'Quarantine', f"Failed to verify permissions: {e}")
+        return RedirectResponse('/dashboard', status_code=303)
 
     if not isinstance(ids, list):
         ids = [ids]
@@ -788,7 +785,8 @@ def perform_bulk_delete(
                 continue
         
         username = request.session.get("username", "unknown")
-        log("warning", "Quarantine", f"User '{username}' bulk deleted {deleted} quarantined email(s) from database (IDs: {ids})", "")
+        log("warning", "Quarantine",
+            f"User '{username}' bulk deleted {deleted} quarantined email(s) from database (IDs: {ids})")
         request.session['flash'] = f"Deleted {deleted} quarantined email(s) from the database."
         return RedirectResponse("/quarantine", status_code=303)
 
@@ -798,11 +796,19 @@ def perform_bulk_delete(
         username = request.session.get("username", "unknown")
         if errors:
             error_text = " | ".join(errors)
-            log("warning", "Quarantine", f"User '{username}' bulk deleted {deleted} quarantined email(s) from IMAP and database with errors (IDs: {ids})", error_text)
-            request.session['flash'] = f"Deleted {deleted} quarantined email(s) from database and mail server. Some errors occurred: {error_text}"
+            log("warning", "Quarantine",
+                f"User '{username}' bulk deleted {deleted} quarantined email(s) from IMAP and DB with errors (IDs: {ids})",
+                error_text)
+            request.session['flash'] = (
+                f"Deleted {deleted} quarantined email(s) from database and mail server. "
+                f"Some errors occurred: {error_text}"
+            )
         else:
-            log("warning", "Quarantine", f"User '{username}' bulk deleted {deleted} quarantined email(s) from IMAP and database (IDs: {ids})", "")
-            request.session['flash'] = f"Deleted {deleted} quarantined email(s) from database and mail server."
+            log("warning", "Quarantine",
+                f"User '{username}' bulk deleted {deleted} quarantined email(s) from IMAP and database (IDs: {ids})")
+            request.session['flash'] = (
+                f"Deleted {deleted} quarantined email(s) from database and mail server."
+            )
 
         return RedirectResponse("/quarantine", status_code=303)
 
