@@ -116,11 +116,10 @@ CREATE TABLE IF NOT EXISTS fetch_state (
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     username TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL DEFAULT '',  -- Empty string for unset passwords
+    password_hash TEXT NOT NULL DEFAULT '',
     first_name TEXT,
     last_name TEXT,
     email TEXT,
-    role TEXT NOT NULL DEFAULT 'administrator',
     page_size INTEGER NOT NULL DEFAULT 50,
     date_format TEXT NOT NULL DEFAULT '%d/%m/%Y',
     time_format TEXT NOT NULL DEFAULT '%H:%M',
@@ -130,7 +129,6 @@ CREATE TABLE IF NOT EXISTS users (
     enabled BOOLEAN NOT NULL DEFAULT TRUE,
     last_login TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    -- Security fields
     failed_login_attempts INTEGER NOT NULL DEFAULT 0,
     locked_until TIMESTAMPTZ,
     password_reset_token TEXT,
@@ -159,9 +157,10 @@ CREATE TABLE IF NOT EXISTS permissions (
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS roles (
     id SERIAL PRIMARY KEY,
-    -- machine-friendly slug used for role checks and lookups (e.g. 'administrator', 'read_only')
+    -- machine-friendly slug used for role lookups (e.g. 'manager', 'auditor', 'support_team')
     name TEXT UNIQUE NOT NULL,
-    -- human-friendly display label (e.g. 'Administrator', 'Read Only')
+
+    -- human-friendly display label for UI (e.g. 'Manager', 'Auditor')
     display_name TEXT,
     description TEXT,
     is_system_role BOOLEAN NOT NULL DEFAULT FALSE, -- System roles cannot be deleted
