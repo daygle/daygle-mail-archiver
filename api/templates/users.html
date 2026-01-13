@@ -83,6 +83,7 @@
                 <strong>Account Information:</strong><br>
                 <small>
                     <strong>Last Login:</strong> <span id="last_login">-</span><br>
+                    <strong>Last Login IP:</strong> <span id="last_login_ip">-</span><br>
                     <strong>Created:</strong> <span id="created_at">-</span>
                 </small>
             </div>
@@ -125,6 +126,7 @@
                             <th>Status</th>
                             <th class="hide-mobile">Created</th>
                             <th class="hide-mobile">Last Login</th>
+                            <th class="hide-mobile">Last Login IP</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -158,6 +160,13 @@
                                     <span style="color: var(--text-secondary);">Never</span>
                                 {% endif %}
                             </td>
+                            <td class="hide-mobile">
+                                {% if user.last_login_ip %}
+                                    <small>{{ user.last_login_ip }}</small>
+                                {% else %}
+                                    <span style="color: var(--text-secondary);">-</span>
+                                {% endif %}
+                            </td>
                             <td>
                                 <div class="flex-gap-8">
                                     <button type="button" class="btn btn-secondary btn-sm" title="Edit" onclick="editUser({{ user.id }})">
@@ -179,7 +188,7 @@
                         {% endfor %}
                         {% if users|length == 0 %}
                         <tr>
-                            <td colspan="8" class="text-center empty-state">
+                            <td colspan="9" class="text-center empty-state">
                                 <div>
                                     <i class="fas fa-users empty-icon"></i>
                                     <p>No users found.</p>
@@ -283,6 +292,7 @@ async function editUser(userId) {
 
         // Read-only info
         document.getElementById('last_login').textContent = user.last_login || 'Never';
+        document.getElementById('last_login_ip').textContent = user.last_login_ip || '-';
         document.getElementById('created_at').textContent = user.created_at || '-';
         document.getElementById('userInfoAlert').style.display = 'block';
 

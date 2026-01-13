@@ -16,6 +16,17 @@ from utils.permissions import PermissionChecker
 router = APIRouter()
 
 
+def get_client_ip(request: Request) -> str:
+    # Check X-Forwarded-For first (may contain multiple IPs)
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        # First IP in the list is the real client
+        return forwarded.split(",")[0].strip()
+    
+    # Fallback to direct client IP
+    return request.client.host
+
+
 def load_user_permissions(user_id: int) -> List[str]:
     """Load permissions strictly from the new RBAC system."""
     try:
@@ -200,6 +211,12 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
 
     # First login (no password set)
     if not user["password_hash"]:
+        client_ip = get_client_ip(request)
+        execute("""
+            UPDATE users
+            SET last_login = NOW(), last_login_ip = :ip
+            WHERE id = :id
+        """, {"id": user["id"], "ip": client_ip})
         request.session["user_id"] = user["id"]
         request.session["username"] = user["username"]
         request.session["date_format"] = user["date_format"] or "%d/%m/%Y"
@@ -213,11 +230,12 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
     # Normal login
     try:
         if bcrypt.checkpw(password.encode("utf-8"), user["password_hash"].encode("utf-8")):
+            client_ip = get_client_ip(request)
             execute("""
                 UPDATE users
-                SET failed_login_attempts = 0, locked_until = NULL, last_login = NOW()
+                SET failed_login_attempts = 0, locked_until = NULL, last_login = NOW(), last_login_ip = :ip
                 WHERE id = :id
-            """, {"id": user["id"]})
+            """, {"id": user["id"], "ip": client_ip})
 
             request.session["user_id"] = user["id"]
             request.session["username"] = user["username"]

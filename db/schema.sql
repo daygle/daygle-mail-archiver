@@ -128,6 +128,7 @@ CREATE TABLE IF NOT EXISTS users (
     email_notifications BOOLEAN NOT NULL DEFAULT TRUE,
     enabled BOOLEAN NOT NULL DEFAULT TRUE,
     last_login TIMESTAMPTZ,
+    last_login_ip TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     failed_login_attempts INTEGER NOT NULL DEFAULT 0,
     locked_until TIMESTAMPTZ,

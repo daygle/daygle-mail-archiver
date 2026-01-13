@@ -101,6 +101,7 @@ def init_database():
 
         # Ensure theme_preference column exists (Postgres supports IF NOT EXISTS)
         conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS theme_preference TEXT NOT NULL DEFAULT 'system'"))
+        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_ip TEXT"))
 
         # Insert some default settings
         default_settings = [
