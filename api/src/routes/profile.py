@@ -8,6 +8,7 @@ from utils.logger import log
 from utils.templates import templates
 from utils.permissions import require_permission, PERMISSIONS
 from utils.i18n import get_gettext
+from utils.timezone import format_datetime
 
 router = APIRouter()
 
@@ -45,18 +46,58 @@ def profile_form(
 ):
     user_id = request.session["user_id"]
 
+    # Get auto-logout setting for online/offline calculation
+    auto_logout_setting = query("SELECT value FROM settings WHERE key = 'auto_logout_minutes' ").mappings().first()
+    auto_logout_minutes = int(auto_logout_setting["value"]) if auto_logout_setting else 60
+
     user = query("""
-        SELECT username, first_name, last_name, email, last_login, created_at
+        SELECT username, first_name, last_name, email, last_login, last_login_ip, last_seen, created_at
         FROM users
         WHERE id = :id
     """, {"id": user_id}).mappings().first()
 
+    # Fetch role display names assigned to the user
+    role_rows = query("""
+        SELECT COALESCE(r.display_name, r.name) AS role_name
+        FROM roles r
+        JOIN user_roles ur ON r.id = ur.role_id
+        WHERE ur.user_id = :id
+        ORDER BY role_name
+    """, {"id": user_id}).mappings().all()
+    roles = [r["role_name"] for r in role_rows] if role_rows else []
+
+    # Compute online status using same logic as users list
+    online_status = 'offline'
+    if user and user.get("last_seen"):
+        now_check = query("SELECT CASE WHEN NOW() - :last_seen > INTERVAL ':minutes minutes' THEN 'offline' ELSE 'online' END AS status", {"last_seen": user["last_seen"], "minutes": auto_logout_minutes}).mappings().first()
+        online_status = now_check["status"]
+
     msg = request.session.pop("flash", None)
+
+    # Format datetimes for display
+    current_user_id = int(request.session.get("user_id"))
+    if user:
+        user["last_login_fmt"] = format_datetime(user["last_login"], current_user_id) if user.get("last_login") else None
+        user["last_seen_fmt"] = format_datetime(user["last_seen"], current_user_id) if user.get("last_seen") else None
+        user["created_at_fmt"] = format_datetime(user["created_at"], current_user_id) if user.get("created_at") else None
+
+    user_payload = {
+        "username": user.get("username") if user else None,
+        "first_name": user.get("first_name") if user else None,
+        "last_name": user.get("last_name") if user else None,
+        "email": user.get("email") if user else None,
+        "roles": roles,
+        "last_login": user.get("last_login_fmt") if user else None,
+        "last_login_ip": user.get("last_login_ip") if user else None,
+        "last_seen": user.get("last_seen_fmt") if user else None,
+        "online_status": online_status,
+        "created_at": user.get("created_at_fmt") if user else None
+    }
 
     return templates.TemplateResponse("profile.html", {
         "request": request,
         "flash": msg,
-        "user": user
+        "user": user_payload
     })
 
 

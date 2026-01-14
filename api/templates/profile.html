@@ -65,16 +65,43 @@
                         <div>
                             <strong>Last Login:</strong>
                             {% if user.last_login %}
-                                {{ user.last_login | format_user_datetime(request.session.user_id) }}
+                                {{ user.last_login }}
                             {% else %}
                                 Never
                             {% endif %}
                         </div>
 
                         <div>
+                            <strong>Last Login IP:</strong>
+                            {% if user.last_login_ip %}
+                                {{ user.last_login_ip }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <strong>Last Seen:</strong>
+                            {% if user.last_seen %}
+                                {{ user.last_seen }}
+                            {% else %}
+                                Never
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <strong>Online Status:</strong>
+                            {% if user.online_status == 'online' %}
+                                <span class="badge badge-success">Online</span>
+                            {% else %}
+                                <span class="badge badge-secondary">Offline</span>
+                            {% endif %}
+                        </div>
+
+                        <div>
                             <strong>Account Created:</strong>
                             {% if user.created_at %}
-                                {{ user.created_at | format_user_datetime(request.session.user_id) }}
+                                {{ user.created_at }}
                             {% else %}
                                 -
                             {% endif %}
