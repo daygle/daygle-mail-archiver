@@ -67,21 +67,14 @@
             </div>
 
             <div class="form-group mt-3">
-                <label class="form-label">{{ gettext("Language") }}</label>
-                <div class="auth-lang-picker" style="position:relative;">
-                    <button id="settingsLangToggle" class="auth-lang-toggle" type="button" title="{{ gettext('Language') }}">
-                        <span id="settingsLangFlag">
-                            {% if language == 'en' or not language %}🇬🇧{% elif language == 'es' %}🇪🇸{% elif language == 'fr' %}🇫🇷{% elif language == 'de' %}🇩🇪{% elif language == 'zh' %}🇨🇳{% else %}🌐{% endif %}
-                        </span>
-                    </button>
-                    <div id="settingsLangPopup" class="auth-lang-popup" style="left:0; top:44px;">
-                        <button data-lang="en"><span class="flag">🇬🇧</span>&nbsp;{{ gettext('English') }}</button>
-                        <button data-lang="es"><span class="flag">🇪🇸</span>&nbsp;{{ gettext('Español') }}</button>
-                        <button data-lang="fr"><span class="flag">🇫🇷</span>&nbsp;{{ gettext('Français') }}</button>
-                        <button data-lang="de"><span class="flag">🇩🇪</span>&nbsp;{{ gettext('Deutsch') }}</button>
-                        <button data-lang="zh"><span class="flag">🇨🇳</span>&nbsp;{{ gettext('中文') }}</button>
-                    </div>
-                </div>
+                <label for="language" class="form-label">{{ gettext("Language") }}</label>
+                <select id="language" class="form-select" name="language">
+                    <option value="en" {% if language == 'en' or not language %}selected{% endif %}>English</option>
+                    <option value="es" {% if language == 'es' %}selected{% endif %}>Español</option>
+                    <option value="fr" {% if language == 'fr' %}selected{% endif %}>Français</option>
+                    <option value="de" {% if language == 'de' %}selected{% endif %}>Deutsch</option>
+                    <option value="zh" {% if language == 'zh' %}selected{% endif %}>中文</option>
+                </select>
                 <small class="form-text">{{ gettext("Interface language") }}</small>
             </div>
 
@@ -171,47 +164,20 @@ window.addEventListener('theme-changed', function(e) {
     } catch (err) { console.debug('theme-changed listener error', err); }
 });
 
-// User settings language picker
+// User settings language select
 (function(){
-    console.log('User settings language picker initializing');
-    var settingsLangToggle = document.getElementById('settingsLangToggle');
-    var settingsLangPopup = document.getElementById('settingsLangPopup');
-    var settingsLangFlag = document.getElementById('settingsLangFlag');
-    var lang = "{{ language or 'en' }}";
-    var map = { en: '🇬🇧', es: '🇪🇸', fr: '🇫🇷', de: '🇩🇪', zh: '🇨🇳' };
-    if(settingsLangFlag) settingsLangFlag.textContent = map[lang] || '🌐';
-    if(settingsLangToggle && settingsLangPopup){
-        console.log('Elements found, adding listeners');
-        settingsLangToggle.addEventListener('click', function(e){ 
-            console.log('Settings lang toggle clicked', e.target);
-            e.preventDefault();
-            e.stopPropagation(); 
-            settingsLangPopup.classList.toggle('open');
-            console.log('Popup open class:', settingsLangPopup.classList.contains('open'));
-        });
-        settingsLangPopup.querySelectorAll('button[data-lang]').forEach(function(b){ 
-            b.addEventListener('click', function(){ 
-                var l = this.getAttribute('data-lang');
-                console.log('Settings language button clicked:', l);
-                fetch('/set-language',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({language: l})})
-                .then(function(response){ 
-                    if(response.ok){ 
-                        if(settingsLangFlag) settingsLangFlag.textContent = map[l] || '🌐';
-                        location.reload(); 
-                    }else{ 
-                        alert('Failed to set language'); 
-                    } 
-                })
-                .catch(function(error){ 
-                    console.error('Set-language error:', error); 
-                    alert('Error setting language'); 
-                }); 
-            }); 
-        });
-        document.addEventListener('click', function(e){ if(!settingsLangPopup.contains(e.target) && e.target !== settingsLangToggle) settingsLangPopup.classList.remove('open'); });
-    } else {
-        console.error('Settings language picker elements not found');
-    }
+    var sel = document.getElementById('language');
+    if(!sel) return;
+    sel.addEventListener('change', function(){
+        try{
+            fetch('/set-language', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                credentials: 'same-origin',
+                body: JSON.stringify({language: this.value})
+            }).finally(function(){ location.reload(); });
+        }catch(e){ location.reload(); }
+    });
 })();
 </script>
 {% endblock %}
