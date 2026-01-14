@@ -78,16 +78,6 @@ def get_user_date_format(request: Request, date_only: bool = False) -> str:
 @router.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request, _=require_permission(PERMISSIONS["view_dashboard"])):
     """Dashboard page with charts"""
-    # Temporary debug: log incoming cookie and session for diagnosis
-    try:
-        print(f"DEBUG: Incoming Cookie on /dashboard: {request.headers.get('cookie')}")
-    except Exception:
-        pass
-    try:
-        print(f"DEBUG: session on /dashboard: {dict(request.session) if 'session' in request.scope else {}}")
-    except Exception:
-        pass
-
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 

@@ -191,11 +191,6 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
         log("debug", "Login", f"Login attempt for user={username} language={language} from={get_client_ip(request)}")
     except Exception:
         pass
-    # Temporary: print incoming Cookie header for diagnosis
-    try:
-        print(f"DEBUG: Incoming Cookie: {request.headers.get('cookie')}")
-    except Exception:
-        pass
     try:
         user = query("""
             SELECT id, username, password_hash, date_format, time_format,
@@ -312,10 +307,7 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
             except Exception:
                 pass
 
-            try:
-                print(f"DEBUG: session set after login: {dict(request.session)}")
-            except Exception:
-                pass
+            pass
             return RedirectResponse("/dashboard", status_code=303)
 
     except Exception as e:
@@ -369,13 +361,20 @@ async def set_language(request: Request):
     """Allow unauthenticated users to set a preferred language into the session.
     If the user is authenticated, persist it to their DB record too.
     """
-    data = await request.json()
-    language = data.get('language', 'en')
+    try:
+        data = await request.json()
+        language = data.get('language', 'en')
+        print(f"DEBUG: set-language called with language={language}")
+    except Exception as e:
+        print(f"DEBUG: set-language JSON error: {e}")
+        return JSONResponse({"error": "Invalid JSON"}, status_code=400)
+
     try:
         if "session" in request.scope:
             request.session["language"] = language
-    except Exception:
-        pass
+            print(f"DEBUG: set session language to {language}")
+    except Exception as e:
+        print(f"DEBUG: session set error: {e}")
 
     # If logged in, persist preference to DB (best-effort)
     try:
@@ -386,7 +385,8 @@ async def set_language(request: Request):
                 SET language = :lang
                 WHERE id = :id
             """, {"lang": language, "id": user_id})
-    except Exception:
-        pass
+            print(f"DEBUG: updated DB language for user {user_id}")
+    except Exception as e:
+        print(f"DEBUG: DB update error: {e}")
 
     return JSONResponse({"success": True})

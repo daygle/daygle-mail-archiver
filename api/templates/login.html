@@ -116,11 +116,27 @@
                 if(authLangFlag) authLangFlag.textContent = map[lang] || '🌐';
 
                 if(authLangToggle && authLangPopup){
-                    authLangToggle.addEventListener('click', function(e){ e.stopPropagation(); authLangPopup.classList.toggle('open'); });
-                    authLangPopup.querySelectorAll('button[data-lang]').forEach(function(b){ b.addEventListener('click', function(){ var l=this.getAttribute('data-lang'); fetch('/set-language',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({language: l})}).finally(function(){ location.reload(); }); }); });
+                    console.log('Auth language picker initialized');
+                    authLangToggle.addEventListener('click', function(e){ 
+                        console.log('Auth lang toggle clicked');
+                        e.stopPropagation(); 
+                        authLangPopup.classList.toggle('open'); 
+                    });
+                    authLangPopup.querySelectorAll('button[data-lang]').forEach(function(b){ 
+                        b.addEventListener('click', function(){ 
+                            var l=this.getAttribute('data-lang');
+                            console.log('Selected language:', l);
+                            fetch('/set-language',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({language: l})})
+                            .then(function(response){ console.log('Set-language response:', response.status); })
+                            .catch(function(error){ console.error('Set-language error:', error); })
+                            .finally(function(){ location.reload(); }); 
+                        }); 
+                    });
                     document.addEventListener('click', function(e){ if(!authLangPopup.contains(e.target) && e.target !== authLangToggle) authLangPopup.classList.remove('open'); });
+                } else {
+                    console.error('Auth language picker elements not found');
                 }
-            }catch(e){}
+            }catch(e){ console.error('Auth language picker error:', e); }
         })();
         // Post language selection to the server so unauthenticated users can change language immediately
         (function(){
@@ -243,50 +259,6 @@
                     applyTheme(systemTheme);
                 }
             });
-        })();
-    </script>
-    <script>
-        (function(){
-            try {
-                const toggle = document.getElementById('authLangToggle');
-                const popup = document.getElementById('authLangPopup');
-                const flag = document.getElementById('authLangFlag');
-
-                if (!toggle || !popup) return;
-
-                const currentLang = "{{ request.session.get('language', 'en') }}";
-                const flags = { en: '🇬🇧', es: '🇪🇸', fr: '🇫🇷', de: '🇩🇪', zh: '🇨🇳' };
-                if (flag) flag.textContent = flags[currentLang] || '🌐';
-
-                // Toggle popup
-                toggle.addEventListener('click', function(e){
-                    e.stopPropagation();
-                    popup.classList.toggle('open');
-                });
-
-                // Select language
-                popup.querySelectorAll('button[data-lang]').forEach(btn => {
-                    btn.addEventListener('click', function(){
-                        const lang = this.getAttribute('data-lang');
-                        fetch('/set-language', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            credentials: 'same-origin',
-                            body: JSON.stringify({language: lang})
-                        }).finally(() => location.reload());
-                    });
-                });
-
-                // Close popup when clicking outside
-                document.addEventListener('click', function(e){
-                    if (!popup.contains(e.target) && e.target !== toggle) {
-                        popup.classList.remove('open');
-                    }
-                });
-
-            } catch (e) {
-                console.error('Auth language picker failed:', e);
-            }
         })();
     </script>
     
