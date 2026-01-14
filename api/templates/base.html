@@ -11,14 +11,15 @@
     {% block extra_css %}{% endblock %}
     <style>
         /* Inline styles for language picker (small, self-contained) */
-        .lang-picker { position: relative; display: inline-block; margin-left: 8px; }
-        .lang-toggle { width: 36px; height: 36px; border-radius: 50%; border: none; background: var(--bg-elevated); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+        .lang-picker { position: absolute; display: inline-block; right: 16px; top: 10px; }
+        header.topbar { position: relative; }
+        .lang-toggle { width: 36px; height: 36px; border-radius: 50%; border: none; background: var(--bg-elevated); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.06); font-weight:600; }
         .lang-toggle:focus { outline: 2px solid var(--accent); }
-        .lang-flag { font-size: 18px; line-height:1; }
+        .lang-flag { font-size: 12px; line-height:1; text-transform:uppercase; }
         .lang-popup { position: absolute; right: 0; top: 44px; background: var(--bg-elevated); border-radius: 8px; padding:6px; box-shadow: 0 6px 18px rgba(0,0,0,0.12); z-index:1200; display:flex; flex-direction:column; gap:6px; }
         .lang-popup button { border: none; background: transparent; padding:6px 10px; border-radius:6px; cursor:pointer; display:flex; gap:8px; align-items:center; }
         .lang-popup button:hover { background: var(--bg-hover); }
-        .lang-popup .flag { font-size:18px; }
+        .lang-popup .flag { font-size:14px; display:inline-block; width:28px; text-align:center; font-weight:700; }
     </style>
     <script>
         (function(){
@@ -238,13 +239,13 @@
                         <button id="langToggle" class="lang-toggle" aria-haspopup="true" aria-expanded="false">
                             <span id="langFlag" class="lang-flag">🌐</span>
                         </button>
-                        <div class="lang-popup" id="langPopup" style="display:none;">
-                            <button data-lang="en"><span class="flag">🇬🇧</span><span>{{ gettext('English') }}</span></button>
-                            <button data-lang="es"><span class="flag">🇪🇸</span><span>{{ gettext('Español') }}</span></button>
-                            <button data-lang="fr"><span class="flag">🇫🇷</span><span>{{ gettext('Français') }}</span></button>
-                            <button data-lang="de"><span class="flag">🇩🇪</span><span>{{ gettext('Deutsch') }}</span></button>
-                            <button data-lang="zh"><span class="flag">🇨🇳</span><span>{{ gettext('中文') }}</span></button>
-                        </div>
+                                <div class="lang-popup" id="langPopup" style="display:none;">
+                                    <button data-lang="en"><span class="flag">🇬🇧</span><span>{{ gettext('English') }}</span></button>
+                                    <button data-lang="es"><span class="flag">🇪🇸</span><span>{{ gettext('Español') }}</span></button>
+                                    <button data-lang="fr"><span class="flag">🇫🇷</span><span>{{ gettext('Français') }}</span></button>
+                                    <button data-lang="de"><span class="flag">🇩🇪</span><span>{{ gettext('Deutsch') }}</span></button>
+                                    <button data-lang="zh"><span class="flag">🇨🇳</span><span>{{ gettext('中文') }}</span></button>
+                                </div>
                     </div>
             </header>
 
@@ -481,10 +482,7 @@
             const langFlag = document.getElementById('langFlag');
             const langFromSession = "{{ request.session.get('language', 'en') }}";
             const map = { en: '🇬🇧', es: '🇪🇸', fr: '🇫🇷', de: '🇩🇪', zh: '🇨🇳' };
-
-            try{
-                if(langFlag) langFlag.textContent = map[langFromSession] || '🌐';
-            }catch(e){}
+            try{ if(langFlag) langFlag.textContent = map[langFromSession] || '🌐'; }catch(e){}
 
             function closePopup(){ langPopup.style.display='none'; langToggle.setAttribute('aria-expanded','false'); }
             function openPopup(){ langPopup.style.display='flex'; langToggle.setAttribute('aria-expanded','true'); }
