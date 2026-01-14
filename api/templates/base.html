@@ -203,7 +203,9 @@
                                 <span>Toggle theme</span>
                             </a>
                             <div class="dropdown-divider"></div>
-                            <div class="dropdown-header" id="languageHeader" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">{{ gettext('Language') }} <i class="fas fa-chevron-down" id="languageChevron"></i></div>
+                            <div class="dropdown-item" id="languageHeader" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                                <i class="fas fa-globe"></i> <span>{{ gettext('Language') }}</span> <i class="fas fa-chevron-down" id="languageChevron"></i>
+                            </div>
                             <div id="languageOptions" style="display:none;">
                                 <button data-lang="en" class="dropdown-item"><span class="flag">🇬🇧</span> {{ gettext('English') }}</button>
                                 <button data-lang="es" class="dropdown-item"><span class="flag">🇪🇸</span> {{ gettext('Español') }}</button>
