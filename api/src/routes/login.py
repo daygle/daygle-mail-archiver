@@ -257,6 +257,10 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
             pass
         request.session["needs_password"] = True
         request.session["permissions"] = load_user_permissions(user["id"])
+        try:
+            print(f"DEBUG: session before redirect to set-password: {dict(request.session)}")
+        except Exception:
+            pass
         return RedirectResponse("/set-password", status_code=303)
 
     # Normal login
@@ -299,6 +303,10 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
             except Exception:
                 pass
 
+            try:
+                print(f"DEBUG: session before redirect to dashboard: {dict(request.session)}")
+            except Exception:
+                pass
             return RedirectResponse("/dashboard", status_code=303)
 
     except Exception as e:
