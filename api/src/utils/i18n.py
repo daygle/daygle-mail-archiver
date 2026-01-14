@@ -49,7 +49,14 @@ def get_gettext(lang='en'):
                 "Number of emails to display per page in lists": "Número de correos electrónicos para mostrar por página en listas",
                 "Date Format": "Formato de fecha",
                 "Language": "Idioma",
-                "Interface language": "Idioma de la interfaz"
+                "Interface language": "Idioma de la interfaz",
+                "Sign in to access your archived emails": "Inicia sesión para acceder a tus correos archivados",
+                "Username": "Nombre de usuario",
+                "Enter your username": "Ingresa tu nombre de usuario",
+                "Password": "Contraseña",
+                "Enter your password": "Ingresa tu contraseña",
+                "Sign In": "Iniciar sesión",
+                "Forgot Password?": "¿Olvidaste tu contraseña?"
             }
             return lambda x: translations.get(x, x)
         elif lang == 'fr':
@@ -60,7 +67,14 @@ def get_gettext(lang='en'):
                 "Number of emails to display per page in lists": "Nombre d'e-mails à afficher par page dans les listes",
                 "Date Format": "Format de date",
                 "Language": "Langue",
-                "Interface language": "Langue de l'interface"
+                "Interface language": "Langue de l'interface",
+                "Sign in to access your archived emails": "Connectez-vous pour accéder à vos e-mails archivés",
+                "Username": "Nom d'utilisateur",
+                "Enter your username": "Entrez votre nom d'utilisateur",
+                "Password": "Mot de passe",
+                "Enter your password": "Entrez votre mot de passe",
+                "Sign In": "Se connecter",
+                "Forgot Password?": "Mot de passe oublié ?"
             }
             return lambda x: translations.get(x, x)
         elif lang == 'de':
@@ -71,7 +85,14 @@ def get_gettext(lang='en'):
                 "Number of emails to display per page in lists": "Anzahl der E-Mails, die pro Seite in Listen angezeigt werden",
                 "Date Format": "Datumsformat",
                 "Language": "Sprache",
-                "Interface language": "Schnittstellensprache"
+                "Interface language": "Schnittstellensprache",
+                "Sign in to access your archived emails": "Melden Sie sich an, um auf Ihre archivierten E-Mails zuzugreifen",
+                "Username": "Benutzername",
+                "Enter your username": "Geben Sie Ihren Benutzernamen ein",
+                "Password": "Passwort",
+                "Enter your password": "Geben Sie Ihr Passwort ein",
+                "Sign In": "Anmelden",
+                "Forgot Password?": "Passwort vergessen?"
             }
             return lambda x: translations.get(x, x)
         elif lang == 'zh':
@@ -82,7 +103,14 @@ def get_gettext(lang='en'):
                 "Number of emails to display per page in lists": "列表中每页显示的电子邮件数量",
                 "Date Format": "日期格式",
                 "Language": "语言",
-                "Interface language": "界面语言"
+                "Interface language": "界面语言",
+                "Sign in to access your archived emails": "登录以访问您的存档电子邮件",
+                "Username": "用户名",
+                "Enter your username": "输入您的用户名",
+                "Password": "密码",
+                "Enter your password": "输入您的密码",
+                "Sign In": "登录",
+                "Forgot Password?": "忘记密码？"
             }
             return lambda x: translations.get(x, x)
         else:
