@@ -1841,6 +1841,47 @@ textarea.form-control {
 .auth-page-theme-toggle:focus { outline: 2px solid var(--primary); outline-offset: 2px; box-shadow: 0 0 0 4px var(--accent-focus); }
 /* remove accidental label styling; keep markup simple for circular button */
 
+/* Auth language picker */
+.auth-lang-picker {
+    position: fixed;
+    right: 60px;
+    top: 12px;
+    z-index: 12001;
+}
+
+.auth-lang-toggle {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: var(--bg-elevated);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.auth-lang-popup {
+    position: absolute;
+    left: 0;
+    top: 44px;
+    background: var(--bg-elevated);
+    border-radius: 8px;
+    padding: 6px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    display: none;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.auth-lang-popup.open {
+    display: flex;
+}
+
+#language {
+    display: none !important;
+}
+
 
 
 @keyframes fadeIn {
