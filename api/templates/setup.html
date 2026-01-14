@@ -16,6 +16,24 @@
             var appliedTheme = savedTheme === 'system' ? systemTheme : savedTheme;
             document.documentElement.setAttribute('data-theme', appliedTheme);
         })();
+        // Auth page language picker behavior (setup)
+        (function(){
+            try{
+                var authLangToggle = document.getElementById('authLangToggle');
+                var authLangPopup = document.getElementById('authLangPopup');
+                var authLangFlag = document.getElementById('authLangFlag');
+                var lang = "{{ request.session.get('language', 'en') }}";
+                var map = { en: '🇬🇧', es: '🇪🇸', fr: '🇫🇷', de: '🇩🇪', zh: '🇨🇳' };
+                if(authLangFlag) authLangFlag.textContent = map[lang] || '🌐';
+
+                if(authLangToggle && authLangPopup){
+                    authLangToggle.addEventListener('click', function(e){ e.stopPropagation(); authLangPopup.style.display = authLangPopup.style.display === 'flex' ? 'none' : 'flex'; });
+                    authLangPopup.querySelectorAll('button[data-lang]').forEach(function(b){ b.addEventListener('click', function(){ var l=this.getAttribute('data-lang'); fetch('/set-language',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'language='+encodeURIComponent(l),credentials:'same-origin'}).then(function(){ location.reload(); }).catch(function(){ location.reload(); }); }); });
+                    document.addEventListener('click', function(e){ if(!authLangPopup.contains(e.target) && e.target !== authLangToggle) authLangPopup.style.display='none'; });
+                }
+            }catch(e){}
+        })();
+        
     </script>
 </head>
 <body>
@@ -23,6 +41,16 @@
         <i class="fas fa-sun" id="authThemeIconLight"></i>
         <i class="fas fa-moon" id="authThemeIconDark" style="display:none;"></i>
     </button>
+    <div class="auth-lang-picker" style="position:relative; display:inline-block; margin-left:8px;">
+        <button id="authLangToggle" class="auth-lang-toggle" title="{{ gettext('Language') }}"><span id="authLangFlag">🌐</span></button>
+        <div id="authLangPopup" class="auth-lang-popup" style="display:none; right:0; top:44px;">
+            <button data-lang="en"><span>🇬🇧</span>&nbsp;{{ gettext('English') }}</button>
+            <button data-lang="es"><span>🇪🇸</span>&nbsp;{{ gettext('Español') }}</button>
+            <button data-lang="fr"><span>🇫🇷</span>&nbsp;{{ gettext('Français') }}</button>
+            <button data-lang="de"><span>🇩🇪</span>&nbsp;{{ gettext('Deutsch') }}</button>
+            <button data-lang="zh"><span>🇨🇳</span>&nbsp;{{ gettext('中文') }}</button>
+        </div>
+    </div>
 
     <div class="auth-container">
         <div class="auth-card wide">
@@ -134,6 +162,11 @@
             });
         })();
     </script>
+    <style>
+        #language { display:none !important; }
+        .auth-lang-toggle{ width:34px; height:34px; border-radius:50%; border:none; background:var(--bg-elevated); display:flex; align-items:center; justify-content:center; }
+        .auth-lang-popup{ position:absolute; background:var(--bg-elevated); border-radius:8px; padding:6px; box-shadow:0 6px 18px rgba(0,0,0,0.12); display:flex; flex-direction:column; gap:6px; }
+    </style>
 
     <script>
         // Reveal auth content after styles are loaded to reduce FOUC
