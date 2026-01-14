@@ -321,10 +321,12 @@ def logout(request: Request):
 
 
 @router.post("/set-language")
-def set_language(request: Request, language: str = Form('en')):
+async def set_language(request: Request):
     """Allow unauthenticated users to set a preferred language into the session.
     If the user is authenticated, persist it to their DB record too.
     """
+    data = await request.json()
+    language = data.get('language', 'en')
     try:
         if "session" in request.scope:
             request.session["language"] = language
@@ -343,4 +345,4 @@ def set_language(request: Request, language: str = Form('en')):
     except Exception:
         pass
 
-    return JSONResponse(status_code=204)
+    return JSONResponse({"success": True})
