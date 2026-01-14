@@ -107,19 +107,35 @@ async def update_last_seen(request: Request, call_next):
     try:
         # Auto-logout check
         setting = query("SELECT value FROM settings WHERE key = 'auto_logout_minutes'").mappings().first()
+        minutes = None
         if setting:
-            minutes = int(setting["value"])
-            if minutes > 0:
-                user = query("SELECT last_seen FROM users WHERE id = :id", {"id": user_id}).mappings().first()
-                if user and user["last_seen"]:
-                    from datetime import datetime, timedelta
-                    import pytz
-                    now = datetime.now(pytz.UTC)
-                    if now - user["last_seen"] > timedelta(minutes=minutes):
-                        username = request.session.get("username", "unknown")
-                        log("info", "Security", f"Auto-logout due to inactivity for user {username}")
-                        request.session.clear()
-                        return RedirectResponse("/login", status_code=303)
+            try:
+                minutes = int(setting["value"])
+            except Exception:
+                minutes = None
+
+        # Debug: report auto-logout config and last_seen for this user
+        try:
+            print(f"DEBUG: auto_logout_minutes={minutes} for user_id={user_id}")
+        except Exception:
+            pass
+
+        if minutes and minutes > 0:
+            user = query("SELECT last_seen FROM users WHERE id = :id", {"id": user_id}).mappings().first()
+            last_seen = user.get("last_seen") if user else None
+            try:
+                from datetime import datetime, timedelta
+                import pytz
+                now = datetime.now(pytz.UTC)
+                print(f"DEBUG: last_seen={last_seen} now={now}")
+                if last_seen and (now - last_seen) > timedelta(minutes=minutes):
+                    username = request.session.get("username", "unknown")
+                    print(f"DEBUG: Auto-logout triggered for user {username} (idle > {minutes} minutes)")
+                    log("info", "Security", f"Auto-logout due to inactivity for user {username}")
+                    request.session.clear()
+                    return RedirectResponse("/login", status_code=303)
+            except Exception as e:
+                print(f"DEBUG: error evaluating auto-logout: {e}")
 
         # Update last_seen + IP
         ip = get_client_ip(request)
