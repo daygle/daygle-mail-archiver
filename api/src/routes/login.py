@@ -186,11 +186,15 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
     except Exception:
         pass
 
-    # Debug logging for login attempts
+    # Debug logging for login attempts (also print to stdout temporarily)
+    try:
+        print(f"DEBUG: login attempt user={username!r} language={language} from={get_client_ip(request)}")
+    except Exception:
+        pass
     try:
         log("debug", "Login", f"Login attempt for user={username} language={language} from={get_client_ip(request)}")
     except Exception:
-        pass
+        print("DEBUG: log() to DB failed during login attempt")
     try:
         user = query("""
             SELECT id, username, password_hash, date_format, time_format,
@@ -204,7 +208,11 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
         return templates.TemplateResponse("login.html", {"request": request, "error": "System error. Please try again."})
 
     if not user:
-        log("warning", "Login", f"Failed login attempt for unknown user: {username}")
+        print(f"DEBUG: user not found: {username!r}")
+        try:
+            log("warning", "Login", f"Failed login attempt for unknown user: {username}")
+        except Exception:
+            pass
         return templates.TemplateResponse("login.html", {"request": request, "error": "Invalid credentials"})
 
     # Account lockout
@@ -253,8 +261,18 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
 
     # Normal login
     try:
-        if bcrypt.checkpw(password.encode("utf-8"), user["password_hash"].encode("utf-8")):
-            log("debug", "Login", f"Password check passed for {username}")
+        pw_hash = user.get("password_hash")
+        print(f"DEBUG: password_hash present={pw_hash is not None}")
+        ok = False
+        if pw_hash:
+            ok = bcrypt.checkpw(password.encode("utf-8"), pw_hash.encode("utf-8"))
+        print(f"DEBUG: bcrypt.checkpw result={ok}")
+
+        if ok:
+            try:
+                log("debug", "Login", f"Password check passed for {username}")
+            except Exception:
+                pass
             client_ip = get_client_ip(request)
             execute("""
                 UPDATE users
@@ -284,7 +302,11 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
             return RedirectResponse("/dashboard", status_code=303)
 
     except Exception as e:
-        log("error", "Login", f"Password verification error for {username}: {str(e)}")
+        print(f"DEBUG: password verification error: {e}")
+        try:
+            log("error", "Login", f"Password verification error for {username}: {str(e)}")
+        except Exception:
+            pass
         return templates.TemplateResponse("login.html", {"request": request, "error": "System error. Please try again."})
 
     # Failed login
