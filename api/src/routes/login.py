@@ -237,6 +237,14 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
             SET last_login = NOW(), last_login_ip = :ip
             WHERE id = :id
         """, {"id": user["id"], "ip": client_ip})
+        try:
+            execute("""
+                UPDATE users
+                SET last_seen = NOW()
+                WHERE id = :id
+            """, {"id": user["id"]})
+        except Exception:
+            pass
         request.session["user_id"] = user["id"]
         request.session["username"] = user["username"]
         request.session["date_format"] = user["date_format"] or "%d/%m/%Y"
@@ -276,6 +284,14 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
                 SET failed_login_attempts = 0, locked_until = NULL, last_login = NOW(), last_login_ip = :ip
                 WHERE id = :id
             """, {"id": user["id"], "ip": client_ip})
+            try:
+                execute("""
+                    UPDATE users
+                    SET last_seen = NOW()
+                    WHERE id = :id
+                """, {"id": user["id"]})
+            except Exception:
+                pass
 
             request.session["user_id"] = user["id"]
             request.session["username"] = user["username"]
