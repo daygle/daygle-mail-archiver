@@ -105,6 +105,24 @@ async def update_last_seen(request: Request, call_next):
         return response
 
     try:
+        # Skip auto-logout checks for authentication/setup endpoints
+        skip_paths = ["/login", "/set-password", "/setup", "/logout", "/static"]
+        if any(request.url.path.startswith(p) for p in skip_paths):
+            try:
+                ip = get_client_ip(request)
+                execute(
+                    """
+                    UPDATE users
+                    SET last_seen = NOW(),
+                        last_login_ip = :ip
+                    WHERE id = :uid
+                    """,
+                    {"uid": user_id, "ip": ip}
+                )
+            except Exception as e:
+                logging.error(f"Failed to update last_seen on skip path: {e}")
+            return response
+
         # Auto-logout check
         setting = query("SELECT value FROM settings WHERE key = 'auto_logout_minutes'").mappings().first()
         minutes = None
