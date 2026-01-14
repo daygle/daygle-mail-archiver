@@ -4,6 +4,7 @@ Shared Jinja2 templates configuration with custom filters
 from pathlib import Path
 from fastapi.templating import Jinja2Templates
 from utils.timezone import convert_utc_to_user_timezone, format_datetime
+from utils.i18n import get_gettext
 
 
 # Determine templates directory
@@ -11,10 +12,34 @@ BASE_DIR = Path(__file__).parent.parent
 templates_dir = BASE_DIR / "templates" if (BASE_DIR / "templates").exists() else BASE_DIR.parent / "templates"
 
 # Create templates instance
-templates = Jinja2Templates(directory=str(templates_dir))
+_jinja_templates = Jinja2Templates(directory=str(templates_dir))
 
-# Enable gettext in Jinja2 (but we'll pass _ per request)
-# templates.env.install_gettext_callables(gettext.gettext, gettext.ngettext, newstyle=True)
+
+class TemplatesWrapper:
+    """Wrapper around Jinja2Templates that injects a per-request `gettext` function
+    into the template context (key: `gettext`). This avoids modifying every route.
+    """
+    def __init__(self, jinja_templates: Jinja2Templates):
+        self._templates = jinja_templates
+        # expose env so callers can still access filters and env
+        self.env = jinja_templates.env
+
+    def TemplateResponse(self, name: str, context: dict, status_code: int = 200):
+        # Ensure we don't mutate caller's dict
+        ctx = dict(context or {})
+        request = ctx.get('request')
+        lang = 'en'
+        if request and "session" in request.scope:
+            lang = request.session.get('language', 'en')
+
+        # inject gettext callable for templates
+        ctx.setdefault('gettext', get_gettext(lang))
+
+        return self._templates.TemplateResponse(name, ctx, status_code=status_code)
+
+
+# Public templates object used across the app
+templates = TemplatesWrapper(_jinja_templates)
 
 
 # Custom Jinja2 filters
