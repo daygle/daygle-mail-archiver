@@ -200,11 +200,14 @@ app.include_router(quarantine.router)
 # Root + Utility Endpoints
 # ---------------------------------------------------------
 @app.get("/")
-def root():
+def root(request: Request):
     from routes.login import is_setup_complete
     if not is_setup_complete():
         return RedirectResponse("/setup", status_code=303)
-    return RedirectResponse("/dashboard", status_code=303)
+    # If the visitor is authenticated send them to the dashboard, otherwise show the login page
+    if request.session.get("username"):
+        return RedirectResponse("/dashboard", status_code=303)
+    return RedirectResponse("/login", status_code=303)
 
 @app.get("/403")
 def forbidden(request: Request):
