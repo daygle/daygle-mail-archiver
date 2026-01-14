@@ -126,10 +126,23 @@
                         b.addEventListener('click', function(){ 
                             var l=this.getAttribute('data-lang');
                             console.log('Selected language:', l);
-                            fetch('/set-language',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({language: l})})
-                            .then(function(response){ console.log('Set-language response:', response.status); })
-                            .catch(function(error){ console.error('Set-language error:', error); })
-                            .finally(function(){ location.reload(); }); 
+                            fetch('/set-language',{
+                                method:'POST',
+                                headers:{'Content-Type':'application/json'},
+                                credentials:'same-origin',
+                                body:JSON.stringify({language: l})
+                            })
+                            .then(function(response){
+                                if(response.ok){
+                                    location.reload();
+                                }else{
+                                    alert('Failed to set language');
+                                }
+                            })
+                            .catch(function(error){
+                                console.error('Set-language error:', error);
+                                alert('Error setting language');
+                            });
                         }); 
                     });
                     document.addEventListener('click', function(e){ if(!authLangPopup.contains(e.target) && e.target !== authLangToggle) authLangPopup.classList.remove('open'); });

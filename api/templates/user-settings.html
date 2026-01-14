@@ -67,16 +67,38 @@
             </div>
 
             <div class="form-group mt-3">
-                <label for="language" class="form-label">{{ gettext("Language") }}</label>
-                <select id="language" class="form-select" name="language">
-                    <option value="en" {% if language == 'en' or not language %}selected{% endif %}>English</option>
-                    <option value="es" {% if language == 'es' %}selected{% endif %}>Español</option>
-                    <option value="fr" {% if language == 'fr' %}selected{% endif %}>Français</option>
-                    <option value="de" {% if language == 'de' %}selected{% endif %}>Deutsch</option>
-                    <option value="zh" {% if language == 'zh' %}selected{% endif %}>中文</option>
-                </select>
+                <label class="form-label">{{ gettext("Language") }}</label>
+                <div class="auth-lang-picker" style="position:relative;">
+                    <button id="settingsLangToggle" class="auth-lang-toggle" type="button" title="{{ gettext('Language') }}">
+                        <span id="settingsLangFlag">
+                            {% if language == 'en' or not language %}🇬🇧{% elif language == 'es' %}🇪🇸{% elif language == 'fr' %}🇫🇷{% elif language == 'de' %}🇩🇪{% elif language == 'zh' %}🇨🇳{% else %}🌐{% endif %}
+                        </span>
+                    </button>
+                    <div id="settingsLangPopup" class="auth-lang-popup" style="left:0; top:44px;">
+                        <button data-lang="en"><span class="flag">🇬🇧</span>&nbsp;{{ gettext('English') }}</button>
+                        <button data-lang="es"><span class="flag">🇪🇸</span>&nbsp;{{ gettext('Español') }}</button>
+                        <button data-lang="fr"><span class="flag">🇫🇷</span>&nbsp;{{ gettext('Français') }}</button>
+                        <button data-lang="de"><span class="flag">🇩🇪</span>&nbsp;{{ gettext('Deutsch') }}</button>
+                        <button data-lang="zh"><span class="flag">🇨🇳</span>&nbsp;{{ gettext('中文') }}</button>
+                    </div>
+                </div>
                 <small class="form-text">{{ gettext("Interface language") }}</small>
             </div>
+            <script>
+            (function(){
+                var settingsLangToggle = document.getElementById('settingsLangToggle');
+                var settingsLangPopup = document.getElementById('settingsLangPopup');
+                var settingsLangFlag = document.getElementById('settingsLangFlag');
+                var lang = "{{ language or 'en' }}";
+                var map = { en: '🇬🇧', es: '🇪🇸', fr: '🇫🇷', de: '🇩🇪', zh: '🇨🇳' };
+                if(settingsLangFlag) settingsLangFlag.textContent = map[lang] || '🌐';
+                if(settingsLangToggle && settingsLangPopup){
+                    settingsLangToggle.addEventListener('click', function(e){ e.stopPropagation(); settingsLangPopup.classList.toggle('open'); });
+                    settingsLangPopup.querySelectorAll('button[data-lang]').forEach(function(b){ b.addEventListener('click', function(){ var l=this.getAttribute('data-lang'); fetch('/set-language',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({language: l})}).then(function(response){ if(response.ok){ location.reload(); }else{ alert('Failed to set language'); } }).catch(function(error){ alert('Error setting language'); }); }); });
+                    document.addEventListener('click', function(e){ if(!settingsLangPopup.contains(e.target) && e.target !== settingsLangToggle) settingsLangPopup.classList.remove('open'); });
+                }
+            })();
+            </script>
 
             <div class="form-group mt-3">
                 <label for="theme" class="form-label">Theme Preference</label>
