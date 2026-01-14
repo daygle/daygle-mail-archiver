@@ -203,12 +203,14 @@
                                 <span>Toggle theme</span>
                             </a>
                             <div class="dropdown-divider"></div>
-                            <div class="dropdown-header">{{ gettext('Language') }}</div>
-                            <button data-lang="en" class="dropdown-item"><span class="flag">🇬🇧</span> {{ gettext('English') }}</button>
-                            <button data-lang="es" class="dropdown-item"><span class="flag">🇪🇸</span> {{ gettext('Español') }}</button>
-                            <button data-lang="fr" class="dropdown-item"><span class="flag">🇫🇷</span> {{ gettext('Français') }}</button>
-                            <button data-lang="de" class="dropdown-item"><span class="flag">🇩🇪</span> {{ gettext('Deutsch') }}</button>
-                            <button data-lang="zh" class="dropdown-item"><span class="flag">🇨🇳</span> {{ gettext('中文') }}</button>
+                            <div class="dropdown-header" id="languageHeader" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">{{ gettext('Language') }} <i class="fas fa-chevron-down" id="languageChevron"></i></div>
+                            <div id="languageOptions" style="display:none;">
+                                <button data-lang="en" class="dropdown-item"><span class="flag">🇬🇧</span> {{ gettext('English') }}</button>
+                                <button data-lang="es" class="dropdown-item"><span class="flag">🇪🇸</span> {{ gettext('Español') }}</button>
+                                <button data-lang="fr" class="dropdown-item"><span class="flag">🇫🇷</span> {{ gettext('Français') }}</button>
+                                <button data-lang="de" class="dropdown-item"><span class="flag">🇩🇪</span> {{ gettext('Deutsch') }}</button>
+                                <button data-lang="zh" class="dropdown-item"><span class="flag">🇨🇳</span> {{ gettext('中文') }}</button>
+                            </div>
                             <div class="dropdown-divider"></div>
                             <a href="/change-password" class="dropdown-item">
                                 <i class="fas fa-key"></i>
@@ -470,6 +472,25 @@
                 }).then(function(){ location.reload(); }).catch(function(){ location.reload(); });
             });
         });
+
+        // Language submenu toggle
+        const languageHeader = document.getElementById('languageHeader');
+        const languageOptions = document.getElementById('languageOptions');
+        const languageChevron = document.getElementById('languageChevron');
+        if(languageHeader && languageOptions && languageChevron){
+            languageChevron.style.transition = 'transform 0.2s';
+            languageHeader.addEventListener('click', function(e){
+                e.stopPropagation();
+                const isShown = languageOptions.style.display === 'block';
+                if(isShown){
+                    languageOptions.style.display = 'none';
+                    languageChevron.style.transform = 'rotate(0deg)';
+                } else {
+                    languageOptions.style.display = 'block';
+                    languageChevron.style.transform = 'rotate(180deg)';
+                }
+            });
+        }
 
 
     </script>
