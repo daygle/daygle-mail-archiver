@@ -74,12 +74,11 @@ def profile_form(
 
     msg = request.session.pop("flash", None)
 
-    # Format datetimes for display
+    # Format datetimes for display without mutating RowMapping
     current_user_id = int(request.session.get("user_id"))
-    if user:
-        user["last_login_fmt"] = format_datetime(user["last_login"], current_user_id) if user.get("last_login") else None
-        user["last_seen_fmt"] = format_datetime(user["last_seen"], current_user_id) if user.get("last_seen") else None
-        user["created_at_fmt"] = format_datetime(user["created_at"], current_user_id) if user.get("created_at") else None
+    last_login_fmt = format_datetime(user["last_login"], current_user_id) if user and user.get("last_login") else None
+    last_seen_fmt = format_datetime(user["last_seen"], current_user_id) if user and user.get("last_seen") else None
+    created_at_fmt = format_datetime(user["created_at"], current_user_id) if user and user.get("created_at") else None
 
     user_payload = {
         "username": user.get("username") if user else None,
@@ -87,11 +86,11 @@ def profile_form(
         "last_name": user.get("last_name") if user else None,
         "email": user.get("email") if user else None,
         "roles": roles,
-        "last_login": user.get("last_login_fmt") if user else None,
+        "last_login": last_login_fmt,
         "last_login_ip": user.get("last_login_ip") if user else None,
-        "last_seen": user.get("last_seen_fmt") if user else None,
+        "last_seen": last_seen_fmt,
         "online_status": online_status,
-        "created_at": user.get("created_at_fmt") if user else None
+        "created_at": created_at_fmt
     }
 
     return templates.TemplateResponse("profile.html", {
