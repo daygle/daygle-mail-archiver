@@ -183,9 +183,11 @@ window.addEventListener('theme-changed', function(e) {
     if(settingsLangToggle && settingsLangPopup){
         console.log('Elements found, adding listeners');
         settingsLangToggle.addEventListener('click', function(e){ 
-            console.log('Settings lang toggle clicked');
+            console.log('Settings lang toggle clicked', e.target);
+            e.preventDefault();
             e.stopPropagation(); 
-            settingsLangPopup.classList.toggle('open'); 
+            settingsLangPopup.classList.toggle('open');
+            console.log('Popup open class:', settingsLangPopup.classList.contains('open'));
         });
         settingsLangPopup.querySelectorAll('button[data-lang]').forEach(function(b){ 
             b.addEventListener('click', function(){ 

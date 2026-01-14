@@ -1883,7 +1883,8 @@ textarea.form-control {
     border-radius: 8px;
     padding: 6px;
     box-shadow: 0 6px 18px rgba(0,0,0,0.12);
-    display: none;
+    /* display: none; */ /* DEBUG: comment out to always show */
+    display: flex; /* DEBUG: always visible */
     flex-direction: column;
     gap: 6px;
     opacity: 0;
