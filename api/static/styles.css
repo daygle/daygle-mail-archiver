@@ -1874,7 +1874,7 @@ textarea.form-control {
     outline-offset: 2px;
 }
 
-/* Debug: highlight popup */
+/* Auth language picker popup */
 .auth-lang-popup {
     position: absolute;
     left: 0;
@@ -1883,15 +1883,13 @@ textarea.form-control {
     border-radius: 8px;
     padding: 6px;
     box-shadow: 0 6px 18px rgba(0,0,0,0.12);
-    /* display: none; */ /* DEBUG: comment out to always show */
-    display: flex; /* DEBUG: always visible */
+    display: none;
     flex-direction: column;
     gap: 6px;
-    opacity: 1; /* DEBUG: visible */
+    opacity: 0;
     transform: translateY(-10px);
     transition: opacity 0.2s ease, transform 0.2s ease;
     z-index: 12001;
-    border: 2px solid red; /* DEBUG */
 }
 
 .auth-lang-popup.open {
