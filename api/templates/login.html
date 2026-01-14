@@ -25,7 +25,7 @@
     </button>
     <div class="auth-lang-picker" style="position:fixed; right:60px; top:12px;">
         <button id="authLangToggle" class="auth-lang-toggle" title="{{ gettext('Language') }}"><span id="authLangFlag">{% if request.session.get('language') == 'en' %}🇬🇧{% elif request.session.get('language') == 'es' %}🇪🇸{% elif request.session.get('language') == 'fr' %}🇫🇷{% elif request.session.get('language') == 'de' %}🇩🇪{% elif request.session.get('language') == 'zh' %}🇨🇳{% else %}�🇧{% endif %}</span></button>
-        <div id="authLangPopup" class="auth-lang-popup" style="display:none; left:0; top:44px;">
+        <div id="authLangPopup" class="auth-lang-popup" style="left:0; top:44px;">
             <button data-lang="en"><span class="flag">🇬🇧</span>&nbsp;{{ gettext('English') }}</button>
             <button data-lang="es"><span class="flag">🇪🇸</span>&nbsp;{{ gettext('Español') }}</button>
             <button data-lang="fr"><span class="flag">🇫🇷</span>&nbsp;{{ gettext('Français') }}</button>
