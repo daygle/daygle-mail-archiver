@@ -1887,7 +1887,7 @@ textarea.form-control {
     display: flex; /* DEBUG: always visible */
     flex-direction: column;
     gap: 6px;
-    opacity: 0;
+    opacity: 1; /* DEBUG: visible */
     transform: translateY(-10px);
     transition: opacity 0.2s ease, transform 0.2s ease;
     z-index: 12001;

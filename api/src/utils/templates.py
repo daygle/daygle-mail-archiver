@@ -33,7 +33,7 @@ class TemplatesWrapper:
             lang = request.session.get('language', 'en')
 
         # inject gettext callable for templates
-        ctx.setdefault('gettext', get_gettext(lang))
+        ctx['gettext'] = get_gettext(lang)
 
         return self._templates.TemplateResponse(name, ctx, status_code=status_code)
 
