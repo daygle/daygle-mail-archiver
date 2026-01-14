@@ -33,7 +33,7 @@
         <i class="fas fa-moon" id="authThemeIconDark" style="display:none;"></i>
     </button>
     <div class="auth-lang-picker" style="position:relative; display:inline-block;">
-        <button id="authLangToggle" class="auth-lang-toggle" title="{{ gettext('Language') }}"><span id="authLangFlag">🌐</span></button>
+        <button id="authLangToggle" class="auth-lang-toggle" title="{{ gettext('Language') }}"><span id="authLangFlag">{% if request.session.get('language') == 'en' %}🇬🇧{% elif request.session.get('language') == 'es' %}🇪🇸{% elif request.session.get('language') == 'fr' %}🇫🇷{% elif request.session.get('language') == 'de' %}🇩🇪{% elif request.session.get('language') == 'zh' %}🇨🇳{% else %}🌐{% endif %}</span></button>
         <div id="authLangPopup" class="auth-lang-popup" style="display:none; right:0; top:44px;">
             <button data-lang="en"><span class="flag">🇬🇧</span>&nbsp;{{ gettext('English') }}</button>
             <button data-lang="es"><span class="flag">🇪🇸</span>&nbsp;{{ gettext('Español') }}</button>
@@ -253,6 +253,25 @@
                     applyTheme(systemTheme);
                 }
             });
+        })();
+    </script>
+    <script>
+        // Auth page language picker behavior (login)
+        (function(){
+            try{
+                var authLangToggle = document.getElementById('authLangToggle');
+                var authLangPopup = document.getElementById('authLangPopup');
+                var authLangFlag = document.getElementById('authLangFlag');
+                var lang = "{{ request.session.get('language', 'en') }}";
+                var map = { en: '🇬🇧', es: '🇪🇸', fr: '🇫🇷', de: '🇩🇪', zh: '🇨🇳' };
+                if(authLangFlag) authLangFlag.textContent = map[lang] || '🌐';
+
+                if(authLangToggle && authLangPopup){
+                    authLangToggle.addEventListener('click', function(e){ e.stopPropagation(); authLangPopup.style.display = authLangPopup.style.display === 'flex' ? 'none' : 'flex'; });
+                    authLangPopup.querySelectorAll('button[data-lang]').forEach(function(b){ b.addEventListener('click', function(){ var l=this.getAttribute('data-lang'); fetch('/set-language',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'language='+encodeURIComponent(l),credentials:'same-origin'}).then(function(){ location.reload(); }).catch(function(){ location.reload(); }); }); });
+                    document.addEventListener('click', function(e){ if(!authLangPopup.contains(e.target) && e.target !== authLangToggle) authLangPopup.style.display='none'; });
+                }
+            }catch(e){}
         })();
     </script>
     

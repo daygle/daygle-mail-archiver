@@ -16,7 +16,7 @@
         .lang-toggle { width: 36px; height: 36px; border-radius: 50%; border: none; background: var(--bg-elevated); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.06); font-weight:600; }
         .lang-toggle:focus { outline: 2px solid var(--accent); }
         .lang-flag { font-size: 12px; line-height:1; text-transform:uppercase; }
-        .lang-popup { position: absolute; right: 0; top: 44px; background: var(--bg-elevated); border-radius: 8px; padding:6px; box-shadow: 0 6px 18px rgba(0,0,0,0.12); z-index:1200; display:flex; flex-direction:column; gap:6px; }
+        .lang-popup { position: absolute; right: 0; bottom: 44px; background: var(--bg-elevated); border-radius: 8px; padding:6px; box-shadow: 0 6px 18px rgba(0,0,0,0.12); z-index:11000; display:flex; flex-direction:column; gap:6px; }
         .lang-popup button { border: none; background: transparent; padding:6px 10px; border-radius:6px; cursor:pointer; display:flex; gap:8px; align-items:center; }
         .lang-popup button:hover { background: var(--bg-hover); }
         .lang-popup .flag { font-size:14px; display:inline-block; width:28px; text-align:center; font-weight:700; }
@@ -237,7 +237,7 @@
                     <!-- Language picker (circular flag) -->
                     <div class="lang-picker" id="langPicker" title="{{ gettext('Language') }}" style="margin-right:12px;">
                         <button id="langToggle" class="lang-toggle" aria-haspopup="true" aria-expanded="false">
-                            <span id="langFlag" class="lang-flag">🌐</span>
+                            <span id="langFlag" class="lang-flag">{% if request.session.get('language') == 'en' %}🇬🇧{% elif request.session.get('language') == 'es' %}🇪🇸{% elif request.session.get('language') == 'fr' %}🇫🇷{% elif request.session.get('language') == 'de' %}🇩🇪{% elif request.session.get('language') == 'zh' %}🇨🇳{% else %}🌐{% endif %}</span>
                         </button>
                                 <div class="lang-popup" id="langPopup" style="display:none;">
                                     <button data-lang="en"><span class="flag">🇬🇧</span><span>{{ gettext('English') }}</span></button>
