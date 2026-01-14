@@ -191,6 +191,11 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
         log("debug", "Login", f"Login attempt for user={username} language={language} from={get_client_ip(request)}")
     except Exception:
         pass
+    # Temporary: print incoming Cookie header for diagnosis
+    try:
+        print(f"DEBUG: Incoming Cookie: {request.headers.get('cookie')}")
+    except Exception:
+        pass
     try:
         user = query("""
             SELECT id, username, password_hash, date_format, time_format,
@@ -291,6 +296,10 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
             except Exception:
                 pass
 
+            try:
+                print(f"DEBUG: session set after login: {dict(request.session)}")
+            except Exception:
+                pass
             return RedirectResponse("/dashboard", status_code=303)
 
     except Exception as e:
