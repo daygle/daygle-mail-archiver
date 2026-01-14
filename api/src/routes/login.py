@@ -186,15 +186,11 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
     except Exception:
         pass
 
-    # Debug logging for login attempts (also print to stdout temporarily)
-    try:
-        print(f"DEBUG: login attempt user={username!r} language={language} from={get_client_ip(request)}")
-    except Exception:
-        pass
+    # Debug logging for login attempts
     try:
         log("debug", "Login", f"Login attempt for user={username} language={language} from={get_client_ip(request)}")
     except Exception:
-        print("DEBUG: log() to DB failed during login attempt")
+        pass
     try:
         user = query("""
             SELECT id, username, password_hash, date_format, time_format,
@@ -208,7 +204,6 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
         return templates.TemplateResponse("login.html", {"request": request, "error": "System error. Please try again."})
 
     if not user:
-        print(f"DEBUG: user not found: {username!r}")
         try:
             log("warning", "Login", f"Failed login attempt for unknown user: {username}")
         except Exception:
@@ -257,21 +252,14 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
             pass
         request.session["needs_password"] = True
         request.session["permissions"] = load_user_permissions(user["id"])
-        try:
-            print(f"DEBUG: session before redirect to set-password: {dict(request.session)}")
-        except Exception:
-            pass
         return RedirectResponse("/set-password", status_code=303)
 
     # Normal login
     try:
         pw_hash = user.get("password_hash")
-        print(f"DEBUG: password_hash present={pw_hash is not None}")
         ok = False
         if pw_hash:
             ok = bcrypt.checkpw(password.encode("utf-8"), pw_hash.encode("utf-8"))
-        print(f"DEBUG: bcrypt.checkpw result={ok}")
-
         if ok:
             try:
                 log("debug", "Login", f"Password check passed for {username}")
@@ -303,14 +291,9 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
             except Exception:
                 pass
 
-            try:
-                print(f"DEBUG: session before redirect to dashboard: {dict(request.session)}")
-            except Exception:
-                pass
             return RedirectResponse("/dashboard", status_code=303)
 
     except Exception as e:
-        print(f"DEBUG: password verification error: {e}")
         try:
             log("error", "Login", f"Password verification error for {username}: {str(e)}")
         except Exception:

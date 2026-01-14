@@ -108,19 +108,6 @@ async def update_last_seen(request: Request, call_next):
         # Skip auto-logout checks for authentication/setup endpoints
         skip_paths = ["/login", "/set-password", "/setup", "/logout", "/static"]
         if any(request.url.path.startswith(p) for p in skip_paths):
-            try:
-                ip = get_client_ip(request)
-                execute(
-                    """
-                    UPDATE users
-                    SET last_seen = NOW(),
-                        last_login_ip = :ip
-                    WHERE id = :uid
-                    """,
-                    {"uid": user_id, "ip": ip}
-                )
-            except Exception as e:
-                logging.error(f"Failed to update last_seen on skip path: {e}")
             return response
 
         # Auto-logout check
@@ -132,12 +119,6 @@ async def update_last_seen(request: Request, call_next):
             except Exception:
                 minutes = None
 
-        # Debug: report auto-logout config and last_seen for this user
-        try:
-            print(f"DEBUG: auto_logout_minutes={minutes} for user_id={user_id}")
-        except Exception:
-            pass
-
         if minutes and minutes > 0:
             user = query("SELECT last_seen FROM users WHERE id = :id", {"id": user_id}).mappings().first()
             last_seen = user.get("last_seen") if user else None
@@ -145,15 +126,13 @@ async def update_last_seen(request: Request, call_next):
                 from datetime import datetime, timedelta
                 import pytz
                 now = datetime.now(pytz.UTC)
-                print(f"DEBUG: last_seen={last_seen} now={now}")
                 if last_seen and (now - last_seen) > timedelta(minutes=minutes):
                     username = request.session.get("username", "unknown")
-                    print(f"DEBUG: Auto-logout triggered for user {username} (idle > {minutes} minutes)")
                     log("info", "Security", f"Auto-logout due to inactivity for user {username}")
                     request.session.clear()
                     return RedirectResponse("/login", status_code=303)
             except Exception as e:
-                print(f"DEBUG: error evaluating auto-logout: {e}")
+                logging.debug(f"Error evaluating auto-logout: {e}")
 
         # Update last_seen + IP
         ip = get_client_ip(request)
