@@ -10,14 +10,36 @@ def get_gettext(lang='en'):
     Loads compiled `.mo` files from the project's `api/locales` directory.
     Falls back to a small hardcoded dictionary if loading fails.
     """
-    try:
-        # file is at api/src/utils/i18n.py -> go up two levels to api/
-        base_dir = Path(__file__).resolve().parents[2]
-        locales_dir = str(base_dir / 'locales')
-        trans = Translations.load(locales_dir, [lang], domain='messages')
-        return trans.gettext
-    except Exception as e:
-        logging.debug(f"i18n: failed to load translations for {lang}: {e}")
+    # Try several likely locations for the `locales` directory so this works
+    # both on the developer machine and inside the Docker container.
+    candidates = []
+    p = Path(__file__).resolve()
+    # neighbors: /app/utils -> /app/locales
+    candidates.append(p.parents[1] / 'locales')
+    # repo-style: api/src/utils -> api/locales
+    candidates.append(p.parents[2] / 'locales')
+    # project root cwd/locales
+    candidates.append(Path.cwd() / 'locales')
+    # fallback absolute /app/locales (Dockerfile copies to /app/locales)
+    candidates.append(Path('/app/locales'))
+
+    chosen = None
+    for c in candidates:
+        try:
+            if c.exists() and any(c.iterdir()):
+                chosen = str(c)
+                break
+        except Exception:
+            continue
+
+    if chosen:
+        try:
+            trans = Translations.load(chosen, [lang], domain='messages')
+            return trans.gettext
+        except Exception as e:
+            logging.debug(f"i18n: failed to load translations from {chosen} for {lang}: {e}")
+    else:
+        logging.debug(f"i18n: no locales directory found among candidates: {candidates}")
         # Fallback to small in-code dictionaries while .mo loading is fixed
         if lang == 'es':
             translations = {
