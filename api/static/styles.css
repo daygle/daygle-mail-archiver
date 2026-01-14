@@ -1859,6 +1859,19 @@ textarea.form-control {
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.auth-lang-toggle:hover {
+    background: var(--bg-hover);
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.auth-lang-toggle:focus {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
 }
 
 .auth-lang-popup {
@@ -1872,6 +1885,15 @@ textarea.form-control {
     display: none;
     flex-direction: column;
     gap: 6px;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 12001;
+}
+
+.auth-lang-popup.open {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .auth-lang-popup.open {
