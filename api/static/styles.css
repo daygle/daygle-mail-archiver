@@ -1874,6 +1874,7 @@ textarea.form-control {
     outline-offset: 2px;
 }
 
+/* Debug: highlight popup */
 .auth-lang-popup {
     position: absolute;
     left: 0;
@@ -1889,6 +1890,7 @@ textarea.form-control {
     transform: translateY(-10px);
     transition: opacity 0.2s ease, transform 0.2s ease;
     z-index: 12001;
+    border: 2px solid red; /* DEBUG */
 }
 
 .auth-lang-popup.open {
