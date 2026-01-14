@@ -36,18 +36,30 @@
             
             <form method="post" class="auth-form">
                 <div class="form-group">
-                    <label for="username" class="form-label">Username</label>
-                    <input type="text" id="username" name="username" class="form-control" placeholder="Enter your username" autocomplete="username" autofocus required>
+                    <label for="username" class="form-label">{{ gettext("Username") }}</label>
+                    <input type="text" id="username" name="username" class="form-control" placeholder="{{ gettext("Enter your username") }}" autocomplete="username" autofocus required>
                 </div>
 
                 <div class="form-group">
-                    <label for="password" class="form-label">Password</label>
-                    <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" autocomplete="current-password" required>
+                    <label for="password" class="form-label">{{ gettext("Password") }}</label>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="{{ gettext("Enter your password") }}" autocomplete="current-password" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="language" class="form-label">{{ gettext("Language") }}</label>
+                    {% set _lang = request.session.get('language', 'en') %}
+                    <select id="language" name="language" class="form-select">
+                        <option value="en" {% if _lang == 'en' %}selected{% endif %}>{{ gettext("English") }}</option>
+                        <option value="es" {% if _lang == 'es' %}selected{% endif %}>{{ gettext("Español") }}</option>
+                        <option value="fr" {% if _lang == 'fr' %}selected{% endif %}>{{ gettext("Français") }}</option>
+                        <option value="de" {% if _lang == 'de' %}selected{% endif %}>{{ gettext("Deutsch") }}</option>
+                        <option value="zh" {% if _lang == 'zh' %}selected{% endif %}>{{ gettext("中文") }}</option>
+                    </select>
                 </div>
 
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-right-to-bracket"></i>
-                    <span>Sign In</span>
+                    <span>{{ gettext("Sign In") }}</span>
                 </button>
             </form>
 
@@ -84,6 +96,22 @@
     <script src="/static/js/toast.js"></script>
 
     <script>
+        // Post language selection to the server so unauthenticated users can change language immediately
+        (function(){
+            var sel = document.getElementById('language');
+            if(!sel) return;
+            sel.addEventListener('change', function(){
+                try{
+                    var body = 'language=' + encodeURIComponent(this.value);
+                    fetch('/set-language', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body: body,
+                        credentials: 'same-origin'
+                    }).then(function(){ location.reload(); }).catch(function(){ location.reload(); });
+                }catch(e){ location.reload(); }
+            });
+        })();
         // Reveal auth content after styles are loaded to reduce FOUC
         function revealAuth(){
             try{

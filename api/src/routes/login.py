@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, Form
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 import bcrypt
 import re
 import secrets
@@ -178,12 +178,19 @@ def login_form(request: Request, setup_complete: str = ""):
 
 
 @router.post("/login")
-def login_submit(request: Request, username: str = Form(...), password: str = Form(...)):
+def login_submit(request: Request, username: str = Form(...), password: str = Form(...), language: str = Form('en')):
+    # Ensure selected language takes effect immediately for the response
+    try:
+        if "session" in request.scope:
+            request.session["language"] = language or request.session.get("language", "en")
+    except Exception:
+        pass
+
     try:
         user = query("""
             SELECT id, username, password_hash, date_format, time_format,
                    timezone, theme_preference, enabled,
-                   failed_login_attempts, locked_until, avatar_color
+                   failed_login_attempts, locked_until, avatar_color, language
             FROM users
             WHERE username = :u
         """, {"u": username}).mappings().first()
@@ -224,6 +231,17 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
         request.session["timezone"] = user["timezone"] or "Australia/Melbourne"
         request.session["theme"] = user.get("theme_preference") or "system"
         request.session["avatar_color"] = user.get("avatar_color") or "#007bff"
+        # Persist selected language into session and user record
+        request.session["language"] = language or (user.get("language") or "en")
+        try:
+            execute("""
+                UPDATE users
+                SET language = :lang
+                WHERE id = :id
+            """, {"lang": request.session["language"], "id": user["id"]})
+        except Exception:
+            # Non-fatal: login can proceed even if language persistence fails
+            pass
         request.session["needs_password"] = True
         request.session["permissions"] = load_user_permissions(user["id"])
         return RedirectResponse("/set-password", status_code=303)
@@ -246,6 +264,16 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
             request.session["theme"] = user.get("theme_preference") or "system"
             request.session["avatar_color"] = user.get("avatar_color") or "#007bff"
             request.session["permissions"] = load_user_permissions(user["id"])
+            # Persist selected language into session and user record
+            request.session["language"] = language or (user.get("language") or "en")
+            try:
+                execute("""
+                    UPDATE users
+                    SET language = :lang
+                    WHERE id = :id
+                """, {"lang": request.session["language"], "id": user["id"]})
+            except Exception:
+                pass
 
             return RedirectResponse("/dashboard", status_code=303)
 
@@ -290,3 +318,29 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
 def logout(request: Request):
     request.session.clear()
     return RedirectResponse("/login", status_code=303)
+
+
+@router.post("/set-language")
+def set_language(request: Request, language: str = Form('en')):
+    """Allow unauthenticated users to set a preferred language into the session.
+    If the user is authenticated, persist it to their DB record too.
+    """
+    try:
+        if "session" in request.scope:
+            request.session["language"] = language
+    except Exception:
+        pass
+
+    # If logged in, persist preference to DB (best-effort)
+    try:
+        user_id = request.session.get("user_id") if "session" in request.scope else None
+        if user_id:
+            execute("""
+                UPDATE users
+                SET language = :lang
+                WHERE id = :id
+            """, {"lang": language, "id": user_id})
+    except Exception:
+        pass
+
+    return JSONResponse(status_code=204)
