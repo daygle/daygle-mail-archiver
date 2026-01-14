@@ -186,6 +186,11 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
     except Exception:
         pass
 
+    # Debug logging for login attempts
+    try:
+        log("debug", "Login", f"Login attempt for user={username} language={language} from={get_client_ip(request)}")
+    except Exception:
+        pass
     try:
         user = query("""
             SELECT id, username, password_hash, date_format, time_format,
@@ -249,6 +254,7 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
     # Normal login
     try:
         if bcrypt.checkpw(password.encode("utf-8"), user["password_hash"].encode("utf-8")):
+            log("debug", "Login", f"Password check passed for {username}")
             client_ip = get_client_ip(request)
             execute("""
                 UPDATE users

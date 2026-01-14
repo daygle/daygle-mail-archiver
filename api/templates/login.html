@@ -116,9 +116,9 @@
                 if(authLangFlag) authLangFlag.textContent = map[lang] || '🌐';
 
                 if(authLangToggle && authLangPopup){
-                    authLangToggle.addEventListener('click', function(e){ e.stopPropagation(); authLangPopup.style.display = authLangPopup.style.display === 'flex' ? 'none' : 'flex'; });
-                    authLangPopup.querySelectorAll('button[data-lang]').forEach(function(b){ b.addEventListener('click', function(){ var l=this.getAttribute('data-lang'); fetch('/set-language',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'language='+encodeURIComponent(l),credentials:'same-origin'}).then(function(){ location.reload(); }).catch(function(){ location.reload(); }); }); });
-                    document.addEventListener('click', function(e){ if(!authLangPopup.contains(e.target) && e.target !== authLangToggle) authLangPopup.style.display='none'; });
+                    authLangToggle.addEventListener('click', function(e){ e.stopPropagation(); authLangPopup.classList.toggle('open'); });
+                    authLangPopup.querySelectorAll('button[data-lang]').forEach(function(b){ b.addEventListener('click', function(){ var l=this.getAttribute('data-lang'); fetch('/set-language',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({language: l})}).finally(function(){ location.reload(); }); }); });
+                    document.addEventListener('click', function(e){ if(!authLangPopup.contains(e.target) && e.target !== authLangToggle) authLangPopup.classList.remove('open'); });
                 }
             }catch(e){}
         })();
@@ -128,13 +128,12 @@
             if(!sel) return;
             sel.addEventListener('change', function(){
                 try{
-                    var body = 'language=' + encodeURIComponent(this.value);
                     fetch('/set-language', {
                         method: 'POST',
-                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                        body: body,
-                        credentials: 'same-origin'
-                    }).then(function(){ location.reload(); }).catch(function(){ location.reload(); });
+                        headers: {'Content-Type': 'application/json'},
+                        credentials: 'same-origin',
+                        body: JSON.stringify({language: this.value})
+                    }).finally(function(){ location.reload(); });
                 }catch(e){ location.reload(); }
             });
         })();
