@@ -134,6 +134,8 @@
                             })
                             .then(function(response){
                                 if(response.ok){
+                                    // Update flag immediately
+                                    if(authLangFlag) authLangFlag.textContent = map[l] || '🌐';
                                     location.reload();
                                 }else{
                                     alert('Failed to set language');
