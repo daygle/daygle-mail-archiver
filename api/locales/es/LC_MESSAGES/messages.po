@@ -64,6 +64,133 @@ msgstr "中文"
 msgid "Toggle theme"
 msgstr "Cambiar tema"
 
+msgid "Email Address"
+msgstr "Dirección de correo electrónico"
+
+msgid "Enter your email address"
+msgstr "Introduce tu dirección de correo electrónico"
+
+msgid "Send Reset Link"
+msgstr "Enviar enlace de restablecimiento"
+
+msgid "Back to Login"
+msgstr "Volver al inicio de sesión"
+
+msgid "New Password"
+msgstr "Nueva contraseña"
+
+msgid "Enter your new password"
+msgstr "Introduce tu nueva contraseña"
+
+msgid "Password must be at least 8 characters long and contain uppercase, lowercase, and numeric characters."
+msgstr "La contraseña debe tener al menos 8 caracteres y contener mayúsculas, minúsculas y caracteres numéricos."
+
+msgid "Confirm New Password"
+msgstr "Confirmar nueva contraseña"
+
+msgid "Confirm your new password"
+msgstr "Confirma tu nueva contraseña"
+
+msgid "Reset Password"
+msgstr "Restablecer la contraseña"
+
+msgid "Initial Setup - Daygle Mail Archiver"
+msgstr "Configuración inicial - Daygle Mail Archiver"
+
+msgid "Welcome to Daygle Mail Archiver"
+msgstr "Bienvenido a Daygle Mail Archiver"
+
+# Added from templates/base.html
+msgid "Daygle Mail Archiver"
+msgstr "Daygle Mail Archiver"
+
+msgid "View Alerts"
+msgstr "Ver alertas"
+
+msgid "Profile"
+msgstr "Perfil"
+
+msgid "User Settings"
+msgstr "Configuración de usuario"
+
+msgid "Theme saved"
+msgstr "Tema guardado"
+
+msgid "Theme saved locally"
+msgstr "Tema guardado localmente"
+
+msgid "Theme applied"
+msgstr "Tema aplicado"
+
+msgid "Change Password"
+msgstr "Cambiar contraseña"
+
+msgid "Logout"
+msgstr "Cerrar sesión"
+
+msgid "Login"
+msgstr "Iniciar sesión"
+
+msgid "Current Password"
+msgstr "Contraseña actual"
+
+msgid "Enter your current password"
+msgstr "Introduzca su contraseña actual"
+
+msgid "Let's set up your administrator account to get started"
+msgstr "Vamos a configurar su cuenta de administrador para comenzar"
+
+msgid "First Time Setup:"
+msgstr "Configuración inicial:"
+
+msgid "This wizard will create your primary administrator account. This account will have full access to all system features."
+msgstr "Este asistente creará su cuenta de administrador principal. Esta cuenta tendrá acceso completo a todas las funciones del sistema."
+
+msgid "Choose a unique username for the administrator account"
+msgstr "Elija un nombre de usuario único para la cuenta de administrador"
+
+msgid "Optional - your first name"
+msgstr "Opcional - su nombre"
+
+msgid "Optional - your last name"
+msgstr "Opcional - su apellido"
+
+msgid "Optional - for notifications and account recovery"
+msgstr "Opcional - para notificaciones y recuperación de la cuenta"
+
+msgid "Username"
+msgstr "Nombre de usuario"
+
+msgid "administrator"
+msgstr "administrador"
+
+msgid "First Name"
+msgstr "Nombre"
+
+msgid "John"
+msgstr "Juan"
+
+msgid "Last Name"
+msgstr "Apellido"
+
+msgid "Smith"
+msgstr "Pérez"
+
+msgid "Must be at least 8 characters and include a mix of letters and numbers"
+msgstr "Debe tener al menos 8 caracteres e incluir una mezcla de letras y números"
+
+msgid "Choose a strong password"
+msgstr "Elija una contraseña segura"
+
+msgid "Confirm Password"
+msgstr "Confirmar contraseña"
+
+msgid "Confirm password"
+msgstr "Confirme la contraseña"
+
+msgid "Create Administrator"
+msgstr "Crear administrador"
+
 msgid "Dashboard"
 msgstr "Tablero"
 
@@ -168,3 +295,61 @@ msgstr "Tiempo de actividad"
 
 msgid "Time since last restart"
 msgstr "Tiempo desde el último reinicio"
+
+# Added from templates/profile.html
+msgid "My Profile"
+msgstr "Mi perfil"
+
+msgid "Personal Information"
+msgstr "Información personal"
+
+msgid "First Name"
+msgstr "Nombre"
+
+msgid "First name"
+msgstr "Nombre"
+
+msgid "Last Name"
+msgstr "Apellido"
+
+msgid "Last name"
+msgstr "Apellido"
+
+msgid "Email"
+msgstr "Correo electrónico"
+
+msgid "your.email@example.com"
+msgstr "tu.email@ejemplo.com"
+
+msgid "Username:"
+msgstr "Nombre de usuario:"
+
+msgid "Roles:"
+msgstr "Roles:"
+
+msgid "No roles assigned"
+msgstr "No hay roles asignados"
+
+msgid "Last Login:"
+msgstr "Último acceso:"
+
+msgid "Last Login IP:"
+msgstr "IP del último acceso:"
+
+msgid "Last Seen:"
+msgstr "Última vez visto:"
+
+msgid "Online Status:"
+msgstr "Estado en línea:"
+
+msgid "Online"
+msgstr "En línea"
+
+msgid "Offline"
+msgstr "Desconectado"
+
+msgid "Account Created:"
+msgstr "Cuenta creada:"
+
+msgid "Update Information"
+msgstr "Actualizar información"

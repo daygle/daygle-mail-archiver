@@ -64,6 +64,133 @@ msgstr "中文"
 msgid "Toggle theme"
 msgstr "Basculer le thème"
 
+msgid "Email Address"
+msgstr "Adresse e-mail"
+
+msgid "Enter your email address"
+msgstr "Entrez votre adresse e-mail"
+
+msgid "Send Reset Link"
+msgstr "Envoyer le lien de réinitialisation"
+
+msgid "Back to Login"
+msgstr "Retour à la connexion"
+
+msgid "New Password"
+msgstr "Nouveau mot de passe"
+
+msgid "Enter your new password"
+msgstr "Entrez votre nouveau mot de passe"
+
+msgid "Password must be at least 8 characters long and contain uppercase, lowercase, and numeric characters."
+msgstr "Le mot de passe doit comporter au moins 8 caractères et contenir des majuscules, des minuscules et des chiffres."
+
+msgid "Confirm New Password"
+msgstr "Confirmer le nouveau mot de passe"
+
+msgid "Confirm your new password"
+msgstr "Confirmez votre nouveau mot de passe"
+
+msgid "Reset Password"
+msgstr "Réinitialiser le mot de passe"
+
+msgid "Initial Setup - Daygle Mail Archiver"
+msgstr "Configuration initiale - Daygle Mail Archiver"
+
+msgid "Welcome to Daygle Mail Archiver"
+msgstr "Bienvenue sur Daygle Mail Archiver"
+
+# Added from templates/base.html
+msgid "Daygle Mail Archiver"
+msgstr "Daygle Mail Archiver"
+
+msgid "View Alerts"
+msgstr "Afficher les alertes"
+
+msgid "Profile"
+msgstr "Profil"
+
+msgid "User Settings"
+msgstr "Paramètres utilisateur"
+
+msgid "Theme saved"
+msgstr "Thème enregistré"
+
+msgid "Theme saved locally"
+msgstr "Thème enregistré localement"
+
+msgid "Theme applied"
+msgstr "Thème appliqué"
+
+msgid "Change Password"
+msgstr "Changer le mot de passe"
+
+msgid "Logout"
+msgstr "Se déconnecter"
+
+msgid "Login"
+msgstr "Se connecter"
+
+msgid "Current Password"
+msgstr "Mot de passe actuel"
+
+msgid "Enter your current password"
+msgstr "Entrez votre mot de passe actuel"
+
+msgid "Let's set up your administrator account to get started"
+msgstr "Commençons par configurer votre compte administrateur"
+
+msgid "First Time Setup:"
+msgstr "Configuration initiale :"
+
+msgid "This wizard will create your primary administrator account. This account will have full access to all system features."
+msgstr "Cet assistant va créer votre compte administrateur principal. Ce compte aura un accès complet à toutes les fonctionnalités du système."
+
+msgid "Choose a unique username for the administrator account"
+msgstr "Choisissez un nom d'utilisateur unique pour le compte administrateur"
+
+msgid "Optional - your first name"
+msgstr "Optionnel - votre prénom"
+
+msgid "Optional - your last name"
+msgstr "Optionnel - votre nom de famille"
+
+msgid "Optional - for notifications and account recovery"
+msgstr "Optionnel - pour les notifications et la récupération de compte"
+
+msgid "Username"
+msgstr "Nom d'utilisateur"
+
+msgid "administrator"
+msgstr "administrateur"
+
+msgid "First Name"
+msgstr "Prénom"
+
+msgid "John"
+msgstr "Jean"
+
+msgid "Last Name"
+msgstr "Nom de famille"
+
+msgid "Smith"
+msgstr "Dupont"
+
+msgid "Must be at least 8 characters and include a mix of letters and numbers"
+msgstr "Doit comporter au moins 8 caractères et inclure un mélange de lettres et de chiffres"
+
+msgid "Choose a strong password"
+msgstr "Choisissez un mot de passe fort"
+
+msgid "Confirm Password"
+msgstr "Confirmer le mot de passe"
+
+msgid "Confirm password"
+msgstr "Confirmez le mot de passe"
+
+msgid "Create Administrator"
+msgstr "Créer l'administrateur"
+
 msgid "Dashboard"
 msgstr "Tableau de bord"
 
@@ -168,3 +295,61 @@ msgstr "Temps de fonctionnement"
 
 msgid "Time since last restart"
 msgstr "Temps depuis le dernier redémarrage"
+
+# Added from templates/profile.html
+msgid "My Profile"
+msgstr "Mon profil"
+
+msgid "Personal Information"
+msgstr "Informations personnelles"
+
+msgid "First Name"
+msgstr "Prénom"
+
+msgid "First name"
+msgstr "Prénom"
+
+msgid "Last Name"
+msgstr "Nom de famille"
+
+msgid "Last name"
+msgstr "Nom de famille"
+
+msgid "Email"
+msgstr "E-mail"
+
+msgid "your.email@example.com"
+msgstr "votre.email@exemple.com"
+
+msgid "Username:"
+msgstr "Nom d'utilisateur :"
+
+msgid "Roles:"
+msgstr "Rôles :"
+
+msgid "No roles assigned"
+msgstr "Aucun rôle assigné"
+
+msgid "Last Login:"
+msgstr "Dernière connexion :"
+
+msgid "Last Login IP:"
+msgstr "IP de dernière connexion :"
+
+msgid "Last Seen:"
+msgstr "Dernière activité :"
+
+msgid "Online Status:"
+msgstr "Statut en ligne :"
+
+msgid "Online"
+msgstr "En ligne"
+
+msgid "Offline"
+msgstr "Hors ligne"
+
+msgid "Account Created:"
+msgstr "Compte créé :"
+
+msgid "Update Information"
+msgstr "Mettre à jour les informations"

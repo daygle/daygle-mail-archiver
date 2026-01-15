@@ -365,17 +365,29 @@ async def set_language(request: Request):
     try:
         data = await request.json()
         language = data.get('language', 'en')
-        print(f"DEBUG: set-language called with language={language}")
+        try:
+            log("debug", "Language", f"set-language called with language={language}")
+        except Exception:
+            pass
     except Exception as e:
-        print(f"DEBUG: set-language JSON error: {e}")
+        try:
+            log("error", "Language", f"set-language JSON error: {str(e)}")
+        except Exception:
+            pass
         return JSONResponse({"error": "Invalid JSON"}, status_code=400)
 
     try:
         if "session" in request.scope:
             request.session["language"] = language
-            print(f"DEBUG: set session language to {language}")
+            try:
+                log("debug", "Language", f"set session language to {language}")
+            except Exception:
+                pass
     except Exception as e:
-        print(f"DEBUG: session set error: {e}")
+        try:
+            log("error", "Language", f"session set error: {str(e)}")
+        except Exception:
+            pass
 
     # If logged in, persist preference to DB (best-effort)
     try:
@@ -386,9 +398,15 @@ async def set_language(request: Request):
                 SET language = :lang
                 WHERE id = :id
             """, {"lang": language, "id": user_id})
-            print(f"DEBUG: updated DB language for user {user_id}")
+            try:
+                log("debug", "Language", f"updated DB language for user {user_id}")
+            except Exception:
+                pass
     except Exception as e:
-        print(f"DEBUG: DB update error: {e}")
+        try:
+            log("error", "Language", f"DB update error: {str(e)}")
+        except Exception:
+            pass
 
     return JSONResponse({"success": True})
 

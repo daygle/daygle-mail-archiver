@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html data-theme="light">
 <head>
-    <title>Daygle Mail Archiver</title>
+    <title>{{ gettext("Daygle Mail Archiver") }}</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/png" href="/static/daygle.png">
@@ -46,7 +46,7 @@
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-brand" id="sidebarBrand" style="cursor: pointer; gap: 2px;">
-                    <img src="/static/daygle-light.png" alt="Daygle Mail Archiver" style="height: 32px; width: auto;">
+                    <img src="/static/daygle-light.png" alt="{{ gettext('Daygle Mail Archiver') }}" style="height: 32px; width: auto;">
                     <span class="brand-text">{{ gettext("aygle Mail Archiver") }}</span>
                 </div>
             </div>
@@ -167,13 +167,13 @@
                     <button class="btn-ghost sidebar-mobile-toggle" id="sidebarMobileToggle">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <h1 class="page-title">{% block page_title %}aygle Mail Archiver{% endblock %}</h1>
+                    <h1 class="page-title">{% block page_title %}{{ gettext('Daygle Mail Archiver') }}{% endblock %}</h1>
                 </div>
 
                 <div class="topbar-right">
                     {% if request.session.username %}
                     <div class="alerts-menu">
-                        <a href="/alerts" class="alerts-button" title="View Alerts">
+                        <a href="/alerts" class="alerts-button" title="{{ gettext('View Alerts') }}">
                             <i class="fas fa-bell"></i>
                             {% if request.session.get('unacknowledged_alerts', 0) > 0 %}
                             <span class="alerts-badge">{{ request.session.unacknowledged_alerts }}</span>
@@ -191,16 +191,16 @@
                         <div class="dropdown-menu" id="userMenuDropdown">
                             <a href="/profile" class="dropdown-item">
                                 <i class="fas fa-user"></i>
-                                <span>Profile</span>
+                                <span>{{ gettext('Profile') }}</span>
                             </a>
                             <a href="/user-settings" class="dropdown-item">
                                 <i class="fas fa-cog"></i>
-                                <span>User Settings</span>
+                                <span>{{ gettext('User Settings') }}</span>
                             </a>
-                            <a href="#" class="dropdown-item theme-toggle-item" id="themeToggle" role="button" title="Toggle theme">
+                            <a href="#" class="dropdown-item theme-toggle-item" id="themeToggle" role="button" title="{{ gettext('Toggle theme') }}">
                                 <i class="fas fa-sun" id="themeIconLight"></i>
                                 <i class="fas fa-moon" id="themeIconDark" style="display:none;"></i>
-                                <span>Toggle theme</span>
+                                <span>{{ gettext('Toggle theme') }}</span>
                             </a>
                             <div class="dropdown-divider"></div>
                             <div class="dropdown-item" id="languageHeader" style="cursor:pointer; display:flex; align-items:center;">
@@ -216,19 +216,19 @@
                             <div class="dropdown-divider"></div>
                             <a href="/change-password" class="dropdown-item">
                                 <i class="fas fa-key"></i>
-                                <span>Change Password</span>
+                                <span>{{ gettext('Change Password') }}</span>
                             </a>
                             <div class="dropdown-divider"></div>
                             <a href="/logout" class="dropdown-item">
                                 <i class="fas fa-right-from-bracket"></i>
-                                <span>Logout</span>
+                                <span>{{ gettext('Logout') }}</span>
                             </a>
                         </div>
                     </div>
                     {% else %}
                     <a href="/login" class="btn btn-primary">
                         <i class="fas fa-right-to-bracket"></i>
-                        <span>Login</span>
+                        <span>{{ gettext('Login') }}</span>
                     </a>
                     {% endif %}
                     {% endif %}
@@ -364,16 +364,16 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ theme: theme })
                     }).then((resp) => {
-                        if (resp.ok) {
-                                showToast('Theme saved', 'success');
-                            } else {
-                                showToast('Theme saved locally', 'info');
-                            }
-                    }).catch(() => {
-                        showToast('Theme saved locally', 'info');
+                                if (resp.ok) {
+                                        showToast({{ gettext('Theme saved')|tojson }}, 'success');
+                                    } else {
+                                        showToast({{ gettext('Theme saved locally')|tojson }}, 'info');
+                                    }
+                        }).catch(() => {
+                        showToast({{ gettext('Theme saved locally')|tojson }}, 'info');
                     });
                 } else {
-                    showToast('Theme applied', 'info');
+                    showToast({{ gettext('Theme applied')|tojson }}, 'info');
                 }
             } catch (e) {}
         }

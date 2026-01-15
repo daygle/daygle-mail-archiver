@@ -168,3 +168,218 @@ msgstr "Time since last restart"
 
 msgid "Toggle theme"
 msgstr "Toggle theme"
+
+msgid "Email Address"
+msgstr "Email Address"
+
+msgid "Enter your email address"
+msgstr "Enter your email address"
+
+msgid "Send Reset Link"
+msgstr "Send Reset Link"
+
+msgid "Back to Login"
+msgstr "Back to Login"
+
+msgid "New Password"
+msgstr "New Password"
+
+msgid "Enter your new password"
+msgstr "Enter your new password"
+
+msgid "Password must be at least 8 characters long and contain uppercase, lowercase, and numeric characters."
+msgstr "Password must be at least 8 characters long and contain uppercase, lowercase, and numeric characters."
+
+msgid "Confirm New Password"
+msgstr "Confirm New Password"
+
+msgid "Current Password"
+msgstr "Current Password"
+
+msgid "Enter your current password"
+msgstr "Enter your current password"
+
+msgid "Confirm your new password"
+msgstr "Confirm your new password"
+
+msgid "Reset Password"
+msgstr "Reset Password"
+
+# Added from templates/profile.html
+msgid "My Profile"
+msgstr "My Profile"
+
+msgid "Personal Information"
+msgstr "Personal Information"
+
+msgid "First Name"
+msgstr "First Name"
+
+msgid "First name"
+msgstr "First name"
+
+msgid "Last Name"
+msgstr "Last Name"
+
+msgid "Last name"
+msgstr "Last name"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "your.email@example.com"
+msgstr "your.email@example.com"
+
+msgid "Username:"
+msgstr "Username:"
+
+msgid "Roles:"
+msgstr "Roles:"
+
+msgid "No roles assigned"
+msgstr "No roles assigned"
+
+msgid "Last Login:"
+msgstr "Last Login:"
+
+msgid "Last Login IP:"
+msgstr "Last Login IP:"
+
+msgid "Last Seen:"
+msgstr "Last Seen:"
+
+msgid "Online Status:"
+msgstr "Online Status:"
+
+msgid "Online"
+msgstr "Online"
+
+msgid "Offline"
+msgstr "Offline"
+
+msgid "Account Created:"
+msgstr "Account Created:"
+
+msgid "Update Information"
+msgstr "Update Information"
+
+# Added from templates/base.html
+msgid "Daygle Mail Archiver"
+msgstr "Daygle Mail Archiver"
+
+msgid "View Alerts"
+msgstr "View Alerts"
+
+msgid "Profile"
+msgstr "Profile"
+
+msgid "User Settings"
+msgstr "User Settings"
+
+msgid "Theme saved"
+msgstr "Theme saved"
+
+msgid "Theme saved locally"
+msgstr "Theme saved locally"
+
+msgid "Theme applied"
+msgstr "Theme applied"
+
+msgid "Change Password"
+msgstr "Change Password"
+
+msgid "Logout"
+msgstr "Logout"
+
+msgid "Login"
+msgstr "Login"
+
+msgid "Initial Setup - Daygle Mail Archiver"
+msgstr "Initial Setup - Daygle Mail Archiver"
+
+msgid "Welcome to Daygle Mail Archiver"
+msgstr "Welcome to Daygle Mail Archiver"
+
+msgid "Let's set up your administrator account to get started"
+msgstr "Let's set up your administrator account to get started"
+
+msgid "First Time Setup:"
+msgstr "First Time Setup:"
+
+msgid "This wizard will create your primary administrator account. This account will have full access to all system features."
+msgstr "This wizard will create your primary administrator account. This account will have full access to all system features."
+
+msgid "Choose a unique username for the administrator account"
+msgstr "Choose a unique username for the administrator account"
+
+msgid "Optional - your first name"
+msgstr "Optional - your first name"
+
+msgid "Optional - your last name"
+msgstr "Optional - your last name"
+
+msgid "Optional - for notifications and account recovery"
+msgstr "Optional - for notifications and account recovery"
+
+msgid "Username"
+msgstr "Username"
+
+msgid "administrator"
+msgstr "administrator"
+
+msgid "First Name"
+msgstr "First Name"
+
+msgid "John"
+msgstr "John"
+
+msgid "Last Name"
+msgstr "Last Name"
+
+msgid "Smith"
+msgstr "Smith"
+
+msgid "Must be at least 8 characters and include a mix of letters and numbers"
+msgstr "Must be at least 8 characters and include a mix of letters and numbers"
+
+msgid "Choose a strong password"
+msgstr "Choose a strong password"
+
+msgid "Confirm Password"
+msgstr "Confirm Password"
+
+msgid "Confirm password"
+msgstr "Confirm password"
+
+msgid "Create Administrator"
+msgstr "Create Administrator"
+
+msgid "Email Address"
+msgstr "Email Address"
+
+msgid "Enter your email address"
+msgstr "Enter your email address"
+
+msgid "Send Reset Link"
+msgstr "Send Reset Link"
+
+msgid "Back to Login"
+msgstr "Back to Login"
+
+msgid "New Password"
+msgstr "New Password"
+
+msgid "Enter your new password"
+msgstr "Enter your new password"
+
+msgid "Password must be at least 8 characters long and contain uppercase, lowercase, and numeric characters."
+msgstr "Password must be at least 8 characters long and contain uppercase, lowercase, and numeric characters."
+
+msgid "Confirm New Password"
+msgstr "Confirm New Password"
+
+msgid "Confirm your new password"
+msgstr "Confirm your new password"
+
+msgid "Reset Password"
+msgstr "Reset Password"

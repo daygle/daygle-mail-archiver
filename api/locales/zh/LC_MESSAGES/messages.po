@@ -1,6 +1,35 @@
 # Chinese translations for Daygle Mail Archiver
 msgid ""
 msgstr ""
+msgid "Daygle Mail Archiver"
+msgstr "Daygle Mail Archiver"
+msgid "View Alerts"
+msgstr "查看警报"
+msgid "Profile"
+msgstr "个人资料"
+msgid "User Settings"
+msgstr "用户设置"
+msgid "Theme saved"
+msgstr "主题已保存"
+msgid "Theme saved locally"
+msgstr "主题已在本地保存"
+msgid "Theme applied"
+msgstr "主题已应用"
+msgid "Change Password"
+msgstr "更改密码"
+msgid "Logout"
+msgstr "登出"
+msgid "Login"
+msgstr "登录"
+
+msgid "Current Password"
+msgstr "当前密码"
+
+msgid "Enter your current password"
+msgstr "输入您当前的密码"
+# Chinese translations for Daygle Mail Archiver
+msgid ""
+msgstr ""
 "Language: zh\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
@@ -63,6 +92,96 @@ msgstr "中文"
 
 msgid "Toggle theme"
 msgstr "切换主题"
+
+msgid "Email Address"
+msgstr "电子邮件地址"
+
+msgid "Enter your email address"
+msgstr "请输入您的电子邮件地址"
+
+msgid "Send Reset Link"
+msgstr "发送重置链接"
+
+msgid "Back to Login"
+msgstr "返回登录"
+
+msgid "New Password"
+msgstr "新密码"
+
+msgid "Enter your new password"
+msgstr "请输入您的新密码"
+
+msgid "Password must be at least 8 characters long and contain uppercase, lowercase, and numeric characters."
+msgstr "密码必须至少 8 个字符长，且包含大写字母、小写字母和数字。"
+
+msgid "Confirm New Password"
+msgstr "确认新密码"
+
+msgid "Confirm your new password"
+msgstr "请确认您的新密码"
+
+msgid "Reset Password"
+msgstr "重置密码"
+
+msgid "Initial Setup - Daygle Mail Archiver"
+msgstr "初始设置 - Daygle 邮件归档器"
+
+msgid "Welcome to Daygle Mail Archiver"
+msgstr "欢迎使用 Daygle 邮件归档器"
+
+msgid "Let's set up your administrator account to get started"
+msgstr "让我们设置您的管理员帐户以开始使用"
+
+msgid "First Time Setup:"
+msgstr "首次设置："
+
+msgid "This wizard will create your primary administrator account. This account will have full access to all system features."
+msgstr "此向导将创建您的主要管理员帐户。该帐户将对所有系统功能具有完全访问权限。"
+
+msgid "Choose a unique username for the administrator account"
+msgstr "为管理员帐户选择唯一的用户名"
+
+msgid "Optional - your first name"
+msgstr "可选 - 您的名字"
+
+msgid "Optional - your last name"
+msgstr "可选 - 您的姓氏"
+
+msgid "Optional - for notifications and account recovery"
+msgstr "可选 - 用于通知和帐户恢复"
+
+msgid "Username"
+msgstr "用户名"
+
+msgid "administrator"
+msgstr "管理员"
+
+msgid "First Name"
+msgstr "名字"
+
+msgid "John"
+msgstr "约翰"
+
+msgid "Last Name"
+msgstr "姓氏"
+
+msgid "Smith"
+msgstr "史密斯"
+
+msgid "Must be at least 8 characters and include a mix of letters and numbers"
+msgstr "必须至少 8 个字符长，并包含字母和数字的组合"
+
+msgid "Choose a strong password"
+msgstr "选择一个强密码"
+
+msgid "Confirm Password"
+msgstr "确认密码"
+
+msgid "Confirm password"
+msgstr "确认密码"
+
+msgid "Create Administrator"
+msgstr "创建管理员"
 
 msgid "Dashboard"
 msgstr "仪表板"
@@ -168,3 +287,61 @@ msgstr "系统运行时间"
 
 msgid "Time since last restart"
 msgstr "自上次重启以来的时间"
+
+# Added from templates/profile.html
+msgid "My Profile"
+msgstr "我的个人资料"
+
+msgid "Personal Information"
+msgstr "个人信息"
+
+msgid "First Name"
+msgstr "名"
+
+msgid "First name"
+msgstr "名"
+
+msgid "Last Name"
+msgstr "姓"
+
+msgid "Last name"
+msgstr "姓"
+
+msgid "Email"
+msgstr "电子邮件"
+
+msgid "your.email@example.com"
+msgstr "your.email@example.com"
+
+msgid "Username:"
+msgstr "用户名："
+
+msgid "Roles:"
+msgstr "角色："
+
+msgid "No roles assigned"
+msgstr "未分配角色"
+
+msgid "Last Login:"
+msgstr "最后登录："
+
+msgid "Last Login IP:"
+msgstr "最后登录IP："
+
+msgid "Last Seen:"
+msgstr "最后活动："
+
+msgid "Online Status:"
+msgstr "在线状态："
+
+msgid "Online"
+msgstr "在线"
+
+msgid "Offline"
+msgstr "离线"
+
+msgid "Account Created:"
+msgstr "账户创建时间："
+
+msgid "Update Information"
+msgstr "更新信息"

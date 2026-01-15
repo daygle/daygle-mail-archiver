@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html data-theme="light">
 <head>
-    <title>Initial Setup - Daygle Mail Archiver</title>
+    <title>{{ gettext('Initial Setup - Daygle Mail Archiver') }}</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/png" href="/static/daygle.png">
@@ -82,14 +82,13 @@
         <div class="auth-card wide">
             <div class="auth-header">
                 <img id="logo" src="/static/daygle.png" alt="Daygle" class="auth-logo">
-                <h1 class="auth-title large">Welcome to Daygle Mail Archiver</h1>
-                <p class="auth-subtitle large">Let's set up your administrator account to get started</p>
+                <h1 class="auth-title large">{{ gettext('Welcome to Daygle Mail Archiver') }}</h1>
+                <p class="auth-subtitle large">{{ gettext("Let's set up your administrator account to get started") }}</p>
             </div>
             
             <div class="auth-info">
                 <i class="fas fa-info-circle"></i>
-                <strong>First Time Setup:</strong> This wizard will create your primary administrator account. 
-                This account will have full access to all system features.
+                <strong>{{ gettext('First Time Setup:') }}</strong> {{ gettext('This wizard will create your primary administrator account. This account will have full access to all system features.') }}
             </div>
             
             {# flash messages are shown as toasts to match the main UI (#toastContainer)
@@ -107,48 +106,48 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
-                    <input type="text" id="username" name="username" class="form-control" 
-                           placeholder="administrator" value="{{ username }}" autofocus required>
-                    <small class="form-text">Choose a unique username for the administrator account</small>
+                          <label for="username" class="form-label">{{ gettext('Username') }} <span class="text-danger">*</span></label>
+                          <input type="text" id="username" name="username" class="form-control" 
+                              placeholder="{{ gettext('administrator') }}" value="{{ username }}" autofocus required>
+                          <small class="form-text">{{ gettext('Choose a unique username for the administrator account') }}</small>
                 </div>
                 
                 <div class="form-group">
-                    <label for="first_name" class="form-label">First Name</label>
-                    <input type="text" id="first_name" name="first_name" class="form-control" 
-                           placeholder="John" value="{{ first_name }}">
-                    <small class="form-text">Optional - your first name</small>
+                          <label for="first_name" class="form-label">{{ gettext('First Name') }}</label>
+                          <input type="text" id="first_name" name="first_name" class="form-control" 
+                              placeholder="{{ gettext('John') }}" value="{{ first_name }}">
+                          <small class="form-text">{{ gettext('Optional - your first name') }}</small>
                 </div>
                 
                 <div class="form-group">
-                    <label for="last_name" class="form-label">Last Name</label>
-                    <input type="text" id="last_name" name="last_name" class="form-control" 
-                           placeholder="Smith" value="{{ last_name }}">
-                    <small class="form-text">Optional - your last name</small>
+                          <label for="last_name" class="form-label">{{ gettext('Last Name') }}</label>
+                          <input type="text" id="last_name" name="last_name" class="form-control" 
+                              placeholder="{{ gettext('Smith') }}" value="{{ last_name }}">
+                          <small class="form-text">{{ gettext('Optional - your last name') }}</small>
                 </div>
                 
                 <div class="form-group">
-                    <label for="email" class="form-label">Email Address</label>
-                    <input type="email" id="email" name="email" class="form-control" 
-                           placeholder="admin@example.com" value="{{ email }}" autocomplete="email">
-                    <small class="form-text">Optional - for notifications and account recovery</small>
+                          <label for="email" class="form-label">{{ gettext('Email Address') }}</label>
+                          <input type="email" id="email" name="email" class="form-control" 
+                              placeholder="{{ gettext('admin@example.com') }}" value="{{ email }}" autocomplete="email">
+                          <small class="form-text">{{ gettext('Optional - for notifications and account recovery') }}</small>
                 </div>
 
                 <div class="form-group mt-3">
-                    <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
-                    <input type="password" id="password" name="password" class="form-control" placeholder="Choose a strong password" required>
-                    <small class="form-text">Must be at least 8 characters and include a mix of letters and numbers</small>
+                    <label for="password" class="form-label">{{ gettext('Password') }} <span class="text-danger">*</span></label>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="{{ gettext('Choose a strong password') }}" required>
+                    <small class="form-text">{{ gettext('Must be at least 8 characters and include a mix of letters and numbers') }}</small>
                 </div>
 
                 <div class="form-group mt-3">
-                    <label for="confirm_password" class="form-label">Confirm Password <span class="text-danger">*</span></label>
-                    <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="Confirm password" required>
+                    <label for="confirm_password" class="form-label">{{ gettext('Confirm Password') }} <span class="text-danger">*</span></label>
+                    <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="{{ gettext('Confirm password') }}" required>
                 </div>
 
                 <div class="form-actions mt-4">
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-rocket"></i>
-                        <span>Create Administrator</span>
+                        <span>{{ gettext('Create Administrator') }}</span>
                     </button>
                 </div>
             </form>
@@ -191,6 +190,7 @@
         #language { display:none !important; }
         .auth-lang-toggle{ width:34px; height:34px; border-radius:50%; border:none; background:var(--bg-elevated); display:flex; align-items:center; justify-content:center; }
         .auth-lang-popup{ position:absolute; background:var(--bg-elevated); border-radius:8px; padding:6px; box-shadow:0 6px 18px rgba(0,0,0,0.12); display:flex; flex-direction:column; gap:6px; }
+        .auth-lang-popup.open{ display:flex !important; }
         .auth-page-theme-toggle { position: absolute; right: 60px; top: 12px; }
         .auth-lang-picker { position: absolute; right: 16px; top: 12px; }
     </style>

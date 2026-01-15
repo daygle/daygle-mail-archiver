@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block page_title %}My Profile{% endblock %}
+{% block page_title %}{{ gettext("My Profile") }}{% endblock %}
 
 {% block content %}
 <div class="grid grid-cols-1 gap-4 mb-4">
@@ -8,9 +8,9 @@
     <!-- Personal Information Card -->
     <div class="card">
         <div class="card-header">
-            <div class="card-title">
+                <div class="card-title">
                 <i class="fas fa-id-card"></i>
-                <span>Personal Information</span>
+                <span>{{ gettext("Personal Information") }}</span>
             </div>
         </div>
 
@@ -19,60 +19,60 @@
 
                 <div class="grid grid-cols-2 gap-3">
                     <div class="form-group">
-                        <label for="first_name" class="form-label">First Name</label>
+                        <label for="first_name" class="form-label">{{ gettext("First Name") }}</label>
                         <input id="first_name"
                                class="form-control"
                                name="first_name"
                                value="{{ user.first_name or '' }}"
-                               placeholder="First name">
+                               placeholder="{{ gettext("First name") }}">
                     </div>
 
                     <div class="form-group">
-                        <label for="last_name" class="form-label">Last Name</label>
+                        <label for="last_name" class="form-label">{{ gettext("Last Name") }}</label>
                         <input id="last_name"
                                class="form-control"
                                name="last_name"
                                value="{{ user.last_name or '' }}"
-                               placeholder="Last name">
+                               placeholder="{{ gettext("Last name") }}">
                     </div>
                 </div>
 
                 <div class="form-group mt-3">
-                    <label for="email" class="form-label">Email</label>
+                    <label for="email" class="form-label">{{ gettext("Email") }}</label>
                     <input id="email"
                            class="form-control"
                            name="email"
                            type="email"
                            value="{{ user.email or '' }}"
-                           placeholder="your.email@example.com">
+                           placeholder="{{ gettext("your.email@example.com") }}">
                 </div>
 
                 <!-- Account Info -->
                 <div class="alert alert-info mt-3">
                     <div style="display: grid; gap: 8px;">
 
-                        <div><strong>Username:</strong> {{ user.username }}</div>
+                        <div><strong>{{ gettext("Username:") }}</strong> {{ user.username }}</div>
 
                         <div>
-                            <strong>Roles:</strong>
+                            <strong>{{ gettext("Roles:") }}</strong>
                             {% if user.roles %}
                                 {{ user.roles | join(', ') }}
                             {% else %}
-                                <em>No roles assigned</em>
+                                <em>{{ gettext("No roles assigned") }}</em>
                             {% endif %}
                         </div>
 
                         <div>
-                            <strong>Last Login:</strong>
+                            <strong>{{ gettext("Last Login:") }}</strong>
                             {% if user.last_login %}
                                 {{ user.last_login }}
                             {% else %}
-                                Never
+                                {{ gettext("Never") }}
                             {% endif %}
                         </div>
 
                         <div>
-                            <strong>Last Login IP:</strong>
+                            <strong>{{ gettext("Last Login IP:") }}</strong>
                             {% if user.last_login_ip %}
                                 {{ user.last_login_ip }}
                             {% else %}
@@ -81,25 +81,25 @@
                         </div>
 
                         <div>
-                            <strong>Last Seen:</strong>
+                            <strong>{{ gettext("Last Seen:") }}</strong>
                             {% if user.last_seen %}
                                 {{ user.last_seen }}
                             {% else %}
-                                Never
+                                {{ gettext("Never") }}
                             {% endif %}
                         </div>
 
                         <div>
-                            <strong>Online Status:</strong>
+                            <strong>{{ gettext("Online Status:") }}</strong>
                             {% if user.online_status == 'online' %}
-                                <span class="badge badge-success">Online</span>
+                                <span class="badge badge-success">{{ gettext("Online") }}</span>
                             {% else %}
-                                <span class="badge badge-secondary">Offline</span>
+                                <span class="badge badge-secondary">{{ gettext("Offline") }}</span>
                             {% endif %}
                         </div>
 
                         <div>
-                            <strong>Account Created:</strong>
+                            <strong>{{ gettext("Account Created:") }}</strong>
                             {% if user.created_at %}
                                 {{ user.created_at }}
                             {% else %}
@@ -113,7 +113,7 @@
                 <div style="display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end;">
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save"></i>
-                        <span>Update Information</span>
+                        <span>{{ gettext("Update Information") }}</span>
                     </button>
                 </div>
 
