@@ -12,5 +12,5 @@ ls -la /app/src || true
 echo "Python path:"
 python -c "import sys; print(sys.path)"
 
-# Ensure /app is on PYTHONPATH and import the package module explicitly
-exec sh -c "PYTHONPATH=/app exec uvicorn src.app:app --host 0.0.0.0 --port 8000"
+# Ensure /app and /app/src are on PYTHONPATH so absolute imports work
+exec sh -c "PYTHONPATH=/app:/app/src exec uvicorn app:app --host 0.0.0.0 --port 8000"
