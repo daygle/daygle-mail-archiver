@@ -36,7 +36,6 @@ def get_gettext(lang='en'):
         try:
             trans = Translations.load(chosen, [lang], domain='messages')
             try:
-                from pathlib import Path
                 mo_path = Path(chosen) / lang / 'LC_MESSAGES' / 'messages.mo'
                 print(f"i18n: chosen={chosen} lang={lang} mo_exists={mo_path.exists()} mo_path={mo_path}")
             except Exception:
