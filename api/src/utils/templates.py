@@ -35,8 +35,6 @@ class TemplatesWrapper:
         # inject gettext callable for templates
         ctx['gettext'] = get_gettext(lang)
 
-        print(f"TemplatesWrapper: lang={lang}, gettext('Username')={ctx['gettext']('Username')}")
-
         # Render template immediately to ensure per-request context (including
         # the injected `gettext`) is used at render time. FastAPI's
         # Jinja2Templates.TemplateResponse defers rendering which may cause
