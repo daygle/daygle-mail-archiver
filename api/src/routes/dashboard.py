@@ -5,11 +5,11 @@ from typing import List, Dict
 from pydantic import BaseModel
 from sqlalchemy import text
 
-from utils.db import query, engine
-from utils.logger import log
-from utils.templates import templates
-from utils.timezone import convert_utc_to_user_timezone, get_user_timezone
-from utils.permissions import PermissionChecker, require_permission, PERMISSIONS
+from ..utils.db import query, engine
+from ..utils.logger import log
+from ..utils.templates import templates
+from ..utils.timezone import convert_utc_to_user_timezone, get_user_timezone
+from ..utils.permissions import PermissionChecker, require_permission, PERMISSIONS
 
 router = APIRouter()
 
@@ -83,7 +83,7 @@ def dashboard(request: Request, _=require_permission(PERMISSIONS["view_dashboard
 
     # Set unacknowledged alerts count for bell icon
     try:
-        from utils.alerts import get_unacknowledged_count
+        from ..utils.alerts import get_unacknowledged_count
         unacknowledged_count = get_unacknowledged_count()
         session = getattr(request, 'session', {})
         session["unacknowledged_alerts"] = unacknowledged_count

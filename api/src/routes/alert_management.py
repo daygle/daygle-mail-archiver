@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import RedirectResponse
 
-from utils.db import query, execute
-from utils.logger import log
-from utils.templates import templates
-from utils.permissions import PermissionChecker, require_permission, PERMISSIONS
+from ..utils.db import query, execute
+from ..utils.logger import log
+from ..utils.templates import templates
+from ..utils.permissions import PermissionChecker, require_permission, PERMISSIONS
 
 router = APIRouter()
 
@@ -21,7 +21,7 @@ def alert_management_form(request: Request, _=require_permission(PERMISSIONS["ma
 
     # Set unacknowledged alerts count for bell icon
     try:
-        from utils.alerts import get_unacknowledged_count
+        from ..utils.alerts import get_unacknowledged_count
         unacknowledged_count = get_unacknowledged_count()
         request.session["unacknowledged_alerts"] = unacknowledged_count
     except Exception:

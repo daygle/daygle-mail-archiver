@@ -2,15 +2,16 @@ from fastapi import APIRouter, Request, Form
 from fastapi.responses import RedirectResponse, HTMLResponse, JSONResponse
 from imaplib import IMAP4, IMAP4_SSL
 from typing import List
-from utils.templates import templates
-from utils.db import query, execute
-from utils.logger import log
-from utils.config import get_config
+from ..utils.templates import templates
+from ..utils.db import query, execute
+from ..utils.logger import log
+from ..utils.config import get_config
+from ..utils.crypto import decrypt_password
 from cryptography.fernet import Fernet
-from utils.alerts import create_alert
-from utils.email_parser import compute_signature
-from utils.timezone import format_datetime
-from utils.permissions import PermissionChecker, require_permission, PERMISSIONS
+from ..utils.alerts import create_alert
+from ..utils.email_parser import compute_signature
+from ..utils.timezone import format_datetime
+from ..utils.permissions import PermissionChecker, require_permission, PERMISSIONS
 
 router = APIRouter()
 
@@ -372,7 +373,7 @@ def view_quarantine(request: Request, qid: int):
 
             # Parse email
             try:
-                from utils.email_parser import parse_email
+                from ..utils.email_parser import parse_email
                 parsed = parse_email(data)
                 headers = parsed.get('headers', {})
                 body = parsed.get('body', {})

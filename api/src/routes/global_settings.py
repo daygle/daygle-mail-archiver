@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import RedirectResponse
 
-from utils.db import query, execute
-from utils.logger import log
-from utils.templates import templates
-from utils.email import test_smtp_connection
-from utils.permissions import require_permission, PERMISSIONS
+from ..utils.db import query, execute
+from ..utils.logger import log
+from ..utils.templates import templates
+from ..utils.email import test_smtp_connection
+from ..utils.permissions import require_permission, PERMISSIONS
 
 router = APIRouter()
 

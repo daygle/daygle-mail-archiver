@@ -4,11 +4,11 @@ from collections import defaultdict
 from typing import List, Dict, Any
 from datetime import datetime, timedelta, date
 
-from utils.db import query
-from utils.logger import log
-from utils.templates import templates
-from utils.timezone import convert_utc_to_user_timezone, get_user_timezone
-from utils.permissions import PermissionChecker, require_permission, PERMISSIONS
+from ..utils.db import query
+from ..utils.logger import log
+from ..utils.templates import templates
+from ..utils.timezone import convert_utc_to_user_timezone, get_user_timezone
+from ..utils.permissions import PermissionChecker, require_permission, PERMISSIONS
 
 router = APIRouter()
 
@@ -596,7 +596,7 @@ def av_stats_report(request: Request, start_date: str = None, end_date: str = No
                         local_dt = convert_utc_to_user_timezone(period_dt, user_id)
                     else:
                         # Use default timezone for testing
-                        from utils.timezone import convert_utc_to_timezone
+                        from ..utils.timezone import convert_utc_to_timezone
                         local_dt = convert_utc_to_timezone(period_dt, "Australia/Melbourne")
                     
                     # Format the date according to user preferences

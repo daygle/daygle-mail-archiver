@@ -1,6 +1,6 @@
 from datetime import datetime
 import pytz
-from utils.timezone import get_user_timezone, convert_utc_to_user_timezone
+from .timezone import get_user_timezone, convert_utc_to_user_timezone
 
 
 def time_ago(utc_datetime, user_id):

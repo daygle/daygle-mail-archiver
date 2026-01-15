@@ -1,6 +1,6 @@
 import os
 from sqlalchemy import create_engine, text
-from utils.config import require_config
+from .config import require_config
 
 DB_DSN = require_config("DB_DSN")
 

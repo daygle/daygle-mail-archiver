@@ -6,8 +6,8 @@ import pyclamd
 from typing import Optional, Tuple
 from datetime import datetime, timezone
 
-from utils.db import query
-from utils.logger import log
+from .db import query
+from .logger import log
 
 
 class ClamAVScanner:

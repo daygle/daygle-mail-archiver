@@ -1,5 +1,5 @@
 from cryptography.fernet import Fernet
-from utils.config import require_config
+from .config import require_config
 
 IMAP_PASSWORD_KEY = require_config("IMAP_PASSWORD_KEY")
 fernet = Fernet(IMAP_PASSWORD_KEY.encode())

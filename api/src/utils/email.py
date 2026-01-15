@@ -8,9 +8,9 @@ from email.utils import formataddr
 from typing import List, Optional
 import ssl
 
-from utils.db import query
-from utils.logger import log
-from utils.timezone import format_datetime
+from .db import query
+from .logger import log
+from .timezone import format_datetime
 
 
 def get_smtp_config() -> dict:

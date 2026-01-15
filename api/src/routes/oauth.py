@@ -5,10 +5,10 @@ import urllib.parse
 import requests
 from datetime import datetime, timezone, timedelta
 
-from utils.db import query, execute
-from utils.logger import log
-from utils.crypto import encrypt_password
-from utils.templates import templates
+from ..utils.db import query, execute
+from ..utils.logger import log
+from ..utils.crypto import encrypt_password
+from ..utils.templates import templates
 
 router = APIRouter()
 

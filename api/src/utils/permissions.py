@@ -2,8 +2,8 @@ from typing import List, Dict, Any, Optional
 
 from fastapi import Request, HTTPException, Depends
 
-from utils.db import query
-from utils.logger import log
+from .db import query
+from .logger import log
 
 
 class PermissionChecker:

@@ -8,16 +8,15 @@ from fastapi import APIRouter, Request, Form, UploadFile, File
 from fastapi.responses import RedirectResponse, StreamingResponse, HTMLResponse
 from imaplib import IMAP4, IMAP4_SSL
 
-from utils.db import query, execute
-from utils.email_parser import decompress, parse_email
-from utils.email_parser import compute_signature
-from utils.crypto import decrypt_password
-from utils.logger import log
-from utils.templates import templates
-from utils.timezone import format_datetime
-from utils.alerts import create_alert
-from utils.permissions import PermissionChecker, require_permission, PERMISSIONS
-from utils.clamav_scanner import ClamAVScanner
+from ..utils.db import query, execute
+from ..utils.email_parser import decompress, parse_email, compute_signature
+from ..utils.crypto import decrypt_password
+from ..utils.logger import log
+from ..utils.templates import templates
+from ..utils.timezone import format_datetime
+from ..utils.alerts import create_alert
+from ..utils.permissions import PermissionChecker, require_permission, PERMISSIONS
+from ..utils.clamav_scanner import ClamAVScanner
 
 router = APIRouter()
 

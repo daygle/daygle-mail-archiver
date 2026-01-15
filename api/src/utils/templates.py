@@ -3,8 +3,8 @@ Shared Jinja2 templates configuration with custom filters
 """
 from pathlib import Path
 from fastapi.templating import Jinja2Templates
-from utils.timezone import convert_utc_to_user_timezone, format_datetime
-from utils.i18n import get_gettext
+from .timezone import convert_utc_to_user_timezone, format_datetime
+from .i18n import get_gettext
 
 
 # Determine templates directory
@@ -67,7 +67,7 @@ templates.env.filters['format_user_datetime'] = format_user_datetime_filter
 
 # Register time helper filter (human-friendly relative times)
 try:
-    from utils.time_helpers import time_ago as _time_ago
+    from .time_helpers import time_ago as _time_ago
     templates.env.filters['time_ago'] = lambda dt, user_id: _time_ago(dt, user_id)
 except Exception:
     # If import fails, provide a no-op implementation

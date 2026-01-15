@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from utils.db import query
+from .db import query
 
 def log(level: str, source: str, message: str, details: str = ""):
     query(

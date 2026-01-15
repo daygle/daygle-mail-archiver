@@ -2,9 +2,9 @@
 Alert system for managing system notifications and email alerts
 """
 from typing import List, Optional
-from utils.db import query, execute
-from utils.logger import log
-from utils.email import send_alert_email
+from .db import query, execute
+from .logger import log
+from .email import send_alert_email
 
 
 def create_alert(

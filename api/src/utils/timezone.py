@@ -3,7 +3,7 @@ Timezone conversion utilities for displaying dates in user's preferred timezone
 """
 from datetime import datetime
 import pytz
-from utils.db import query
+from .db import query
 
 
 def get_user_timezone(user_id) -> str:

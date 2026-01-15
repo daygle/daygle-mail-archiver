@@ -7,12 +7,12 @@ import hashlib
 from datetime import datetime, timedelta
 from typing import List
 
-from utils.db import query, execute
-from utils.logger import log
-from utils.templates import templates
-from utils.email import send_email
-from utils.permissions import PermissionChecker
-from utils.i18n import get_gettext
+from ..utils.db import query, execute
+from ..utils.logger import log
+from ..utils.templates import templates
+from ..utils.email import send_email
+from ..utils.permissions import PermissionChecker
+from ..utils.i18n import get_gettext
 
 router = APIRouter()
 

@@ -4,11 +4,11 @@ import sys
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import RedirectResponse
 
-from utils.db import query
-from utils.crypto import encrypt_password, decrypt_password
-from utils.logger import log
-from utils.templates import templates
-from utils.permissions import require_permission, PERMISSIONS
+from ..utils.db import query
+from ..utils.crypto import encrypt_password, decrypt_password
+from ..utils.logger import log
+from ..utils.templates import templates
+from ..utils.permissions import require_permission, PERMISSIONS
 from imaplib import IMAP4, IMAP4_SSL
 
 router = APIRouter()
@@ -398,7 +398,7 @@ def test_account_connection(request: Request, id: int):
         elif account_type == "gmail":
             # Test Gmail API connection
             import requests
-            from utils.oauth_helpers import get_valid_token
+            from ..utils.oauth_helpers import get_valid_token
             
             access_token = get_valid_token(id, "gmail")
             if not access_token:
@@ -420,7 +420,7 @@ def test_account_connection(request: Request, id: int):
         elif account_type == "o365":
             # Test Office 365 Graph API connection
             import requests
-            from utils.oauth_helpers import get_valid_token
+            from ..utils.oauth_helpers import get_valid_token
             
             access_token = get_valid_token(id, "o365")
             if not access_token:

@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
 
-from utils.db import query
-from utils.templates import templates
-from utils.permissions import PermissionChecker, require_permission, PERMISSIONS
+from ..utils.db import query
+from ..utils.templates import templates
+from ..utils.permissions import PermissionChecker, require_permission, PERMISSIONS
 
 router = APIRouter()
 

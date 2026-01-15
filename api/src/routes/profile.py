@@ -3,12 +3,12 @@ from fastapi.responses import JSONResponse, RedirectResponse
 import bcrypt
 import re
 
-from utils.db import query, execute
-from utils.logger import log
-from utils.templates import templates
-from utils.permissions import require_permission, PERMISSIONS
-from utils.i18n import get_gettext
-from utils.timezone import format_datetime
+from ..utils.db import query, execute
+from ..utils.logger import log
+from ..utils.templates import templates
+from ..utils.permissions import require_permission, PERMISSIONS
+from ..utils.i18n import get_gettext
+from ..utils.timezone import format_datetime
 
 router = APIRouter()
 

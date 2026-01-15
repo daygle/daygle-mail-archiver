@@ -2,7 +2,7 @@
 import requests
 from datetime import datetime, timezone, timedelta
 from typing import Optional, Dict, Any
-from utils.db import query, execute
+from .db import query, execute
 
 
 def refresh_gmail_token(account_id: int) -> Optional[str]:
