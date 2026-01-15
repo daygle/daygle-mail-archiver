@@ -8,10 +8,10 @@
 # and environment configuration (.env file with encryption keys).
 #
 # Usage:
-#   ./scripts/backup_restore.sh backup
-#   ./scripts/backup_restore.sh restore <backup_file.tar.gz>
-#   ./scripts/backup_restore.sh list
-#   ./scripts/backup_restore.sh delete <backup_file.tar.gz>
+#   ./backup_restore.sh backup
+#   ./backup_restore.sh restore <backup_file.tar.gz>
+#   ./backup_restore.sh list
+#   ./backup_restore.sh delete <backup_file.tar.gz>
 #
 # Backups are stored in ./backups/ directory by default.
 # ============================================
@@ -27,7 +27,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+ROOT_DIR="$SCRIPT_DIR"
 BACKUP_DIR="${ROOT_DIR}/backups"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
@@ -206,7 +206,7 @@ IMPORTANT: Keep this backup secure as it contains:
 - Database credentials
 
 To restore this backup:
-  ./scripts/backup_restore.sh restore daygle_mail_archiver_backup_${TIMESTAMP}.tar.gz
+  ./backup_restore.sh restore daygle_mail_archiver_backup_${TIMESTAMP}.tar.gz
 EOF
     
     log_info "Creating compressed backup archive..."
@@ -440,14 +440,14 @@ Commands:
 
 Examples:
   # Create a new backup (will prompt for save location)
-  ./scripts/backup_restore.sh backup
+  ./backup_restore.sh backup
 
   # List available backups
-  ./scripts/backup_restore.sh list
+  ./backup_restore.sh list
 
   # Restore from a backup
-  ./scripts/backup_restore.sh restore daygle_mail_archiver_backup_20240105_120000.tar.gz
-  ./scripts/backup_restore.sh restore backups/daygle_mail_archiver_backup_20240105_120000.tar.gz
+  ./backup_restore.sh restore daygle_mail_archiver_backup_20240105_120000.tar.gz
+  ./backup_restore.sh restore backups/daygle_mail_archiver_backup_20240105_120000.tar.gz
 
   # Delete a backup
   ./scripts/backup_restore.sh delete daygle_mail_archiver_backup_20240105_120000.tar.gz

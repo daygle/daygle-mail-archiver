@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.12-slim-bookworm
 
 WORKDIR /app
 
@@ -9,14 +9,18 @@ RUN apt-get update && apt-get install -y \
     postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
+# Create non-root user
+RUN useradd -m appuser
+
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY src/ /app/
-COPY templates/ /app/templates/
-COPY static/ /app/static/
+COPY src/ templates/ static/ locales/ /app/
 
-COPY locales/ /app/locales/
+# Change ownership to non-root user
+RUN chown -R appuser:appuser /app
+
+USER appuser
 
 EXPOSE 8000
 
