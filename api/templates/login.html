@@ -127,16 +127,13 @@
                 if(authLangFlag) authLangFlag.textContent = map[lang] || '🌐';
 
                 if(authLangToggle && authLangPopup){
-                    console.log('Auth language picker initialized');
                     authLangToggle.addEventListener('click', function(e){ 
-                        console.log('Auth lang toggle clicked');
                         e.stopPropagation(); 
                         authLangPopup.classList.toggle('open'); 
                     });
                     authLangPopup.querySelectorAll('button[data-lang]').forEach(function(b){ 
                         b.addEventListener('click', function(){ 
                             var l=this.getAttribute('data-lang');
-                            console.log('Selected language:', l);
                             fetch('/set-language',{
                                 method:'POST',
                                 headers:{'Content-Type':'application/json'},
