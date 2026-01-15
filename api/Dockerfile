@@ -1,6 +1,6 @@
 FROM python:3.12-slim-bookworm
 
-WORKDIR /app
+WORKDIR /app/src
 
 # Install system deps for psycopg2 and PostgreSQL client tools
 RUN apt-get update && apt-get install -y \
@@ -20,10 +20,8 @@ COPY src/ templates/ static/ locales/ /app/
 # Change ownership to non-root user
 RUN chown -R appuser:appuser /app
 
-ENV PYTHONPATH=/app
-
 USER appuser
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "PYTHONPATH=/app uvicorn src.app:app --host 0.0.0.0 --port 8000"]
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
