@@ -172,10 +172,11 @@ async def not_found_handler(request: Request, exc: Exception):
 # Static Files
 # ---------------------------------------------------------
 BASE_DIR = Path(__file__).parent
+# Prefer absolute (resolved) paths so StaticFiles always receives an absolute directory
 if (BASE_DIR / "static").exists():
-    static_dir = BASE_DIR / "static"
+    static_dir = (BASE_DIR / "static").resolve()
 else:
-    static_dir = BASE_DIR.parent / "static"
+    static_dir = (BASE_DIR.parent / "static").resolve()
 
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
