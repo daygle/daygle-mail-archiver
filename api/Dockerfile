@@ -26,4 +26,4 @@ USER appuser
 
 EXPOSE 8000
 
-CMD ["uvicorn", "--app-dir", "/app", "src.app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "PYTHONPATH=/app uvicorn src.app:app --host 0.0.0.0 --port 8000"]
