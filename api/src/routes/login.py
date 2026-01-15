@@ -354,10 +354,10 @@ async def set_language(request: Request):
     """Allow unauthenticated users to set a preferred language into the session.
     If the user is authenticated, persist it to their DB record too.
     """
-        try:
-            data = await request.json()
-            language = data.get('language', 'en')
-        except Exception as e:
+    try:
+        data = await request.json()
+        language = data.get('language', 'en')
+    except Exception as e:
         try:
             log("error", "Language", f"set-language JSON error: {str(e)}")
         except Exception:
