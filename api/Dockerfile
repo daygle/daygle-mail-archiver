@@ -1,6 +1,6 @@
 FROM python:3.12-slim-bookworm
 
-WORKDIR /app/src
+WORKDIR /app
 
 # Install system deps for psycopg2 and PostgreSQL client tools
 RUN apt-get update && apt-get install -y \
