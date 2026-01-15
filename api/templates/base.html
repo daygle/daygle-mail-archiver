@@ -463,17 +463,21 @@
         }
 
         // Language selection in user dropdown
-        userMenuDropdown.querySelectorAll('button[data-lang]').forEach(function(b){
-            b.addEventListener('click', function(){
-                var l = this.getAttribute('data-lang');
-                fetch('/set-language', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                    body: 'language=' + encodeURIComponent(l),
-                    credentials: 'same-origin'
-                }).then(function(){ location.reload(); }).catch(function(){ location.reload(); });
+        (function(){
+            var buttons = userMenuDropdown.querySelectorAll('button[data-lang]');
+            if(!buttons) buttons = [];
+            buttons.forEach(function(b){
+                b.addEventListener('click', function(){
+                    var l = this.getAttribute('data-lang');
+                    fetch('/set-language', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        credentials: 'same-origin',
+                        body: JSON.stringify({language: l})
+                    }).then(function(){ location.reload(); }).catch(function(){ location.reload(); });
+                });
             });
-        });
+        })();
 
         // Language submenu toggle
         const languageHeader = document.getElementById('languageHeader');
