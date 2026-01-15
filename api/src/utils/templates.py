@@ -35,6 +35,9 @@ class TemplatesWrapper:
         # inject gettext callable for templates
         ctx['gettext'] = get_gettext(lang)
 
+        import logging
+        logging.debug(f"TemplatesWrapper: lang={lang}, gettext('Username')={ctx['gettext']('Username')}")
+
         return self._templates.TemplateResponse(name, ctx, status_code=status_code)
 
 
