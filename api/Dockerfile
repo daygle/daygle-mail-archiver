@@ -20,6 +20,8 @@ COPY src/ templates/ static/ locales/ /app/
 # Change ownership to non-root user
 RUN chown -R appuser:appuser /app
 
+ENV PYTHONPATH=/app
+
 USER appuser
 
 EXPOSE 8000
