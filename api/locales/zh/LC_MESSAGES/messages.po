@@ -63,3 +63,108 @@ msgstr "中文"
 
 msgid "Toggle theme"
 msgstr "切换主题"
+
+msgid "Dashboard"
+msgstr "仪表板"
+
+msgid "Customise Dashboard"
+msgstr "自定义仪表板"
+
+msgid "Add Widget"
+msgstr "添加小部件"
+
+msgid "Save Layout"
+msgstr "保存布局"
+
+msgid "Reset Layout"
+msgstr "重置布局"
+
+msgid "Cancel"
+msgstr "取消"
+
+msgid "API unreachable - retrying..."
+msgstr "无法访问API - 正在重试..."
+
+msgid "Retry now"
+msgstr "立即重试"
+
+msgid "Add Widgets"
+msgstr "添加小部件"
+
+msgid "Select widgets to add to your dashboard:"
+msgstr "选择要添加到仪表板的小部件："
+
+msgid "Remove widget"
+msgstr "移除小部件"
+
+msgid "Total Emails"
+msgstr "电子邮件总数"
+
+msgid "Total archived emails"
+msgstr "归档电子邮件总数"
+
+msgid "Emails Today"
+msgstr "今日邮件"
+
+msgid "Emails received today"
+msgstr "今日收到的邮件"
+
+msgid "Database Size"
+msgstr "数据库大小"
+
+msgid "Current database size"
+msgstr "当前数据库大小"
+
+msgid "Active Accounts"
+msgstr "活动账户"
+
+msgid "Configured fetch accounts"
+msgstr "已配置的抓取账户"
+
+msgid "Workers Online"
+msgstr "在线工作进程"
+
+msgid "Active worker processes"
+msgstr "活跃工作进程"
+
+msgid "Last 7 Days"
+msgstr "过去7天"
+
+msgid "Emails in past week"
+msgstr "过去一周的邮件"
+
+msgid "Last 30 Days"
+msgstr "过去30天"
+
+msgid "Emails in past month"
+msgstr "过去一个月的邮件"
+
+msgid "Storage Used"
+msgstr "已用存储"
+
+msgid "Total storage consumed"
+msgstr "总消耗存储"
+
+msgid "Clean Emails"
+msgstr "无病毒邮件"
+
+msgid "Virus-free emails"
+msgstr "无病毒的邮件"
+
+msgid "Quarantined"
+msgstr "已隔离"
+
+msgid "Emails with viruses"
+msgstr "含病毒的邮件"
+
+msgid "Rejected"
+msgstr "被拒绝的邮件"
+
+msgid "Emails blocked by antivirus"
+msgstr "被杀毒软件拦截的邮件"
+
+msgid "System Uptime"
+msgstr "系统运行时间"
+
+msgid "Time since last restart"
+msgstr "自上次重启以来的时间"

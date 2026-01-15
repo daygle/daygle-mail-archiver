@@ -391,3 +391,114 @@ async def set_language(request: Request):
         print(f"DEBUG: DB update error: {e}")
 
     return JSONResponse({"success": True})
+
+
+# ---------------------------------------------------------
+# FORGOT / RESET PASSWORD
+# ---------------------------------------------------------
+@router.get("/forgot-password")
+def forgot_password_form(request: Request):
+    return templates.TemplateResponse("forgot-password.html", {"request": request})
+
+
+@router.post("/forgot-password")
+def forgot_password_submit(request: Request, email: str = Form(...)):
+    # Generate a reset token and send email if the account exists.
+    try:
+        user = query("SELECT id, username, email FROM users WHERE lower(email) = lower(:e)", {"e": email}).mappings().first()
+    except Exception:
+        user = None
+
+    if user:
+        try:
+            token = secrets.token_urlsafe(32)
+            # expiry 1 hour from now
+            execute("""
+                UPDATE users
+                SET password_reset_token = :t, password_reset_expires = NOW() + INTERVAL '1 hour'
+                WHERE id = :id
+            """, {"t": token, "id": user["id"]})
+
+            base = str(request.base_url).rstrip('/')
+            reset_link = f"{base}/reset-password?token={token}"
+            subject = "Reset your Daygle password"
+            body = (
+                f"Hello {user.get('username') or ''},\n\n"
+                f"A request was received to reset your Daygle Mail Archiver password. "
+                f"If you did not request this, you can ignore this message.\n\n"
+                f"To reset your password, visit the following link:\n{reset_link}\n\n"
+                "This link will expire in 1 hour.\n\n"
+                "If you have trouble, contact your administrator.\n"
+            )
+            # best-effort send; failures are non-fatal
+            try:
+                send_email(user.get('email'), subject, body)
+            except Exception:
+                pass
+        except Exception:
+            # swallow DB/email errors and show generic response
+            pass
+
+    # Always show the same message to avoid user enumeration
+    return templates.TemplateResponse(
+        "forgot-password.html",
+        {"request": request, "success": "If an account exists for that email, a reset link has been sent."},
+    )
+
+
+@router.get("/reset-password")
+def reset_password_form(request: Request, token: str = ""):
+    if not token:
+        return RedirectResponse("/login", status_code=303)
+
+    try:
+        row = query(
+            "SELECT id FROM users WHERE password_reset_token = :t AND password_reset_expires > NOW()",
+            {"t": token},
+        ).mappings().first()
+    except Exception:
+        row = None
+
+    if not row:
+        return templates.TemplateResponse("login.html", {"request": request, "error": "Invalid or expired reset token."})
+
+    return templates.TemplateResponse("reset-password.html", {"request": request, "token": token})
+
+
+@router.post("/reset-password")
+def reset_password_submit(request: Request, token: str = Form(...), password: str = Form(...), confirm_password: str = Form(...)):
+    if password != confirm_password:
+        return templates.TemplateResponse("reset-password.html", {"request": request, "error": "Passwords do not match.", "token": token})
+
+    if len(password) < 8 or not re.search(r"[a-z]", password) or not re.search(r"[A-Z]", password) or not re.search(r"[0-9]", password):
+        return templates.TemplateResponse(
+            "reset-password.html",
+            {"request": request, "error": "Password must include upper, lower, number and be 8+ chars", "token": token},
+        )
+
+    try:
+        user = query(
+            "SELECT id FROM users WHERE password_reset_token = :t AND password_reset_expires > NOW()",
+            {"t": token},
+        ).mappings().first()
+    except Exception:
+        user = None
+
+    if not user:
+        return templates.TemplateResponse("login.html", {"request": request, "error": "Invalid or expired reset token."})
+
+    # Update password and clear token
+    try:
+        hash_pw = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        execute(
+            """
+            UPDATE users
+            SET password_hash = :h, password_reset_token = NULL, password_reset_expires = NULL, failed_login_attempts = 0, locked_until = NULL
+            WHERE id = :id
+            """,
+            {"h": hash_pw, "id": user["id"]},
+        )
+    except Exception:
+        return templates.TemplateResponse("reset-password.html", {"request": request, "error": "Failed to reset password. Please try again.", "token": token})
+
+    return templates.TemplateResponse("login.html", {"request": request, "success": "Password reset successful. Please login with your new password."})

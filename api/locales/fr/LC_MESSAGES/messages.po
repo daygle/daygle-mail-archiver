@@ -63,3 +63,108 @@ msgstr "中文"
 
 msgid "Toggle theme"
 msgstr "Basculer le thème"
+
+msgid "Dashboard"
+msgstr "Tableau de bord"
+
+msgid "Customise Dashboard"
+msgstr "Personnaliser le tableau de bord"
+
+msgid "Add Widget"
+msgstr "Ajouter un widget"
+
+msgid "Save Layout"
+msgstr "Enregistrer la mise en page"
+
+msgid "Reset Layout"
+msgstr "Réinitialiser la mise en page"
+
+msgid "Cancel"
+msgstr "Annuler"
+
+msgid "API unreachable - retrying..."
+msgstr "API injoignable - nouvelle tentative..."
+
+msgid "Retry now"
+msgstr "Réessayer maintenant"
+
+msgid "Add Widgets"
+msgstr "Ajouter des widgets"
+
+msgid "Select widgets to add to your dashboard:"
+msgstr "Sélectionnez les widgets à ajouter à votre tableau de bord :"
+
+msgid "Remove widget"
+msgstr "Supprimer le widget"
+
+msgid "Total Emails"
+msgstr "E-mails totaux"
+
+msgid "Total archived emails"
+msgstr "Total des e-mails archivés"
+
+msgid "Emails Today"
+msgstr "E-mails aujourd'hui"
+
+msgid "Emails received today"
+msgstr "E-mails reçus aujourd'hui"
+
+msgid "Database Size"
+msgstr "Taille de la base de données"
+
+msgid "Current database size"
+msgstr "Taille actuelle de la base de données"
+
+msgid "Active Accounts"
+msgstr "Comptes actifs"
+
+msgid "Configured fetch accounts"
+msgstr "Comptes de récupération configurés"
+
+msgid "Workers Online"
+msgstr "Workers en ligne"
+
+msgid "Active worker processes"
+msgstr "Processus de travail actifs"
+
+msgid "Last 7 Days"
+msgstr "7 derniers jours"
+
+msgid "Emails in past week"
+msgstr "E-mails de la semaine passée"
+
+msgid "Last 30 Days"
+msgstr "30 derniers jours"
+
+msgid "Emails in past month"
+msgstr "E-mails du mois passé"
+
+msgid "Storage Used"
+msgstr "Stockage utilisé"
+
+msgid "Total storage consumed"
+msgstr "Stockage total consommé"
+
+msgid "Clean Emails"
+msgstr "E-mails propres"
+
+msgid "Virus-free emails"
+msgstr "E-mails sans virus"
+
+msgid "Quarantined"
+msgstr "Mis en quarantaine"
+
+msgid "Emails with viruses"
+msgstr "E-mails avec virus"
+
+msgid "Rejected"
+msgstr "Rejetés"
+
+msgid "Emails blocked by antivirus"
+msgstr "E-mails bloqués par l'antivirus"
+
+msgid "System Uptime"
+msgstr "Temps de fonctionnement"
+
+msgid "Time since last restart"
+msgstr "Temps depuis le dernier redémarrage"

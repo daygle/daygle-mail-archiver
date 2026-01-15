@@ -61,5 +61,110 @@ msgstr "Deutsch"
 msgid "中文"
 msgstr "中文"
 
+msgid "Dashboard"
+msgstr "Dashboard"
+
+msgid "Customise Dashboard"
+msgstr "Customise Dashboard"
+
+msgid "Add Widget"
+msgstr "Add Widget"
+
+msgid "Save Layout"
+msgstr "Save Layout"
+
+msgid "Reset Layout"
+msgstr "Reset Layout"
+
+msgid "Cancel"
+msgstr "Cancel"
+
+msgid "API unreachable - retrying..."
+msgstr "API unreachable - retrying..."
+
+msgid "Retry now"
+msgstr "Retry now"
+
+msgid "Add Widgets"
+msgstr "Add Widgets"
+
+msgid "Select widgets to add to your dashboard:"
+msgstr "Select widgets to add to your dashboard:"
+
+msgid "Remove widget"
+msgstr "Remove widget"
+
+msgid "Total Emails"
+msgstr "Total Emails"
+
+msgid "Total archived emails"
+msgstr "Total archived emails"
+
+msgid "Emails Today"
+msgstr "Emails Today"
+
+msgid "Emails received today"
+msgstr "Emails received today"
+
+msgid "Database Size"
+msgstr "Database Size"
+
+msgid "Current database size"
+msgstr "Current database size"
+
+msgid "Active Accounts"
+msgstr "Active Accounts"
+
+msgid "Configured fetch accounts"
+msgstr "Configured fetch accounts"
+
+msgid "Workers Online"
+msgstr "Workers Online"
+
+msgid "Active worker processes"
+msgstr "Active worker processes"
+
+msgid "Last 7 Days"
+msgstr "Last 7 Days"
+
+msgid "Emails in past week"
+msgstr "Emails in past week"
+
+msgid "Last 30 Days"
+msgstr "Last 30 Days"
+
+msgid "Emails in past month"
+msgstr "Emails in past month"
+
+msgid "Storage Used"
+msgstr "Storage Used"
+
+msgid "Total storage consumed"
+msgstr "Total storage consumed"
+
+msgid "Clean Emails"
+msgstr "Clean Emails"
+
+msgid "Virus-free emails"
+msgstr "Virus-free emails"
+
+msgid "Quarantined"
+msgstr "Quarantined"
+
+msgid "Emails with viruses"
+msgstr "Emails with viruses"
+
+msgid "Rejected"
+msgstr "Rejected"
+
+msgid "Emails blocked by antivirus"
+msgstr "Emails blocked by antivirus"
+
+msgid "System Uptime"
+msgstr "System Uptime"
+
+msgid "Time since last restart"
+msgstr "Time since last restart"
+
 msgid "Toggle theme"
 msgstr "Toggle theme"

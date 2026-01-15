@@ -63,3 +63,108 @@ msgstr "中文"
 
 msgid "Toggle theme"
 msgstr "Thema umschalten"
+
+msgid "Dashboard"
+msgstr "Dashboard"
+
+msgid "Customise Dashboard"
+msgstr "Dashboard anpassen"
+
+msgid "Add Widget"
+msgstr "Widget hinzufügen"
+
+msgid "Save Layout"
+msgstr "Layout speichern"
+
+msgid "Reset Layout"
+msgstr "Layout zurücksetzen"
+
+msgid "Cancel"
+msgstr "Abbrechen"
+
+msgid "API unreachable - retrying..."
+msgstr "API nicht erreichbar - versuche erneut..."
+
+msgid "Retry now"
+msgstr "Jetzt erneut versuchen"
+
+msgid "Add Widgets"
+msgstr "Widgets hinzufügen"
+
+msgid "Select widgets to add to your dashboard:"
+msgstr "Wählen Sie Widgets aus, die dem Dashboard hinzugefügt werden sollen:"
+
+msgid "Remove widget"
+msgstr "Widget entfernen"
+
+msgid "Total Emails"
+msgstr "Gesamt-E-Mails"
+
+msgid "Total archived emails"
+msgstr "Gesamt archivierte E-Mails"
+
+msgid "Emails Today"
+msgstr "E-Mails heute"
+
+msgid "Emails received today"
+msgstr "Heute empfangene E-Mails"
+
+msgid "Database Size"
+msgstr "Datenbankgröße"
+
+msgid "Current database size"
+msgstr "Aktuelle Datenbankgröße"
+
+msgid "Active Accounts"
+msgstr "Aktive Konten"
+
+msgid "Configured fetch accounts"
+msgstr "Konfigurierte Abrufkonten"
+
+msgid "Workers Online"
+msgstr "Worker online"
+
+msgid "Active worker processes"
+msgstr "Aktive Worker-Prozesse"
+
+msgid "Last 7 Days"
+msgstr "Letzte 7 Tage"
+
+msgid "Emails in past week"
+msgstr "E-Mails in der letzten Woche"
+
+msgid "Last 30 Days"
+msgstr "Letzte 30 Tage"
+
+msgid "Emails in past month"
+msgstr "E-Mails im letzten Monat"
+
+msgid "Storage Used"
+msgstr "Genutzter Speicher"
+
+msgid "Total storage consumed"
+msgstr "Gesamter verbrauchter Speicher"
+
+msgid "Clean Emails"
+msgstr "Saubere E-Mails"
+
+msgid "Virus-free emails"
+msgstr "Virusfreie E-Mails"
+
+msgid "Quarantined"
+msgstr "Quarantäne"
+
+msgid "Emails with viruses"
+msgstr "E-Mails mit Viren"
+
+msgid "Rejected"
+msgstr "Abgelehnt"
+
+msgid "Emails blocked by antivirus"
+msgstr "Von Antivirus blockierte E-Mails"
+
+msgid "System Uptime"
+msgstr "Systemlaufzeit"
+
+msgid "Time since last restart"
+msgstr "Zeit seit letztem Neustart"
