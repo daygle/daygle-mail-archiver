@@ -215,7 +215,7 @@ app.include_router(quarantine.router)
 # ---------------------------------------------------------
 @app.get("/")
 def root(request: Request):
-    from routes.login import is_setup_complete
+    from .routes.login import is_setup_complete
     if not is_setup_complete():
         return RedirectResponse("/setup", status_code=303)
     # If the visitor is authenticated send them to the dashboard, otherwise show the login page

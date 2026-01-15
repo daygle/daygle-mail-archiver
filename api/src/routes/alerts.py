@@ -8,7 +8,7 @@ from ..utils.templates import templates
 from ..utils.alerts import create_alert, get_alerts, acknowledge_alert, get_unacknowledged_count
 from ..utils.timezone import convert_utc_to_user_timezone
 from ..utils.permissions import PermissionChecker, require_permission, PERMISSIONS
-from routes.reports import get_user_date_format
+from .reports import get_user_date_format
 
 router = APIRouter()
 
