@@ -21,10 +21,6 @@ COPY templates/ /app/templates/
 COPY static/ /app/static/
 COPY locales/ /app/locales/
 
-# Copy startup script (provides simple diagnostics then execs uvicorn)
-COPY start.sh /app/start.sh
-RUN chmod +x /app/start.sh
-
 # Change ownership to non-root user
 RUN chown -R appuser:appuser /app
 
@@ -32,4 +28,5 @@ USER appuser
 
 EXPOSE 8000
 
-CMD ["/app/start.sh"]
+# Production: run uvicorn directly
+CMD ["uvicorn", "src.app:app", "--host", "0.0.0.0", "--port", "8000"]
