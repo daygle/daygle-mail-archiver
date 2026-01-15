@@ -49,11 +49,46 @@
                         <label for="timezone" class="form-label">{{ gettext('Timezone') }}</label>
                         <select id="timezone" class="form-select" name="timezone">
                             <option value="UTC" {% if settings.timezone == 'UTC' %}selected{% endif %}>{{ gettext('UTC') }}</option>
+                            <option value="Pacific/Honolulu" {% if settings.timezone == 'Pacific/Honolulu' %}selected{% endif %}>{{ gettext('Pacific/Honolulu (HST)') }}</option>
+                            <option value="America/Anchorage" {% if settings.timezone == 'America/Anchorage' %}selected{% endif %}>{{ gettext('America/Anchorage (AKST)') }}</option>
+                            <option value="America/Los_Angeles" {% if settings.timezone == 'America/Los_Angeles' %}selected{% endif %}>{{ gettext('America/Los Angeles (PST)') }}</option>
+                            <option value="America/Denver" {% if settings.timezone == 'America/Denver' %}selected{% endif %}>{{ gettext('America/Denver (MST)') }}</option>
+                            <option value="America/Chicago" {% if settings.timezone == 'America/Chicago' %}selected{% endif %}>{{ gettext('America/Chicago (CST)') }}</option>
                             <option value="America/New_York" {% if settings.timezone == 'America/New_York' %}selected{% endif %}>{{ gettext('America/New York (EST)') }}</option>
+                            <option value="America/Toronto" {% if settings.timezone == 'America/Toronto' %}selected{% endif %}>{{ gettext('America/Toronto (EST)') }}</option>
+                            <option value="America/Mexico_City" {% if settings.timezone == 'America/Mexico_City' %}selected{% endif %}>{{ gettext('America/Mexico City (CST)') }}</option>
+                            <option value="America/Bogota" {% if settings.timezone == 'America/Bogota' %}selected{% endif %}>{{ gettext('America/Bogota (COT)') }}</option>
+                            <option value="America/Lima" {% if settings.timezone == 'America/Lima' %}selected{% endif %}>{{ gettext('America/Lima (PET)') }}</option>
+                            <option value="America/Sao_Paulo" {% if settings.timezone == 'America/Sao_Paulo' %}selected{% endif %}>{{ gettext('America/Sao Paulo (BRT)') }}</option>
+                            <option value="America/Argentina/Buenos_Aires" {% if settings.timezone == 'America/Argentina/Buenos_Aires' %}selected{% endif %}>{{ gettext('America/Argentina (ART)') }}</option>
                             <option value="Europe/London" {% if settings.timezone == 'Europe/London' %}selected{% endif %}>{{ gettext('Europe/London (GMT)') }}</option>
+                            <option value="Europe/Dublin" {% if settings.timezone == 'Europe/Dublin' %}selected{% endif %}>{{ gettext('Europe/Dublin (GMT)') }}</option>
+                            <option value="Europe/Lisbon" {% if settings.timezone == 'Europe/Lisbon' %}selected{% endif %}>{{ gettext('Europe/Lisbon (WET)') }}</option>
                             <option value="Europe/Paris" {% if settings.timezone == 'Europe/Paris' %}selected{% endif %}>{{ gettext('Europe/Paris (CET)') }}</option>
-                            <option value="Asia/Tokyo" {% if settings.timezone == 'Asia/Tokyo' %}selected{% endif %}>{{ gettext('Asia/Tokyo (JST)') }</option>
+                            <option value="Europe/Berlin" {% if settings.timezone == 'Europe/Berlin' %}selected{% endif %}>{{ gettext('Europe/Berlin (CET)') }}</option>
+                            <option value="Europe/Madrid" {% if settings.timezone == 'Europe/Madrid' %}selected{% endif %}>{{ gettext('Europe/Madrid (CET)') }}</option>
+                            <option value="Europe/Rome" {% if settings.timezone == 'Europe/Rome' %}selected{% endif %}>{{ gettext('Europe/Rome (CET)') }}</option>
+                            <option value="Europe/Moscow" {% if settings.timezone == 'Europe/Moscow' %}selected{% endif %}>{{ gettext('Europe/Moscow (MSK)') }}</option>
+                            <option value="Africa/Cairo" {% if settings.timezone == 'Africa/Cairo' %}selected{% endif %}>{{ gettext('Africa/Cairo (EET)') }}</option>
+                            <option value="Africa/Johannesburg" {% if settings.timezone == 'Africa/Johannesburg' %}selected{% endif %}>{{ gettext('Africa/Johannesburg (SAST)') }}</option>
+                            <option value="Africa/Nairobi" {% if settings.timezone == 'Africa/Nairobi' %}selected{% endif %}>{{ gettext('Africa/Nairobi (EAT)') }}</option>
+                            <option value="Asia/Dubai" {% if settings.timezone == 'Asia/Dubai' %}selected{% endif %}>{{ gettext('Asia/Dubai (GST)') }}</option>
+                            <option value="Asia/Jerusalem" {% if settings.timezone == 'Asia/Jerusalem' %}selected{% endif %}>{{ gettext('Asia/Jerusalem (IST)') }}</option>
+                            <option value="Asia/Kolkata" {% if settings.timezone == 'Asia/Kolkata' %}selected{% endif %}>{{ gettext('Asia/Kolkata (IST)') }}</option>
+                            <option value="Asia/Kathmandu" {% if settings.timezone == 'Asia/Kathmandu' %}selected{% endif %}>{{ gettext('Asia/Kathmandu (NPT)') }}</option>
+                            <option value="Asia/Karachi" {% if settings.timezone == 'Asia/Karachi' %}selected{% endif %}>{{ gettext('Asia/Karachi (PKT)') }}</option>
+                            <option value="Asia/Bangkok" {% if settings.timezone == 'Asia/Bangkok' %}selected{% endif %}>{{ gettext('Asia/Bangkok (ICT)') }}</option>
+                            <option value="Asia/Singapore" {% if settings.timezone == 'Asia/Singapore' %}selected{% endif %}>{{ gettext('Asia/Singapore (SGT)') }}</option>
+                            <option value="Asia/Hong_Kong" {% if settings.timezone == 'Asia/Hong_Kong' %}selected{% endif %}>{{ gettext('Asia/Hong Kong (HKT)') }}</option>
+                            <option value="Asia/Shanghai" {% if settings.timezone == 'Asia/Shanghai' %}selected{% endif %}>{{ gettext('Asia/Shanghai (CST)') }}</option>
+                            <option value="Asia/Tokyo" {% if settings.timezone == 'Asia/Tokyo' %}selected{% endif %}>{{ gettext('Asia/Tokyo (JST)') }}</option>
+                            <option value="Asia/Seoul" {% if settings.timezone == 'Asia/Seoul' %}selected{% endif %}>{{ gettext('Asia/Seoul (KST)') }}</option>
+                            <option value="Australia/Perth" {% if settings.timezone == 'Australia/Perth' %}selected{% endif %}>{{ gettext('Australia/Perth (AWST)') }}</option>
+                            <option value="Australia/Adelaide" {% if settings.timezone == 'Australia/Adelaide' %}selected{% endif %}>{{ gettext('Australia/Adelaide (ACST)') }}</option>
+                            <option value="Australia/Brisbane" {% if settings.timezone == 'Australia/Brisbane' %}selected{% endif %}>{{ gettext('Australia/Brisbane (AEST)') }}</option>
                             <option value="Australia/Sydney" {% if settings.timezone == 'Australia/Sydney' %}selected{% endif %}>{{ gettext('Australia/Sydney (AEST)') }}</option>
+                            <option value="Australia/Melbourne" {% if settings.timezone == 'Australia/Melbourne' or not settings.timezone %}selected{% endif %}>{{ gettext('Australia/Melbourne (AEST)') }}</option>
+                            <option value="Pacific/Auckland" {% if settings.timezone == 'Pacific/Auckland' %}selected{% endif %}>{{ gettext('Pacific/Auckland (NZST)') }}</option>
                         </select>
                         <small class="form-text">{{ gettext('Timezone for displaying dates and times throughout the application') }}</small>
                     </div>
@@ -361,32 +396,35 @@ document.addEventListener('DOMContentLoaded', function() {
                     <option value="Pacific/Honolulu" {% if settings.timezone == 'Pacific/Honolulu' %}selected{% endif %}>{{ gettext('Pacific/Honolulu (HST)') }}</option>
                     <option value="America/Anchorage" {% if settings.timezone == 'America/Anchorage' %}selected{% endif %}>{{ gettext('America/Anchorage (AKST)') }}</option>
                     <option value="America/Los_Angeles" {% if settings.timezone == 'America/Los_Angeles' %}selected{% endif %}>{{ gettext('America/Los Angeles (PST)') }}</option>
-                    <option value="America/Vancouver" {% if settings.timezone == 'America/Vancouver' %}selected{% endif %}>{{ gettext('America/Vancouver (PST)') }}</option>
                     <option value="America/Denver" {% if settings.timezone == 'America/Denver' %}selected{% endif %}>{{ gettext('America/Denver (MST)') }}</option>
                     <option value="America/Chicago" {% if settings.timezone == 'America/Chicago' %}selected{% endif %}>{{ gettext('America/Chicago (CST)') }}</option>
-                    <option value="America/Mexico_City" {% if settings.timezone == 'America/Mexico_City' %}selected{% endif %}>{{ gettext('America/Mexico City (CST)') }}</option>
                     <option value="America/New_York" {% if settings.timezone == 'America/New_York' %}selected{% endif %}>{{ gettext('America/New York (EST)') }}</option>
                     <option value="America/Toronto" {% if settings.timezone == 'America/Toronto' %}selected{% endif %}>{{ gettext('America/Toronto (EST)') }}</option>
-                    <option value="America/Buenos_Aires" {% if settings.timezone == 'America/Argentina/Buenos_Aires' %}selected{% endif %}>{{ gettext('America/Argentina (BRT)') }}</option>
+                    <option value="America/Mexico_City" {% if settings.timezone == 'America/Mexico_City' %}selected{% endif %}>{{ gettext('America/Mexico City (CST)') }}</option>
+                    <option value="America/Bogota" {% if settings.timezone == 'America/Bogota' %}selected{% endif %}>{{ gettext('America/Bogota (COT)') }}</option>
+                    <option value="America/Lima" {% if settings.timezone == 'America/Lima' %}selected{% endif %}>{{ gettext('America/Lima (PET)') }}</option>
                     <option value="America/Sao_Paulo" {% if settings.timezone == 'America/Sao_Paulo' %}selected{% endif %}>{{ gettext('America/Sao Paulo (BRT)') }}</option>
+                    <option value="America/Argentina/Buenos_Aires" {% if settings.timezone == 'America/Argentina/Buenos_Aires' %}selected{% endif %}>{{ gettext('America/Argentina (ART)') }}</option>
                     <option value="Europe/London" {% if settings.timezone == 'Europe/London' %}selected{% endif %}>{{ gettext('Europe/London (GMT)') }}</option>
                     <option value="Europe/Dublin" {% if settings.timezone == 'Europe/Dublin' %}selected{% endif %}>{{ gettext('Europe/Dublin (GMT)') }}</option>
-                    <option value="Europe/Berlin" {% if settings.timezone == 'Europe/Berlin' %}selected{% endif %}>{{ gettext('Europe/Berlin (CET)') }}</option>
+                    <option value="Europe/Lisbon" {% if settings.timezone == 'Europe/Lisbon' %}selected{% endif %}>{{ gettext('Europe/Lisbon (WET)') }}</option>
                     <option value="Europe/Paris" {% if settings.timezone == 'Europe/Paris' %}selected{% endif %}>{{ gettext('Europe/Paris (CET)') }}</option>
+                    <option value="Europe/Berlin" {% if settings.timezone == 'Europe/Berlin' %}selected{% endif %}>{{ gettext('Europe/Berlin (CET)') }}</option>
                     <option value="Europe/Madrid" {% if settings.timezone == 'Europe/Madrid' %}selected{% endif %}>{{ gettext('Europe/Madrid (CET)') }}</option>
                     <option value="Europe/Rome" {% if settings.timezone == 'Europe/Rome' %}selected{% endif %}>{{ gettext('Europe/Rome (CET)') }}</option>
-                    <option value="Europe/Amsterdam" {% if settings.timezone == 'Europe/Amsterdam' %}selected{% endif %}>{{ gettext('Europe/Amsterdam (CET)') }}</option>
-                    <option value="Europe/Zurich" {% if settings.timezone == 'Europe/Zurich' %}selected{% endif %}>{{ gettext('Europe/Zurich (CET)') }}</option>
                     <option value="Europe/Moscow" {% if settings.timezone == 'Europe/Moscow' %}selected{% endif %}>{{ gettext('Europe/Moscow (MSK)') }}</option>
                     <option value="Africa/Cairo" {% if settings.timezone == 'Africa/Cairo' %}selected{% endif %}>{{ gettext('Africa/Cairo (EET)') }}</option>
                     <option value="Africa/Johannesburg" {% if settings.timezone == 'Africa/Johannesburg' %}selected{% endif %}>{{ gettext('Africa/Johannesburg (SAST)') }}</option>
+                    <option value="Africa/Nairobi" {% if settings.timezone == 'Africa/Nairobi' %}selected{% endif %}>{{ gettext('Africa/Nairobi (EAT)') }}</option>
                     <option value="Asia/Dubai" {% if settings.timezone == 'Asia/Dubai' %}selected{% endif %}>{{ gettext('Asia/Dubai (GST)') }}</option>
                     <option value="Asia/Jerusalem" {% if settings.timezone == 'Asia/Jerusalem' %}selected{% endif %}>{{ gettext('Asia/Jerusalem (IST)') }}</option>
                     <option value="Asia/Kolkata" {% if settings.timezone == 'Asia/Kolkata' %}selected{% endif %}>{{ gettext('Asia/Kolkata (IST)') }}</option>
+                    <option value="Asia/Kathmandu" {% if settings.timezone == 'Asia/Kathmandu' %}selected{% endif %}>{{ gettext('Asia/Kathmandu (NPT)') }}</option>
                     <option value="Asia/Karachi" {% if settings.timezone == 'Asia/Karachi' %}selected{% endif %}>{{ gettext('Asia/Karachi (PKT)') }}</option>
                     <option value="Asia/Bangkok" {% if settings.timezone == 'Asia/Bangkok' %}selected{% endif %}>{{ gettext('Asia/Bangkok (ICT)') }}</option>
                     <option value="Asia/Singapore" {% if settings.timezone == 'Asia/Singapore' %}selected{% endif %}>{{ gettext('Asia/Singapore (SGT)') }}</option>
                     <option value="Asia/Hong_Kong" {% if settings.timezone == 'Asia/Hong_Kong' %}selected{% endif %}>{{ gettext('Asia/Hong Kong (HKT)') }}</option>
+                    <option value="Asia/Shanghai" {% if settings.timezone == 'Asia/Shanghai' %}selected{% endif %}>{{ gettext('Asia/Shanghai (CST)') }}</option>
                     <option value="Asia/Tokyo" {% if settings.timezone == 'Asia/Tokyo' %}selected{% endif %}>{{ gettext('Asia/Tokyo (JST)') }}</option>
                     <option value="Asia/Seoul" {% if settings.timezone == 'Asia/Seoul' %}selected{% endif %}>{{ gettext('Asia/Seoul (KST)') }}</option>
                     <option value="Australia/Perth" {% if settings.timezone == 'Australia/Perth' %}selected{% endif %}>{{ gettext('Australia/Perth (AWST)') }}</option>
@@ -395,7 +433,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     <option value="Australia/Sydney" {% if settings.timezone == 'Australia/Sydney' %}selected{% endif %}>{{ gettext('Australia/Sydney (AEST)') }}</option>
                     <option value="Australia/Melbourne" {% if settings.timezone == 'Australia/Melbourne' or not settings.timezone %}selected{% endif %}>{{ gettext('Australia/Melbourne (AEST)') }}</option>
                     <option value="Pacific/Auckland" {% if settings.timezone == 'Pacific/Auckland' %}selected{% endif %}>{{ gettext('Pacific/Auckland (NZST)') }}</option>
-                    <option value="Pacific/Guam" {% if settings.timezone == 'Pacific/Guam' %}selected{% endif %}>{{ gettext('Pacific/Guam (ChST)') }}</option>
                 </select>
                 <small class="form-text">{{ gettext('Timezone for displaying dates and times throughout the application') }}</small>
             </div>

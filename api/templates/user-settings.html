@@ -47,21 +47,47 @@
             <div class="form-group mt-3">
                 <label for="timezone" class="form-label">Timezone</label>
                 <select id="timezone" class="form-select" name="timezone">
-                    <option value="Australia/Melbourne" {% if timezone == 'Australia/Melbourne' or not timezone %}selected{% endif %}>Australia/Melbourne</option>
-                    <option value="Australia/Sydney" {% if timezone == 'Australia/Sydney' %}selected{% endif %}>Australia/Sydney</option>
-                    <option value="Australia/Brisbane" {% if timezone == 'Australia/Brisbane' %}selected{% endif %}>Australia/Brisbane</option>
-                    <option value="Australia/Perth" {% if timezone == 'Australia/Perth' %}selected{% endif %}>Australia/Perth</option>
-                    <option value="Australia/Adelaide" {% if timezone == 'Australia/Adelaide' %}selected{% endif %}>Australia/Adelaide</option>
-                    <option value="Pacific/Auckland" {% if timezone == 'Pacific/Auckland' %}selected{% endif %}>Pacific/Auckland (New Zealand)</option>
                     <option value="UTC" {% if timezone == 'UTC' %}selected{% endif %}>UTC</option>
-                    <option value="America/New_York" {% if timezone == 'America/New_York' %}selected{% endif %}>America/New York (EST)</option>
-                    <option value="America/Chicago" {% if timezone == 'America/Chicago' %}selected{% endif %}>America/Chicago (CST)</option>
+                    <option value="Pacific/Honolulu" {% if timezone == 'Pacific/Honolulu' %}selected{% endif %}>Pacific/Honolulu (HST)</option>
+                    <option value="America/Anchorage" {% if timezone == 'America/Anchorage' %}selected{% endif %}>America/Anchorage (AKST)</option>
                     <option value="America/Los_Angeles" {% if timezone == 'America/Los_Angeles' %}selected{% endif %}>America/Los Angeles (PST)</option>
+                    <option value="America/Denver" {% if timezone == 'America/Denver' %}selected{% endif %}>America/Denver (MST)</option>
+                    <option value="America/Chicago" {% if timezone == 'America/Chicago' %}selected{% endif %}>America/Chicago (CST)</option>
+                    <option value="America/New_York" {% if timezone == 'America/New_York' %}selected{% endif %}>America/New York (EST)</option>
+                    <option value="America/Toronto" {% if timezone == 'America/Toronto' %}selected{% endif %}>America/Toronto (EST)</option>
+                    <option value="America/Mexico_City" {% if timezone == 'America/Mexico_City' %}selected{% endif %}>America/Mexico City (CST)</option>
+                    <option value="America/Bogota" {% if timezone == 'America/Bogota' %}selected{% endif %}>America/Bogota (COT)</option>
+                    <option value="America/Lima" {% if timezone == 'America/Lima' %}selected{% endif %}>America/Lima (PET)</option>
+                    <option value="America/Sao_Paulo" {% if timezone == 'America/Sao_Paulo' %}selected{% endif %}>America/Sao Paulo (BRT)</option>
+                    <option value="America/Argentina/Buenos_Aires" {% if timezone == 'America/Argentina/Buenos_Aires' %}selected{% endif %}>America/Argentina (ART)</option>
                     <option value="Europe/London" {% if timezone == 'Europe/London' %}selected{% endif %}>Europe/London (GMT)</option>
+                    <option value="Europe/Dublin" {% if timezone == 'Europe/Dublin' %}selected{% endif %}>Europe/Dublin (GMT)</option>
+                    <option value="Europe/Lisbon" {% if timezone == 'Europe/Lisbon' %}selected{% endif %}>Europe/Lisbon (WET)</option>
                     <option value="Europe/Paris" {% if timezone == 'Europe/Paris' %}selected{% endif %}>Europe/Paris (CET)</option>
-                    <option value="Asia/Tokyo" {% if timezone == 'Asia/Tokyo' %}selected{% endif %}>Asia/Tokyo (JST)</option>
+                    <option value="Europe/Berlin" {% if timezone == 'Europe/Berlin' %}selected{% endif %}>Europe/Berlin (CET)</option>
+                    <option value="Europe/Madrid" {% if timezone == 'Europe/Madrid' %}selected{% endif %}>Europe/Madrid (CET)</option>
+                    <option value="Europe/Rome" {% if timezone == 'Europe/Rome' %}selected{% endif %}>Europe/Rome (CET)</option>
+                    <option value="Europe/Moscow" {% if timezone == 'Europe/Moscow' %}selected{% endif %}>Europe/Moscow (MSK)</option>
+                    <option value="Africa/Cairo" {% if timezone == 'Africa/Cairo' %}selected{% endif %}>Africa/Cairo (EET)</option>
+                    <option value="Africa/Johannesburg" {% if timezone == 'Africa/Johannesburg' %}selected{% endif %}>Africa/Johannesburg (SAST)</option>
+                    <option value="Africa/Nairobi" {% if timezone == 'Africa/Nairobi' %}selected{% endif %}>Africa/Nairobi (EAT)</option>
+                    <option value="Asia/Dubai" {% if timezone == 'Asia/Dubai' %}selected{% endif %}>Asia/Dubai (GST)</option>
+                    <option value="Asia/Jerusalem" {% if timezone == 'Asia/Jerusalem' %}selected{% endif %}>Asia/Jerusalem (IST)</option>
+                    <option value="Asia/Kolkata" {% if timezone == 'Asia/Kolkata' %}selected{% endif %}>Asia/Kolkata (IST)</option>
+                    <option value="Asia/Kathmandu" {% if timezone == 'Asia/Kathmandu' %}selected{% endif %}>Asia/Kathmandu (NPT)</option>
+                    <option value="Asia/Karachi" {% if timezone == 'Asia/Karachi' %}selected{% endif %}>Asia/Karachi (PKT)</option>
+                    <option value="Asia/Bangkok" {% if timezone == 'Asia/Bangkok' %}selected{% endif %}>Asia/Bangkok (ICT)</option>
                     <option value="Asia/Singapore" {% if timezone == 'Asia/Singapore' %}selected{% endif %}>Asia/Singapore (SGT)</option>
                     <option value="Asia/Hong_Kong" {% if timezone == 'Asia/Hong_Kong' %}selected{% endif %}>Asia/Hong Kong (HKT)</option>
+                    <option value="Asia/Shanghai" {% if timezone == 'Asia/Shanghai' %}selected{% endif %}>Asia/Shanghai (CST)</option>
+                    <option value="Asia/Tokyo" {% if timezone == 'Asia/Tokyo' %}selected{% endif %}>Asia/Tokyo (JST)</option>
+                    <option value="Asia/Seoul" {% if timezone == 'Asia/Seoul' %}selected{% endif %}>Asia/Seoul (KST)</option>
+                    <option value="Australia/Perth" {% if timezone == 'Australia/Perth' %}selected{% endif %}>Australia/Perth (AWST)</option>
+                    <option value="Australia/Adelaide" {% if timezone == 'Australia/Adelaide' %}selected{% endif %}>Australia/Adelaide (ACST)</option>
+                    <option value="Australia/Brisbane" {% if timezone == 'Australia/Brisbane' %}selected{% endif %}>Australia/Brisbane (AEST)</option>
+                    <option value="Australia/Sydney" {% if timezone == 'Australia/Sydney' %}selected{% endif %}>Australia/Sydney (AEST)</option>
+                    <option value="Australia/Melbourne" {% if timezone == 'Australia/Melbourne' or not timezone %}selected{% endif %}>Australia/Melbourne (AEST)</option>
+                    <option value="Pacific/Auckland" {% if timezone == 'Pacific/Auckland' %}selected{% endif %}>Pacific/Auckland (NZST)</option>
                 </select>
                 <small class="form-text">Your preferred timezone for displaying dates and times</small>
             </div>
