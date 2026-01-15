@@ -124,16 +124,14 @@
         <div class="card-body">
             <p class="section-description">Configure your email alert preferences</p>
             
-            {% if 'manage_alerts' in permissions %}
             <div class="form-group">
-                <label for="email_notifications" class="form-label">Email Notifications</label>
+                <label for="email_notifications" class="form-label">{{ gettext('Email Notifications') }}</label>
                 <select id="email_notifications" class="form-select" name="email_notifications">
-                    <option value="true" {% if email_notifications %}selected{% endif %}>Enabled</option>
-                    <option value="false" {% if not email_notifications %}selected{% endif %}>Disabled</option>
+                    <option value="true" {% if email_notifications %}selected{% endif %}>{{ gettext('Enabled') }}</option>
+                    <option value="false" {% if not email_notifications %}selected{% endif %}>{{ gettext('Disabled') }}</option>
                 </select>
-                <small class="form-text">Receive email alerts and notifications for system events</small>
+                <small class="form-text">{{ gettext('Receive email alerts and notifications for system events') }}</small>
             </div>
-            {% endif %}
         </div>
         <div class="card-footer form-actions">
             <button type="submit" class="btn btn-primary">
