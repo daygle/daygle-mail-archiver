@@ -35,9 +35,21 @@ def get_gettext(lang='en'):
     if chosen:
         try:
             trans = Translations.load(chosen, [lang], domain='messages')
+            try:
+                from pathlib import Path
+                mo_path = Path(chosen) / lang / 'LC_MESSAGES' / 'messages.mo'
+                print(f"i18n: chosen={chosen} lang={lang} mo_exists={mo_path.exists()} mo_path={mo_path}")
+            except Exception:
+                pass
+            # If the loaded Translations object has no catalog entries,
+            # treat it as a failed load so we fall back to the in-code mappings.
+            if not getattr(trans, '_catalog', None):
+                logging.debug(f"i18n: Translations loaded but empty for {lang} in {chosen}")
+                raise Exception("empty translations")
             return trans.gettext
         except Exception as e:
             logging.debug(f"i18n: failed to load translations from {chosen} for {lang}: {e}")
+            # Fall through to builtin mapping fallbacks below
     else:
         logging.debug(f"i18n: no locales directory found among candidates: {candidates}")
         # Fallback to small in-code dictionaries while .mo loading is fixed
