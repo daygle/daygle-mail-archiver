@@ -43,6 +43,6 @@ RUN useradd -u 1001 -m -s /usr/sbin/nologin workeruser && chown -R workeruser:wo
 USER workeruser
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD-SHELL "ps aux | grep -v grep | grep worker.py >/dev/null || exit 1"
+    CMD ["sh", "-c", "ps aux | grep -v grep | grep worker.py >/dev/null"]
 
 CMD ["python", "worker.py"]
