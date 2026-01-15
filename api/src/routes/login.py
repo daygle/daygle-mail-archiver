@@ -187,11 +187,7 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
     except Exception:
         pass
 
-    # Debug logging for login attempts
-    try:
-        log("debug", "Login", f"Login attempt for user={username} language={language} from={get_client_ip(request)}")
-    except Exception:
-        pass
+    # Debug logging for login attempts removed
     try:
         user = query("""
             SELECT id, username, password_hash, date_format, time_format,
@@ -270,10 +266,6 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
         if pw_hash:
             ok = bcrypt.checkpw(password.encode("utf-8"), pw_hash.encode("utf-8"))
         if ok:
-            try:
-                log("debug", "Login", f"Password check passed for {username}")
-            except Exception:
-                pass
             client_ip = get_client_ip(request)
             execute("""
                 UPDATE users
@@ -362,14 +354,10 @@ async def set_language(request: Request):
     """Allow unauthenticated users to set a preferred language into the session.
     If the user is authenticated, persist it to their DB record too.
     """
-    try:
-        data = await request.json()
-        language = data.get('language', 'en')
         try:
-            log("debug", "Language", f"set-language called with language={language}")
-        except Exception:
-            pass
-    except Exception as e:
+            data = await request.json()
+            language = data.get('language', 'en')
+        except Exception as e:
         try:
             log("error", "Language", f"set-language JSON error: {str(e)}")
         except Exception:
@@ -379,10 +367,6 @@ async def set_language(request: Request):
     try:
         if "session" in request.scope:
             request.session["language"] = language
-            try:
-                log("debug", "Language", f"set session language to {language}")
-            except Exception:
-                pass
     except Exception as e:
         try:
             log("error", "Language", f"session set error: {str(e)}")
@@ -398,10 +382,6 @@ async def set_language(request: Request):
                 SET language = :lang
                 WHERE id = :id
             """, {"lang": language, "id": user_id})
-            try:
-                log("debug", "Language", f"updated DB language for user {user_id}")
-            except Exception:
-                pass
     except Exception as e:
         try:
             log("error", "Language", f"DB update error: {str(e)}")
