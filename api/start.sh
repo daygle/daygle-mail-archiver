@@ -12,4 +12,5 @@ ls -la /app/src || true
 echo "Python path:"
 python -c "import sys; print(sys.path)"
 
-exec uvicorn app:app --host 0.0.0.0 --port 8000
+# Ensure /app is on PYTHONPATH and import the package module explicitly
+exec sh -c "PYTHONPATH=/app exec uvicorn src.app:app --host 0.0.0.0 --port 8000"
