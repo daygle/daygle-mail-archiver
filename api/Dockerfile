@@ -10,8 +10,9 @@ ENV PYTHONUNBUFFERED=1 \
 WORKDIR /app
 
 # Install system deps for psycopg2 and PostgreSQL client tools (minimal)
+# include `build-essential` to ensure libc headers are available when building wheels
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
+    build-essential \
     libpq-dev \
     postgresql-client \
     && rm -rf /var/lib/apt/lists/*

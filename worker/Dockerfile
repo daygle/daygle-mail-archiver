@@ -7,8 +7,9 @@ FROM python:3.12-slim-bookworm AS builder
 WORKDIR /app
 
 # Install build deps for psycopg2 (minimal)
+# `build-essential` provides libc headers (stdlib.h) and make which are required
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
+    build-essential \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
