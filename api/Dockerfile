@@ -15,7 +15,11 @@ RUN useradd -m appuser
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
-COPY src/ templates/ static/ locales/ /app/
+# Copy sources into explicit destinations to preserve directory structure
+COPY src/ /app/src/
+COPY templates/ /app/templates/
+COPY static/ /app/static/
+COPY locales/ /app/locales/
 
 # Copy startup script (provides simple diagnostics then execs uvicorn)
 COPY start.sh /app/start.sh
