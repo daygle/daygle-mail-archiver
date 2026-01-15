@@ -24,3 +24,39 @@ msgstr "语言"
 
 msgid "Interface language"
 msgstr "界面语言"
+
+msgid "Sign in to access your archived emails"
+msgstr "登录以访问您的存档电子邮件"
+
+msgid "Username"
+msgstr "用户名"
+
+msgid "Enter your username"
+msgstr "输入您的用户名"
+
+msgid "Password"
+msgstr "密码"
+
+msgid "Enter your password"
+msgstr "输入您的密码"
+
+msgid "Sign In"
+msgstr "登录"
+
+msgid "Forgot Password?"
+msgstr "忘记密码？"
+
+msgid "English"
+msgstr "English"
+
+msgid "Español"
+msgstr "Español"
+
+msgid "Français"
+msgstr "Français"
+
+msgid "Deutsch"
+msgstr "Deutsch"
+
+msgid "中文"
+msgstr "中文"

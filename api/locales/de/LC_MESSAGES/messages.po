@@ -24,3 +24,39 @@ msgstr "Sprache"
 
 msgid "Interface language"
 msgstr "Schnittstellensprache"
+
+msgid "Sign in to access your archived emails"
+msgstr "Melden Sie sich an, um auf Ihre archivierten E-Mails zuzugreifen"
+
+msgid "Username"
+msgstr "Benutzername"
+
+msgid "Enter your username"
+msgstr "Geben Sie Ihren Benutzernamen ein"
+
+msgid "Password"
+msgstr "Passwort"
+
+msgid "Enter your password"
+msgstr "Geben Sie Ihr Passwort ein"
+
+msgid "Sign In"
+msgstr "Anmelden"
+
+msgid "Forgot Password?"
+msgstr "Passwort vergessen?"
+
+msgid "English"
+msgstr "English"
+
+msgid "Español"
+msgstr "Español"
+
+msgid "Français"
+msgstr "Français"
+
+msgid "Deutsch"
+msgstr "Deutsch"
+
+msgid "中文"
+msgstr "中文"
