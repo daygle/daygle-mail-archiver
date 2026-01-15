@@ -464,8 +464,10 @@
 
         // Language selection in user dropdown
         (function(){
-            var buttons = userMenuDropdown.querySelectorAll('button[data-lang]');
-            if(!buttons) buttons = [];
+            var buttons = [];
+            if (userMenuDropdown) {
+                buttons = Array.prototype.slice.call(userMenuDropdown.querySelectorAll('button[data-lang]') || []);
+            }
             buttons.forEach(function(b){
                 b.addEventListener('click', function(){
                     var l = this.getAttribute('data-lang');
