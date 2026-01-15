@@ -17,6 +17,10 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 
 COPY src/ templates/ static/ locales/ /app/
 
+# Copy startup script (provides simple diagnostics then execs uvicorn)
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
 # Change ownership to non-root user
 RUN chown -R appuser:appuser /app
 
@@ -24,4 +28,4 @@ USER appuser
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["/app/start.sh"]
