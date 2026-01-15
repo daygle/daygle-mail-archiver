@@ -19,7 +19,7 @@
     </script>
 </head>
 <body>
-    <button type="button" class="auth-page-theme-toggle" id="authThemeToggle" title="Toggle theme">
+    <button type="button" class="auth-page-theme-toggle" id="authThemeToggle" title="{{ gettext('Toggle theme') }}">
         <i class="fas fa-sun" id="authThemeIconLight"></i>
         <i class="fas fa-moon" id="authThemeIconDark" style="display:none;"></i>
     </button>
@@ -42,7 +42,7 @@
             <div class="auth-header">
                 <img id="logo" src="/static/daygle.png" alt="Daygle" class="auth-logo">
                 <h1 class="auth-title">Daygle Mail Archiver</h1>
-                <p class="auth-subtitle">Sign in to access your archived emails</p>
+                <p class="auth-subtitle">{{ gettext('Sign in to access your archived emails') }}</p>
             
             {# flash messages are shown as toasts to match the main UI (#toastContainer)
                avoid rendering inline auth error/success blocks which duplicate messages #}
@@ -80,7 +80,7 @@
             <div class="auth-links">
                 <a href="/forgot-password" class="auth-link">
                     <i class="fas fa-key"></i>
-                    Forgot Password?
+                    {{ gettext('Forgot Password?') }}
                 </a>
             </div>
         </div>

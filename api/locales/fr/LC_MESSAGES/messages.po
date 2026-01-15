@@ -60,3 +60,6 @@ msgstr "Deutsch"
 
 msgid "中文"
 msgstr "中文"
+
+msgid "Toggle theme"
+msgstr "Basculer le thème"
