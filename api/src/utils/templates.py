@@ -35,10 +35,17 @@ class TemplatesWrapper:
         # inject gettext callable for templates
         ctx['gettext'] = get_gettext(lang)
 
-        import logging
-        logging.debug(f"TemplatesWrapper: lang={lang}, gettext('Username')={ctx['gettext']('Username')}")
+        print(f"TemplatesWrapper: lang={lang}, gettext('Username')={ctx['gettext']('Username')}")
 
-        return self._templates.TemplateResponse(name, ctx, status_code=status_code)
+        # Render template immediately to ensure per-request context (including
+        # the injected `gettext`) is used at render time. FastAPI's
+        # Jinja2Templates.TemplateResponse defers rendering which may cause
+        # the environment globals to be used instead of our per-request
+        # context in some cases.
+        from fastapi.responses import HTMLResponse
+        template = self._templates.env.get_template(name)
+        body = template.render(ctx)
+        return HTMLResponse(content=body, status_code=status_code, media_type="text/html")
 
 
 # Public templates object used across the app
