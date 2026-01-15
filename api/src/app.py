@@ -9,14 +9,14 @@ import logging
 import gettext
 import locale
 
-from routes import (
+from .routes import (
     emails, fetch_accounts, global_settings, login, users, profile, logs,
     dashboard, worker_status, oauth, donate, help, about, reports, alerts,
     alert_management, quarantine, roles
 )
-from utils.logger import log
-from utils.config import get_config
-from utils.db import query, execute
+from .utils.logger import log
+from .utils.config import get_config
+from .utils.db import query, execute
 
 # ---------------------------------------------------------
 # Helper: Extract client IP safely (proxy-aware)
@@ -84,7 +84,7 @@ async def check_setup_completion(request: Request, call_next):
     if any(request.url.path.startswith(path) for path in skip_paths):
         return await call_next(request)
 
-    from routes.login import is_setup_complete
+    from .routes.login import is_setup_complete
     if not is_setup_complete():
         return RedirectResponse("/setup", status_code=303)
 
@@ -225,7 +225,7 @@ def root(request: Request):
 
 @app.get("/403")
 def forbidden(request: Request):
-    from utils.templates import templates
+    from .utils.templates import templates
     return templates.TemplateResponse("403.html", {"request": request})
 
 @app.get("/health")
