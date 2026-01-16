@@ -1,134 +1,350 @@
 {% extends "base.html" %}
+
 {% block page_title %}{{ gettext('Global Settings') }}{% endblock %}
 
 {% block content %}
 <form method="post">
+    <div class="row">
+        <div class="col-12">
 
-<!-- ================= GENERAL ================= -->
-<div class="card mb-4">
-    <div class="card-header"><i class="fas fa-cog"></i> {{ gettext('General Settings') }}</div>
-    <div class="card-body">
-        <div class="row g-3">
+            <!-- General Settings Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-cog"></i>
+                        <span>{{ gettext('General Settings') }}</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="page_size" class="form-label">{{ gettext('Items Per Page') }}</label>
+                        <input id="page_size" class="form-control" name="page_size" type="number" value="{{ settings.page_size or '50' }}" min="10" max="500">
+                        <small class="form-text text-secondary">{{ gettext('Number of emails to display per page in lists') }}</small>
+                    </div>
 
-            <div class="col-md-4">
-                <label class="form-label">{{ gettext('Items Per Page') }}</label>
-                <input class="form-control" type="number" name="page_size" value="{{ settings.page_size or 50 }}" min="10" max="500">
+                    <div class="form-group mt-3">
+                        <label for="date_format" class="form-label">{{ gettext('Date Format') }}</label>
+                        <select id="date_format" class="form-select" name="date_format">
+                            <option value="%d/%m/%Y" {% if settings.date_format == '%d/%m/%Y' or not settings.date_format %}selected{% endif %}>{{ gettext('15/01/2024') }}</option>
+                            <option value="%Y-%m-%d" {% if settings.date_format == '%Y-%m-%d' %}selected{% endif %}>{{ gettext('2024-01-15') }}</option>
+                            <option value="%m/%d/%Y" {% if settings.date_format == '%m/%d/%Y' %}selected{% endif %}>{{ gettext('01/15/2024') }}</option>
+                            <option value="%d %b %Y" {% if settings.date_format == '%d %b %Y' %}selected{% endif %}>{{ gettext('15 Jan 2024') }}</option>
+                            <option value="%B %d, %Y" {% if settings.date_format == '%B %d, %Y' %}selected{% endif %}>{{ gettext('January 15, 2024') }}</option>
+                        </select>
+                        <small class="form-text text-secondary">{{ gettext('Date display format throughout the application') }}</small>
+                    </div>
+
+                    <div class="form-group mt-3">
+                        <label for="time_format" class="form-label">{{ gettext('Time Format') }}</label>
+                        <select id="time_format" class="form-select" name="time_format">
+                            <option value="%H:%M" {% if settings.time_format == '%H:%M' or not settings.time_format %}selected{% endif %}>{{ gettext('14:30 (24-hour)') }}</option>
+                            <option value="%H:%M:%S" {% if settings.time_format == '%H:%M:%S' %}selected{% endif %}>{{ gettext('14:30:45 (24-hour with seconds)') }}</option>
+                            <option value="%I:%M %p" {% if settings.time_format == '%I:%M %p' %}selected{% endif %}>{{ gettext('02:30 PM (12-hour)') }}</option>
+                            <option value="%I:%M:%S %p" {% if settings.time_format == '%I:%M:%S %p' %}selected{% endif %}>{{ gettext('02:30:45 PM (12-hour with seconds)') }}</option>
+                        </select>
+                        <small class="form-text d-block text-secondary">{{ gettext('Time display format throughout the application') }}</small>
+                    </div>
+
+                    <div class="form-group mt-3">
+                        <label for="timezone" class="form-label">{{ gettext('Timezone') }}</label>
+                        <select id="timezone" class="form-select" name="timezone">
+                            <option value="UTC" {% if settings.timezone == 'UTC' %}selected{% endif %}>{{ gettext('UTC') }}</option>
+                            <option value="Pacific/Honolulu" {% if settings.timezone == 'Pacific/Honolulu' %}selected{% endif %}>{{ gettext('Pacific/Honolulu (HST)') }}</option>
+                            <option value="America/Anchorage" {% if settings.timezone == 'America/Anchorage' %}selected{% endif %}>{{ gettext('America/Anchorage (AKST)') }}</option>
+                            <option value="America/Los_Angeles" {% if settings.timezone == 'America/Los_Angeles' %}selected{% endif %}>{{ gettext('America/Los Angeles (PST)') }}</option>
+                            <option value="America/Vancouver" {% if settings.timezone == 'America/Vancouver' %}selected{% endif %}>{{ gettext('America/Vancouver (PST)') }}</option>
+                            <option value="America/Denver" {% if settings.timezone == 'America/Denver' %}selected{% endif %}>{{ gettext('America/Denver (MST)') }}</option>
+                            <option value="America/Chicago" {% if settings.timezone == 'America/Chicago' %}selected{% endif %}>{{ gettext('America/Chicago (CST)') }}</option>
+                            <option value="America/Mexico_City" {% if settings.timezone == 'America/Mexico_City' %}selected{% endif %}>{{ gettext('America/Mexico City (CST)') }}</option>
+                            <option value="America/New_York" {% if settings.timezone == 'America/New_York' %}selected{% endif %}>{{ gettext('America/New York (EST)') }}</option>
+                            <option value="America/Toronto" {% if settings.timezone == 'America/Toronto' %}selected{% endif %}>{{ gettext('America/Toronto (EST)') }}</option>
+                            <option value="America/Argentina/Buenos_Aires" {% if settings.timezone == 'America/Argentina/Buenos_Aires' %}selected{% endif %}>{{ gettext('America/Argentina (BRT)') }}</option>
+                            <option value="America/Sao_Paulo" {% if settings.timezone == 'America/Sao_Paulo' %}selected{% endif %}>{{ gettext('America/Sao Paulo (BRT)') }}</option>
+                            <option value="Europe/London" {% if settings.timezone == 'Europe/London' %}selected{% endif %}>{{ gettext('Europe/London (GMT)') }}</option>
+                            <option value="Europe/Dublin" {% if settings.timezone == 'Europe/Dublin' %}selected{% endif %}>{{ gettext('Europe/Dublin (GMT)') }}</option>
+                            <option value="Europe/Berlin" {% if settings.timezone == 'Europe/Berlin' %}selected{% endif %}>{{ gettext('Europe/Berlin (CET)') }}</option>
+                            <option value="Europe/Paris" {% if settings.timezone == 'Europe/Paris' %}selected{% endif %}>{{ gettext('Europe/Paris (CET)') }}</option>
+                            <option value="Europe/Madrid" {% if settings.timezone == 'Europe/Madrid' %}selected{% endif %}>{{ gettext('Europe/Madrid (CET)') }}</option>
+                            <option value="Europe/Rome" {% if settings.timezone == 'Europe/Rome' %}selected{% endif %}>{{ gettext('Europe/Rome (CET)') }}</option>
+                            <option value="Europe/Amsterdam" {% if settings.timezone == 'Europe/Amsterdam' %}selected{% endif %}>{{ gettext('Europe/Amsterdam (CET)') }}</option>
+                            <option value="Europe/Zurich" {% if settings.timezone == 'Europe/Zurich' %}selected{% endif %}>{{ gettext('Europe/Zurich (CET)') }}</option>
+                            <option value="Europe/Moscow" {% if settings.timezone == 'Europe/Moscow' %}selected{% endif %}>{{ gettext('Europe/Moscow (MSK)') }}</option>
+                            <option value="Africa/Cairo" {% if settings.timezone == 'Africa/Cairo' %}selected{% endif %}>{{ gettext('Africa/Cairo (EET)') }}</option>
+                            <option value="Africa/Johannesburg" {% if settings.timezone == 'Africa/Johannesburg' %}selected{% endif %}>{{ gettext('Africa/Johannesburg (SAST)') }}</option>
+                            <option value="Asia/Dubai" {% if settings.timezone == 'Asia/Dubai' %}selected{% endif %}>{{ gettext('Asia/Dubai (GST)') }}</option>
+                            <option value="Asia/Jerusalem" {% if settings.timezone == 'Asia/Jerusalem' %}selected{% endif %}>{{ gettext('Asia/Jerusalem (IST)') }}</option>
+                            <option value="Asia/Kolkata" {% if settings.timezone == 'Asia/Kolkata' %}selected{% endif %}>{{ gettext('Asia/Kolkata (IST)') }}</option>
+                            <option value="Asia/Karachi" {% if settings.timezone == 'Asia/Karachi' %}selected{% endif %}>{{ gettext('Asia/Karachi (PKT)') }}</option>
+                            <option value="Asia/Bangkok" {% if settings.timezone == 'Asia/Bangkok' %}selected{% endif %}>{{ gettext('Asia/Bangkok (ICT)') }}</option>
+                            <option value="Asia/Singapore" {% if settings.timezone == 'Asia/Singapore' %}selected{% endif %}>{{ gettext('Asia/Singapore (SGT)') }}</option>
+                            <option value="Asia/Hong_Kong" {% if settings.timezone == 'Asia/Hong_Kong' %}selected{% endif %}>{{ gettext('Asia/Hong Kong (HKT)') }}</option>
+                            <option value="Asia/Tokyo" {% if settings.timezone == 'Asia/Tokyo' %}selected{% endif %}>{{ gettext('Asia/Tokyo (JST)') }}</option>
+                            <option value="Asia/Seoul" {% if settings.timezone == 'Asia/Seoul' %}selected{% endif %}>{{ gettext('Asia/Seoul (KST)') }}</option>
+                            <option value="Australia/Perth" {% if settings.timezone == 'Australia/Perth' %}selected{% endif %}>{{ gettext('Australia/Perth (AWST)') }}</option>
+                            <option value="Australia/Adelaide" {% if settings.timezone == 'Australia/Adelaide' %}selected{% endif %}>{{ gettext('Australia/Adelaide (ACST)') }}</option>
+                            <option value="Australia/Brisbane" {% if settings.timezone == 'Australia/Brisbane' %}selected{% endif %}>{{ gettext('Australia/Brisbane (AEST)') }}</option>
+                            <option value="Australia/Sydney" {% if settings.timezone == 'Australia/Sydney' %}selected{% endif %}>{{ gettext('Australia/Sydney (AEST)') }}</option>
+                            <option value="Australia/Melbourne" {% if settings.timezone == 'Australia/Melbourne' or not settings.timezone %}selected{% endif %}>{{ gettext('Australia/Melbourne (AEST)') }}</option>
+                            <option value="Pacific/Auckland" {% if settings.timezone == 'Pacific/Auckland' %}selected{% endif %}>{{ gettext('Pacific/Auckland (NZST)') }}</option>
+                            <option value="Pacific/Guam" {% if settings.timezone == 'Pacific/Guam' %}selected{% endif %}>{{ gettext('Pacific/Guam (ChST)') }}</option>
+                        </select>
+                        <small class="form-text text-secondary">{{ gettext('Timezone for displaying dates and times throughout the application') }}</small>
+                    </div>
+
+                    <div class="form-group mt-3">
+                        <label for="default_theme" class="form-label">{{ gettext('Default Theme') }}</label>
+                        <select id="default_theme" class="form-select" name="default_theme">
+                            <option value="system" {% if settings.default_theme == 'system' or not settings.default_theme %}selected{% endif %}>{{ gettext('System (use browser / user preference)') }}</option>
+                            <option value="light" {% if settings.default_theme == 'light' %}selected{% endif %}>{{ gettext('Light') }}</option>
+                            <option value="dark" {% if settings.default_theme == 'dark' %}selected{% endif %}>{{ gettext('Dark') }}</option>
+                        </select>
+                        <small class="form-text text-secondary">{{ gettext("Global default theme for users who have not set a personal preference (users' own preference overrides this)") }}</small>
+                    </div>
+
+                    <div class="form-group mt-3">
+                        <label for="auto_logout_minutes" class="form-label">{{ gettext('Auto Logout (minutes)') }}</label>
+                        <input id="auto_logout_minutes" class="form-control" name="auto_logout_minutes" type="number" value="{{ settings.auto_logout_minutes or '60' }}" min="0" max="1440">
+                        <small class="form-text text-secondary">{{ gettext('Automatically log out users after this many minutes of inactivity. Set to 0 to disable auto-logout.') }}</small>
+                    </div>
+
+                    <!-- Update checking has been removed from the web UI -->
+                </div>
             </div>
 
-            <div class="col-md-4">
-                <label class="form-label">{{ gettext('Date Format') }}</label>
-                <select class="form-select" name="date_format">
-                    <option value="%d/%m/%Y" {{ 'selected' if settings.date_format == '%d/%m/%Y' else '' }}>15/01/2024</option>
-                    <option value="%Y-%m-%d" {{ 'selected' if settings.date_format == '%Y-%m-%d' else '' }}>2024-01-15</option>
-                    <option value="%m/%d/%Y" {{ 'selected' if settings.date_format == '%m/%d/%Y' else '' }}>01/15/2024</option>
-                </select>
+            <!-- Email Retention Policy Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-clock"></i>
+                        <span>{{ gettext('Email Retention Policy') }}</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="enable_purge" name="enable_purge" {% if settings.enable_purge == 'true' %}checked{% endif %}>
+                        <label class="form-check-label" for="enable_purge">
+                            <strong>{{ gettext('Enable Automatic Email Purging') }}</strong>
+                            <small class="d-block text-secondary">{{ gettext('Automatically delete emails older than the retention period') }}</small>
+                        </label>
+                    </div>
+
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" id="retention_delete_from_mail_server" name="retention_delete_from_mail_server" {% if settings.retention_delete_from_mail_server == 'true' %}checked{% endif %}>
+                        <label class="form-check-label" for="retention_delete_from_mail_server">
+                            <strong>{{ gettext('Delete from Mail Server During Retention Cleanup') }}</strong>
+                            <small class="d-block text-secondary">{{ gettext('When enabled, retention cleanup will also attempt to delete emails from the original IMAP mail servers for both regular emails and quarantined emails') }}</small>
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="retention_value" class="form-label">{{ gettext('Retention Period') }}</label>
+                        <div class="row g-2">
+                            <div class="col">
+                                <input id="retention_value" class="form-control" name="retention_value" type="number" min="1" value="{{ settings.retention_value or '1' }}">
+                            </div>
+                            <div class="col-auto">
+                                <select id="retention_unit" class="form-select" name="retention_unit">
+                                    <option value="days" {% if settings.retention_unit == 'days' %}selected{% endif %}>{{ gettext('Day(s)') }}</option>
+                                    <option value="months" {% if settings.retention_unit == 'months' %}selected{% endif %}>{{ gettext('Month(s)') }}</option>
+                                    <option value="years" {% if settings.retention_unit == 'years' or not settings.retention_unit %}selected{% endif %}>{{ gettext('Year(s)') }}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <small class="form-text text-secondary">{{ gettext('Emails older than this period will be automatically deleted') }}</small>
+                    </div>
+                </div>
             </div>
 
-            <div class="col-md-4">
-                <label class="form-label">{{ gettext('Time Format') }}</label>
-                <select class="form-select" name="time_format">
-                    <option value="%H:%M" {{ 'selected' if settings.time_format == '%H:%M' else '' }}>24 Hour</option>
-                    <option value="%I:%M %p" {{ 'selected' if settings.time_format == '%I:%M %p' else '' }}>12 Hour</option>
-                </select>
+            <!-- ClamAV Virus Scanning Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-shield-virus"></i>
+                        <span>{{ gettext('Virus Scanning (ClamAV)') }}</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="clamav_enabled" name="clamav_enabled" {% if settings.clamav_enabled == 'true' %}checked{% endif %}>
+                        <label class="form-check-label" for="clamav_enabled">
+                            <strong>{{ gettext('Enable Virus Scanning') }}</strong>
+                            <small class="d-block text-secondary">{{ gettext('Scan incoming emails for viruses using ClamAV') }}</small>
+                        </label>
+                    </div>
+
+                    <div class="form-group mt-3">
+                        <label for="clamav_host" class="form-label">{{ gettext('ClamAV Host') }}</label>
+                        <input id="clamav_host" class="form-control" name="clamav_host" type="text" value="{{ settings.clamav_host or 'clamav' }}">
+                        <small class="form-text text-secondary">{{ gettext('Hostname or IP address of the ClamAV daemon (default: clamav for Docker)') }}</small>
+                    </div>
+
+                    <div class="form-group mt-3">
+                        <label for="clamav_port" class="form-label">{{ gettext('ClamAV Port') }}</label>
+                        <input id="clamav_port" class="form-control" name="clamav_port" type="number" value="{{ settings.clamav_port or '3310' }}" min="1" max="65535">
+                        <small class="form-text text-secondary">{{ gettext('Port number for the ClamAV daemon (default: 3310)') }}</small>
+                    </div>
+
+                    <div class="form-group mt-3">
+                        <label for="clamav_action" class="form-label">{{ gettext('Action When Virus Detected') }}</label>
+                        <select id="clamav_action" class="form-select" name="clamav_action">
+                            <option value="quarantine" {% if settings.clamav_action == 'quarantine' or not settings.clamav_action %}selected{% endif %}>{{ gettext('Quarantine (Store with virus flag)') }}</option>
+                            <option value="reject" {% if settings.clamav_action == 'reject' %}selected{% endif %}>{{ gettext('Reject (Do not store infected emails)') }}</option>
+                            <option value="log_only" {% if settings.clamav_action == 'log_only' %}selected{% endif %}>{{ gettext('Log Only (Store all emails, log detections)') }}</option>
+                        </select>
+                        <small class="form-text text-secondary">
+                            <strong>{{ gettext('Quarantine:') }}</strong> {{ gettext('Emails with viruses are stored but marked as infected for review') }}<br>
+                            <strong>{{ gettext('Reject:') }}</strong> {{ gettext('Emails with viruses are not stored in the database') }}<br>
+                            <strong>{{ gettext('Log Only:') }}</strong> {{ gettext('All emails are stored, virus detections are logged for monitoring') }}
+                        </small>
+                    </div>
+
+                    <div class="form-group mt-3">
+                        <label for="clamav_max_file_size" class="form-label">{{ gettext('Max File Size to Scan (bytes)') }}</label>
+                        <input id="clamav_max_file_size" class="form-control" name="clamav_max_file_size" type="number" min="1024" value="{{ settings.clamav_max_file_size or '10485760' }}">
+                        <small class="form-text text-secondary">{{ gettext('Files larger than this size will not be scanned by ClamAV') }}</small>
+                    </div>
+                </div>
             </div>
 
-            <div class="col-md-6">
-                <label class="form-label">{{ gettext('Timezone') }}</label>
-                <select class="form-select" name="timezone">
-                    <option value="Australia/Melbourne" selected>Australia/Melbourne (AEST)</option>
-                    <option value="Australia/Sydney">Australia/Sydney</option>
-                    <option value="UTC">UTC</option>
-                    <option value="Europe/London">Europe/London</option>
-                    <option value="America/New_York">America/New York</option>
-                </select>
+            <!-- Quarantine Settings Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-shield-virus"></i>
+                        <span>{{ gettext('Quarantine Settings') }}</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="clamav_quarantine_in_db" name="clamav_quarantine_in_db" {% if settings.clamav_quarantine_in_db == 'true' %}checked{% endif %}>
+                        <label class="form-check-label" for="clamav_quarantine_in_db">
+                            <strong>{{ gettext('Store quarantined emails in database') }}</strong>
+                            <small class="d-block text-secondary">{{ gettext('When enabled, infected message payloads are moved to the quarantined_emails table (recommended for auditability)') }}</small>
+                        </label>
+                    </div>
+
+                    <div class="form-group mt-3">
+                        <label for="clamav_quarantine_retention_days" class="form-label">{{ gettext('Quarantine Retention (days)') }}</label>
+                        <input id="clamav_quarantine_retention_days" class="form-control" name="clamav_quarantine_retention_days" type="number" min="1" value="{{ settings.clamav_quarantine_retention_days or '90' }}">
+                        <small class="form-text text-secondary">{{ gettext('Number of days to retain quarantined messages before automatic purge') }}</small>
+                    </div>
+
+                    <div class="form-check mt-3 mb-0">
+                        <input class="form-check-input" type="checkbox" id="clamav_quarantine_encrypt" name="clamav_quarantine_encrypt" {% if settings.clamav_quarantine_encrypt == 'true' %}checked{% endif %}>
+                        <label class="form-check-label" for="clamav_quarantine_encrypt">
+                            <strong>{{ gettext('Encrypt quarantined data at rest') }}</strong>
+                            <small class="d-block text-secondary">{{ gettext('Requires CLAMAV_QUARANTINE_KEY to be configured in the environment or config file (see README)') }}</small>
+                        </label>
+                    </div>
+                </div>
             </div>
 
-            <div class="col-md-6">
-                <label class="form-label">{{ gettext('Default Theme') }}</label>
-                <select class="form-select" name="default_theme">
-                    <option value="system">System</option>
-                    <option value="light">Light</option>
-                    <option value="dark">Dark</option>
-                </select>
+            <!-- SMTP Email Configuration Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <i class="fas fa-envelope"></i>
+                            <span>{{ gettext('SMTP Email Configuration') }}</span>
+                        </div>
+                        <div id="test-smtp-container"></div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="smtp_enabled" name="smtp_enabled" {% if settings.smtp_enabled == 'true' %}checked{% endif %}>
+                        <label class="form-check-label" for="smtp_enabled">
+                            <strong>{{ gettext('Enable Email Alerts') }}</strong>
+                            <small class="d-block text-secondary">{{ gettext('Send email notifications for system alerts and important events') }}</small>
+                        </label>
+                    </div>
+
+                    <div class="form-group mt-3">
+                        <label for="smtp_host" class="form-label">{{ gettext('SMTP Host') }}</label>
+                        <input id="smtp_host" class="form-control" name="smtp_host" type="text" value="{{ settings.smtp_host or '' }}" placeholder="smtp.gmail.com">
+                        <small class="form-text text-secondary">{{ gettext('SMTP server hostname or IP address') }}</small>
+                    </div>
+
+                    <div class="form-group mt-3">
+                        <label for="smtp_port" class="form-label">{{ gettext('SMTP Port') }}</label>
+                        <input id="smtp_port" class="form-control" name="smtp_port" type="number" value="{{ settings.smtp_port or '587' }}" min="1" max="65535">
+                        <small class="form-text text-secondary">{{ gettext('SMTP server port (587 for TLS, 465 for SSL, 25 for plain)') }}</small>
+                    </div>
+
+                    <div class="form-group mt-3">
+                        <label for="smtp_username" class="form-label">{{ gettext('SMTP Username') }}</label>
+                        <input id="smtp_username" class="form-control" name="smtp_username" type="text" value="{{ settings.smtp_username or '' }}" placeholder="your-email@example.com" autocomplete="off">
+                        <small class="form-text text-secondary">{{ gettext('Username for SMTP authentication (usually your email address)') }}</small>
+                    </div>
+
+                    <div class="form-group mt-3">
+                        <label for="smtp_password" class="form-label">{{ gettext('SMTP Password') }}</label>
+                        <input id="smtp_password" class="form-control" name="smtp_password" type="password" value="{{ settings.smtp_password or '' }}" placeholder="your-password" autocomplete="off">
+                        <small class="form-text text-secondary">{{ gettext('Password for SMTP authentication (use app passwords for Gmail)') }}</small>
+                    </div>
+
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" id="smtp_use_tls" name="smtp_use_tls" {% if settings.smtp_use_tls != 'false' %}checked{% endif %}>
+                        <label class="form-check-label" for="smtp_use_tls">
+                            <strong>{{ gettext('Use TLS Encryption') }}</strong>
+                            <small class="d-block text-secondary">{{ gettext('Use STARTTLS for secure connection (recommended for most servers)') }}</small>
+                        </label>
+                    </div>
+
+                    <div class="form-group mt-3">
+                        <label for="smtp_from_email" class="form-label">{{ gettext('From Email Address') }}</label>
+                        <input id="smtp_from_email" class="form-control" name="smtp_from_email" type="email" value="{{ settings.smtp_from_email or '' }}" placeholder="noreply@example.com">
+                        <small class="form-text text-secondary">{{ gettext('Email address to send alerts from') }}</small>
+                    </div>
+
+                    <div class="form-group mt-3">
+                        <label for="smtp_from_name" class="form-label">{{ gettext('From Name') }}</label>
+                        <input id="smtp_from_name" class="form-control" name="smtp_from_name" type="text" value="{{ settings.smtp_from_name or 'Daygle Mail Archiver' }}" placeholder="Daygle Mail Archiver">
+                        <small class="form-text text-secondary">{{ gettext('Display name for alert emails') }}</small>
+                    </div>
+                </div>
+                <div class="card-footer form-actions">
+                    <a href="/dashboard" class="btn btn-secondary">
+                        <i class="fas fa-times"></i>
+                        <span>{{ gettext('Cancel') }}</span>
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        <span>{{ gettext('Save Settings') }}</span>
+                    </button>
+                </div>
             </div>
 
-            <div class="col-md-4">
-                <label class="form-label">{{ gettext('Auto Logout (minutes)') }}</label>
-                <input class="form-control" type="number" name="auto_logout_minutes" value="{{ settings.auto_logout_minutes or 60 }}">
-            </div>
         </div>
     </div>
-</div>
-
-<!-- ================= RETENTION ================= -->
-<div class="card mb-4">
-    <div class="card-header"><i class="fas fa-clock"></i> {{ gettext('Email Retention') }}</div>
-    <div class="card-body">
-
-        <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" name="enable_purge" {{ 'checked' if settings.enable_purge=='true' else '' }}>
-            <label class="form-check-label">{{ gettext('Enable Automatic Purging') }}</label>
-        </div>
-
-        <div class="row g-3">
-            <div class="col-md-3">
-                <input class="form-control" type="number" name="retention_value" value="{{ settings.retention_value or 1 }}">
-            </div>
-            <div class="col-md-3">
-                <select class="form-select" name="retention_unit">
-                    <option value="days">Days</option>
-                    <option value="months">Months</option>
-                    <option value="years">Years</option>
-                </select>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ================= SMTP ================= -->
-<div class="card mb-4">
-    <div class="card-header d-flex justify-content-between">
-        <span><i class="fas fa-envelope"></i> SMTP</span>
-        <div id="smtp-test-container"></div>
-    </div>
-    <div class="card-body">
-
-        <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" id="smtp_enabled" name="smtp_enabled" {{ 'checked' if settings.smtp_enabled=='true' else '' }}>
-            <label class="form-check-label">Enable Email Alerts</label>
-        </div>
-
-        <div class="row g-3">
-            <div class="col-md-4"><input class="form-control" name="smtp_host" placeholder="smtp.example.com"></div>
-            <div class="col-md-2"><input class="form-control" name="smtp_port" value="587"></div>
-            <div class="col-md-6"><input class="form-control" name="smtp_from_email"></div>
-        </div>
-    </div>
-</div>
-
-<div class="text-end">
-    <a href="/dashboard" class="btn btn-secondary">Cancel</a>
-    <button type="submit" class="btn btn-primary">Save Settings</button>
-</div>
-
 </form>
 
-<!-- Test SMTP -->
-<form method="post" action="/api/test-smtp" id="smtp-test-form" style="display:none;">
-    <button class="btn btn-info" id="smtp-test-btn">Send Test Email</button>
+<!-- Test SMTP form outside the main form to avoid nesting -->
+<form method="post" action="/api/test-smtp" id="test-smtp-form" style="display: none;">
+    <button type="submit" class="btn btn-info" id="test-smtp-btn" {% if settings.smtp_enabled != 'true' %}disabled{% endif %}>
+        <i class="fas fa-paper-plane"></i>
+        <span>{{ gettext('Send Test Email') }}</span>
+    </button>
 </form>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const box = document.getElementById('smtp-test-container');
-    const form = document.getElementById('smtp-test-form');
-    const chk = document.getElementById('smtp_enabled');
-    box.appendChild(form);
-    form.style.display = 'inline-block';
+function updateTestButtonState() {
+    const testBtn = document.getElementById('test-smtp-btn');
+    const smtpEnabledEl = document.getElementById('smtp_enabled');
+    if (!testBtn || !smtpEnabledEl) return;
+    testBtn.disabled = !smtpEnabledEl.checked;
+}
 
-    chk.addEventListener('change', ()=> {
-        document.getElementById('smtp-test-btn').disabled = !chk.checked;
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('test-smtp-container');
+    const form = document.getElementById('test-smtp-form');
+    if (container && form) {
+        container.appendChild(form);
+        form.style.display = 'inline';
+    }
+    updateTestButtonState();
+    const smtpCheckbox = document.getElementById('smtp_enabled');
+    if (smtpCheckbox) smtpCheckbox.addEventListener('change', updateTestButtonState);
 });
 </script>
 
