@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block page_title %}{{ gettext('Fetch Accounts') }}{% endblock %}
+{% block page_title %}Fetch Accounts{% endblock %}
 
 {% block content %}
 
@@ -14,24 +14,24 @@
             <div class="card-header">
                 <div class="card-title">
                     <i class="fas fa-server"></i>
-                    <span id="form-title">{{ gettext('New Fetch Account') }}</span>
+                    <span id="form-title">New Fetch Account</span>
                 </div>
             </div>
             <div class="card-body">
                 <div class="form-group">
-                    <label for="name" class="form-label">{{ gettext('Account Name') }} <span class="text-danger">*</span></label>
+                    <label for="name" class="form-label">Account Name <span class="text-danger">*</span></label>
                     <input id="name" class="form-control" name="name" placeholder="My Email Account" required>
-                    <small class="form-text">{{ gettext('A friendly name to identify this account') }}</small>
+                    <small class="form-text">A friendly name to identify this account</small>
                 </div>
 
                 <div class="form-group mt-3">
-                    <label for="account_type" class="form-label">{{ gettext('Account Type') }} <span class="text-danger">*</span></label>
+                    <label for="account_type" class="form-label">Account Type <span class="text-danger">*</span></label>
                     <select id="account_type" class="form-select" name="account_type" required onchange="toggleAccountFields()">
-                        <option value="imap" selected>{{ gettext('IMAP') }}</option>
-                        <option value="gmail">{{ gettext('Gmail API') }}</option>
-                        <option value="o365">{{ gettext('Office 365 API') }}</option>
+                        <option value="imap" selected>IMAP</option>
+                        <option value="gmail">Gmail API</option>
+                        <option value="o365">Office 365 API</option>
                     </select>
-                    <small class="form-text">{{ gettext('Select the type of email service to fetch from') }}</small>
+                    <small class="form-text">Select the type of email service to fetch from</small>
                 </div>
             </div>
         </div>
@@ -41,31 +41,31 @@
             <div class="card-header">
                 <div class="card-title">
                     <i class="fas fa-envelope"></i>
-                    <span>{{ gettext('IMAP Configuration') }}</span>
+                    <span>IMAP Configuration</span>
                 </div>
             </div>
             <div class="card-body">
                 <div class="two-col-grid">
                     <div class="form-group">
-                        <label for="host" class="form-label">{{ gettext('Host') }} <span class="text-danger">*</span></label>
+                        <label for="host" class="form-label">Host <span class="text-danger">*</span></label>
                         <input id="host" class="form-control" name="host" placeholder="imap.example.com">
                     </div>
 
                     <div class="form-group">
-                        <label for="port" class="form-label">{{ gettext('Port') }} <span class="text-danger">*</span></label>
+                        <label for="port" class="form-label">Port <span class="text-danger">*</span></label>
                         <input id="port" class="form-control" name="port" type="number" value="993" placeholder="993">
                     </div>
                 </div>
 
                 <div class="form-group mt-3">
-                    <label for="username" class="form-label">{{ gettext('Username') }} <span class="text-danger">*</span></label>
+                    <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
                     <input id="username" class="form-control" name="username" placeholder="user@example.com" autocomplete="off">
                 </div>
 
                 <div class="form-group mt-3">
-                    <label for="password" class="form-label">{{ gettext('Password') }} <span class="text-danger">*</span></label>
+                    <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
                     <input id="password" class="form-control" name="password" type="password" placeholder="Enter password" autocomplete="off">
-                    <small class="form-text" id="password-help" style="display: none;">{{ gettext('Leave blank to keep the existing password') }}</small>
+                    <small class="form-text" id="password-help" style="display: none;">Leave blank to keep the existing password</small>
                 </div>
 
                 <div style="margin-top: 16px;">
@@ -73,56 +73,56 @@
                         <label class="checkbox-label">
                             <input type="checkbox" id="use_ssl" name="use_ssl">
                             <div>
-                                    <span>{{ gettext('Fetch Settings') }}</span>
-                                <small style="display: block; color: var(--text-secondary);">{{ gettext('Recommended for secure connections (port 993)') }}</small>
+                                <strong>Use SSL/TLS</strong>
+                                <small style="display: block; color: var(--text-secondary);">Recommended for secure connections (port 993)</small>
                             </div>
                         </label>
                     </div>
 
                     <div>
-                                    <small class="form-text">{{ gettext('How often to check for new emails (minimum 60 seconds)') }}</small>
+                        <label class="checkbox-label">
                             <input type="checkbox" id="require_starttls" name="require_starttls">
                             <div>
-                                <strong>{{ gettext('Require STARTTLS') }}</strong>
-                                <small style="display: block; color: var(--text-secondary);">{{ gettext('For plain connections that upgrade to TLS (port 143)') }}</small>
+                                <strong>Require STARTTLS</strong>
+                                <small style="display: block; color: var(--text-secondary);">For plain connections that upgrade to TLS (port 143)</small>
                             </div>
                         </label>
-                                                <strong>{{ gettext('Delete Email After Processing') }}</strong>
-                                                <small style="display: block; color: var(--text-secondary);">
-                                                    {{ gettext('Gmail: moves to Trash | Office 365: moves to Deleted Items | IMAP: marks as deleted (recoverable)') }}
-                                                </small>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- OAuth Configuration Card -->
         <div id="oauth_fields" class="card mb-4" style="display: none;">
             <div class="card-header">
                 <div class="card-title">
                     <i class="fas fa-key"></i>
-                                            <div>
-                                                <strong>{{ gettext('Permanently Expunge Deleted (IMAP only)') }}</strong>
-                                                <small style="display: block; color: var(--danger);">⚠️ {{ gettext('Warning: Permanently removes deleted emails from server - cannot be recovered') }}</small>
-                                            </div>
+                    <span>OAuth Configuration</span>
+                </div>
+            </div>
+            <div class="card-body">
                 <div class="alert alert-info mb-4">
                     <i class="fas fa-info-circle"></i>
-                    <strong>{{ gettext('OAuth Setup Required') }}</strong>
-                    <p class="mt-2 mb-2">{{ gettext('To use Gmail or Office 365, you need to:') }}</p>
+                    <strong>OAuth Setup Required</strong>
+                    <p class="mt-2 mb-2">To use Gmail or Office 365, you need to:</p>
                     <ol class="mb-0" style="padding-left: 20px;">
-                        <li>{{ gettext('Create an OAuth app in Google/Microsoft developer console') }}</li>
-                        <li>{{ gettext('Enter your Client ID and Client Secret below') }}</li>
-                                    <span>{{ gettext('Cancel') }}</span>
-                        <li>{{ gettext('Click "Authorise" to grant access') }}</li>
+                        <li>Create an OAuth app in Google/Microsoft developer console</li>
+                        <li>Enter your Client ID and Client Secret below</li>
+                        <li>Save the account</li>
+                        <li>Click "Authorise" to grant access</li>
                     </ol>
                 </div>
-                                    <span>{{ gettext('Create Account') }}</span>
+
                 <div class="form-group">
-                    <label for="oauth_client_id" class="form-label">{{ gettext('OAuth Client ID') }} <span class="text-danger">*</span></label>
+                    <label for="oauth_client_id" class="form-label">OAuth Client ID <span class="text-danger">*</span></label>
                     <input id="oauth_client_id" class="form-control" name="oauth_client_id" placeholder="Enter your OAuth Client ID">
-                    <small class="form-text">{{ gettext('From your Google/Microsoft OAuth app') }}</small>
+                    <small class="form-text">From your Google/Microsoft OAuth app</small>
                 </div>
 
                 <div class="form-group mt-3">
-                    <label for="oauth_client_secret" class="form-label">{{ gettext('OAuth Client Secret') }} <span class="text-danger">*</span></label>
+                    <label for="oauth_client_secret" class="form-label">OAuth Client Secret <span class="text-danger">*</span></label>
                     <input id="oauth_client_secret" class="form-control" name="oauth_client_secret" type="password" placeholder="Enter your OAuth Client Secret" autocomplete="off">
-                    <small class="form-text">{{ gettext('Keep this secret secure') }}</small>
+                    <small class="form-text">Keep this secret secure</small>
                 </div>
 
                 <div id="oauth_status" style="display: none; margin-top: 16px;"></div>
@@ -171,11 +171,11 @@
             <div class="card-footer form-actions">
                 <button type="button" class="btn btn-secondary" onclick="cancelForm()">
                     <i class="fas fa-times"></i>
-                    <span>{{ gettext('Cancel') }}</span>
+                    <span>Cancel</span>
                 </button>
                 <button type="submit" class="btn btn-primary" id="submit-btn">
                     <i class="fas fa-save"></i>
-                    <span>{{ gettext('Create Account') }}</span>
+                    <span>Create Account</span>
                 </button>
             </div>
         </div>
@@ -188,11 +188,11 @@
         <div class="card-header flex-between">
             <div class="card-title">
                 <i class="fas fa-server"></i>
-                <span>{{ gettext('Fetch Accounts') }}</span>
+                <span>Fetch Accounts</span>
             </div>
             <button class="btn btn-primary" onclick="showCreateForm()">
                 <i class="fas fa-plus"></i>
-                <span>{{ gettext('Add Fetch Account') }}</span>
+                <span>Add Fetch Account</span>
             </button>
         </div>
         <div class="card-body" style="padding: 0;">
@@ -200,14 +200,14 @@
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>{{ gettext('Name') }}</th>
-                            <th>{{ gettext('Type') }}</th>
-                            <th>{{ gettext('Host/Service') }}</th>
-                            <th>{{ gettext('User') }}</th>
-                            <th class="hide-mobile">{{ gettext('Poll Interval') }}</th>
-                            <th>{{ gettext('Enabled') }}</th>
-                            <th class="hide-mobile">{{ gettext('Last Success') }}</th>
-                            <th>{{ gettext('Actions') }}</th>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Host/Service</th>
+                            <th>User</th>
+                            <th class="hide-mobile">Poll Interval</th>
+                            <th>Enabled</th>
+                            <th class="hide-mobile">Last Success</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -216,11 +216,11 @@
                             <td><strong>{{ acc.name }}</strong></td>
                             <td>
                                 {% if acc.account_type == 'imap' %}
-                                    <span class="badge badge-primary"><i class="fas fa-envelope"></i> {{ gettext('IMAP') }}</span>
+                                    <span class="badge badge-primary"><i class="fas fa-envelope"></i> IMAP</span>
                                 {% elif acc.account_type == 'gmail' %}
-                                    <span class="badge badge-danger"><i class="fab fa-google"></i> {{ gettext('Gmail') }}</span>
+                                    <span class="badge badge-danger"><i class="fab fa-google"></i> Gmail</span>
                                 {% elif acc.account_type == 'o365' %}
-                                    <span class="badge badge-info"><i class="fab fa-microsoft"></i> {{ gettext('O365') }}</span>
+                                    <span class="badge badge-info"><i class="fab fa-microsoft"></i> O365</span>
                                 {% else %}
                                     <span class="badge badge-secondary">{{ acc.account_type }}</span>
                                 {% endif %}
@@ -229,34 +229,34 @@
                                 {{ acc.host or '-' }}
                                 {% if acc.port and acc.account_type == 'imap' %}
                                     :{{ acc.port }}
-                                    {% if acc.use_ssl %}<i class="fas fa-lock text-success" title="{{ gettext('SSL Enabled') }}"></i>{% endif %}
+                                    {% if acc.use_ssl %}<i class="fas fa-lock text-success" title="SSL Enabled"></i>{% endif %}
                                 {% endif %}
                             </td>
                             <td>{{ acc.username or '-' }}</td>
                             <td class="hide-mobile">{{ acc.poll_interval_seconds }}s</td>
                             <td>
                                 {% if acc.enabled %}
-                                    <span class="badge badge-success"><i class="fas fa-check"></i> {{ gettext('Enabled') }}</span>
+                                    <span class="badge badge-success"><i class="fas fa-check"></i> Enabled</span>
                                 {% else %}
-                                    <span class="badge badge-danger"><i class="fas fa-times"></i> {{ gettext('Disabled') }}</span>
+                                    <span class="badge badge-danger"><i class="fas fa-times"></i> Disabled</span>
                                 {% endif %}
                             </td>
                             <td class="hide-mobile">
                                 {% if acc.last_success %}
                                     <small>{{ acc.last_success.strftime(request.session.get('date_format', '%d/%m/%Y %H:%M')) }}</small>
                                 {% else %}
-                                    <span class="text-secondary">{{ gettext('Never') }}</span>
+                                    <span class="text-secondary">Never</span>
                                 {% endif %}
                             </td>
                             <td>
                                 <div class="flex gap-2">
-                                    <button class="btn btn-secondary btn-sm" title="{{ gettext('Edit') }}" onclick='showEditForm({{ acc.id | tojson }}, {{ acc.json_safe | tojson }})'>
+                                    <button class="btn btn-secondary btn-sm" title="Edit" onclick='showEditForm({{ acc.id | tojson }}, {{ acc.json_safe | tojson }})'>
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <a href="/fetch-accounts/{{ acc.id }}/test" class="btn btn-info btn-sm" title="{{ gettext('Test Connection') }}">
+                                    <a href="/fetch-accounts/{{ acc.id }}/test" class="btn btn-info btn-sm" title="Test Connection">
                                         <i class="fas fa-plug"></i>
                                     </a>
-                                    <button class="btn btn-danger btn-sm" title="{{ gettext('Delete') }}" onclick='showDeleteConfirmation({{ acc.id | tojson }}, {{ acc.name | tojson }}, {{ acc.email_count }})'>
+                                    <button class="btn btn-danger btn-sm" title="Delete" onclick='showDeleteConfirmation({{ acc.id | tojson }}, {{ acc.name | tojson }}, {{ acc.email_count }})'>
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -268,10 +268,10 @@
                             <td colspan="8" class="text-center" style="padding: 48px 0;">
                                 <div>
                                     <i class="fas fa-server empty-icon"></i>
-                                    <p>{{ gettext('No fetch accounts configured.') }}</p>
+                                    <p>No fetch accounts configured.</p>
                                     <button class="btn btn-primary mt-3" onclick="showCreateForm()">
                                         <i class="fas fa-plus"></i>
-                                        <span>{{ gettext('Add Fetch Account') }}</span>
+                                        <span>Add Fetch Account</span>
                                     </button>
                                 </div>
                             </td>
@@ -290,7 +290,7 @@
                     {% if page > 1 %}
                     <a href="/fetch-accounts?page={{ page - 1 }}" class="btn btn-secondary">
                         <i class="fas fa-chevron-left"></i>
-                        <span>{{ gettext('Previous') }}</span>
+                        <span>Previous</span>
                     </a>
                     {% endif %}
                 </div>
@@ -300,7 +300,7 @@
                 <div>
                     {% if page < total_pages %}
                     <a href="/fetch-accounts?page={{ page + 1 }}" class="btn btn-secondary">
-                        <span>{{ gettext('Next') }}</span>
+                        <span>Next</span>
                         <i class="fas fa-chevron-right"></i>
                     </a>
                     {% endif %}
@@ -316,42 +316,42 @@
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i>
-            <span>{{ gettext('Delete Fetch Account') }}</span>
+            <span>Delete Fetch Account</span>
         </div>
     </div>
     <div class="card-body">
         <div class="alert alert-danger">
             <i class="fas fa-exclamation-circle"></i>
-                <div style="margin-top: 8px;">
-                <strong>{{ gettext('Warning:') }}</strong> {{ gettext('You are about to delete the fetch account:') }}
+            <div style="margin-top: 8px;">
+                <strong>Warning:</strong> You are about to delete the fetch account:
                 <div style="margin-top: 8px; font-size: 1.125rem;"><strong id="delete-account-name"></strong></div>
             </div>
         </div>
 
-                <div class="alert alert-info" style="margin-top: 16px;" id="delete-email-count-alert">
+        <div class="alert alert-info" style="margin-top: 16px;" id="delete-email-count-alert">
             <i class="fas fa-info-circle"></i>
-            <span>{{ gettext('Loading email count...') }}</span>
+            <span>Loading email count...</span>
         </div>
 
-        <p style="margin-top: 20px; margin-bottom: 20px;"><strong>{{ gettext('What would you like to do?') }}</strong></p>
+        <p style="margin-top: 20px; margin-bottom: 20px;"><strong>What would you like to do?</strong></p>
 
         <form method="post" id="delete-form">
             <div style="display: grid; gap: 12px; margin-bottom: 20px;">
                 <button type="submit" name="mode" value="retain" class="btn btn-warning w-100">
                     <i class="fas fa-folder-minus"></i>
-                    <span id="delete-retain-text">{{ gettext('Delete Account Only (retain emails)') }}</span>
+                    <span id="delete-retain-text">Delete Account Only (retain emails)</span>
                 </button>
 
                 <button type="submit" name="mode" value="delete_messages" class="btn btn-danger w-100">
                     <i class="fas fa-trash"></i>
-                    <span id="delete-all-text">{{ gettext('Delete Account + All Emails') }}</span>
+                    <span id="delete-all-text">Delete Account + All Emails</span>
                 </button>
             </div>
 
             <div class="text-center">
                 <button type="button" class="btn btn-secondary" onclick="hideDeleteConfirmation()">
                     <i class="fas fa-times"></i>
-                    <span>{{ gettext('Cancel') }}</span>
+                    <span>Cancel</span>
                 </button>
             </div>
         </form>
@@ -363,21 +363,6 @@
     let editAccountId = null;
     let deleteAccountId = null;
 
-    const T = {
-        NEW_FETCH_ACCOUNT: "{{ gettext('New Fetch Account') }}",
-        CREATE_ACCOUNT: "{{ gettext('Create Account') }}",
-        EDIT_FETCH_ACCOUNT: "{{ gettext('Edit Fetch Account') }}",
-        UPDATE_ACCOUNT: "{{ gettext('Update Account') }}",
-        CANCEL: "{{ gettext('Cancel') }}",
-        THIS_ACCOUNT_HAS: "{{ gettext('This account has') }}",
-        ASSOCIATED_WITH_IT: "{{ gettext('associated with it.') }}",
-        EMAIL_SINGULAR: "{{ gettext('email') }}",
-        EMAIL_PLURAL: "{{ gettext('emails') }}",
-        DELETE_RETAIN_PREFIX: "{{ gettext('Delete Account Only (retain') }}",
-        DELETE_RETAIN_SUFFIX: ")",
-        DELETE_ALL_PREFIX: "{{ gettext('Delete Account + All') }}"
-    };
-
     function showCreateForm() {
         editMode = false;
         editAccountId = null;
@@ -385,8 +370,8 @@
         // Reset form
         document.getElementById('account-form').reset();
         document.getElementById('form-account-id').value = '';
-        document.getElementById('form-title').textContent = T.NEW_FETCH_ACCOUNT;
-        document.getElementById('submit-btn').innerHTML = '<i class="fas fa-save"></i><span>' + T.CREATE_ACCOUNT + '</span>';
+        document.getElementById('form-title').textContent = 'New Fetch Account';
+        document.getElementById('submit-btn').innerHTML = '<i class="fas fa-save"></i><span>Create Account</span>';
         document.getElementById('account-form').action = '/fetch-accounts/new';
         document.getElementById('password-help').style.display = 'none';
         
@@ -407,8 +392,8 @@
         
         // Populate form
         document.getElementById('form-account-id').value = account.id;
-        document.getElementById('form-title').textContent = T.EDIT_FETCH_ACCOUNT;
-        document.getElementById('submit-btn').innerHTML = '<i class="fas fa-save"></i><span>' + T.UPDATE_ACCOUNT + '</span>';
+        document.getElementById('form-title').textContent = 'Edit Fetch Account';
+        document.getElementById('submit-btn').innerHTML = '<i class="fas fa-save"></i><span>Update Account</span>';
         document.getElementById('account-form').action = '/fetch-accounts/' + id + '/edit';
         document.getElementById('password-help').style.display = 'block';
         
@@ -456,17 +441,17 @@
         document.getElementById('delete-account-name').textContent = accountName;
         
         // Update email count information
-        const plural = emailCount !== 1 ? T.EMAIL_PLURAL : T.EMAIL_SINGULAR;
-
-        document.getElementById('delete-email-count-alert').innerHTML =
-            '<i class="fas fa-info-circle"></i><span>' + T.THIS_ACCOUNT_HAS + ' <strong>' +
-            emailCount + '</strong> ' + plural + ' ' + T.ASSOCIATED_WITH_IT + '</span>';
-
-        document.getElementById('delete-retain-text').textContent =
-            T.DELETE_RETAIN_PREFIX + ' ' + emailCount + ' ' + plural + T.DELETE_RETAIN_SUFFIX;
-
-        document.getElementById('delete-all-text').textContent =
-            T.DELETE_ALL_PREFIX + ' ' + emailCount + ' ' + plural;
+        const plural = emailCount !== 1 ? 's' : '';
+        
+        document.getElementById('delete-email-count-alert').innerHTML = 
+            '<i class="fas fa-info-circle"></i><span>This account has <strong>' + 
+            emailCount + '</strong> email' + plural + ' associated with it.</span>';
+        
+        document.getElementById('delete-retain-text').textContent = 
+            'Delete Account Only (retain ' + emailCount + ' email' + plural + ')';
+        
+        document.getElementById('delete-all-text').textContent = 
+            'Delete Account + All ' + emailCount + ' Email' + plural;
         
         // Hide form and table sections, show delete confirmation
         document.getElementById('form-section').style.display = 'none';
