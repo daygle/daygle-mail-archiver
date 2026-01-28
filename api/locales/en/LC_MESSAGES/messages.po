@@ -383,3 +383,620 @@ msgstr "Confirm your new password"
 
 msgid "Reset Password"
 msgstr "Reset Password"
+msgid "aygle Mail Archiver"
+msgstr ""
+
+msgid "Emails"
+msgstr ""
+
+msgid "Operations & Monitoring"
+msgstr ""
+
+msgid "Fetch Accounts"
+msgstr ""
+
+msgid "Worker Status"
+msgstr ""
+
+msgid "Reports"
+msgstr ""
+
+msgid "Quarantine"
+msgstr ""
+
+msgid "Transfer"
+msgstr ""
+
+msgid "System Management"
+msgstr ""
+
+msgid "Alert Management"
+msgstr ""
+
+msgid "Global Settings"
+msgstr ""
+
+msgid "User Management"
+msgstr ""
+
+msgid "Role Management"
+msgstr ""
+
+msgid "Logs"
+msgstr ""
+
+msgid "Help"
+msgstr ""
+
+msgid "About"
+msgstr ""
+
+msgid "Donate"
+msgstr ""
+
+msgid "New Fetch Account"
+msgstr ""
+
+msgid "Account Name"
+msgstr ""
+
+msgid "A friendly name to identify this account"
+msgstr ""
+
+msgid "Account Type"
+msgstr ""
+
+msgid "IMAP"
+msgstr ""
+
+msgid "Gmail API"
+msgstr ""
+
+msgid "Office 365 API"
+msgstr ""
+
+msgid "Select the type of email service to fetch from"
+msgstr ""
+
+msgid "IMAP Configuration"
+msgstr ""
+
+msgid "Host"
+msgstr ""
+
+msgid "Port"
+msgstr ""
+
+msgid "Leave blank to keep the existing password"
+msgstr ""
+
+msgid "Fetch Settings"
+msgstr ""
+
+msgid "Recommended for secure connections (port 993)"
+msgstr ""
+
+msgid "How often to check for new emails (minimum 60 seconds)"
+msgstr ""
+
+msgid "Require STARTTLS"
+msgstr ""
+
+msgid "For plain connections that upgrade to TLS (port 143)"
+msgstr ""
+
+msgid "Delete Email After Processing"
+msgstr ""
+
+msgid "Gmail: moves to Trash | Office 365: moves to Deleted Items | IMAP: marks as deleted (recoverable)"
+msgstr ""
+
+msgid "Permanently Expunge Deleted (IMAP only)"
+msgstr ""
+
+msgid "Warning: Permanently removes deleted emails from server - cannot be recovered"
+msgstr ""
+
+msgid "OAuth Setup Required"
+msgstr ""
+
+msgid "To use Gmail or Office 365, you need to:"
+msgstr ""
+
+msgid "Create an OAuth app in Google/Microsoft developer console"
+msgstr ""
+
+msgid "Enter your Client ID and Client Secret below"
+msgstr ""
+
+msgid "Click \"Authorise\" to grant access"
+msgstr ""
+
+msgid "Create Account"
+msgstr ""
+
+msgid "OAuth Client ID"
+msgstr ""
+
+msgid "From your Google/Microsoft OAuth app"
+msgstr ""
+
+msgid "OAuth Client Secret"
+msgstr ""
+
+msgid "Keep this secret secure"
+msgstr ""
+
+msgid "Add Fetch Account"
+msgstr ""
+
+msgid "Name"
+msgstr ""
+
+msgid "Type"
+msgstr ""
+
+msgid "Host/Service"
+msgstr ""
+
+msgid "User"
+msgstr ""
+
+msgid "Poll Interval"
+msgstr ""
+
+msgid "Enabled"
+msgstr ""
+
+msgid "Last Success"
+msgstr ""
+
+msgid "Actions"
+msgstr ""
+
+msgid "Gmail"
+msgstr ""
+
+msgid "O365"
+msgstr ""
+
+msgid "SSL Enabled"
+msgstr ""
+
+msgid "Disabled"
+msgstr ""
+
+msgid "Never"
+msgstr ""
+
+msgid "Edit"
+msgstr ""
+
+msgid "Test Connection"
+msgstr ""
+
+msgid "Delete"
+msgstr ""
+
+msgid "No fetch accounts configured."
+msgstr ""
+
+msgid "Previous"
+msgstr ""
+
+msgid "Next"
+msgstr ""
+
+msgid "Delete Fetch Account"
+msgstr ""
+
+msgid "Warning:"
+msgstr ""
+
+msgid "You are about to delete the fetch account:"
+msgstr ""
+
+msgid "Loading email count..."
+msgstr ""
+
+msgid "What would you like to do?"
+msgstr ""
+
+msgid "Delete Account Only (retain emails)"
+msgstr ""
+
+msgid "Delete Account + All Emails"
+msgstr ""
+
+msgid "Edit Fetch Account"
+msgstr ""
+
+msgid "Update Account"
+msgstr ""
+
+msgid "This account has"
+msgstr ""
+
+msgid "associated with it."
+msgstr ""
+
+msgid "email"
+msgstr ""
+
+msgid "emails"
+msgstr ""
+
+msgid "Delete Account Only (retain"
+msgstr ""
+
+msgid "Delete Account + All"
+msgstr ""
+
+msgid "Forgot Password"
+msgstr ""
+
+msgid "Enter your email address to reset your password or unlock your account"
+msgstr ""
+
+msgid "General Settings"
+msgstr ""
+
+msgid "15/01/2024"
+msgstr ""
+
+msgid "2024-01-15"
+msgstr ""
+
+msgid "01/15/2024"
+msgstr ""
+
+msgid "15 Jan 2024"
+msgstr ""
+
+msgid "January 15, 2024"
+msgstr ""
+
+msgid "Date display format throughout the application"
+msgstr ""
+
+msgid "Time Format"
+msgstr ""
+
+msgid "14:30 (24-hour)"
+msgstr ""
+
+msgid "14:30:45 (24-hour with seconds)"
+msgstr ""
+
+msgid "02:30 PM (12-hour)"
+msgstr ""
+
+msgid "02:30:45 PM (12-hour with seconds)"
+msgstr ""
+
+msgid "Time display format throughout the application"
+msgstr ""
+
+msgid "Timezone"
+msgstr ""
+
+msgid "UTC"
+msgstr ""
+
+msgid "Pacific/Honolulu (HST)"
+msgstr ""
+
+msgid "America/Anchorage (AKST)"
+msgstr ""
+
+msgid "America/Los Angeles (PST)"
+msgstr ""
+
+msgid "America/Vancouver (PST)"
+msgstr ""
+
+msgid "America/Denver (MST)"
+msgstr ""
+
+msgid "America/Chicago (CST)"
+msgstr ""
+
+msgid "America/Mexico City (CST)"
+msgstr ""
+
+msgid "America/New York (EST)"
+msgstr ""
+
+msgid "America/Toronto (EST)"
+msgstr ""
+
+msgid "America/Argentina (BRT)"
+msgstr ""
+
+msgid "America/Sao Paulo (BRT)"
+msgstr ""
+
+msgid "Europe/London (GMT)"
+msgstr ""
+
+msgid "Europe/Dublin (GMT)"
+msgstr ""
+
+msgid "Europe/Berlin (CET)"
+msgstr ""
+
+msgid "Europe/Paris (CET)"
+msgstr ""
+
+msgid "Europe/Madrid (CET)"
+msgstr ""
+
+msgid "Europe/Rome (CET)"
+msgstr ""
+
+msgid "Europe/Amsterdam (CET)"
+msgstr ""
+
+msgid "Europe/Zurich (CET)"
+msgstr ""
+
+msgid "Europe/Moscow (MSK)"
+msgstr ""
+
+msgid "Africa/Cairo (EET)"
+msgstr ""
+
+msgid "Africa/Johannesburg (SAST)"
+msgstr ""
+
+msgid "Asia/Dubai (GST)"
+msgstr ""
+
+msgid "Asia/Jerusalem (IST)"
+msgstr ""
+
+msgid "Asia/Kolkata (IST)"
+msgstr ""
+
+msgid "Asia/Karachi (PKT)"
+msgstr ""
+
+msgid "Asia/Bangkok (ICT)"
+msgstr ""
+
+msgid "Asia/Singapore (SGT)"
+msgstr ""
+
+msgid "Asia/Hong Kong (HKT)"
+msgstr ""
+
+msgid "Asia/Tokyo (JST)"
+msgstr ""
+
+msgid "Asia/Seoul (KST)"
+msgstr ""
+
+msgid "Australia/Perth (AWST)"
+msgstr ""
+
+msgid "Australia/Adelaide (ACST)"
+msgstr ""
+
+msgid "Australia/Brisbane (AEST)"
+msgstr ""
+
+msgid "Australia/Sydney (AEST)"
+msgstr ""
+
+msgid "Australia/Melbourne (AEST)"
+msgstr ""
+
+msgid "Pacific/Auckland (NZST)"
+msgstr ""
+
+msgid "Pacific/Guam (ChST)"
+msgstr ""
+
+msgid "Timezone for displaying dates and times throughout the application"
+msgstr ""
+
+msgid "Default Theme"
+msgstr ""
+
+msgid "System (use browser / user preference)"
+msgstr ""
+
+msgid "Light"
+msgstr ""
+
+msgid "Dark"
+msgstr ""
+
+msgid "Global default theme for users who have not set a personal preference (users' own preference overrides this)"
+msgstr ""
+
+msgid "Auto Logout (minutes)"
+msgstr ""
+
+msgid "Automatically log out users after this many minutes of inactivity. Set to 0 to disable auto-logout."
+msgstr ""
+
+msgid "Email Retention Policy"
+msgstr ""
+
+msgid "Enable Automatic Email Purging"
+msgstr ""
+
+msgid "Automatically delete emails older than the retention period"
+msgstr ""
+
+msgid "Delete from Mail Server During Retention Cleanup"
+msgstr ""
+
+msgid "When enabled, retention cleanup will also attempt to delete emails from the original IMAP mail servers for both regular emails and quarantined emails"
+msgstr ""
+
+msgid "Retention Period"
+msgstr ""
+
+msgid "Day(s)"
+msgstr ""
+
+msgid "Month(s)"
+msgstr ""
+
+msgid "Year(s)"
+msgstr ""
+
+msgid "Emails older than this period will be automatically deleted"
+msgstr ""
+
+msgid "Virus Scanning (ClamAV)"
+msgstr ""
+
+msgid "Enable Virus Scanning"
+msgstr ""
+
+msgid "Scan incoming emails for viruses using ClamAV"
+msgstr ""
+
+msgid "ClamAV Host"
+msgstr ""
+
+msgid "Hostname or IP address of the ClamAV daemon (default: clamav for Docker)"
+msgstr ""
+
+msgid "ClamAV Port"
+msgstr ""
+
+msgid "Port number for the ClamAV daemon (default: 3310)"
+msgstr ""
+
+msgid "Action When Virus Detected"
+msgstr ""
+
+msgid "Quarantine (Store with virus flag)"
+msgstr ""
+
+msgid "Reject (Do not store infected emails)"
+msgstr ""
+
+msgid "Log Only (Store all emails, log detections)"
+msgstr ""
+
+msgid "Quarantine:"
+msgstr ""
+
+msgid "Emails with viruses are stored but marked as infected for review"
+msgstr ""
+
+msgid "Reject:"
+msgstr ""
+
+msgid "Emails with viruses are not stored in the database"
+msgstr ""
+
+msgid "Log Only:"
+msgstr ""
+
+msgid "All emails are stored, virus detections are logged for monitoring"
+msgstr ""
+
+msgid "Max File Size to Scan (bytes)"
+msgstr ""
+
+msgid "Files larger than this size will not be scanned by ClamAV"
+msgstr ""
+
+msgid "Quarantine Settings"
+msgstr ""
+
+msgid "Store quarantined emails in database"
+msgstr ""
+
+msgid "When enabled, infected message payloads are moved to the quarantined_emails table (recommended for auditability)"
+msgstr ""
+
+msgid "Quarantine Retention (days)"
+msgstr ""
+
+msgid "Number of days to retain quarantined messages before automatic purge"
+msgstr ""
+
+msgid "Encrypt quarantined data at rest"
+msgstr ""
+
+msgid "Requires CLAMAV_QUARANTINE_KEY to be configured in the environment or config file (see README)"
+msgstr ""
+
+msgid "SMTP Email Configuration"
+msgstr ""
+
+msgid "Enable Email Alerts"
+msgstr ""
+
+msgid "Send email notifications for system alerts and important events"
+msgstr ""
+
+msgid "SMTP Host"
+msgstr ""
+
+msgid "SMTP server hostname or IP address"
+msgstr ""
+
+msgid "SMTP Port"
+msgstr ""
+
+msgid "SMTP server port (587 for TLS, 465 for SSL, 25 for plain)"
+msgstr ""
+
+msgid "SMTP Username"
+msgstr ""
+
+msgid "Username for SMTP authentication (usually your email address)"
+msgstr ""
+
+msgid "SMTP Password"
+msgstr ""
+
+msgid "Password for SMTP authentication (use app passwords for Gmail)"
+msgstr ""
+
+msgid "Use TLS Encryption"
+msgstr ""
+
+msgid "Use STARTTLS for secure connection (recommended for most servers)"
+msgstr ""
+
+msgid "From Email Address"
+msgstr ""
+
+msgid "Email address to send alerts from"
+msgstr ""
+
+msgid "From Name"
+msgstr ""
+
+msgid "Display name for alert emails"
+msgstr ""
+
+msgid "Save Settings"
+msgstr ""
+
+msgid "Send Test Email"
+msgstr ""
+
+msgid "Enter your new password below"
+msgstr ""
+
+msgid "Set Your Password"
+msgstr ""
+
+msgid "admin@example.com"
+msgstr ""
+
+msgid "Email Notifications"
+msgstr ""
+
+msgid "Receive email alerts and notifications for system events"
+msgstr ""
