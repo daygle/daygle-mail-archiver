@@ -93,7 +93,28 @@ def create_role(
             "description": description.strip() or None,
         }).mappings().first()
 
-        role_id = created["id"] if created else None
+        # Normalize role_id to an integer. If INSERT...RETURNING didn't materialize
+        # as expected, fall back to selecting the role by name.
+        role_id = None
+        try:
+            if created and isinstance(created, dict) and "id" in created:
+                role_id = int(created["id"])
+        except Exception:
+            role_id = None
+
+        if role_id is None:
+            # Fallback: select the role we just created by name
+            row = query("SELECT id FROM roles WHERE name = :name", {"name": slug}).mappings().first()
+            if row and "id" in row:
+                try:
+                    role_id = int(row["id"])
+                except Exception:
+                    role_id = None
+
+        if role_id is None:
+            log("error", "Roles", f"Failed to determine new role id for '{slug}' after insert")
+            flash(request, "Failed to create role (internal error).", "error")
+            return RedirectResponse("/roles", status_code=303)
 
         # Assign permissions
         for perm_id in permission_ids:
