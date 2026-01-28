@@ -62,6 +62,16 @@ def is_setup_complete():
 def setup_wizard_form(request: Request):
     if is_setup_complete():
         return RedirectResponse("/login", status_code=303)
+    # allow setting language via ?lang=xx on unauthenticated setup page
+    try:
+        lang_q = request.query_params.get('lang')
+    except Exception:
+        lang_q = None
+    if lang_q and "session" in request.scope:
+        try:
+            request.session["language"] = lang_q
+        except Exception:
+            pass
     return templates.TemplateResponse("setup.html", {"request": request})
 
 
@@ -73,7 +83,8 @@ def setup_wizard_submit(
     last_name: str = Form(""),
     email: str = Form(""),
     password: str = Form(...),
-    confirm_password: str = Form(...)
+    confirm_password: str = Form(...),
+    language: str = Form('en')
 ):
     if is_setup_complete():
         return RedirectResponse("/login", status_code=303)
@@ -119,15 +130,16 @@ def setup_wizard_submit(
         # Create admin user
         hash_pw = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
         new_user = query("""
-            INSERT INTO users (username, password_hash, first_name, last_name, email)
-            VALUES (:u, :h, :fn, :ln, :e)
+            INSERT INTO users (username, password_hash, first_name, last_name, email, language)
+            VALUES (:u, :h, :fn, :ln, :e, :lang)
             RETURNING id
         """, {
             "u": username,
             "h": hash_pw,
             "fn": first_name or None,
             "ln": last_name or None,
-            "e": email or None
+            "e": email or None,
+            "lang": language or 'en'
         }).mappings().first()
 
         user_id = new_user["id"]
@@ -151,6 +163,12 @@ def setup_wizard_submit(
         execute("UPDATE settings SET value = 'true' WHERE key = 'setup_complete'")
 
         log("info", "Setup", f"Initial setup completed - Administrator '{username}' created")
+        # ensure session language reflects chosen language
+        try:
+            if "session" in request.scope:
+                request.session["language"] = language or 'en'
+        except Exception:
+            pass
         return RedirectResponse("/login?setup_complete=true", status_code=303)
 
     except Exception as e:
@@ -169,6 +187,17 @@ def setup_wizard_submit(
 def login_form(request: Request, setup_complete: str = ""):
     if not is_setup_complete():
         return RedirectResponse("/setup", status_code=303)
+
+    # allow setting language via ?lang=xx for unauthenticated pages
+    try:
+        lang_q = request.query_params.get('lang')
+    except Exception:
+        lang_q = None
+    if lang_q and "session" in request.scope:
+        try:
+            request.session["language"] = lang_q
+        except Exception:
+            pass
 
     success_message = (
         "Setup complete! Please login with your new account."
@@ -349,46 +378,7 @@ def logout(request: Request):
     return RedirectResponse("/login", status_code=303)
 
 
-@router.post("/set-language")
-async def set_language(request: Request):
-    """Allow unauthenticated users to set a preferred language into the session.
-    If the user is authenticated, persist it to their DB record too.
-    """
-    try:
-        data = await request.json()
-        language = data.get('language', 'en')
-    except Exception as e:
-        try:
-            log("error", "Language", f"set-language JSON error: {str(e)}")
-        except Exception:
-            pass
-        return JSONResponse({"error": "Invalid JSON"}, status_code=400)
-
-    try:
-        if "session" in request.scope:
-            request.session["language"] = language
-    except Exception as e:
-        try:
-            log("error", "Language", f"session set error: {str(e)}")
-        except Exception:
-            pass
-
-    # If logged in, persist preference to DB (best-effort)
-    try:
-        user_id = request.session.get("user_id") if "session" in request.scope else None
-        if user_id:
-            execute("""
-                UPDATE users
-                SET language = :lang
-                WHERE id = :id
-            """, {"lang": language, "id": user_id})
-    except Exception as e:
-        try:
-            log("error", "Language", f"DB update error: {str(e)}")
-        except Exception:
-            pass
-
-    return JSONResponse({"success": True})
+# /set-language endpoint removed: language is set via query param on unauthenticated pages
 
 
 # ---------------------------------------------------------
@@ -396,12 +386,28 @@ async def set_language(request: Request):
 # ---------------------------------------------------------
 @router.get("/forgot-password")
 def forgot_password_form(request: Request):
+    # allow setting language via ?lang=xx on unauthenticated forgot-password page
+    try:
+        lang_q = request.query_params.get('lang')
+    except Exception:
+        lang_q = None
+    if lang_q and "session" in request.scope:
+        try:
+            request.session["language"] = lang_q
+        except Exception:
+            pass
     return templates.TemplateResponse("forgot-password.html", {"request": request})
 
 
 @router.post("/forgot-password")
-def forgot_password_submit(request: Request, email: str = Form(...)):
+def forgot_password_submit(request: Request, email: str = Form(...), language: str = Form('en')):
     # Generate a reset token and send email if the account exists.
+    # persist language selection from form (best-effort)
+    try:
+        if "session" in request.scope and language:
+            request.session["language"] = language
+    except Exception:
+        pass
     try:
         user = query("SELECT id, username, email FROM users WHERE lower(email) = lower(:e)", {"e": email}).mappings().first()
     except Exception:
@@ -448,6 +454,17 @@ def forgot_password_submit(request: Request, email: str = Form(...)):
 def reset_password_form(request: Request, token: str = ""):
     if not token:
         return RedirectResponse("/login", status_code=303)
+
+    # allow setting language via ?lang=xx on reset-password page
+    try:
+        lang_q = request.query_params.get('lang')
+    except Exception:
+        lang_q = None
+    if lang_q and "session" in request.scope:
+        try:
+            request.session["language"] = lang_q
+        except Exception:
+            pass
 
     try:
         row = query(

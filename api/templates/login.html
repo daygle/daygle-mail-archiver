@@ -134,25 +134,13 @@
                     authLangPopup.querySelectorAll('button[data-lang]').forEach(function(b){ 
                         b.addEventListener('click', function(){ 
                             var l=this.getAttribute('data-lang');
-                            fetch('/set-language',{
-                                method:'POST',
-                                headers:{'Content-Type':'application/json'},
-                                credentials:'same-origin',
-                                body:JSON.stringify({language: l})
-                            })
-                            .then(function(response){
-                                if(response.ok){
-                                    // Update flag immediately
-                                    if(authLangFlag) authLangFlag.textContent = map[l] || '🌐';
-                                    location.reload();
-                                }else{
-                                    alert('Failed to set language');
-                                }
-                            })
-                            .catch(function(error){
-                                console.error('Set-language error:', error);
-                                alert('Error setting language');
-                            });
+                            try{
+                                var url = new URL(window.location.href);
+                                url.searchParams.set('lang', l);
+                                // update flag immediately for responsiveness
+                                if(authLangFlag) authLangFlag.textContent = map[l] || '🌐';
+                                window.location.href = url.toString();
+                            }catch(e){ location.reload(); }
                         }); 
                     });
                     document.addEventListener('click', function(e){ if(!authLangPopup.contains(e.target) && e.target !== authLangToggle) authLangPopup.classList.remove('open'); });
@@ -167,12 +155,9 @@
             if(!sel) return;
             sel.addEventListener('change', function(){
                 try{
-                    fetch('/set-language', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        credentials: 'same-origin',
-                        body: JSON.stringify({language: this.value})
-                    }).finally(function(){ location.reload(); });
+                    var url = new URL(window.location.href);
+                    url.searchParams.set('lang', this.value);
+                    window.location.href = url.toString();
                 }catch(e){ location.reload(); }
             });
         })();
