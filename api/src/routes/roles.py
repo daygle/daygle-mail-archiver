@@ -82,15 +82,18 @@ def create_role(
             flash(request, f"Role '{display_name}' already exists.", "error")
             return RedirectResponse("/roles", status_code=303)
 
-        # Create role
-        role_id = execute("""
+        # Create role and return new id
+        created = query("""
             INSERT INTO roles (name, display_name, description)
             VALUES (:name, :display_name, :description)
+            RETURNING id
         """, {
             "name": slug,
             "display_name": display_name,
             "description": description.strip() or None,
-        })
+        }).mappings().first()
+
+        role_id = created["id"] if created else None
 
         # Assign permissions
         for perm_id in permission_ids:
