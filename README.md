@@ -169,10 +169,10 @@ Check for updates via the command line:
 
 What the update script does:
 
-- Fetches and merges the latest code from the current git branch (attempts to preserve local changes by saving diffs and committing current state)
+-- Fetches and merges the latest code from the current git branch (attempts to preserve local changes by committing current state)
 - Pulls updated Docker images via Docker Compose
 - Rebuilds and restarts containers (with fallback to `--no-cache` and build cache pruning on failure)
-- Saves local repository diffs to `./update_diffs/` if you have uncommitted changes
+<!-- Local diff saving removed -->
 
 Important: the update script does NOT automatically create a full database backup. You should create a backup before updating if you need to preserve the database state. Use the provided backup script before running `update.sh`:
 

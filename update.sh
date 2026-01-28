@@ -31,12 +31,11 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$SCRIPT_DIR"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-DIFF_DIRECTORY="${ROOT_DIR}/update_diffs"
-
 # Default values
 FORCE=false
 SKIP_START=false
 CHECK_ONLY=false
+
 
 # Function to print colored messages
 log_info() {
@@ -67,11 +66,11 @@ ${GREEN}Usage:${NC}
 EOF
     echo ""
     echo -e "${GREEN}Options:${NC}"
-    cat <<EOF
-  -c, --check           Check for updates without applying them
-  -f, --force           Update without confirmation prompts
-  --skip-start          Don't start containers after update
-  -h, --help            Show this help message
+        cat <<EOF
+    -c, --check           Check for updates without applying them
+    -f, --force           Update without confirmation prompts
+    --skip-start          Don't start containers after update
+    -h, --help            Show this help message
 EOF
     
     echo ""
@@ -93,9 +92,8 @@ EOF
     echo ""
     echo -e "${YELLOW}Important Notes:${NC}"
     cat <<EOF
-  - Use --check first to see what will be updated
-  - Your configuration file (daygle_mail_archiver.conf) is preserved
-  - Local changes are saved to ${DIFF_DIRECTORY}/ for reference
+    - Use --check first to see what will be updated
+    - Your configuration file (daygle_mail_archiver.conf) is preserved
 
 EOF
 }
@@ -181,27 +179,7 @@ check_for_updates() {
     fi
 }
 
-# Function to save local changes
-save_local_changes() {
-    if ! git diff-index --quiet HEAD 2>/dev/null; then
-        log_warning "You have local changes in your repository"
-        
-        # Create diff directory
-        mkdir -p "$DIFF_DIRECTORY"
-        
-        # Save diff
-        DIFF_FILE="${DIFF_DIRECTORY}/diff_before_update_${TIMESTAMP}.diff"
-        log_info "Saving your local changes to: $DIFF_FILE"
-        
-        git diff --stat > "$DIFF_FILE"
-        git diff >> "$DIFF_FILE"
-        
-        log_success "Local changes saved"
-        echo ""
-        log_warning "These changes will be preserved during update"
-        log_warning "Review the diff file if you need to reapply customizations"
-    fi
-}
+# (diff saving removed)
 
 # Function to stop containers
 stop_containers() {
@@ -363,10 +341,7 @@ show_post_update_info() {
     log_info "Stop services with: $DOCKER_COMPOSE down"
     echo ""
     
-    if [ -d "$DIFF_DIRECTORY" ] && [ -n "$(ls -A "$DIFF_DIRECTORY" 2>/dev/null)" ]; then
-        log_warning "Local changes were saved to: $DIFF_DIRECTORY/"
-        log_warning "Review these files if you need to reapply customizations"
-    fi
+    # Local diffs disabled; nothing to show
 }
 
 # Parse command line arguments
@@ -386,6 +361,7 @@ parse_args() {
                 SKIP_START=true
                 shift
                 ;;
+            
             -h|--help)
                 show_usage
                 exit 0

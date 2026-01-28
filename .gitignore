@@ -40,8 +40,7 @@ backups/
 *.backup_*
 daygle_mail_archiver.conf.backup_*
 
-# Update diffs (local changes tracking)
-update_diffs/
+## update_diffs removed
 
 # Python bytecode & caches
 *.pyc
