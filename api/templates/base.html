@@ -203,17 +203,6 @@
                                 <span>{{ gettext('Toggle theme') }}</span>
                             </a>
                             <div class="dropdown-divider"></div>
-                            <div class="dropdown-item" id="languageHeader" style="cursor:pointer; display:flex; align-items:center;">
-                                <i class="fas fa-globe"></i> <span>{{ gettext('Language') }}</span> <i class="fas fa-chevron-down" id="languageChevron" style="margin-left:auto;"></i>
-                            </div>
-                            <div id="languageOptions" style="display:none;">
-                                <button data-lang="en" class="dropdown-item"><span class="flag">🇬🇧</span> {{ gettext('English') }}</button>
-                                <button data-lang="es" class="dropdown-item"><span class="flag">🇪🇸</span> {{ gettext('Español') }}</button>
-                                <button data-lang="fr" class="dropdown-item"><span class="flag">🇫🇷</span> {{ gettext('Français') }}</button>
-                                <button data-lang="de" class="dropdown-item"><span class="flag">🇩🇪</span> {{ gettext('Deutsch') }}</button>
-                                <button data-lang="zh" class="dropdown-item"><span class="flag">🇨🇳</span> {{ gettext('中文') }}</button>
-                            </div>
-                            <div class="dropdown-divider"></div>
                             <a href="/change-password" class="dropdown-item">
                                 <i class="fas fa-key"></i>
                                 <span>{{ gettext('Change Password') }}</span>
@@ -462,43 +451,7 @@
             });
         }
 
-        // Language selection in user dropdown
-        (function(){
-            var buttons = [];
-            if (userMenuDropdown) {
-                buttons = Array.prototype.slice.call(userMenuDropdown.querySelectorAll('button[data-lang]') || []);
-            }
-            buttons.forEach(function(b){
-                b.addEventListener('click', function(){
-                    var l = this.getAttribute('data-lang');
-                    fetch('/set-language', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        credentials: 'same-origin',
-                        body: JSON.stringify({language: l})
-                    }).then(function(){ location.reload(); }).catch(function(){ location.reload(); });
-                });
-            });
-        })();
-
-        // Language submenu toggle
-        const languageHeader = document.getElementById('languageHeader');
-        const languageOptions = document.getElementById('languageOptions');
-        const languageChevron = document.getElementById('languageChevron');
-        if(languageHeader && languageOptions && languageChevron){
-            languageChevron.style.transition = 'transform 0.2s';
-            languageHeader.addEventListener('click', function(e){
-                e.stopPropagation();
-                const isShown = languageOptions.style.display === 'block';
-                if(isShown){
-                    languageOptions.style.display = 'none';
-                    languageChevron.style.transform = 'rotate(0deg)';
-                } else {
-                    languageOptions.style.display = 'block';
-                    languageChevron.style.transform = 'rotate(180deg)';
-                }
-            });
-        }
+        // Language selection removed: language is managed via User Settings only.
 
 
     </script>

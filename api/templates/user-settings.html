@@ -188,20 +188,6 @@ window.addEventListener('theme-changed', function(e) {
     } catch (err) { console.debug('theme-changed listener error', err); }
 });
 
-// User settings language select
-(function(){
-    var sel = document.getElementById('user_language');
-    if(!sel) return;
-    sel.addEventListener('change', function(){
-        try{
-            fetch('/set-language', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                credentials: 'same-origin',
-                body: JSON.stringify({language: this.value})
-            }).finally(function(){ location.reload(); });
-        }catch(e){ location.reload(); }
-    });
-})();
+// Language select is persisted via the settings form; immediate-change handler removed.
 </script>
 {% endblock %}
