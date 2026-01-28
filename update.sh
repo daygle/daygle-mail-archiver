@@ -422,8 +422,7 @@ main() {
             fi
         fi
         
-        # Save local changes
-        save_local_changes
+        # (local diff saving removed) proceed with update
         
         # Perform update
         stop_containers
