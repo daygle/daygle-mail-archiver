@@ -353,3 +353,430 @@ msgstr "Compte créé :"
 
 msgid "Update Information"
 msgstr "Mettre à jour les informations"
+
+# Machine-translated additions (prefill)
+msgid "01/15/2024"
+msgstr "01/15/2024"
+
+msgid "02:30 PM (12-hour)"
+msgstr "02:30 PM (12 heures)"
+
+msgid "02:30:45 PM (12-hour with seconds)"
+msgstr "02:30:45 PM (12 heures avec secondes)"
+
+msgid "14:30 (24-hour)"
+msgstr "14:30 (24 heures)"
+
+msgid "14:30:45 (24-hour with seconds)"
+msgstr "14:30:45 (24 heures avec secondes)"
+
+msgid "15 Jan 2024"
+msgstr "15 janv. 2024"
+
+msgid "15/01/2024"
+msgstr "15/01/2024"
+
+msgid "2024-01-15"
+msgstr "2024-01-15"
+
+msgid "About"
+msgstr "À propos"
+
+msgid "Action When Virus Detected"
+msgstr "Action lorsqu'un virus est détecté"
+
+msgid "Africa/Cairo (EET)"
+msgstr "Afrique/Le Caire (EET)"
+
+msgid "Africa/Johannesburg (SAST)"
+msgstr "Afrique/Johannesburg (SAST)"
+
+msgid "Alert Management"
+msgstr "Gestion des alertes"
+
+msgid "All emails are stored, virus detections are logged for monitoring"
+msgstr "Tous les e-mails sont stockés, les détections de virus sont enregistrées pour la surveillance"
+
+msgid "America/Anchorage (AKST)"
+msgstr "Amérique/Anchorage (AKST)"
+
+msgid "America/Argentina (BRT)"
+msgstr "Amérique/Argentine (BRT)"
+
+msgid "America/Chicago (CST)"
+msgstr "Amérique/Chicago (CST)"
+
+msgid "America/Denver (MST)"
+msgstr "Amérique/Denver (MST)"
+
+msgid "America/Los Angeles (PST)"
+msgstr "Amérique/Los Angeles (PST)"
+
+msgid "America/Mexico City (CST)"
+msgstr "Amérique/Mexique (CST)"
+
+msgid "America/New York (EST)"
+msgstr "Amérique/Nouvelle-York (EST)"
+
+msgid "America/Sao Paulo (BRT)"
+msgstr "Amérique/São Paulo (BRT)"
+
+msgid "America/Toronto (EST)"
+msgstr "Amérique/Toronto (EST)"
+
+msgid "America/Vancouver (PST)"
+msgstr "Amérique/Vancouver (PST)"
+
+msgid "Asia/Bangkok (ICT)"
+msgstr "Asie/Bangkok (ICT)"
+
+msgid "Asia/Dubai (GST)"
+msgstr "Asie/Dubaï (GST)"
+
+msgid "Asia/Hong Kong (HKT)"
+msgstr "Asie/Hong Kong (HKT)"
+
+msgid "Asia/Jerusalem (IST)"
+msgstr "Asie/Jérusalem (IST)"
+
+msgid "Asia/Karachi (PKT)"
+msgstr "Asie/Karachi (PKT)"
+
+msgid "Asia/Kolkata (IST)"
+msgstr "Asie/Kolkata (IST)"
+
+msgid "Asia/Seoul (KST)"
+msgstr "Asie/Seoul (KST)"
+
+msgid "Asia/Singapore (SGT)"
+msgstr "Asie/Singapour (SGT)"
+
+msgid "Asia/Tokyo (JST)"
+msgstr "Asie/Tokyo (JST)"
+
+msgid "Australia/Adelaide (ACST)"
+msgstr "Australie/Adelaide (ACST)"
+
+msgid "Australia/Brisbane (AEST)"
+msgstr "Australie/Brisbane (AEST)"
+
+msgid "Australia/Melbourne (AEST)"
+msgstr "Australie/Melbourne (AEST)"
+
+msgid "Australia/Perth (AWST)"
+msgstr "Australie/Perth (AWST)"
+
+msgid "Australia/Sydney (AEST)"
+msgstr "Australie/Sydney (AEST)"
+
+msgid "Auto Logout (minutes)"
+msgstr "Déconnexion automatique (minutes)"
+
+msgid "Automatically delete emails older than the retention period"
+msgstr "Supprimer automatiquement les e-mails plus anciens que la période de rétention"
+
+msgid "Automatically log out users after this many minutes of inactivity. Set to 0 to disable auto-logout."
+msgstr "Déconnecter automatiquement les utilisateurs après ce nombre de minutes d'inactivité. Mettre 0 pour désactiver."
+
+msgid "ClamAV Host"
+msgstr "Hôte ClamAV"
+
+msgid "ClamAV Port"
+msgstr "Port ClamAV"
+
+msgid "Dark"
+msgstr "Sombre"
+
+msgid "Date display format throughout the application"
+msgstr "Format d'affichage des dates dans toute l'application"
+
+msgid "Day(s)"
+msgstr "Jour(s)"
+
+msgid "Default Theme"
+msgstr "Thème par défaut"
+
+msgid "Delete from Mail Server During Retention Cleanup"
+msgstr "Supprimer du serveur de messagerie lors du nettoyage de rétention"
+
+msgid "Disabled"
+msgstr "Désactivé"
+
+msgid "Display name for alert emails"
+msgstr "Nom affiché pour les e-mails d'alerte"
+
+msgid "Donate"
+msgstr "Faire un don"
+
+msgid "Email Notifications"
+msgstr "Notifications par e-mail"
+
+msgid "Email Retention Policy"
+msgstr "Politique de conservation des e-mails"
+
+msgid "Email address to send alerts from"
+msgstr "Adresse e-mail d'envoi des alertes"
+
+msgid "Emails"
+msgstr "E-mails"
+
+msgid "Emails older than this period will be automatically deleted"
+msgstr "Les e-mails plus anciens que cette période seront supprimés automatiquement"
+
+msgid "Emails with viruses are not stored in the database"
+msgstr "Les e-mails contenant des virus ne sont pas stockés dans la base de données"
+
+msgid "Emails with viruses are stored but marked as infected for review"
+msgstr "Les e-mails contenant des virus sont stockés mais marqués comme infectés pour révision"
+
+msgid "Enable Automatic Email Purging"
+msgstr "Activer la purge automatique des e-mails"
+
+msgid "Enable Email Alerts"
+msgstr "Activer les alertes par e-mail"
+
+msgid "Enable Virus Scanning"
+msgstr "Activer l'analyse antivirus"
+
+msgid "Enabled"
+msgstr "Activé"
+
+msgid "Encrypt quarantined data at rest"
+msgstr "Chiffrer les données en quarantaine au repos"
+
+msgid "Enter your email address to reset your password or unlock your account"
+msgstr "Entrez votre adresse e-mail pour réinitialiser votre mot de passe ou déverrouiller votre compte"
+
+msgid "Enter your new password below"
+msgstr "Entrez votre nouveau mot de passe ci-dessous"
+
+msgid "Europe/Amsterdam (CET)"
+msgstr "Europe/Amsterdam (CET)"
+
+msgid "Europe/Berlin (CET)"
+msgstr "Europe/Berlin (CET)"
+
+msgid "Europe/Dublin (GMT)"
+msgstr "Europe/Dublin (GMT)"
+
+msgid "Europe/London (GMT)"
+msgstr "Europe/London (GMT)"
+
+msgid "Europe/Madrid (CET)"
+msgstr "Europe/Madrid (CET)"
+
+msgid "Europe/Moscow (MSK)"
+msgstr "Europe/Moscou (MSK)"
+
+msgid "Europe/Paris (CET)"
+msgstr "Europe/Paris (CET)"
+
+msgid "Europe/Rome (CET)"
+msgstr "Europe/Rome (CET)"
+
+msgid "Europe/Zurich (CET)"
+msgstr "Europe/Zurich (CET)"
+
+msgid "Fetch Accounts"
+msgstr "Récupérer les comptes"
+
+msgid "Files larger than this size will not be scanned by ClamAV"
+msgstr "Les fichiers plus grands que cette taille ne seront pas scannés par ClamAV"
+
+msgid "Forgot Password"
+msgstr "Mot de passe oublié"
+
+msgid "From Email Address"
+msgstr "Adresse e-mail d'expédition"
+
+msgid "From Name"
+msgstr "Nom d'expéditeur"
+
+msgid "General Settings"
+msgstr "Paramètres généraux"
+
+msgid "Global Settings"
+msgstr "Paramètres globaux"
+
+msgid "Help"
+msgstr "Aide"
+
+msgid "Hostname or IP address of the ClamAV daemon (default: clamav for Docker)"
+msgstr "Nom d'hôte ou adresse IP du démon ClamAV (par défaut : clamav pour Docker)"
+
+msgid "January 15, 2024"
+msgstr "15 janvier 2024"
+
+msgid "Light"
+msgstr "Clair"
+
+msgid "Log Only (Store all emails, log detections)"
+msgstr "Journal seulement (conserver tous les e-mails, enregistrer les détections)"
+
+msgid "Log Only:"
+msgstr "Journal seulement :"
+
+msgid "Logs"
+msgstr "Journaux"
+
+msgid "Max File Size to Scan (bytes)"
+msgstr "Taille maximale de fichier à scanner (octets)"
+
+msgid "Month(s)"
+msgstr "Mois"
+
+msgid "Never"
+msgstr "Jamais"
+
+msgid "Number of days to retain quarantined messages before automatic purge"
+msgstr "Nombre de jours de conservation des messages en quarantaine avant purge automatique"
+
+msgid "Operations & Monitoring"
+msgstr "Opérations et surveillance"
+
+msgid "Pacific/Auckland (NZST)"
+msgstr "Pacifique/Auckland (NZST)"
+
+msgid "Pacific/Guam (ChST)"
+msgstr "Pacifique/Guam (ChST)"
+
+msgid "Pacific/Honolulu (HST)"
+msgstr "Pacifique/Honolulu (HST)"
+
+msgid "Password for SMTP authentication (use app passwords for Gmail)"
+msgstr "Mot de passe pour l'authentification SMTP (utilisez les mots de passe d'application pour Gmail)"
+
+msgid "Port number for the ClamAV daemon (default: 3310)"
+msgstr "Numéro de port pour le démon ClamAV (par défaut : 3310)"
+
+msgid "Quarantine"
+msgstr "Mise en quarantaine"
+
+msgid "Quarantine (Store with virus flag)"
+msgstr "Quarantaine (stocker avec indicateur de virus)"
+
+msgid "Quarantine Retention (days)"
+msgstr "Rétention de quarantaine (jours)"
+
+msgid "Quarantine Settings"
+msgstr "Paramètres de quarantaine"
+
+msgid "Quarantine:"
+msgstr "Quarantaine :"
+
+msgid "Receive email alerts and notifications for system events"
+msgstr "Recevoir des alertes et notifications par e-mail pour les événements système"
+
+msgid "Reject (Do not store infected emails)"
+msgstr "Rejeter (ne pas stocker les e-mails infectés)"
+
+msgid "Reject:"
+msgstr "Rejeter :"
+
+msgid "Reports"
+msgstr "Rapports"
+
+msgid "Requires CLAMAV_QUARANTINE_KEY to be configured in the environment or config file (see README)"
+msgstr "Nécessite que CLAMAV_QUARANTINE_KEY soit configuré dans l'environnement ou le fichier de configuration (voir README)"
+
+msgid "Retention Period"
+msgstr "Période de rétention"
+
+msgid "Role Management"
+msgstr "Gestion des rôles"
+
+msgid "SMTP Email Configuration"
+msgstr "Configuration SMTP"
+
+msgid "SMTP Host"
+msgstr "Hôte SMTP"
+
+msgid "SMTP Password"
+msgstr "Mot de passe SMTP"
+
+msgid "SMTP Port"
+msgstr "Port SMTP"
+
+msgid "SMTP Username"
+msgstr "Nom d'utilisateur SMTP"
+
+msgid "SMTP server hostname or IP address"
+msgstr "Nom d'hôte ou adresse IP du serveur SMTP"
+
+msgid "SMTP server port (587 for TLS, 465 for SSL, 25 for plain)"
+msgstr "Port du serveur SMTP (587 pour TLS, 465 pour SSL, 25 pour plain)"
+
+msgid "Save Settings"
+msgstr "Enregistrer les paramètres"
+
+msgid "Scan incoming emails for viruses using ClamAV"
+msgstr "Scanner les e-mails entrants à la recherche de virus avec ClamAV"
+
+msgid "Send Test Email"
+msgstr "Envoyer un e-mail de test"
+
+msgid "Send email notifications for system alerts and important events"
+msgstr "Envoyer des notifications par e-mail pour les alertes système et événements importants"
+
+msgid "Set Your Password"
+msgstr "Définissez votre mot de passe"
+
+msgid "Store quarantined emails in database"
+msgstr "Stocker les e-mails en quarantaine dans la base de données"
+
+msgid "System (use browser / user preference)"
+msgstr "Système (utiliser la préférence du navigateur/utilisateur)"
+
+msgid "System Management"
+msgstr "Gestion du système"
+
+msgid "Time Format"
+msgstr "Format de l'heure"
+
+msgid "Time display format throughout the application"
+msgstr "Format d'affichage de l'heure dans toute l'application"
+
+msgid "Timezone"
+msgstr "Fuseau horaire"
+
+msgid "Timezone for displaying dates and times throughout the application"
+msgstr "Fuseau horaire pour l'affichage des dates et heures dans toute l'application"
+
+msgid "Transfer"
+msgstr "Transférer"
+
+msgid "UTC"
+msgstr "UTC"
+
+msgid "Use STARTTLS for secure connection (recommended for most servers)"
+msgstr "Utiliser STARTTLS pour une connexion sécurisée (recommandé pour la plupart des serveurs)"
+
+msgid "Use TLS Encryption"
+msgstr "Utiliser le chiffrement TLS"
+
+msgid "User Management"
+msgstr "Gestion des utilisateurs"
+
+msgid "Username for SMTP authentication (usually your email address)"
+msgstr "Nom d'utilisateur pour l'authentification SMTP (généralement votre adresse e-mail)"
+
+msgid "Virus Scanning (ClamAV)"
+msgstr "Analyse des virus (ClamAV)"
+
+msgid "When enabled, infected message payloads are moved to the quarantined_emails table (recommended for auditability)"
+msgstr "Lorsqu'il est activé, les charges utiles infectées sont déplacées vers la table quarantined_emails (recommandé pour l'auditabilité)"
+
+msgid "When enabled, retention cleanup will also attempt to delete emails from the original IMAP mail servers for both regular emails and quarantined emails"
+msgstr "Lorsqu'il est activé, le nettoyage de rétention tentera également de supprimer les e-mails des serveurs IMAP d'origine pour les e-mails normaux et en quarantaine"
+
+msgid "Worker Status"
+msgstr "État du worker"
+
+msgid "Year(s)"
+msgstr "Année(s)"
+
+msgid "admin@example.com"
+msgstr "admin@example.com"
+
+msgid "aygle Mail Archiver"
+msgstr "aygle Mail Archiver"
