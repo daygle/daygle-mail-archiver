@@ -378,79 +378,109 @@ def process_imap_account(account):
         log_error(source, msg)
         update_error(account_id, msg)
         return
+    # Wrap IMAP connection and mailbox operations in a retry loop to tolerate
+    # transient network/DNS issues (e.g. during server reboot).
+    import socket
+    import imaplib
 
-    with ImapConnection(
-        host=account["host"],
-        port=account["port"],
-        username=account["username"],
-        password=password,
-        use_ssl=account["use_ssl"],
-        require_starttls=account["require_starttls"],
-    ) as conn:
+    max_attempts = 5
+    backoff = 1
+    for attempt in range(1, max_attempts + 1):
+        try:
+            with ImapConnection(
+                host=account["host"],
+                port=account["port"],
+                username=account["username"],
+                password=password,
+                use_ssl=account["use_ssl"],
+                require_starttls=account["require_starttls"],
+            ) as conn:
 
-        status, mailboxes = conn.list()
-        if status != "OK":
-            raise RuntimeError(f"LIST failed: {status}")
+                status, mailboxes = conn.list()
+                if status != "OK":
+                    raise RuntimeError(f"LIST failed: {status}")
 
-        # Iterate over all mailboxes
-        for mbox in mailboxes:
-            parts = mbox.decode().split(" ")
-            folder = parts[-1].strip('"')
+                # Iterate over all mailboxes
+                for mbox in mailboxes:
+                    parts = mbox.decode().split(" ")
+                    folder = parts[-1].strip('"')
 
-            # Select folder as readonly unless we need to delete
-            conn.select(folder, readonly=not delete_after_processing)
+                    # Select folder as readonly unless we need to delete
+                    conn.select(folder, readonly=not delete_after_processing)
 
-            last_uid = get_last_uid(account_id, folder)
+                    last_uid = get_last_uid(account_id, folder)
 
-            # UID search: all emails with UID greater than last_uid
-            if last_uid > 0:
-                criteria = f"(UID {last_uid+1}:*)"
+                    # UID search: all emails with UID greater than last_uid
+                    if last_uid > 0:
+                        criteria = f"(UID {last_uid+1}:*)"
+                    else:
+                        criteria = "ALL"
+
+                    status, data = conn.uid("SEARCH", None, criteria)
+                    if status != "OK":
+                        continue
+
+                    if not data or not data[0]:
+                        continue
+
+                    uids = [int(u) for u in data[0].split()]
+                    max_uid = last_uid
+
+                    for uid in uids:
+                        if uid <= last_uid:
+                            continue
+
+                        status, email_data = conn.uid("FETCH", str(uid), "(RFC822)")
+                        if status != "OK" or not email_data or not email_data[0]:
+                            continue
+
+                        raw = email_data[0][1]
+                        store_email(source, folder, uid, raw)
+                        
+                        # Delete from server if configured
+                        if delete_after_processing:
+                            try:
+                                # Mark email as deleted (IMAP standard)
+                                # If expunge is disabled, email stays flagged but visible in mail clients
+                                # If expunge is enabled, email is permanently removed
+                                conn.uid("STORE", str(uid), "+FLAGS", "(\\Deleted)")
+                            except Exception as e:
+                                log_error(source, f"Failed to mark UID {uid} as deleted in folder {folder}: {e}")
+                        
+                        if uid > max_uid:
+                            max_uid = uid
+                    
+                    # Expunge deleted emails only if expunge flag is enabled
+                    if delete_after_processing and expunge_deleted:
+                        try:
+                            conn.expunge()
+                        except Exception as e:
+                            log_error(source, f"Failed to expunge folder {folder}: {e}")
+
+                    if max_uid > last_uid:
+                        set_last_uid(account_id, folder, max_uid)
+
+            # success, break out of attempt loop
+            break
+        except Exception as e:
+            # Treat common network/name resolution errors as transient
+            transient = isinstance(e, (OSError, socket.gaierror, socket.timeout, imaplib.IMAP4.abort))
+            msgstr = str(e)
+            if not transient:
+                if "Network is unreachable" in msgstr or "Temporary failure in name resolution" in msgstr or "timed out" in msgstr:
+                    transient = True
+
+            if transient:
+                log_error(source, f"Network error processing IMAP account {account_id} (attempt {attempt}/{max_attempts}): {e}", level="warning")
+                if attempt == max_attempts:
+                    # re-raise to be handled by outer process_account
+                    raise
+                time.sleep(backoff)
+                backoff *= 2
+                continue
             else:
-                criteria = "ALL"
-
-            status, data = conn.uid("SEARCH", None, criteria)
-            if status != "OK":
-                continue
-
-            if not data or not data[0]:
-                continue
-
-            uids = [int(u) for u in data[0].split()]
-            max_uid = last_uid
-
-            for uid in uids:
-                if uid <= last_uid:
-                    continue
-
-                status, email_data = conn.uid("FETCH", str(uid), "(RFC822)")
-                if status != "OK" or not email_data or not email_data[0]:
-                    continue
-
-                raw = email_data[0][1]
-                store_email(source, folder, uid, raw)
-                
-                # Delete from server if configured
-                if delete_after_processing:
-                    try:
-                        # Mark email as deleted (IMAP standard)
-                        # If expunge is disabled, email stays flagged but visible in mail clients
-                        # If expunge is enabled, email is permanently removed
-                        conn.uid("STORE", str(uid), "+FLAGS", "(\\Deleted)")
-                    except Exception as e:
-                        log_error(source, f"Failed to mark UID {uid} as deleted in folder {folder}: {e}")
-                
-                if uid > max_uid:
-                    max_uid = uid
-            
-            # Expunge deleted emails only if expunge flag is enabled
-            if delete_after_processing and expunge_deleted:
-                try:
-                    conn.expunge()
-                except Exception as e:
-                    log_error(source, f"Failed to expunge folder {folder}: {e}")
-
-            if max_uid > last_uid:
-                set_last_uid(account_id, folder, max_uid)
+                # Non-transient error; re-raise to be handled upstream
+                raise
 
 
 def process_gmail_account(account):
@@ -613,18 +643,31 @@ def get_valid_token(account_id: int, account_type: str) -> str:
             token_url = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
         else:
             return None
-        
-        response = requests.post(
-            token_url,
-            data={
-                "client_id": row["oauth_client_id"],
-                "client_secret": row["oauth_client_secret"],
-                "refresh_token": refresh_token,
-                "grant_type": "refresh_token"
-            },
-            timeout=30
-        )
-        response.raise_for_status()
+
+        # Retry network requests transient failures (e.g. during server reboot / network flaps)
+        max_attempts = 5
+        backoff = 1
+        response = None
+        for attempt in range(1, max_attempts + 1):
+            try:
+                response = requests.post(
+                    token_url,
+                    data={
+                        "client_id": row["oauth_client_id"],
+                        "client_secret": row["oauth_client_secret"],
+                        "refresh_token": refresh_token,
+                        "grant_type": "refresh_token"
+                    },
+                    timeout=30,
+                )
+                response.raise_for_status()
+                break
+            except (requests.exceptions.RequestException, OSError) as e:
+                log_error("OAuth", f"Network error refreshing token for account {account_id} (attempt {attempt}/{max_attempts}): {e}", level="warning")
+                if attempt == max_attempts:
+                    raise
+                time.sleep(backoff)
+                backoff *= 2
         token_data = response.json()
         
         new_access_token = token_data.get("access_token")
