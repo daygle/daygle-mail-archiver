@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
-from collections import defaultdict
-from typing import List, Dict
+from typing import List
 from pydantic import BaseModel
 from sqlalchemy import text
 
@@ -32,48 +31,6 @@ class DashboardLayout(BaseModel):
 def flash(request: Request, message: str, category: str = 'info'):
     session = getattr(request, 'session', {})
     session["flash"] = {"message": message, "type": category}
-
-
-def get_user_date_format(request: Request, date_only: bool = False) -> str:
-    """Get the user's preferred date format, falling back to global setting"""
-    # Get global date format
-    try:
-        global_setting = query("SELECT value FROM settings WHERE key = 'date_format'").mappings().first()
-        date_format = global_setting["value"] if global_setting else "%d/%m/%Y"
-    except Exception:
-        date_format = "%d/%m/%Y"
-    
-    # Override with user's date format if set
-    user_id = getattr(request, 'session', {}).get("user_id")
-    if user_id:
-        try:
-            user = query("SELECT date_format FROM users WHERE id = :id", {"id": user_id}).mappings().first()
-            if user and user["date_format"]:
-                date_format = user["date_format"]
-        except Exception:
-            pass
-    
-    # If we only need the date part, return just date_format
-    if date_only:
-        return date_format
-    
-    # Get time format
-    try:
-        time_setting = query("SELECT value FROM settings WHERE key = 'time_format'").mappings().first()
-        time_format = time_setting["value"] if time_setting else "%H:%M"
-    except Exception:
-        time_format = "%H:%M"
-    
-    if user_id:
-        try:
-            user = query("SELECT time_format FROM users WHERE id = :id", {"id": user_id}).mappings().first()
-            if user and user["time_format"]:
-                time_format = user["time_format"]
-        except Exception:
-            pass
-    
-    return f"{date_format} {time_format}"
-
 
 @router.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request, _=require_permission(PERMISSIONS["view_dashboard"])):
