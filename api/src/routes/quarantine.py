@@ -485,21 +485,21 @@ def restore_quarantine(request: Request, qid: int):
             if f:
                 data = f.decrypt(data)
 
-            # Decompress if needed (emails are stored decompressed in the quarantine, but might be compressed)
-            compressed_flag = item.get('compressed') if item.get('compressed') is not None else False
-            if compressed_flag and isinstance(data, (bytes, bytearray)) and len(data) >= 2 and data[:2] == b"\x1f\x8b":
+            # Decompress if needed to get the original uncompressed email
+            if isinstance(data, (bytes, bytearray)) and len(data) >= 2 and data[:2] == b"\x1f\x8b":
                 import gzip as _gzip
                 data = _gzip.decompress(data)
 
-            # Compute signature on the FINAL data that will be stored
-            # This ensures signature matches what's actually in the database
+            # Compute signature on the UNCOMPRESSED data (this is the standard)
             try:
                 sig = compute_signature(data)
             except Exception:
                 sig = None
 
-            # Use the newly computed signature (not the old one) to ensure integrity
-            sig_to_store = sig
+            # Re-compress the data for storage (emails table stores compressed data)
+            import gzip as _gzip
+            compressed_data = _gzip.compress(data)
+
             vname = item.get('virus_name')
             vdetected = True if vname else False
             vscanned = True
@@ -507,16 +507,15 @@ def restore_quarantine(request: Request, qid: int):
             # Update existing email
             execute(
                 """
-                UPDATE emails SET raw_email = :raw, signature = :signature, compressed = :compressed,
+                UPDATE emails SET raw_email = :raw, signature = :signature, compressed = TRUE,
                     quarantined = FALSE, quarantine_id = NULL,
                     virus_scanned = :vscanned, virus_detected = :vdetected, virus_name = :vname,
                     scan_timestamp = :qtime
                 WHERE source = :source AND folder = :folder AND uid = :uid
                 """,
                 {
-                    'raw': data,
-                    'signature': sig_to_store,
-                    'compressed': compressed_flag,
+                    'raw': compressed_data,
+                    'signature': sig,
                     'vname': vname,
                     'vdetected': vdetected,
                     'vscanned': vscanned,
@@ -534,7 +533,7 @@ def restore_quarantine(request: Request, qid: int):
                     raw_email, signature, compressed, virus_scanned, virus_detected, virus_name,
                     scan_timestamp, quarantined)
                 VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date,
-                    :raw_email, :signature, :compressed, :vscanned, :vdetected, :vname,
+                    :raw_email, :signature, TRUE, :vscanned, :vdetected, :vname,
                     :qtime, FALSE)
                 ON CONFLICT (source, folder, uid) DO NOTHING
                 """,
@@ -546,9 +545,8 @@ def restore_quarantine(request: Request, qid: int):
                     'sender': item.get('sender'),
                     'recipients': item.get('recipients'),
                     'date': item.get('date'),
-                    'raw_email': data,
-                    'signature': sig_to_store,
-                    'compressed': compressed_flag,
+                    'raw_email': compressed_data,
+                    'signature': sig,
                     'vname': vname,
                     'vdetected': vdetected,
                     'vscanned': vscanned,
