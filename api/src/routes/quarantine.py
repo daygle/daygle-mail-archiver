@@ -241,7 +241,6 @@ def list_quarantine(request: Request, _=require_permission(PERMISSIONS["view_qua
                 except Exception:
                     pass
 
-            try:
                 try:
                     if decryption_successful or not fernet:
                         current_sig = compute_signature(data)
@@ -266,9 +265,6 @@ def list_quarantine(request: Request, _=require_permission(PERMISSIONS["view_qua
                 else:
                     integrity = 'modified'
                     integrity_reason = 'Stored hash does not match current hash'
-            except Exception as e:
-                integrity = 'unknown'
-                integrity_reason = f'Could not read attachment file from storage: {str(e)}'
             else:
                 integrity = 'no_raw'
                 integrity_reason = 'No raw email data available'
