@@ -96,14 +96,11 @@
         </div>
 
         <!-- Security & Status -->
-        {% set perms = request.session.permissions or [] %}
-        {% if 'view_email_security' in perms or email.virus_scanned %}
         <div class="mb-4">
             <h6 class="mb-3 text-muted">
                 <i class="fas fa-shield-alt me-2"></i>Security & Status
             </h6>
             <div class="row g-3">
-                {% if 'view_email_security' in perms %}
                 <div class="col-md-6">
                     <div class="email-detail-item">
                         <label class="email-detail-label">Integrity</label>
@@ -120,7 +117,6 @@
                         </div>
                     </div>
                 </div>
-                {% endif %}
                 {% if email.virus_scanned %}
                 <div class="col-md-6">
                     <div class="email-detail-item">
@@ -146,17 +142,16 @@
                 {% endif %}
             </div>
         </div>
-        {% endif %}
     </div>
     <div class="card-footer">
         <div class="d-flex justify-content-end gap-2 flex-wrap">
-            {% if 'download_email' in perms %}
+            {% if 'export_emails' in perms %}
             <a href="/emails/{{ email.id }}/download" class="btn btn-primary btn-sm flex-shrink-1 w-auto">
                 <i class="fas fa-download"></i>
                 <span class="hide-mobile">Download EML</span>
             </a>
             {% endif %}
-            {% if 'quarantine_email' in perms %}
+            {% if 'manage_quarantine' in perms %}
             {% if not email.quarantined %}
             <form method="post" action="/emails/{{ email.id }}/quarantine" style="display:inline;">
                 <button type="submit" class="btn btn-warning btn-sm flex-shrink-1 w-auto">

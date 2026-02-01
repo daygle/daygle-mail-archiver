@@ -547,6 +547,11 @@ def verify_email(request: Request, email_id: int):
 def quarantine_single_email(request: Request, email_id: int):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
+
+    # Check if user has permission to manage quarantine
+    checker = PermissionChecker(request)
+    if not checker.has_permission("manage_quarantine"):
+        return HTMLResponse("Access denied: Insufficient permissions to quarantine emails", status_code=403)
     
     quarantined = _quarantine_emails([email_id], request.session.get("username", "unknown"))
     
