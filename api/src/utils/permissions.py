@@ -159,6 +159,8 @@ PERMISSIONS: Dict[str, str] = {
     "export_emails": "export_emails",
     "view_quarantine": "view_quarantine",
     "manage_quarantine": "manage_quarantine",
+    "restore_quarantine": "restore_quarantine",
+    "delete_quarantine": "delete_quarantine",
     "view_reports": "view_reports",
     "export_reports": "export_reports",
     "view_fetch_accounts": "view_fetch_accounts",

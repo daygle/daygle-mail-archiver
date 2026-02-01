@@ -409,6 +409,8 @@ INSERT INTO permissions (name, description, category) VALUES
     -- Quarantine Management
     ('view_quarantine', 'View quarantined emails', 'emails'),
     ('manage_quarantine', 'Restore or permanently delete quarantined emails', 'emails'),
+    ('restore_quarantine', 'Restore quarantined emails to the archive', 'emails'),
+    ('delete_quarantine', 'Permanently delete quarantined emails', 'emails'),
     
     -- Reports & Analytics
     ('view_reports', 'View system reports and analytics', 'reports'),
@@ -477,7 +479,7 @@ SELECT r.id, p.id
 FROM roles r, permissions p
 WHERE r.name = 'email_manager' AND p.name IN (
     'view_dashboard', 'view_emails', 'delete_emails', 'export_emails', 'import_emails',
-    'view_quarantine', 'manage_quarantine', 'view_reports', 'export_reports',
+    'view_quarantine', 'manage_quarantine', 'restore_quarantine', 'delete_quarantine', 'view_reports', 'export_reports',
     'view_fetch_accounts', 'manage_fetch_accounts', 'view_worker_status', 'view_alerts', 'manage_own_profile'
 )
 ON CONFLICT DO NOTHING;
