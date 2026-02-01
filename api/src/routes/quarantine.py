@@ -486,7 +486,8 @@ def restore_quarantine(request: Request, qid: int):
                 data = f.decrypt(data)
 
             # Decompress if needed to get the original uncompressed email
-            if isinstance(data, (bytes, bytearray)) and len(data) >= 2 and data[:2] == b"\x1f\x8b":
+            # Use the compressed flag from the database instead of magic bytes detection
+            if item.get('compressed'):
                 import gzip as _gzip
                 data = _gzip.decompress(data)
 
