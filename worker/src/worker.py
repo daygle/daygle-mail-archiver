@@ -248,7 +248,7 @@ Action Taken: {action}"""
 
                     try:
                         from utils.email_parser import compute_signature
-                        sig = compute_signature(raw_bytes)
+                        sig = compute_signature(email_bytes)
                     except Exception:
                         sig = None
 
@@ -289,7 +289,7 @@ Action Taken: {action}"""
             # compute signature of uncompressed raw email
             try:
                 from utils.email_parser import compute_signature
-                sig = compute_signature(raw_bytes)
+                sig = compute_signature(email_bytes)
             except Exception:
                 sig = None
 

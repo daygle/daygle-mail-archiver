@@ -123,13 +123,13 @@
                             </td>
                             <td>
                                 {% if email.integrity == 'ok' %}
-                                <span class="badge badge-success">OK</span>
+                                <span class="badge badge-success" title="{{ email.integrity_reason or 'Valid' }}">Valid</span>
                                 {% elif email.integrity == 'modified' %}
-                                <span class="badge badge-danger">Modified</span>
+                                <span class="badge badge-danger" title="{{ email.integrity_reason or 'Modified' }}">Invalid</span>
                                 {% elif email.integrity == 'no_signature' %}
-                                <span class="badge badge-secondary">No Sig</span>
+                                <span class="badge badge-secondary" title="{{ email.integrity_reason or 'No Signature' }}">No Sig</span>
                                 {% else %}
-                                <span class="badge badge-secondary">Unknown</span>
+                                <span class="badge badge-secondary" title="{{ email.integrity_reason or 'Unknown' }}">Unknown</span>
                                 {% endif %}
                             </td>
                             <td style="text-align: center;">

@@ -105,15 +105,15 @@
 
                         <td>
                             {% if i.integrity == 'ok' %}
-                            <span class="badge bg-success"><i class="fas fa-check"></i> Integrity OK</span>
+                            <span class="badge bg-success" title="{{ i.integrity_reason or 'Valid' }}"><i class="fas fa-check"></i> Valid</span>
                             {% elif i.integrity == 'modified' %}
-                            <span class="badge bg-danger"><i class="fas fa-exclamation-triangle"></i> Modified</span>
+                            <span class="badge bg-danger" title="{{ i.integrity_reason or 'Modified' }}"><i class="fas fa-exclamation-triangle"></i> Invalid</span>
                             {% elif i.integrity == 'no_signature' %}
-                            <span class="badge bg-secondary"><i class="fas fa-question"></i> No Signature</span>
+                            <span class="badge bg-secondary" title="{{ i.integrity_reason or 'No Signature' }}"><i class="fas fa-question"></i> No Signature</span>
                             {% elif i.integrity == 'encrypted' %}
-                            <span class="badge bg-warning"><i class="fas fa-lock"></i> Encrypted</span>
+                            <span class="badge bg-warning" title="{{ i.integrity_reason or 'Encrypted' }}"><i class="fas fa-lock"></i> Encrypted</span>
                             {% else %}
-                            <span class="badge bg-secondary"><i class="fas fa-question"></i> Unknown</span>
+                            <span class="badge bg-secondary" title="{{ i.integrity_reason or 'Unknown' }}"><i class="fas fa-question"></i> Unknown</span>
                             {% endif %}
                         </td>
 

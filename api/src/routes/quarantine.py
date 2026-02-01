@@ -241,6 +241,7 @@ def list_quarantine(request: Request, _=require_permission(PERMISSIONS["view_qua
                 except Exception:
                     pass
 
+            try:
                 try:
                     if decryption_successful or not fernet:
                         current_sig = compute_signature(data)
@@ -249,25 +250,37 @@ def list_quarantine(request: Request, _=require_permission(PERMISSIONS["view_qua
                 except Exception:
                     current_sig = None
 
+                integrity_reason = None
                 if stored_sig is None:
                     integrity = 'no_signature'
+                    integrity_reason = 'No signature was stored when this email was quarantined'
                 elif not decryption_successful and fernet:
                     integrity = 'encrypted'
+                    integrity_reason = 'Could not decrypt file to verify integrity'
                 elif current_sig is None:
                     integrity = 'unknown'
+                    integrity_reason = 'Could not compute current signature'
                 elif stored_sig == current_sig:
                     integrity = 'ok'
+                    integrity_reason = 'The current hash matches the original signature'
                 else:
                     integrity = 'modified'
+                    integrity_reason = 'Stored hash does not match current hash'
+            except Exception as e:
+                integrity = 'unknown'
+                integrity_reason = f'Could not read attachment file from storage: {str(e)}'
             else:
                 integrity = 'no_raw'
+                integrity_reason = 'No raw email data available'
 
-        except Exception:
+        except Exception as e:
             integrity = 'unknown'
+            integrity_reason = f'Error checking integrity: {str(e)}'
 
         ir.pop('raw_email', None)
         ir.pop('compressed', None)
         ir['integrity'] = integrity
+        ir['integrity_reason'] = integrity_reason
 
         # Format quarantined_at
         if ir["quarantined_at"] and hasattr(ir["quarantined_at"], 'strftime'):
@@ -381,29 +394,38 @@ def view_quarantine(request: Request, qid: int):
                 log('warning', 'Quarantine', f'Failed to parse email content for quarantine item {qid}: {parse_e}')
 
             # Integrity check
+            integrity_reason = None
             if decryption_successful or not f:
                 try:
                     current_sig = compute_signature(data)
                     stored_sig = item.get('signature')
                     if stored_sig is None:
                         integrity = 'no_signature'
+                        integrity_reason = 'No signature was stored when this email was quarantined'
                     elif current_sig is None:
                         integrity = 'unknown'
+                        integrity_reason = 'Could not compute current signature'
                     elif stored_sig == current_sig:
                         integrity = 'ok'
+                        integrity_reason = 'The current hash matches the original signature'
                     else:
                         integrity = 'modified'
-                except Exception:
+                        integrity_reason = 'Stored hash does not match current hash'
+                except Exception as e:
                     integrity = 'unknown'
+                    integrity_reason = f'Could not read attachment file from storage: {str(e)}'
             else:
                 integrity = 'encrypted'
+                integrity_reason = 'Could not decrypt file to verify integrity'
 
         except Exception as e:
             log('error', 'Quarantine', f'Failed to process quarantined email {qid}: {e}')
             preview = '[Could not decrypt or render content]'
             integrity = 'unknown'
+            integrity_reason = f'Error processing email: {str(e)}'
 
     item['integrity'] = integrity
+    item['integrity_reason'] = integrity_reason
     item['current_signature'] = current_sig
 
     return templates.TemplateResponse(

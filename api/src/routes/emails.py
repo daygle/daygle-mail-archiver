@@ -109,6 +109,7 @@ def list_emails(
     for r in rows:
         rr = dict(r)
         integrity = "unknown"
+        integrity_reason = None
         try:
             stored_sig = rr.get("signature")
             raw_blob = rr.get("raw_email")
@@ -122,16 +123,22 @@ def list_emails(
 
                 if stored_sig is None:
                     integrity = "no_signature"
+                    integrity_reason = "No signature was stored when this email was archived"
                 elif current_sig is None:
                     integrity = "unknown"
+                    integrity_reason = "Could not compute current signature"
                 elif stored_sig == current_sig:
                     integrity = "ok"
+                    integrity_reason = "The current hash matches the original signature"
                 else:
                     integrity = "modified"
+                    integrity_reason = "Stored hash does not match current hash"
             else:
                 integrity = "no_raw"
-        except Exception:
+                integrity_reason = "No raw email data available"
+        except Exception as e:
             integrity = "unknown"
+            integrity_reason = f"Could not read attachment file from storage: {str(e)}"
 
         # Format email date according to user preferences
         if rr["date"]:
@@ -152,6 +159,7 @@ def list_emails(
         rr.pop("raw_email", None)
         rr.pop("compressed", None)
         rr["integrity"] = integrity
+        rr["integrity_reason"] = integrity_reason
         processed.append(rr)
 
     return templates.TemplateResponse(
@@ -428,17 +436,22 @@ def view_email(request: Request, email_id: int):
     parsed = parse_email(raw)
 
     # compute integrity status
+    integrity_reason = None
     try:
         stored_sig = row.get("signature")
         current_sig = compute_signature(raw)
         if stored_sig is None:
             integrity = "no_signature"
+            integrity_reason = "No signature was stored when this email was archived"
         elif stored_sig == current_sig:
             integrity = "ok"
+            integrity_reason = "The current hash matches the original signature"
         else:
             integrity = "modified"
-    except Exception:
+            integrity_reason = "Stored hash does not match current hash"
+    except Exception as e:
         integrity = "unknown"
+        integrity_reason = f"Could not read attachment file from storage: {str(e)}"
 
     username = request.session.get("username", "unknown")
     log("info", "Emails", f"User '{username}' viewed email ID {email_id}", "")
@@ -455,6 +468,7 @@ def view_email(request: Request, email_id: int):
             "preview": preview,
             "flash": msg,
             "integrity": integrity,
+            "integrity_reason": integrity_reason,
             "stored_signature": row.get("signature"),
             "current_signature": current_sig if 'current_sig' in locals() else None,
         },
