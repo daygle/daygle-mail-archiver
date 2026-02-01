@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block page_title %}Import/Export Emails{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">
+      <i class="fas fa-file-import"></i>
+      <span>Import Emails</span>
+    </div>
+  </div>
+  <div class="card-body">
+    {% if flash %}
+    <div class="alert alert-{{ flash.type }}">{{ flash.message }}</div>
+    {% endif %}
+
+    <form id="import-form" method="post" action="/emails/import-export" enctype="multipart/form-data">
+      <div class="mb-3">
+        <label for="files" class="form-label">Select EML or MBOX files to import (ZIP files containing EML/MBOX are supported)</label>
+        <input type="file" name="files" id="files" multiple accept=".eml,.mbox,.mbx,.zip,application/zip" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label for="source" class="form-label">Fetch Account</label>
+        <select name="source" id="source" class="form-select">
+          {% for a in accounts %}
+          <option value="{{ a }}">{{ a }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label for="folder" class="form-label">Folder</label>
+        <input type="text" name="folder" id="folder" value="INBOX" class="form-control">
+      </div>
+    </form>
+
+    <p class="text-muted mt-3">Note: ZIP files are supported and will be scanned for EML/MBX entries. PST files are not supported.</p>
+  </div>
+  <div class="card-footer">
+    <div class="d-flex justify-content-end">
+      <a href="/emails" class="btn btn-secondary me-2">
+        <i class="fas fa-times"></i>
+        <span>Cancel</span>
+      </a>
+      <button type="submit" form="import-form" class="btn btn-primary">
+        <i class="fas fa-upload"></i>
+        <span>Upload and Import</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="card mt-4">
+  <div class="card-header">
+    <div class="card-title">
+      <i class="fas fa-file-export"></i>
+      <span>Export Emails</span>
+    </div>
+  </div>
+  <div class="card-body">
+    <p class="text-muted">Export all emails for a selected fetch account in ZIP (EML files) or MBOX format.</p>
+
+    <form id="export-form" method="post" action="/emails/export">
+      <div class="mb-3">
+        <label for="export-account" class="form-label">Fetch Account</label>
+        <select name="account" id="export-account" class="form-select" required>
+          {% for a in accounts %}
+          <option value="{{ a }}">{{ a }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="mb-3">
+        <label for="export-format" class="form-label">Format</label>
+        <select name="format" id="export-format" class="form-select">
+          <option value="mbox">MBOX</option>
+          <option value="zip">ZIP (EML files)</option>
+        </select>
+      </div>
+      <input type="hidden" name="q" value="">
+      <input type="hidden" name="folder" value="">
+    </form>
+  </div>
+  <div class="card-footer">
+    <div class="d-flex justify-content-end">
+      <a href="/emails" class="btn btn-secondary me-2">
+        <i class="fas fa-times"></i>
+        <span>Cancel</span>
+      </a>
+      <button type="submit" form="export-form" class="btn btn-primary">
+        <i class="fas fa-file-export"></i>
+        <span>Export</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const importForm = document.getElementById('import-form');
+  const importButton = document.querySelector('button[form="import-form"]');
+  const filesInput = document.getElementById('files');
+  const sourceSelect = document.getElementById('source');
+
+  // Disable button initially
+  importButton.disabled = true;
+
+  function validateForm() {
+    const filesSelected = filesInput.files.length > 0;
+    const accountSelected = sourceSelect.value !== '';
+    const validFiles = Array.from(filesInput.files).every(file => {
+      const ext = file.name.toLowerCase().split('.').pop();
+      return ['eml', 'mbox', 'mbx', 'zip'].includes(ext);
+    });
+
+    importButton.disabled = !(filesSelected && accountSelected && validFiles);
+  }
+
+  filesInput.addEventListener('change', validateForm);
+  sourceSelect.addEventListener('change', validateForm);
+
+  // Also validate on form submit to prevent invalid submissions
+  importForm.addEventListener('submit', function(e) {
+    if (importButton.disabled) {
+      e.preventDefault();
+      showToast('Please select valid files and a fetch account.', 'danger');
+    }
+  });
+});
+</script>
+
+{% endblock %}

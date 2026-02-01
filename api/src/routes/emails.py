@@ -196,7 +196,7 @@ def emails_transfer_page(request: Request):
         accounts = []
 
     return templates.TemplateResponse(
-        "emails-transfer.html",
+        "emails-import-export.html",
         {"request": request, "flash": msg, "accounts": accounts},
     )
 
