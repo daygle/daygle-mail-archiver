@@ -178,7 +178,7 @@ def list_emails(
     )
 
 
-@router.get("/emails/import", response_class=HTMLResponse)
+@router.get("/emails/import-export", response_class=HTMLResponse)
 def emails_transfer_page(request: Request):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
@@ -282,7 +282,7 @@ Folder: {folder}""",
         return False
 
 
-@router.post("/emails/import")
+@router.post("/emails/import-export")
 async def import_emails(request: Request, source: str = Form("import"), folder: str = Form("INBOX"), files: List[UploadFile] = File(...)):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)

@@ -99,9 +99,9 @@
                     </a>
                     {% endif %}
                     {% if 'import_emails' in request.session.get('permissions', []) or 'export_emails' in request.session.get('permissions', []) %}
-                    <a href="/emails/import" class="nav-link {% if request.url.path == '/emails/import' %}active{% endif %}">
+                    <a href="/emails/import-export" class="nav-link {% if request.url.path == '/emails/import-export' %}active{% endif %}">
                         <i class="fas fa-exchange-alt"></i>
-                        <span>{{ gettext("Transfer") }}</span>
+                        <span>{{ gettext("Import/Export") }}</span>
                     </a>
                     {% endif %}
                 </div>
