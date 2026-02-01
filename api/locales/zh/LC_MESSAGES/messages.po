@@ -1,969 +1,1236 @@
 # Chinese translations for Daygle Mail Archiver
 msgid ""
 msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-02-01 02:45+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh\n"
+"Language-Team: zh <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.10.3\n"
+
+#: templates/base.html:4 templates/base.html:49 templates/base.html:50
+#: templates/base.html:170
 msgid "Daygle Mail Archiver"
 msgstr "Daygle Mail Archiver"
-msgid "View Alerts"
-msgstr "查看警报"
-msgid "Profile"
-msgstr "个人资料"
-msgid "User Settings"
-msgstr "用户设置"
-msgid "Theme saved"
-msgstr "主题已保存"
-msgid "Theme saved locally"
-msgstr "主题已在本地保存"
-msgid "Theme applied"
-msgstr "主题已应用"
-msgid "Change Password"
-msgstr "更改密码"
-msgid "Logout"
-msgstr "登出"
-msgid "Login"
-msgstr "登录"
 
-msgid "Current Password"
-msgstr "当前密码"
-
-msgid "Enter your current password"
-msgstr "输入您当前的密码"
-# Chinese translations for Daygle Mail Archiver
-msgid ""
-msgstr ""
-"Language: zh\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-
-msgid "Display & Formatting Settings"
-msgstr "显示和格式设置"
-
-msgid "Configure how content is displayed throughout the application"
-msgstr "配置整个应用程序中内容的显示方式"
-
-msgid "Items Per Page"
-msgstr "每页项目数"
-
-msgid "Number of emails to display per page in lists"
-msgstr "列表中每页显示的电子邮件数量"
-
-msgid "Date Format"
-msgstr "日期格式"
-
-msgid "Language"
-msgstr "语言"
-
-msgid "Interface language"
-msgstr "界面语言"
-
-msgid "Sign in to access your archived emails"
-msgstr "登录以访问您的存档电子邮件"
-
-msgid "Username"
-msgstr "用户名"
-
-msgid "Enter your username"
-msgstr "输入您的用户名"
-
-msgid "Password"
-msgstr "密码"
-
-msgid "Enter your password"
-msgstr "输入您的密码"
-
-msgid "Sign In"
-msgstr "登录"
-
-msgid "Forgot Password?"
-msgstr "忘记密码？"
-
-msgid "English"
-msgstr "English"
-
-msgid "Español"
-msgstr "Español"
-
-msgid "Français"
-msgstr "Français"
-
-msgid "Deutsch"
-msgstr "Deutsch"
-
-msgid "中文"
-msgstr "中文"
-
-msgid "Toggle theme"
-msgstr "切换主题"
-
-msgid "Email Address"
-msgstr "电子邮件地址"
-
-msgid "Enter your email address"
-msgstr "请输入您的电子邮件地址"
-
-msgid "Send Reset Link"
-msgstr "发送重置链接"
-
-msgid "Back to Login"
-msgstr "返回登录"
-
-msgid "New Password"
-msgstr "新密码"
-
-msgid "Enter your new password"
-msgstr "请输入您的新密码"
-
-msgid "Password must be at least 8 characters long and contain uppercase, lowercase, and numeric characters."
-msgstr "密码必须至少 8 个字符长，且包含大写字母、小写字母和数字。"
-
-msgid "Confirm New Password"
-msgstr "确认新密码"
-
-msgid "Confirm your new password"
-msgstr "请确认您的新密码"
-
-msgid "Reset Password"
-msgstr "重置密码"
-
-msgid "Initial Setup - Daygle Mail Archiver"
-msgstr "初始设置 - Daygle 邮件归档器"
-
-msgid "Welcome to Daygle Mail Archiver"
-msgstr "欢迎使用 Daygle 邮件归档器"
-
-msgid "Let's set up your administrator account to get started"
-msgstr "让我们设置您的管理员帐户以开始使用"
-
-msgid "First Time Setup:"
-msgstr "首次设置："
-
-msgid "This wizard will create your primary administrator account. This account will have full access to all system features."
-msgstr "此向导将创建您的主要管理员帐户。该帐户将对所有系统功能具有完全访问权限。"
-
-msgid "Choose a unique username for the administrator account"
-msgstr "为管理员帐户选择唯一的用户名"
-
-msgid "Optional - your first name"
-msgstr "可选 - 您的名字"
-
-msgid "Optional - your last name"
-msgstr "可选 - 您的姓氏"
-
-msgid "Optional - for notifications and account recovery"
-msgstr "可选 - 用于通知和帐户恢复"
-
-msgid "Username"
-msgstr "用户名"
-
-msgid "administrator"
-msgstr "管理员"
-
-msgid "First Name"
-msgstr "名字"
-
-msgid "John"
-msgstr "约翰"
-
-msgid "Last Name"
-msgstr "姓氏"
-
-msgid "Smith"
-msgstr "史密斯"
-
-msgid "Must be at least 8 characters and include a mix of letters and numbers"
-msgstr "必须至少 8 个字符长，并包含字母和数字的组合"
-
-msgid "Choose a strong password"
-msgstr "选择一个强密码"
-
-msgid "Confirm Password"
-msgstr "确认密码"
-
-msgid "Confirm password"
-msgstr "确认密码"
-
-msgid "Create Administrator"
-msgstr "创建管理员"
-
+#: templates/base.html:59
 msgid "Dashboard"
 msgstr "仪表板"
 
-msgid "Customise Dashboard"
-msgstr "自定义仪表板"
-
-msgid "Add Widget"
-msgstr "添加小部件"
-
-msgid "Save Layout"
-msgstr "保存布局"
-
-msgid "Reset Layout"
-msgstr "重置布局"
-
-msgid "Cancel"
-msgstr "取消"
-
-msgid "API unreachable - retrying..."
-msgstr "无法访问API - 正在重试..."
-
-msgid "Retry now"
-msgstr "立即重试"
-
-msgid "Add Widgets"
-msgstr "添加小部件"
-
-msgid "Select widgets to add to your dashboard:"
-msgstr "选择要添加到仪表板的小部件："
-
-msgid "Remove widget"
-msgstr "移除小部件"
-
-msgid "Total Emails"
-msgstr "电子邮件总数"
-
-msgid "Total archived emails"
-msgstr "归档电子邮件总数"
-
-msgid "Emails Today"
-msgstr "今日邮件"
-
-msgid "Emails received today"
-msgstr "今日收到的邮件"
-
-msgid "Database Size"
-msgstr "数据库大小"
-
-msgid "Current database size"
-msgstr "当前数据库大小"
-
-msgid "Active Accounts"
-msgstr "活动账户"
-
-msgid "Configured fetch accounts"
-msgstr "已配置的抓取账户"
-
-msgid "Workers Online"
-msgstr "在线工作进程"
-
-msgid "Active worker processes"
-msgstr "活跃工作进程"
-
-msgid "Last 7 Days"
-msgstr "过去7天"
-
-msgid "Emails in past week"
-msgstr "过去一周的邮件"
-
-msgid "Last 30 Days"
-msgstr "过去30天"
-
-msgid "Emails in past month"
-msgstr "过去一个月的邮件"
-
-msgid "Storage Used"
-msgstr "已用存储"
-
-msgid "Total storage consumed"
-msgstr "总消耗存储"
-
-msgid "Clean Emails"
-msgstr "无病毒邮件"
-
-msgid "Virus-free emails"
-msgstr "无病毒的邮件"
-
-msgid "Quarantined"
-msgstr "已隔离"
-
-msgid "Emails with viruses"
-msgstr "含病毒的邮件"
-
-msgid "Rejected"
-msgstr "被拒绝的邮件"
-
-msgid "Emails blocked by antivirus"
-msgstr "被杀毒软件拦截的邮件"
-
-msgid "System Uptime"
-msgstr "系统运行时间"
-
-msgid "Time since last restart"
-msgstr "自上次重启以来的时间"
-
-# Added from templates/profile.html
-msgid "My Profile"
-msgstr "我的个人资料"
-
-msgid "Personal Information"
-msgstr "个人信息"
-
-msgid "First Name"
-msgstr "名"
-
-msgid "First name"
-msgstr "名"
-
-msgid "Last Name"
-msgstr "姓"
-
-msgid "Last name"
-msgstr "姓"
-
-msgid "Email"
-msgstr "电子邮件"
-
-msgid "your.email@example.com"
-msgstr "your.email@example.com"
-
-msgid "Username:"
-msgstr "用户名："
-
-msgid "Roles:"
-msgstr "角色："
-
-msgid "No roles assigned"
-msgstr "未分配角色"
-
-msgid "Last Login:"
-msgstr "最后登录："
-
-msgid "Last Login IP:"
-msgstr "最后登录IP："
-
-msgid "Last Seen:"
-msgstr "最后活动："
-
-msgid "Online Status:"
-msgstr "在线状态："
-
-msgid "Online"
-msgstr "在线"
-
-msgid "Offline"
-msgstr "离线"
-
-msgid "Account Created:"
-msgstr "账户创建时间："
-
-msgid "Update Information"
-msgstr "更新信息"
-
-# Machine-translated additions (prefill)
-msgid "01/15/2024"
-msgstr "01/15/2024"
-
-msgid "02:30 PM (12-hour)"
-msgstr "02:30 PM（12 小时制）"
-
-msgid "02:30:45 PM (12-hour with seconds)"
-msgstr "02:30:45 PM（12 小时制，含秒）"
-
-msgid "14:30 (24-hour)"
-msgstr "14:30（24 小时制）"
-
-msgid "14:30:45 (24-hour with seconds)"
-msgstr "14:30:45（24 小时制，含秒）"
-
-msgid "15 Jan 2024"
-msgstr "2024年1月15日"
-
-msgid "15/01/2024"
-msgstr "15/01/2024"
-
-msgid "2024-01-15"
-msgstr "2024-01-15"
-
-msgid "About"
-msgstr "关于"
-
-msgid "Action When Virus Detected"
-msgstr "检测到病毒时的操作"
-
-msgid "Africa/Cairo (EET)"
-msgstr "非洲/开罗 (EET)"
-
-msgid "Africa/Johannesburg (SAST)"
-msgstr "非洲/约翰内斯堡 (SAST)"
-
-msgid "Alert Management"
-msgstr "警报管理"
-
-msgid "All emails are stored, virus detections are logged for monitoring"
-msgstr "所有邮件均被存储，病毒检测结果会记录以便监控"
-
-msgid "America/Anchorage (AKST)"
-msgstr "美洲/安克雷奇 (AKST)"
-
-msgid "America/Argentina (BRT)"
-msgstr "美洲/阿根廷 (BRT)"
-
-msgid "America/Chicago (CST)"
-msgstr "美洲/芝加哥 (CST)"
-
-msgid "America/Denver (MST)"
-msgstr "美洲/丹佛 (MST)"
-
-msgid "America/Los Angeles (PST)"
-msgstr "美洲/洛杉矶 (PST)"
-
-msgid "America/Mexico City (CST)"
-msgstr "美洲/墨西哥城 (CST)"
-
-msgid "America/New York (EST)"
-msgstr "美洲/纽约 (EST)"
-
-msgid "America/Sao Paulo (BRT)"
-msgstr "美洲/圣保罗 (BRT)"
-
-msgid "America/Toronto (EST)"
-msgstr "美洲/多伦多 (EST)"
-
-msgid "America/Vancouver (PST)"
-msgstr "美洲/温哥华 (PST)"
-
-msgid "Asia/Bangkok (ICT)"
-msgstr "亚洲/曼谷 (ICT)"
-
-msgid "Asia/Dubai (GST)"
-msgstr "亚洲/迪拜 (GST)"
-
-msgid "Asia/Hong Kong (HKT)"
-msgstr "亚洲/香港 (HKT)"
-
-msgid "Asia/Jerusalem (IST)"
-msgstr "亚洲/耶路撒冷 (IST)"
-
-msgid "Asia/Karachi (PKT)"
-msgstr "亚洲/卡拉奇 (PKT)"
-
-msgid "Asia/Kolkata (IST)"
-msgstr "亚洲/加尔各答 (IST)"
-
-msgid "Asia/Seoul (KST)"
-msgstr "亚洲/首尔 (KST)"
-
-msgid "Asia/Singapore (SGT)"
-msgstr "亚洲/新加坡 (SGT)"
-
-msgid "Asia/Tokyo (JST)"
-msgstr "亚洲/东京 (JST)"
-
-msgid "Australia/Adelaide (ACST)"
-msgstr "澳大利亚/阿德莱德 (ACST)"
-
-msgid "Australia/Brisbane (AEST)"
-msgstr "澳大利亚/布里斯班 (AEST)"
-
-msgid "Australia/Melbourne (AEST)"
-msgstr "澳大利亚/墨尔本 (AEST)"
-
-msgid "Australia/Perth (AWST)"
-msgstr "澳大利亚/珀斯 (AWST)"
-
-msgid "Australia/Sydney (AEST)"
-msgstr "澳大利亚/悉尼 (AEST)"
-
-msgid "Auto Logout (minutes)"
-msgstr "自动登出（分钟）"
-
-msgid "Automatically delete emails older than the retention period"
-msgstr "自动删除超过保留期的邮件"
-
-msgid "Automatically log out users after this many minutes of inactivity. Set to 0 to disable auto-logout."
-msgstr "在此分钟数无活动后自动注销用户。设置为 0 可禁用自动注销。"
-
-msgid "ClamAV Host"
-msgstr "ClamAV 主机"
-
-msgid "ClamAV Port"
-msgstr "ClamAV 端口"
-
-msgid "Configure how content is displayed throughout the application"
-msgstr "配置整个应用中内容的显示方式"
-
-msgid "Dark"
-msgstr "深色"
-
-msgid "Date display format throughout the application"
-msgstr "应用中日期的显示格式"
-
-msgid "Day(s)"
-msgstr "天"
-
-msgid "Default Theme"
-msgstr "默认主题"
-
-msgid "Delete from Mail Server During Retention Cleanup"
-msgstr "在保留清理期间从邮件服务器删除"
-
-msgid "Disabled"
-msgstr "已禁用"
-
-msgid "Display name for alert emails"
-msgstr "警报邮件显示名称"
-
-msgid "Donate"
-msgstr "捐赠"
-
-msgid "Email Notifications"
-msgstr "邮件通知"
-
-msgid "Email Retention Policy"
-msgstr "邮件保留策略"
-
-msgid "Email address to send alerts from"
-msgstr "用于发送警报的邮箱地址"
-
+#: templates/base.html:63
 msgid "Emails"
 msgstr "电子邮件"
 
-msgid "Emails older than this period will be automatically deleted"
-msgstr "超过此期限的邮件将被自动删除"
-
-msgid "Emails with viruses are not stored in the database"
-msgstr "带病毒的邮件不会存储在数据库中"
-
-msgid "Emails with viruses are stored but marked as infected for review"
-msgstr "带病毒的邮件会被存储但标记为感染以供审查"
-
-msgid "Enable Automatic Email Purging"
-msgstr "启用自动邮件清理"
-
-msgid "Enable Email Alerts"
-msgstr "启用邮件警报"
-
-msgid "Enable Virus Scanning"
-msgstr "启用病毒扫描"
-
-msgid "Enabled"
-msgstr "已启用"
-
-msgid "Encrypt quarantined data at rest"
-msgstr "对静态隔离数据加密"
-
-msgid "Enter your email address to reset your password or unlock your account"
-msgstr "输入您的邮箱地址以重置密码或解锁账户"
-
-msgid "Enter your new password below"
-msgstr "在下方输入您的新密码"
-
-msgid "Europe/Amsterdam (CET)"
-msgstr "欧洲/阿姆斯特丹 (CET)"
-
-msgid "Europe/Berlin (CET)"
-msgstr "欧洲/柏林 (CET)"
-
-msgid "Europe/Dublin (GMT)"
-msgstr "欧洲/都柏林 (GMT)"
-
-msgid "Europe/London (GMT)"
-msgstr "欧洲/伦敦 (GMT)"
-
-msgid "Europe/Madrid (CET)"
-msgstr "欧洲/马德里 (CET)"
-
-msgid "Europe/Moscow (MSK)"
-msgstr "欧洲/莫斯科 (MSK)"
-
-msgid "Europe/Paris (CET)"
-msgstr "欧洲/巴黎 (CET)"
-
-msgid "Europe/Rome (CET)"
-msgstr "欧洲/罗马 (CET)"
-
-msgid "Europe/Zurich (CET)"
-msgstr "欧洲/苏黎世 (CET)"
-
-msgid "Fetch Accounts"
-msgstr "获取账户"
-
-msgid "Files larger than this size will not be scanned by ClamAV"
-msgstr "大于此大小的文件不会被 ClamAV 扫描"
-
-msgid "Forgot Password"
-msgstr "忘记密码"
-
-msgid "From Email Address"
-msgstr "发件邮箱地址"
-
-msgid "From Name"
-msgstr "发件人名称"
-
-msgid "General Settings"
-msgstr "常规设置"
-
-msgid "Global Settings"
-msgstr "全局设置"
-
-msgid "Help"
-msgstr "帮助"
-
-msgid "Hostname or IP address of the ClamAV daemon (default: clamav for Docker)"
-msgstr "ClamAV 守护进程的主机名或 IP（默认：Docker 下为 clamav）"
-
-msgid "January 15, 2024"
-msgstr "2024年1月15日"
-
-msgid "Light"
-msgstr "浅色"
-
-msgid "Log Only (Store all emails, log detections)"
-msgstr "仅记录（存储所有邮件，记录检测）"
-
-msgid "Log Only:"
-msgstr "仅记录："
-
-msgid "Logs"
-msgstr "日志"
-
-msgid "Max File Size to Scan (bytes)"
-msgstr "扫描的最大文件大小（字节）"
-
-msgid "Month(s)"
-msgstr "月"
-
-msgid "Never"
-msgstr "从不"
-
-msgid "Number of days to retain quarantined messages before automatic purge"
-msgstr "在自动清理之前保留隔离消息的天数"
-
+#: templates/base.html:76
 msgid "Operations & Monitoring"
 msgstr "操作与监控"
 
-msgid "Pacific/Auckland (NZST)"
-msgstr "太平洋/奥克兰 (NZST)"
+#: templates/base.html:80
+msgid "Fetch Accounts"
+msgstr "获取账户"
 
-msgid "Pacific/Guam (ChST)"
-msgstr "太平洋/关岛 (ChST)"
-
-msgid "Pacific/Honolulu (HST)"
-msgstr "太平洋/檀香山 (HST)"
-
-msgid "Password for SMTP authentication (use app passwords for Gmail)"
-msgstr "SMTP 身份验证密码（对 Gmail 使用应用专用密码）"
-
-msgid "Port number for the ClamAV daemon (default: 3310)"
-msgstr "ClamAV 守护进程端口号（默认：3310）"
-
-msgid "Quarantine"
-msgstr "隔离"
-
-msgid "Quarantine (Store with virus flag)"
-msgstr "隔离（带病毒标记存储）"
-
-msgid "Quarantine Retention (days)"
-msgstr "隔离保留（天）"
-
-msgid "Quarantine Settings"
-msgstr "隔离设置"
-
-msgid "Quarantine:"
-msgstr "隔离："
-
-msgid "Receive email alerts and notifications for system events"
-msgstr "接收系统事件的电子邮件警报和通知"
-
-msgid "Reject (Do not store infected emails)"
-msgstr "拒绝（不存储感染邮件）"
-
-msgid "Reject:"
-msgstr "拒绝："
-
-msgid "Reports"
-msgstr "报告"
-
-msgid "Requires CLAMAV_QUARANTINE_KEY to be configured in the environment or config file (see README)"
-msgstr "需要在环境或配置文件中配置 CLAMAV_QUARANTINE_KEY（见 README）"
-
-msgid "Retention Period"
-msgstr "保留期"
-
-msgid "Role Management"
-msgstr "角色管理"
-
-msgid "SMTP Email Configuration"
-msgstr "SMTP 邮件配置"
-
-msgid "SMTP Host"
-msgstr "SMTP 主机"
-
-msgid "SMTP Password"
-msgstr "SMTP 密码"
-
-msgid "SMTP Port"
-msgstr "SMTP 端口"
-
-msgid "SMTP Username"
-msgstr "SMTP 用户名"
-
-msgid "SMTP server hostname or IP address"
-msgstr "SMTP 服务器主机名或 IP 地址"
-
-msgid "SMTP server port (587 for TLS, 465 for SSL, 25 for plain)"
-msgstr "SMTP 服务器端口（587 用于 TLS，465 用于 SSL，25 用于明文）"
-
-msgid "Save Settings"
-msgstr "保存设置"
-
-msgid "Scan incoming emails for viruses using ClamAV"
-msgstr "使用 ClamAV 扫描传入邮件中的病毒"
-
-msgid "Send Test Email"
-msgstr "发送测试邮件"
-
-msgid "Send email notifications for system alerts and important events"
-msgstr "为系统警报和重要事件发送电子邮件通知"
-
-msgid "Set Your Password"
-msgstr "设置您的密码"
-
-msgid "Store quarantined emails in database"
-msgstr "在数据库中存储隔离的邮件"
-
-msgid "System (use browser / user preference)"
-msgstr "系统（使用浏览器/用户偏好）"
-
-msgid "System Management"
-msgstr "系统管理"
-
-msgid "Time Format"
-msgstr "时间格式"
-
-msgid "Time display format throughout the application"
-msgstr "应用中时间显示格式"
-
-msgid "Timezone"
-msgstr "时区"
-
-msgid "Timezone for displaying dates and times throughout the application"
-msgstr "在整个应用中显示日期和时间的时区"
-
-msgid "Transfer"
-msgstr "传输"
-
-msgid "UTC"
-msgstr "UTC"
-
-msgid "Use STARTTLS for secure connection (recommended for most servers)"
-msgstr "使用 STARTTLS 进行安全连接（推荐大多数服务器）"
-
-msgid "Use TLS Encryption"
-msgstr "使用 TLS 加密"
-
-msgid "User Management"
-msgstr "用户管理"
-
-msgid "Username for SMTP authentication (usually your email address)"
-msgstr "SMTP 验证用户名（通常为您的电子邮件地址）"
-
-msgid "Virus Scanning (ClamAV)"
-msgstr "病毒扫描（ClamAV）"
-
-msgid "When enabled, infected message payloads are moved to the quarantined_emails table (recommended for auditability)"
-msgstr "启用后，感染的消息负载将移动到 quarantined_emails 表（建议用于审计）"
-
-msgid "When enabled, retention cleanup will also attempt to delete emails from the original IMAP mail servers for both regular emails and quarantined emails"
-msgstr "启用后，保留清理还将尝试从原始 IMAP 邮件服务器中删除常规邮件和隔离邮件"
-
+#: templates/base.html:86
 msgid "Worker Status"
 msgstr "工作进程状态"
 
+#: templates/base.html:92
+msgid "Reports"
+msgstr "报告"
+
+#: templates/base.html:98
+msgid "Quarantine"
+msgstr "隔离"
+
+#: templates/base.html:104
+msgid "Transfer"
+msgstr "传输"
+
+#: templates/base.html:110
+msgid "System Management"
+msgstr "系统管理"
+
+#: templates/base.html:114
+msgid "Alert Management"
+msgstr "警报管理"
+
+#: templates/base.html:120 templates/global-settings.html:3
+msgid "Global Settings"
+msgstr "全局设置"
+
+#: templates/base.html:126
+msgid "User Management"
+msgstr "用户管理"
+
+#: templates/base.html:132
+msgid "Role Management"
+msgstr "角色管理"
+
+#: templates/base.html:138
+msgid "Logs"
+msgstr "日志"
+
+#: templates/base.html:147
+msgid "Help"
+msgstr "帮助"
+
+#: templates/base.html:151
+msgid "About"
+msgstr "关于"
+
+#: templates/base.html:155
+msgid "Donate"
+msgstr "捐赠"
+
+#: templates/base.html:176
+msgid "View Alerts"
+msgstr "查看警报"
+
+#: templates/base.html:194
+msgid "Profile"
+msgstr "个人资料"
+
+#: templates/base.html:198
+msgid "User Settings"
+msgstr "用户设置"
+
+#: templates/base.html:200 templates/base.html:203 templates/login.html:22
+msgid "Toggle theme"
+msgstr "切换主题"
+
+#: templates/base.html:208 templates/change-password.html:3
+#: templates/change-password.html:10 templates/change-password.html:30
+msgid "Change Password"
+msgstr "更改密码"
+
+#: templates/base.html:213
+msgid "Logout"
+msgstr "登出"
+
+#: templates/base.html:220
+msgid "Login"
+msgstr "登录"
+
+#: templates/base.html:357
+msgid "Theme saved"
+msgstr "主题已保存"
+
+#: templates/base.html:359 templates/base.html:362
+msgid "Theme saved locally"
+msgstr "主题已在本地保存"
+
+#: templates/base.html:365
+msgid "Theme applied"
+msgstr "主题已应用"
+
+#: templates/change-password.html:16
+msgid "Current Password"
+msgstr "当前密码"
+
+#: templates/change-password.html:17
+msgid "Enter your current password"
+msgstr "输入您当前的密码"
+
+#: templates/change-password.html:20 templates/reset-password.html:39
+msgid "New Password"
+msgstr "新密码"
+
+#: templates/change-password.html:21 templates/reset-password.html:40
+msgid "Enter your new password"
+msgstr "请输入您的新密码"
+
+#: templates/change-password.html:24 templates/reset-password.html:47
+msgid "Confirm New Password"
+msgstr "确认新密码"
+
+#: templates/change-password.html:25 templates/reset-password.html:48
+msgid "Confirm your new password"
+msgstr "请确认您的新密码"
+
+#: templates/forgot-password.html:36 templates/login.html:27
+#: templates/reset-password.html:22 templates/setup.html:70
+#: templates/user-settings.html:96
+msgid "Language"
+msgstr "语言"
+
+#: templates/forgot-password.html:38 templates/forgot-password.html:53
+#: templates/login.html:29 templates/login.html:72
+#: templates/reset-password.html:24 templates/setup.html:72
+#: templates/setup.html:100
+msgid "English"
+msgstr "English"
+
+#: templates/forgot-password.html:39 templates/forgot-password.html:54
+#: templates/login.html:30 templates/login.html:73
+#: templates/reset-password.html:25 templates/setup.html:73
+#: templates/setup.html:101
+msgid "Español"
+msgstr "Español"
+
+#: templates/forgot-password.html:40 templates/forgot-password.html:55
+#: templates/login.html:31 templates/login.html:74
+#: templates/reset-password.html:26 templates/setup.html:74
+#: templates/setup.html:102
+msgid "Français"
+msgstr "Français"
+
+#: templates/forgot-password.html:41 templates/forgot-password.html:56
+#: templates/login.html:32 templates/login.html:75
+#: templates/reset-password.html:27 templates/setup.html:75
+#: templates/setup.html:103
+msgid "Deutsch"
+msgstr "Deutsch"
+
+#: templates/forgot-password.html:42 templates/forgot-password.html:57
+#: templates/login.html:33 templates/login.html:76
+#: templates/reset-password.html:28 templates/setup.html:76
+#: templates/setup.html:104
+msgid "中文"
+msgstr "中文"
+
+#: templates/forgot-password.html:48
+msgid "Forgot Password"
+msgstr "忘记密码"
+
+#: templates/forgot-password.html:49
+msgid "Enter your email address to reset your password or unlock your account"
+msgstr "输入您的邮箱地址以重置密码或解锁账户"
+
+#: templates/forgot-password.html:64 templates/setup.html:129
+msgid "Email Address"
+msgstr "电子邮件地址"
+
+#: templates/forgot-password.html:65
+msgid "Enter your email address"
+msgstr "请输入您的电子邮件地址"
+
+#: templates/forgot-password.html:70
+msgid "Send Reset Link"
+msgstr "发送重置链接"
+
+#: templates/forgot-password.html:77 templates/reset-password.html:60
+msgid "Back to Login"
+msgstr "返回登录"
+
+#: templates/global-settings.html:15
+msgid "General Settings"
+msgstr "常规设置"
+
+#: templates/global-settings.html:20 templates/user-settings.html:19
+msgid "Items Per Page"
+msgstr "每页项目数"
+
+#: templates/global-settings.html:22 templates/user-settings.html:21
+msgid "Number of emails to display per page in lists"
+msgstr "列表中每页显示的电子邮件数量"
+
+#: templates/global-settings.html:26 templates/user-settings.html:25
+msgid "Date Format"
+msgstr "日期格式"
+
+#: templates/global-settings.html:28
+msgid "15/01/2024"
+msgstr "15/01/2024"
+
+#: templates/global-settings.html:29
+msgid "2024-01-15"
+msgstr "2024-01-15"
+
+# Machine-translated additions (prefill)
+#: templates/global-settings.html:30
+msgid "01/15/2024"
+msgstr "01/15/2024"
+
+#: templates/global-settings.html:31
+msgid "15 Jan 2024"
+msgstr "2024年1月15日"
+
+#: templates/global-settings.html:32
+msgid "January 15, 2024"
+msgstr "2024年1月15日"
+
+#: templates/global-settings.html:34
+msgid "Date display format throughout the application"
+msgstr "应用中日期的显示格式"
+
+#: templates/global-settings.html:38
+msgid "Time Format"
+msgstr "时间格式"
+
+#: templates/global-settings.html:40
+msgid "14:30 (24-hour)"
+msgstr "14:30（24 小时制）"
+
+#: templates/global-settings.html:41
+msgid "14:30:45 (24-hour with seconds)"
+msgstr "14:30:45（24 小时制，含秒）"
+
+#: templates/global-settings.html:42
+msgid "02:30 PM (12-hour)"
+msgstr "02:30 PM（12 小时制）"
+
+#: templates/global-settings.html:43
+msgid "02:30:45 PM (12-hour with seconds)"
+msgstr "02:30:45 PM（12 小时制，含秒）"
+
+#: templates/global-settings.html:45
+msgid "Time display format throughout the application"
+msgstr "应用中时间显示格式"
+
+#: templates/global-settings.html:49
+msgid "Timezone"
+msgstr "时区"
+
+#: templates/global-settings.html:51
+msgid "UTC"
+msgstr "UTC"
+
+#: templates/global-settings.html:52
+msgid "Pacific/Honolulu (HST)"
+msgstr "太平洋/檀香山 (HST)"
+
+#: templates/global-settings.html:53
+msgid "America/Anchorage (AKST)"
+msgstr "美洲/安克雷奇 (AKST)"
+
+#: templates/global-settings.html:54
+msgid "America/Los Angeles (PST)"
+msgstr "美洲/洛杉矶 (PST)"
+
+#: templates/global-settings.html:55
+msgid "America/Vancouver (PST)"
+msgstr "美洲/温哥华 (PST)"
+
+#: templates/global-settings.html:56
+msgid "America/Denver (MST)"
+msgstr "美洲/丹佛 (MST)"
+
+#: templates/global-settings.html:57
+msgid "America/Chicago (CST)"
+msgstr "美洲/芝加哥 (CST)"
+
+#: templates/global-settings.html:58
+msgid "America/Mexico City (CST)"
+msgstr "美洲/墨西哥城 (CST)"
+
+#: templates/global-settings.html:59
+msgid "America/New York (EST)"
+msgstr "美洲/纽约 (EST)"
+
+#: templates/global-settings.html:60
+msgid "America/Toronto (EST)"
+msgstr "美洲/多伦多 (EST)"
+
+#: templates/global-settings.html:61
+msgid "America/Argentina (BRT)"
+msgstr "美洲/阿根廷 (BRT)"
+
+#: templates/global-settings.html:62
+msgid "America/Sao Paulo (BRT)"
+msgstr "美洲/圣保罗 (BRT)"
+
+#: templates/global-settings.html:63
+msgid "Europe/London (GMT)"
+msgstr "欧洲/伦敦 (GMT)"
+
+#: templates/global-settings.html:64
+msgid "Europe/Dublin (GMT)"
+msgstr "欧洲/都柏林 (GMT)"
+
+#: templates/global-settings.html:65
+msgid "Europe/Berlin (CET)"
+msgstr "欧洲/柏林 (CET)"
+
+#: templates/global-settings.html:66
+msgid "Europe/Paris (CET)"
+msgstr "欧洲/巴黎 (CET)"
+
+#: templates/global-settings.html:67
+msgid "Europe/Madrid (CET)"
+msgstr "欧洲/马德里 (CET)"
+
+#: templates/global-settings.html:68
+msgid "Europe/Rome (CET)"
+msgstr "欧洲/罗马 (CET)"
+
+#: templates/global-settings.html:69
+msgid "Europe/Amsterdam (CET)"
+msgstr "欧洲/阿姆斯特丹 (CET)"
+
+#: templates/global-settings.html:70
+msgid "Europe/Zurich (CET)"
+msgstr "欧洲/苏黎世 (CET)"
+
+#: templates/global-settings.html:71
+msgid "Europe/Moscow (MSK)"
+msgstr "欧洲/莫斯科 (MSK)"
+
+#: templates/global-settings.html:72
+msgid "Africa/Cairo (EET)"
+msgstr "非洲/开罗 (EET)"
+
+#: templates/global-settings.html:73
+msgid "Africa/Johannesburg (SAST)"
+msgstr "非洲/约翰内斯堡 (SAST)"
+
+#: templates/global-settings.html:74
+msgid "Asia/Dubai (GST)"
+msgstr "亚洲/迪拜 (GST)"
+
+#: templates/global-settings.html:75
+msgid "Asia/Jerusalem (IST)"
+msgstr "亚洲/耶路撒冷 (IST)"
+
+#: templates/global-settings.html:76
+msgid "Asia/Kolkata (IST)"
+msgstr "亚洲/加尔各答 (IST)"
+
+#: templates/global-settings.html:77
+msgid "Asia/Karachi (PKT)"
+msgstr "亚洲/卡拉奇 (PKT)"
+
+#: templates/global-settings.html:78
+msgid "Asia/Bangkok (ICT)"
+msgstr "亚洲/曼谷 (ICT)"
+
+#: templates/global-settings.html:79
+msgid "Asia/Singapore (SGT)"
+msgstr "亚洲/新加坡 (SGT)"
+
+#: templates/global-settings.html:80
+msgid "Asia/Hong Kong (HKT)"
+msgstr "亚洲/香港 (HKT)"
+
+#: templates/global-settings.html:81
+msgid "Asia/Tokyo (JST)"
+msgstr "亚洲/东京 (JST)"
+
+#: templates/global-settings.html:82
+msgid "Asia/Seoul (KST)"
+msgstr "亚洲/首尔 (KST)"
+
+#: templates/global-settings.html:83
+msgid "Australia/Perth (AWST)"
+msgstr "澳大利亚/珀斯 (AWST)"
+
+#: templates/global-settings.html:84
+msgid "Australia/Adelaide (ACST)"
+msgstr "澳大利亚/阿德莱德 (ACST)"
+
+#: templates/global-settings.html:85
+msgid "Australia/Brisbane (AEST)"
+msgstr "澳大利亚/布里斯班 (AEST)"
+
+#: templates/global-settings.html:86
+msgid "Australia/Sydney (AEST)"
+msgstr "澳大利亚/悉尼 (AEST)"
+
+#: templates/global-settings.html:87
+msgid "Australia/Melbourne (AEST)"
+msgstr "澳大利亚/墨尔本 (AEST)"
+
+#: templates/global-settings.html:88
+msgid "Pacific/Auckland (NZST)"
+msgstr "太平洋/奥克兰 (NZST)"
+
+#: templates/global-settings.html:89
+msgid "Pacific/Guam (ChST)"
+msgstr "太平洋/关岛 (ChST)"
+
+#: templates/global-settings.html:91
+msgid "Timezone for displaying dates and times throughout the application"
+msgstr "在整个应用中显示日期和时间的时区"
+
+#: templates/global-settings.html:95
+msgid "Default Theme"
+msgstr "默认主题"
+
+#: templates/global-settings.html:97
+msgid "System (use browser / user preference)"
+msgstr "系统（使用浏览器/用户偏好）"
+
+#: templates/global-settings.html:98
+msgid "Light"
+msgstr "浅色"
+
+#: templates/global-settings.html:99
+msgid "Dark"
+msgstr "深色"
+
+#: templates/global-settings.html:101
+msgid ""
+"Global default theme for users who have not set a personal preference "
+"(users' own preference overrides this)"
+msgstr ""
+
+#: templates/global-settings.html:105
+msgid "Auto Logout (minutes)"
+msgstr "自动登出（分钟）"
+
+#: templates/global-settings.html:107
+msgid ""
+"Automatically log out users after this many minutes of inactivity. Set to"
+" 0 to disable auto-logout."
+msgstr "在此分钟数无活动后自动注销用户。设置为 0 可禁用自动注销。"
+
+#: templates/global-settings.html:119
+msgid "Email Retention Policy"
+msgstr "邮件保留策略"
+
+#: templates/global-settings.html:126
+msgid "Enable Automatic Email Purging"
+msgstr "启用自动邮件清理"
+
+#: templates/global-settings.html:127
+msgid "Automatically delete emails older than the retention period"
+msgstr "自动删除超过保留期的邮件"
+
+#: templates/global-settings.html:134
+msgid "Delete from Mail Server During Retention Cleanup"
+msgstr "在保留清理期间从邮件服务器删除"
+
+#: templates/global-settings.html:135
+msgid ""
+"When enabled, retention cleanup will also attempt to delete emails from "
+"the original IMAP mail servers for both regular emails and quarantined "
+"emails"
+msgstr "启用后，保留清理还将尝试从原始 IMAP 邮件服务器中删除常规邮件和隔离邮件"
+
+#: templates/global-settings.html:140
+msgid "Retention Period"
+msgstr "保留期"
+
+#: templates/global-settings.html:147
+msgid "Day(s)"
+msgstr "天"
+
+#: templates/global-settings.html:148
+msgid "Month(s)"
+msgstr "月"
+
+#: templates/global-settings.html:149
 msgid "Year(s)"
 msgstr "年"
 
+#: templates/global-settings.html:153
+msgid "Emails older than this period will be automatically deleted"
+msgstr "超过此期限的邮件将被自动删除"
+
+#: templates/global-settings.html:163
+msgid "Virus Scanning (ClamAV)"
+msgstr "病毒扫描（ClamAV）"
+
+#: templates/global-settings.html:170
+msgid "Enable Virus Scanning"
+msgstr "启用病毒扫描"
+
+#: templates/global-settings.html:171
+msgid "Scan incoming emails for viruses using ClamAV"
+msgstr "使用 ClamAV 扫描传入邮件中的病毒"
+
+#: templates/global-settings.html:176
+msgid "ClamAV Host"
+msgstr "ClamAV 主机"
+
+#: templates/global-settings.html:178
+msgid "Hostname or IP address of the ClamAV daemon (default: clamav for Docker)"
+msgstr "ClamAV 守护进程的主机名或 IP（默认：Docker 下为 clamav）"
+
+#: templates/global-settings.html:182
+msgid "ClamAV Port"
+msgstr "ClamAV 端口"
+
+#: templates/global-settings.html:184
+msgid "Port number for the ClamAV daemon (default: 3310)"
+msgstr "ClamAV 守护进程端口号（默认：3310）"
+
+#: templates/global-settings.html:188
+msgid "Action When Virus Detected"
+msgstr "检测到病毒时的操作"
+
+#: templates/global-settings.html:190
+msgid "Quarantine (Store with virus flag)"
+msgstr "隔离（带病毒标记存储）"
+
+#: templates/global-settings.html:191
+msgid "Reject (Do not store infected emails)"
+msgstr "拒绝（不存储感染邮件）"
+
+#: templates/global-settings.html:192
+msgid "Log Only (Store all emails, log detections)"
+msgstr "仅记录（存储所有邮件，记录检测）"
+
+#: templates/global-settings.html:195
+msgid "Quarantine:"
+msgstr "隔离："
+
+#: templates/global-settings.html:195
+msgid "Emails with viruses are stored but marked as infected for review"
+msgstr "带病毒的邮件会被存储但标记为感染以供审查"
+
+#: templates/global-settings.html:196
+msgid "Reject:"
+msgstr "拒绝："
+
+#: templates/global-settings.html:196
+msgid "Emails with viruses are not stored in the database"
+msgstr "带病毒的邮件不会存储在数据库中"
+
+#: templates/global-settings.html:197
+msgid "Log Only:"
+msgstr "仅记录："
+
+#: templates/global-settings.html:197
+msgid "All emails are stored, virus detections are logged for monitoring"
+msgstr "所有邮件均被存储，病毒检测结果会记录以便监控"
+
+#: templates/global-settings.html:202
+msgid "Max File Size to Scan (bytes)"
+msgstr "扫描的最大文件大小（字节）"
+
+#: templates/global-settings.html:204
+msgid "Files larger than this size will not be scanned by ClamAV"
+msgstr "大于此大小的文件不会被 ClamAV 扫描"
+
+#: templates/global-settings.html:214
+msgid "Quarantine Settings"
+msgstr "隔离设置"
+
+#: templates/global-settings.html:221
+msgid "Store quarantined emails in database"
+msgstr "在数据库中存储隔离的邮件"
+
+#: templates/global-settings.html:222
+msgid ""
+"When enabled, infected message payloads are moved to the "
+"quarantined_emails table (recommended for auditability)"
+msgstr "启用后，感染的消息负载将移动到 quarantined_emails 表（建议用于审计）"
+
+#: templates/global-settings.html:227
+msgid "Quarantine Retention (days)"
+msgstr "隔离保留（天）"
+
+#: templates/global-settings.html:229
+msgid "Number of days to retain quarantined messages before automatic purge"
+msgstr "在自动清理之前保留隔离消息的天数"
+
+#: templates/global-settings.html:235
+msgid "Encrypt quarantined data at rest"
+msgstr "对静态隔离数据加密"
+
+#: templates/global-settings.html:236
+msgid ""
+"Requires CLAMAV_QUARANTINE_KEY to be configured in the environment or "
+"config file (see README)"
+msgstr "需要在环境或配置文件中配置 CLAMAV_QUARANTINE_KEY（见 README）"
+
+#: templates/global-settings.html:248
+msgid "SMTP Email Configuration"
+msgstr "SMTP 邮件配置"
+
+#: templates/global-settings.html:257
+msgid "Enable Email Alerts"
+msgstr "启用邮件警报"
+
+#: templates/global-settings.html:258
+msgid "Send email notifications for system alerts and important events"
+msgstr "为系统警报和重要事件发送电子邮件通知"
+
+#: templates/global-settings.html:263
+msgid "SMTP Host"
+msgstr "SMTP 主机"
+
+#: templates/global-settings.html:265
+msgid "SMTP server hostname or IP address"
+msgstr "SMTP 服务器主机名或 IP 地址"
+
+#: templates/global-settings.html:269
+msgid "SMTP Port"
+msgstr "SMTP 端口"
+
+#: templates/global-settings.html:271
+msgid "SMTP server port (587 for TLS, 465 for SSL, 25 for plain)"
+msgstr "SMTP 服务器端口（587 用于 TLS，465 用于 SSL，25 用于明文）"
+
+#: templates/global-settings.html:275
+msgid "SMTP Username"
+msgstr "SMTP 用户名"
+
+#: templates/global-settings.html:277
+msgid "Username for SMTP authentication (usually your email address)"
+msgstr "SMTP 验证用户名（通常为您的电子邮件地址）"
+
+#: templates/global-settings.html:281
+msgid "SMTP Password"
+msgstr "SMTP 密码"
+
+#: templates/global-settings.html:283
+msgid "Password for SMTP authentication (use app passwords for Gmail)"
+msgstr "SMTP 身份验证密码（对 Gmail 使用应用专用密码）"
+
+#: templates/global-settings.html:289
+msgid "Use TLS Encryption"
+msgstr "使用 TLS 加密"
+
+#: templates/global-settings.html:290
+msgid "Use STARTTLS for secure connection (recommended for most servers)"
+msgstr "使用 STARTTLS 进行安全连接（推荐大多数服务器）"
+
+#: templates/global-settings.html:295
+msgid "From Email Address"
+msgstr "发件邮箱地址"
+
+#: templates/global-settings.html:297
+msgid "Email address to send alerts from"
+msgstr "用于发送警报的邮箱地址"
+
+#: templates/global-settings.html:301
+msgid "From Name"
+msgstr "发件人名称"
+
+#: templates/global-settings.html:303
+msgid "Display name for alert emails"
+msgstr "警报邮件显示名称"
+
+#: templates/global-settings.html:309
+msgid "Cancel"
+msgstr "取消"
+
+#: templates/global-settings.html:313
+msgid "Save Settings"
+msgstr "保存设置"
+
+#: templates/global-settings.html:326
+msgid "Send Test Email"
+msgstr "发送测试邮件"
+
+#: templates/login.html:53
+msgid "Sign in to access your archived emails"
+msgstr "登录以访问您的存档电子邮件"
+
+#: templates/login.html:60 templates/setup.html:108
+msgid "Username"
+msgstr "用户名"
+
+#: templates/login.html:61
+msgid "Enter your username"
+msgstr "输入您的用户名"
+
+#: templates/login.html:65 templates/setup.html:136
+msgid "Password"
+msgstr "密码"
+
+#: templates/login.html:66
+msgid "Enter your password"
+msgstr "输入您的密码"
+
+#: templates/login.html:82
+msgid "Sign In"
+msgstr "登录"
+
+#: templates/login.html:91
+msgid "Forgot Password?"
+msgstr "忘记密码？"
+
+# Added from templates/profile.html
+#: templates/profile.html:3
+msgid "My Profile"
+msgstr "我的个人资料"
+
+#: templates/profile.html:13
+msgid "Personal Information"
+msgstr "个人信息"
+
+#: templates/profile.html:22 templates/setup.html:115
+msgid "First Name"
+msgstr "名字"
+
+#: templates/profile.html:27
+msgid "First name"
+msgstr "名"
+
+#: templates/profile.html:31 templates/setup.html:122
+msgid "Last Name"
+msgstr "姓氏"
+
+#: templates/profile.html:36
+msgid "Last name"
+msgstr "姓"
+
+#: templates/profile.html:41
+msgid "Email"
+msgstr "电子邮件"
+
+#: templates/profile.html:47
+msgid "your.email@example.com"
+msgstr "your.email@example.com"
+
+#: templates/profile.html:54
+msgid "Username:"
+msgstr "用户名："
+
+#: templates/profile.html:57
+msgid "Roles:"
+msgstr "角色："
+
+#: templates/profile.html:61
+msgid "No roles assigned"
+msgstr "未分配角色"
+
+#: templates/profile.html:66
+msgid "Last Login:"
+msgstr "最后登录："
+
+#: templates/profile.html:70 templates/profile.html:88
+msgid "Never"
+msgstr "从不"
+
+#: templates/profile.html:75
+msgid "Last Login IP:"
+msgstr "最后登录IP："
+
+#: templates/profile.html:84
+msgid "Last Seen:"
+msgstr "最后活动："
+
+#: templates/profile.html:93
+msgid "Online Status:"
+msgstr "在线状态："
+
+#: templates/profile.html:95
+msgid "Online"
+msgstr "在线"
+
+#: templates/profile.html:97
+msgid "Offline"
+msgstr "离线"
+
+#: templates/profile.html:102
+msgid "Account Created:"
+msgstr "账户创建时间："
+
+#: templates/profile.html:116
+msgid "Update Information"
+msgstr "更新信息"
+
+#: templates/reset-password.html:18 templates/reset-password.html:53
+msgid "Reset Password"
+msgstr "重置密码"
+
+#: templates/reset-password.html:19
+msgid "Enter your new password below"
+msgstr "在下方输入您的新密码"
+
+#: templates/reset-password.html:42
+msgid ""
+"Password must be at least 8 characters long and contain uppercase, "
+"lowercase, and numeric characters."
+msgstr "密码必须至少 8 个字符长，且包含大写字母、小写字母和数字。"
+
+#: templates/set-password.html:10
+msgid "Set Your Password"
+msgstr "设置您的密码"
+
+#: templates/setup.html:4
+msgid "Initial Setup - Daygle Mail Archiver"
+msgstr "初始设置 - Daygle 邮件归档器"
+
+#: templates/setup.html:84
+msgid "Welcome to Daygle Mail Archiver"
+msgstr "欢迎使用 Daygle 邮件归档器"
+
+#: templates/setup.html:85
+msgid "Let's set up your administrator account to get started"
+msgstr "让我们设置您的管理员帐户以开始使用"
+
+#: templates/setup.html:90
+msgid "First Time Setup:"
+msgstr "首次设置："
+
+#: templates/setup.html:90
+msgid ""
+"This wizard will create your primary administrator account. This account "
+"will have full access to all system features."
+msgstr "此向导将创建您的主要管理员帐户。该帐户将对所有系统功能具有完全访问权限。"
+
+#: templates/setup.html:110
+msgid "administrator"
+msgstr "管理员"
+
+#: templates/setup.html:111
+msgid "Choose a unique username for the administrator account"
+msgstr "为管理员帐户选择唯一的用户名"
+
+#: templates/setup.html:117
+msgid "John"
+msgstr "约翰"
+
+#: templates/setup.html:118
+msgid "Optional - your first name"
+msgstr "可选 - 您的名字"
+
+#: templates/setup.html:124
+msgid "Smith"
+msgstr "史密斯"
+
+#: templates/setup.html:125
+msgid "Optional - your last name"
+msgstr "可选 - 您的姓氏"
+
+#: templates/setup.html:131
 msgid "admin@example.com"
 msgstr "admin@example.com"
 
-msgid "aygle Mail Archiver"
-msgstr "aygle Mail Archiver"
+#: templates/setup.html:132
+msgid "Optional - for notifications and account recovery"
+msgstr "可选 - 用于通知和帐户恢复"
 
-msgid "New Fetch Account"
-msgstr ""
+#: templates/setup.html:137
+msgid "Choose a strong password"
+msgstr "选择一个强密码"
 
-msgid "Account Name"
-msgstr ""
+#: templates/setup.html:138
+msgid "Must be at least 8 characters and include a mix of letters and numbers"
+msgstr "必须至少 8 个字符长，并包含字母和数字的组合"
 
-msgid "A friendly name to identify this account"
-msgstr ""
+#: templates/setup.html:142
+msgid "Confirm Password"
+msgstr "确认密码"
 
-msgid "Account Type"
-msgstr ""
+#: templates/setup.html:143
+msgid "Confirm password"
+msgstr "确认密码"
 
-msgid "IMAP"
-msgstr ""
+#: templates/setup.html:149
+msgid "Create Administrator"
+msgstr "创建管理员"
 
-msgid "Gmail API"
-msgstr ""
+#: templates/user-settings.html:12
+msgid "Display & Formatting Settings"
+msgstr "显示和格式设置"
 
-msgid "Office 365 API"
-msgstr ""
+#: templates/user-settings.html:16
+msgid "Configure how content is displayed throughout the application"
+msgstr "配置整个应用程序中内容的显示方式"
 
-msgid "Select the type of email service to fetch from"
-msgstr ""
+#: templates/user-settings.html:104
+msgid "Interface language"
+msgstr "界面语言"
 
-msgid "IMAP Configuration"
-msgstr ""
+#: templates/user-settings.html:154
+msgid "Email Notifications"
+msgstr "邮件通知"
 
-msgid "Host"
-msgstr ""
+#: templates/user-settings.html:156
+msgid "Enabled"
+msgstr "已启用"
 
-msgid "Port"
-msgstr ""
+#: templates/user-settings.html:157
+msgid "Disabled"
+msgstr "已禁用"
 
-msgid "Leave blank to keep the existing password"
-msgstr ""
+#: templates/user-settings.html:159
+msgid "Receive email alerts and notifications for system events"
+msgstr "接收系统事件的电子邮件警报和通知"
 
-msgid "Fetch Settings"
-msgstr ""
+#~ msgid "Customise Dashboard"
+#~ msgstr "自定义仪表板"
 
-msgid "Recommended for secure connections (port 993)"
-msgstr ""
+#~ msgid "Add Widget"
+#~ msgstr "添加小部件"
 
-msgid "How often to check for new emails (minimum 60 seconds)"
-msgstr ""
+#~ msgid "Save Layout"
+#~ msgstr "保存布局"
 
-msgid "Require STARTTLS"
-msgstr ""
+#~ msgid "Reset Layout"
+#~ msgstr "重置布局"
 
-msgid "For plain connections that upgrade to TLS (port 143)"
-msgstr ""
+#~ msgid "API unreachable - retrying..."
+#~ msgstr "无法访问API - 正在重试..."
 
-msgid "Delete Email After Processing"
-msgstr ""
+#~ msgid "Retry now"
+#~ msgstr "立即重试"
 
-msgid "Gmail: moves to Trash | Office 365: moves to Deleted Items | IMAP: marks as deleted (recoverable)"
-msgstr ""
+#~ msgid "Add Widgets"
+#~ msgstr "添加小部件"
 
-msgid "Permanently Expunge Deleted (IMAP only)"
-msgstr ""
+#~ msgid "Select widgets to add to your dashboard:"
+#~ msgstr "选择要添加到仪表板的小部件："
 
-msgid "Warning: Permanently removes deleted emails from server - cannot be recovered"
-msgstr ""
+#~ msgid "Remove widget"
+#~ msgstr "移除小部件"
 
-msgid "OAuth Setup Required"
-msgstr ""
+#~ msgid "Total Emails"
+#~ msgstr "电子邮件总数"
 
-msgid "To use Gmail or Office 365, you need to:"
-msgstr ""
+#~ msgid "Total archived emails"
+#~ msgstr "归档电子邮件总数"
 
-msgid "Create an OAuth app in Google/Microsoft developer console"
-msgstr ""
+#~ msgid "Emails Today"
+#~ msgstr "今日邮件"
 
-msgid "Enter your Client ID and Client Secret below"
-msgstr ""
+#~ msgid "Emails received today"
+#~ msgstr "今日收到的邮件"
 
-msgid "Click \"Authorise\" to grant access"
-msgstr ""
+#~ msgid "Database Size"
+#~ msgstr "数据库大小"
 
-msgid "Create Account"
-msgstr ""
+#~ msgid "Current database size"
+#~ msgstr "当前数据库大小"
 
-msgid "OAuth Client ID"
-msgstr ""
+#~ msgid "Active Accounts"
+#~ msgstr "活动账户"
 
-msgid "From your Google/Microsoft OAuth app"
-msgstr ""
+#~ msgid "Configured fetch accounts"
+#~ msgstr "已配置的抓取账户"
 
-msgid "OAuth Client Secret"
-msgstr ""
+#~ msgid "Workers Online"
+#~ msgstr "在线工作进程"
 
-msgid "Keep this secret secure"
-msgstr ""
+#~ msgid "Active worker processes"
+#~ msgstr "活跃工作进程"
 
-msgid "Add Fetch Account"
-msgstr ""
+#~ msgid "Last 7 Days"
+#~ msgstr "过去7天"
 
-msgid "Name"
-msgstr ""
+#~ msgid "Emails in past week"
+#~ msgstr "过去一周的邮件"
 
-msgid "Type"
-msgstr ""
+#~ msgid "Last 30 Days"
+#~ msgstr "过去30天"
 
-msgid "Host/Service"
-msgstr ""
+#~ msgid "Emails in past month"
+#~ msgstr "过去一个月的邮件"
 
-msgid "User"
-msgstr ""
+#~ msgid "Storage Used"
+#~ msgstr "已用存储"
 
-msgid "Poll Interval"
-msgstr ""
+#~ msgid "Total storage consumed"
+#~ msgstr "总消耗存储"
 
-msgid "Last Success"
-msgstr ""
+#~ msgid "Clean Emails"
+#~ msgstr "无病毒邮件"
 
-msgid "Actions"
-msgstr ""
+#~ msgid "Virus-free emails"
+#~ msgstr "无病毒的邮件"
 
-msgid "Gmail"
-msgstr ""
+#~ msgid "Quarantined"
+#~ msgstr "已隔离"
 
-msgid "O365"
-msgstr ""
+#~ msgid "Emails with viruses"
+#~ msgstr "含病毒的邮件"
 
-msgid "SSL Enabled"
-msgstr ""
+#~ msgid "Rejected"
+#~ msgstr "被拒绝的邮件"
 
-msgid "Edit"
-msgstr ""
+#~ msgid "Emails blocked by antivirus"
+#~ msgstr "被杀毒软件拦截的邮件"
 
-msgid "Test Connection"
-msgstr ""
+#~ msgid "System Uptime"
+#~ msgstr "系统运行时间"
 
-msgid "Delete"
-msgstr ""
+#~ msgid "Time since last restart"
+#~ msgstr "自上次重启以来的时间"
 
-msgid "No fetch accounts configured."
-msgstr ""
+#~ msgid "New Fetch Account"
+#~ msgstr ""
 
-msgid "Previous"
-msgstr ""
+#~ msgid "Account Name"
+#~ msgstr ""
 
-msgid "Next"
-msgstr ""
+#~ msgid "A friendly name to identify this account"
+#~ msgstr ""
 
-msgid "Delete Fetch Account"
-msgstr ""
+#~ msgid "Account Type"
+#~ msgstr ""
 
-msgid "Warning:"
-msgstr ""
+#~ msgid "IMAP"
+#~ msgstr ""
 
-msgid "You are about to delete the fetch account:"
-msgstr ""
+#~ msgid "Gmail API"
+#~ msgstr ""
 
-msgid "Loading email count..."
-msgstr ""
+#~ msgid "Office 365 API"
+#~ msgstr ""
 
-msgid "What would you like to do?"
-msgstr ""
+#~ msgid "Select the type of email service to fetch from"
+#~ msgstr ""
 
-msgid "Delete Account Only (retain emails)"
-msgstr ""
+#~ msgid "IMAP Configuration"
+#~ msgstr ""
 
-msgid "Delete Account + All Emails"
-msgstr ""
+#~ msgid "Host"
+#~ msgstr ""
 
-msgid "Edit Fetch Account"
-msgstr ""
+#~ msgid "Port"
+#~ msgstr ""
 
-msgid "Update Account"
-msgstr ""
+#~ msgid "Leave blank to keep the existing password"
+#~ msgstr ""
 
-msgid "This account has"
-msgstr ""
+#~ msgid "Fetch Settings"
+#~ msgstr ""
 
-msgid "associated with it."
-msgstr ""
+#~ msgid "Recommended for secure connections (port 993)"
+#~ msgstr ""
 
-msgid "email"
-msgstr ""
+#~ msgid "How often to check for new emails (minimum 60 seconds)"
+#~ msgstr ""
 
-msgid "emails"
-msgstr ""
+#~ msgid "Require STARTTLS"
+#~ msgstr ""
 
-msgid "Delete Account Only (retain"
-msgstr ""
+#~ msgid "For plain connections that upgrade to TLS (port 143)"
+#~ msgstr ""
 
-msgid "Delete Account + All"
-msgstr ""
+#~ msgid "Delete Email After Processing"
+#~ msgstr ""
 
-msgid "Global default theme for users who have not set a personal preference (users' own preference overrides this)"
-msgstr ""
+#~ msgid ""
+#~ "Gmail: moves to Trash | Office "
+#~ "365: moves to Deleted Items | "
+#~ "IMAP: marks as deleted (recoverable)"
+#~ msgstr ""
+
+#~ msgid "Permanently Expunge Deleted (IMAP only)"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Warning: Permanently removes deleted emails"
+#~ " from server - cannot be recovered"
+#~ msgstr ""
+
+#~ msgid "OAuth Setup Required"
+#~ msgstr ""
+
+#~ msgid "To use Gmail or Office 365, you need to:"
+#~ msgstr ""
+
+#~ msgid "Create an OAuth app in Google/Microsoft developer console"
+#~ msgstr ""
+
+#~ msgid "Enter your Client ID and Client Secret below"
+#~ msgstr ""
+
+#~ msgid "Click \"Authorise\" to grant access"
+#~ msgstr ""
+
+#~ msgid "Create Account"
+#~ msgstr ""
+
+#~ msgid "OAuth Client ID"
+#~ msgstr ""
+
+#~ msgid "From your Google/Microsoft OAuth app"
+#~ msgstr ""
+
+#~ msgid "OAuth Client Secret"
+#~ msgstr ""
+
+#~ msgid "Keep this secret secure"
+#~ msgstr ""
+
+#~ msgid "Add Fetch Account"
+#~ msgstr ""
+
+#~ msgid "Name"
+#~ msgstr ""
+
+#~ msgid "Type"
+#~ msgstr ""
+
+#~ msgid "Host/Service"
+#~ msgstr ""
+
+#~ msgid "User"
+#~ msgstr ""
+
+#~ msgid "Poll Interval"
+#~ msgstr ""
+
+#~ msgid "Last Success"
+#~ msgstr ""
+
+#~ msgid "Actions"
+#~ msgstr ""
+
+#~ msgid "Gmail"
+#~ msgstr ""
+
+#~ msgid "O365"
+#~ msgstr ""
+
+#~ msgid "SSL Enabled"
+#~ msgstr ""
+
+#~ msgid "Edit"
+#~ msgstr ""
+
+#~ msgid "Test Connection"
+#~ msgstr ""
+
+#~ msgid "Delete"
+#~ msgstr ""
+
+#~ msgid "No fetch accounts configured."
+#~ msgstr ""
+
+#~ msgid "Previous"
+#~ msgstr ""
+
+#~ msgid "Next"
+#~ msgstr ""
+
+#~ msgid "Delete Fetch Account"
+#~ msgstr ""
+
+#~ msgid "Warning:"
+#~ msgstr ""
+
+#~ msgid "You are about to delete the fetch account:"
+#~ msgstr ""
+
+#~ msgid "Loading email count..."
+#~ msgstr ""
+
+#~ msgid "What would you like to do?"
+#~ msgstr ""
+
+#~ msgid "Delete Account Only (retain emails)"
+#~ msgstr ""
+
+#~ msgid "Delete Account + All Emails"
+#~ msgstr ""
+
+#~ msgid "Edit Fetch Account"
+#~ msgstr ""
+
+#~ msgid "Update Account"
+#~ msgstr ""
+
+#~ msgid "This account has"
+#~ msgstr ""
+
+#~ msgid "associated with it."
+#~ msgstr ""
+
+#~ msgid "email"
+#~ msgstr ""
+
+#~ msgid "emails"
+#~ msgstr ""
+
+#~ msgid "Delete Account Only (retain"
+#~ msgstr ""
+
+#~ msgid "Delete Account + All"
+#~ msgstr ""
+
+#~ msgid "aygle Mail Archiver"
+#~ msgstr "aygle Mail Archiver"
+

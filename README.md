@@ -149,7 +149,37 @@ Configure SMTP settings in **Global Settings** → **SMTP Email Configuration** 
 
 ---
 
-## �🔄 Updating
+## 🌍 Internationalization
+
+Daygle Mail Archiver supports multiple languages:
+
+- 🇬🇧 **English (en)** - Default
+- 🇪🇸 **Spanish (es)** - Español (93% translated)
+- 🇫🇷 **French (fr)** - Français (90% translated)
+- 🇩🇪 **German (de)** - Deutsch (92% translated)
+- 🇨🇳 **Chinese (zh)** - 中文 (99% translated)
+
+Users can select their preferred language:
+- On the login page (language picker in top-right)
+- After login: **Settings** → **User Settings** → **Language**
+
+### Contributing Translations
+
+Want to help translate or add a new language? See **[TRANSLATION_GUIDE.md](TRANSLATION_GUIDE.md)** for:
+- Translation workflow for developers
+- How to add a new language
+- Translation tools and best practices
+- Helper scripts for managing translations
+
+```bash
+# Quick translation workflow
+cd /opt/daygle-mail-archiver
+./api/scripts/update_translations.sh full
+```
+
+---
+
+## 🔄 Updating
 
 Check for updates via the command line:
 
