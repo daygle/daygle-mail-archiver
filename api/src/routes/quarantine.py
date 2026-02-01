@@ -485,14 +485,21 @@ def restore_quarantine(request: Request, qid: int):
             if f:
                 data = f.decrypt(data)
 
-            # Compute signature
+            # Decompress if needed (emails are stored decompressed in the quarantine, but might be compressed)
+            compressed_flag = item.get('compressed') if item.get('compressed') is not None else False
+            if compressed_flag and isinstance(data, (bytes, bytearray)) and len(data) >= 2 and data[:2] == b"\x1f\x8b":
+                import gzip as _gzip
+                data = _gzip.decompress(data)
+
+            # Compute signature on the FINAL data that will be stored
+            # This ensures signature matches what's actually in the database
             try:
                 sig = compute_signature(data)
             except Exception:
                 sig = None
 
-            sig_to_store = item.get('signature') or sig
-            compressed_flag = item.get('compressed') if item.get('compressed') is not None else False
+            # Use the newly computed signature (not the old one) to ensure integrity
+            sig_to_store = sig
             vname = item.get('virus_name')
             vdetected = True if vname else False
             vscanned = True
