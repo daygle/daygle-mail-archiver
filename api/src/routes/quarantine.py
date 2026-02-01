@@ -490,11 +490,9 @@ def restore_quarantine(request: Request, qid: int):
                 import gzip as _gzip
                 data = _gzip.decompress(data)
 
-            # Compute signature on the UNCOMPRESSED data (this is the standard)
-            try:
-                sig = compute_signature(data)
-            except Exception:
-                sig = None
+            # IMPORTANT: Preserve the ORIGINAL signature from quarantine
+            # Do NOT compute a new signature, as this would make modified emails appear valid
+            sig_to_store = item.get('signature')
 
             # Re-compress the data for storage (emails table stores compressed data)
             import gzip as _gzip
@@ -515,7 +513,7 @@ def restore_quarantine(request: Request, qid: int):
                 """,
                 {
                     'raw': compressed_data,
-                    'signature': sig,
+                    'signature': sig_to_store,
                     'vname': vname,
                     'vdetected': vdetected,
                     'vscanned': vscanned,
@@ -546,7 +544,7 @@ def restore_quarantine(request: Request, qid: int):
                     'recipients': item.get('recipients'),
                     'date': item.get('date'),
                     'raw_email': compressed_data,
-                    'signature': sig,
+                    'signature': sig_to_store,
                     'vname': vname,
                     'vdetected': vdetected,
                     'vscanned': vscanned,
