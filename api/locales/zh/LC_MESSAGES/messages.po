@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-02-01 02:38+0000\n"
+"POT-Creation-Date: 2026-02-01 02:45+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh\n"
@@ -14,13 +14,10 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.10.3\n"
 
-#: templates/base.html:4 templates/base.html:49 templates/base.html:170
+#: templates/base.html:4 templates/base.html:49 templates/base.html:50
+#: templates/base.html:170
 msgid "Daygle Mail Archiver"
 msgstr "Daygle Mail Archiver"
-
-#: templates/base.html:50
-msgid "aygle Mail Archiver"
-msgstr "aygle Mail Archiver"
 
 #: templates/base.html:59
 msgid "Dashboard"
@@ -1233,4 +1230,7 @@ msgstr "接收系统事件的电子邮件警报和通知"
 
 #~ msgid "Delete Account + All"
 #~ msgstr ""
+
+#~ msgid "aygle Mail Archiver"
+#~ msgstr "aygle Mail Archiver"
 
