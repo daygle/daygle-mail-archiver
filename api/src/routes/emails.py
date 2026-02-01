@@ -91,7 +91,7 @@ def list_emails(
         FROM emails
         WHERE quarantined = FALSE
         {where_sql}
-        ORDER BY date DESC
+        ORDER BY created_at DESC
         LIMIT :limit OFFSET :offset
         """,
         {**params, "limit": page_size, "offset": offset},
