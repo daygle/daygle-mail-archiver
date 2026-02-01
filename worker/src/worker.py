@@ -931,22 +931,34 @@ def purge_old_emails():
     log_error("Retention", f"Purged {deletion_count} old emails (delete_from_server={delete_from_mail_server})", level="info")
 
 def main_loop():
+    # Track last processing time for each account
+    last_processed = {}
+    
     while True:
         accounts = get_accounts()
         if not accounts:
-            time.sleep(POLL_INTERVAL_FALLBACK)
+            time.sleep(60)  # Check again in 1 minute
             continue
 
+        now = time.time()
+        
         for account in accounts:
+            account_id = account["id"]
             poll_interval = account["poll_interval_seconds"] or POLL_INTERVAL_FALLBACK
-            process_account(account)
-            # No per-account sleep here; we do a global sleep after all accounts
+            
+            # Check if this account is due for processing
+            last_run = last_processed.get(account_id, 0)
+            time_since_last = now - last_run
+            
+            if time_since_last >= poll_interval:
+                process_account(account)
+                last_processed[account_id] = now
 
-        # Purge old emails after processing all accounts
+        # Purge old emails after processing all accounts (run once per cycle)
         purge_old_emails()
 
-        # Sleep before next cycle
-        time.sleep(POLL_INTERVAL_FALLBACK)
+        # Short sleep before checking again (60 seconds allows for responsive polling)
+        time.sleep(60)
 
 if __name__ == "__main__":
     main_loop()
