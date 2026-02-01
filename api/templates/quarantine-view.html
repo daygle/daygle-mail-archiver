@@ -63,8 +63,39 @@
             <div class="row g-3">
                 <div class="col-12">
                     <div class="email-detail-item">
-                        <label class="email-detail-label">Sender</label>
+                        <label class="email-detail-label">From</label>
                         <div class="email-detail-value text-break">{{ item.sender or 'unknown' }}</div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">To</label>
+                        <div class="email-detail-value text-break">{{ item.recipients or 'N/A' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fetch Account Details -->
+        <div class="mb-4">
+            <h6 class="mb-3 text-muted">
+                <i class="fas fa-folder-tree me-2"></i>Fetch Account Details
+            </h6>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Account</label>
+                        <div class="email-detail-value">
+                            <span class="badge badge-primary">{{ item.original_source or 'N/A' }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Folder</label>
+                        <div class="email-detail-value">
+                            <span class="badge badge-secondary">{{ item.original_folder or 'N/A' }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
