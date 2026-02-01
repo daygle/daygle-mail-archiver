@@ -1,976 +1,1268 @@
 # German translations for Daygle Mail Archiver
 msgid ""
 msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-02-01 02:38+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-
-msgid "Display & Formatting Settings"
-msgstr "Anzeige- und Formatierungseinstellungen"
-
-msgid "Configure how content is displayed throughout the application"
-msgstr "Konfigurieren Sie, wie Inhalte in der gesamten Anwendung angezeigt werden"
-
-msgid "Items Per Page"
-msgstr "Elemente pro Seite"
-
-msgid "Number of emails to display per page in lists"
-msgstr "Anzahl der E-Mails, die pro Seite in Listen angezeigt werden"
-
-msgid "Date Format"
-msgstr "Datumsformat"
-
-msgid "Language"
-msgstr "Sprache"
-
-msgid "Interface language"
-msgstr "Schnittstellensprache"
-
-msgid "Sign in to access your archived emails"
-msgstr "Melden Sie sich an, um auf Ihre archivierten E-Mails zuzugreifen"
-
-msgid "Username"
-msgstr "Benutzername"
-
-msgid "Enter your username"
-msgstr "Geben Sie Ihren Benutzernamen ein"
-
-msgid "Password"
-msgstr "Passwort"
-
-msgid "Enter your password"
-msgstr "Geben Sie Ihr Passwort ein"
-
-msgid "Sign In"
-msgstr "Anmelden"
-
-msgid "Forgot Password?"
-msgstr "Passwort vergessen?"
-
-msgid "English"
-msgstr "English"
-
-msgid "Español"
-msgstr "Español"
-
-msgid "Français"
-msgstr "Français"
-
-msgid "Deutsch"
-msgstr "Deutsch"
-
-msgid "中文"
-msgstr "中文"
-
-msgid "Toggle theme"
-msgstr "Thema umschalten"
-
-msgid "Dashboard"
-msgstr "Dashboard"
-
-msgid "Email Address"
-msgstr "E-Mail-Adresse"
-
-msgid "Enter your email address"
-msgstr "Geben Sie Ihre E-Mail-Adresse ein"
-
-msgid "Send Reset Link"
-msgstr "Link zum Zurücksetzen senden"
-
-msgid "Back to Login"
-msgstr "Zurück zur Anmeldung"
-
-msgid "New Password"
-msgstr "Neues Passwort"
-
-msgid "Enter your new password"
-msgstr "Geben Sie Ihr neues Passwort ein"
-
-msgid "Password must be at least 8 characters long and contain uppercase, lowercase, and numeric characters."
-msgstr "Das Passwort muss mindestens 8 Zeichen lang sein und Groß-, Kleinbuchstaben sowie Ziffern enthalten."
-
-msgid "Confirm New Password"
-msgstr "Neues Passwort bestätigen"
-
-msgid "Confirm your new password"
-msgstr "Bestätigen Sie Ihr neues Passwort"
-
-msgid "Reset Password"
-msgstr "Passwort zurücksetzen"
-
-msgid "Initial Setup - Daygle Mail Archiver"
-msgstr "Erstkonfiguration - Daygle Mail Archiver"
-
-msgid "Welcome to Daygle Mail Archiver"
-msgstr "Willkommen bei Daygle Mail Archiver"
+"Language-Team: de <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.10.3\n"
 
 # Added from templates/base.html
+#: templates/base.html:4 templates/base.html:49 templates/base.html:170
 msgid "Daygle Mail Archiver"
 msgstr "Daygle Mail Archiver"
 
-msgid "View Alerts"
-msgstr "Warnungen anzeigen"
-
-msgid "Profile"
-msgstr "Profil"
-
-msgid "User Settings"
-msgstr "Benutzereinstellungen"
-
-msgid "Theme saved"
-msgstr "Thema gespeichert"
-
-msgid "Theme saved locally"
-msgstr "Thema lokal gespeichert"
-
-msgid "Theme applied"
-msgstr "Thema angewendet"
-
-msgid "Change Password"
-msgstr "Passwort ändern"
-
-msgid "Logout"
-msgstr "Abmelden"
-
-msgid "Login"
-msgstr "Anmelden"
-
-msgid "Current Password"
-msgstr "Aktuelles Passwort"
-
-msgid "Enter your current password"
-msgstr "Geben Sie Ihr aktuelles Passwort ein"
-
-msgid "Let's set up your administrator account to get started"
-msgstr "Lassen Sie uns Ihr Administratorkonto einrichten, um zu beginnen"
-
-msgid "First Time Setup:"
-msgstr "Ersteinrichtung:"
-
-msgid "This wizard will create your primary administrator account. This account will have full access to all system features."
-msgstr "Dieser Assistent erstellt Ihr primäres Administratorkonto. Dieses Konto hat vollständigen Zugriff auf alle Systemfunktionen."
-
-msgid "Choose a unique username for the administrator account"
-msgstr "Wählen Sie einen eindeutigen Benutzernamen für das Administratorkonto"
-
-msgid "Optional - your first name"
-msgstr "Optional - Ihr Vorname"
-
-msgid "Optional - your last name"
-msgstr "Optional - Ihr Nachname"
-
-msgid "Optional - for notifications and account recovery"
-msgstr "Optional - für Benachrichtigungen und Kontowiederherstellung"
-
-msgid "Username"
-msgstr "Benutzername"
-
-msgid "administrator"
-msgstr "administrator"
-
-msgid "First Name"
-msgstr "Vorname"
-
-msgid "John"
-msgstr "John"
-
-msgid "Last Name"
-msgstr "Nachname"
-
-msgid "Smith"
-msgstr "Muster"
-
-msgid "Must be at least 8 characters and include a mix of letters and numbers"
-msgstr "Muss mindestens 8 Zeichen lang sein und eine Mischung aus Buchstaben und Zahlen enthalten"
-
-msgid "Choose a strong password"
-msgstr "Wählen Sie ein sicheres Passwort"
-
-msgid "Confirm Password"
-msgstr "Passwort bestätigen"
-
-msgid "Confirm password"
-msgstr "Passwort bestätigen"
-
-msgid "Create Administrator"
-msgstr "Administrator erstellen"
-msgid "Customise Dashboard"
-msgstr "Dashboard anpassen"
-
-msgid "Add Widget"
-msgstr "Widget hinzufügen"
-
-msgid "Save Layout"
-msgstr "Layout speichern"
-
-msgid "Reset Layout"
-msgstr "Layout zurücksetzen"
-
-msgid "Cancel"
-msgstr "Abbrechen"
-
-msgid "API unreachable - retrying..."
-msgstr "API nicht erreichbar - versuche erneut..."
-
-msgid "Retry now"
-msgstr "Jetzt erneut versuchen"
-
-msgid "Add Widgets"
-msgstr "Widgets hinzufügen"
-
-msgid "Select widgets to add to your dashboard:"
-msgstr "Wählen Sie Widgets aus, die dem Dashboard hinzugefügt werden sollen:"
-
-msgid "Remove widget"
-msgstr "Widget entfernen"
-
-msgid "Total Emails"
-msgstr "Gesamt-E-Mails"
-
-msgid "Total archived emails"
-msgstr "Gesamt archivierte E-Mails"
-
-msgid "Emails Today"
-msgstr "E-Mails heute"
-
-msgid "Emails received today"
-msgstr "Heute empfangene E-Mails"
-
-msgid "Database Size"
-msgstr "Datenbankgröße"
-
-msgid "Current database size"
-msgstr "Aktuelle Datenbankgröße"
-
-msgid "Active Accounts"
-msgstr "Aktive Konten"
-
-msgid "Configured fetch accounts"
-msgstr "Konfigurierte Abrufkonten"
-
-msgid "Workers Online"
-msgstr "Worker online"
-
-msgid "Active worker processes"
-msgstr "Aktive Worker-Prozesse"
-
-msgid "Last 7 Days"
-msgstr "Letzte 7 Tage"
-
-msgid "Emails in past week"
-msgstr "E-Mails in der letzten Woche"
-
-msgid "Last 30 Days"
-msgstr "Letzte 30 Tage"
-
-msgid "Emails in past month"
-msgstr "E-Mails im letzten Monat"
-
-msgid "Storage Used"
-msgstr "Genutzter Speicher"
-
-msgid "Total storage consumed"
-msgstr "Gesamter verbrauchter Speicher"
-
-msgid "Clean Emails"
-msgstr "Saubere E-Mails"
-
-msgid "Virus-free emails"
-msgstr "Virusfreie E-Mails"
-
-msgid "Quarantined"
-msgstr "Quarantäne"
-
-msgid "Emails with viruses"
-msgstr "E-Mails mit Viren"
-
-msgid "Rejected"
-msgstr "Abgelehnt"
-
-msgid "Emails blocked by antivirus"
-msgstr "Von Antivirus blockierte E-Mails"
-
-msgid "System Uptime"
-msgstr "Systemlaufzeit"
-
-msgid "Time since last restart"
-msgstr "Zeit seit letztem Neustart"
-
-# Added from templates/profile.html
-msgid "My Profile"
-msgstr "Mein Profil"
-
-msgid "Personal Information"
-msgstr "Persönliche Informationen"
-
-msgid "First Name"
-msgstr "Vorname"
-
-msgid "First name"
-msgstr "Vorname"
-
-msgid "Last Name"
-msgstr "Nachname"
-
-msgid "Last name"
-msgstr "Nachname"
-
-msgid "Email"
-msgstr "E-Mail"
-
-msgid "your.email@example.com"
-msgstr "deine.email@beispiel.de"
-
-msgid "Username:"
-msgstr "Benutzername:"
-
-msgid "Roles:"
-msgstr "Rollen:"
-
-msgid "No roles assigned"
-msgstr "Keine Rollen zugewiesen"
-
-msgid "Last Login:"
-msgstr "Letzte Anmeldung:"
-
-msgid "Last Login IP:"
-msgstr "IP der letzten Anmeldung:"
-
-msgid "Last Seen:"
-msgstr "Zuletzt gesehen:"
-
-msgid "Online Status:"
-msgstr "Online-Status:"
-
-msgid "Online"
-msgstr "Online"
-
-msgid "Offline"
-msgstr "Offline"
-
-msgid "Account Created:"
-msgstr "Konto erstellt:"
-
-msgid "Update Information"
-msgstr "Informationen aktualisieren"
-
-# Machine-translated additions (prefill)
-msgid "01/15/2024"
-msgstr "01/15/2024"
-
-msgid "02:30 PM (12-hour)"
-msgstr "02:30 PM (12-Stunden)"
-
-msgid "02:30:45 PM (12-hour with seconds)"
-msgstr "02:30:45 PM (12-Stunden mit Sekunden)"
-
-msgid "14:30 (24-hour)"
-msgstr "14:30 (24-Stunden)"
-
-msgid "14:30:45 (24-hour with seconds)"
-msgstr "14:30:45 (24-Stunden mit Sekunden)"
-
-msgid "15 Jan 2024"
-msgstr "15. Jan 2024"
-
-msgid "15/01/2024"
-msgstr "15/01/2024"
-
-msgid "2024-01-15"
-msgstr "2024-01-15"
-
-msgid "About"
-msgstr "Über"
-
-msgid "Action When Virus Detected"
-msgstr "Aktion bei Virenerkennung"
-
-msgid "Africa/Cairo (EET)"
-msgstr "Afrika/Kairo (EET)"
-
-msgid "Africa/Johannesburg (SAST)"
-msgstr "Afrika/Johannesburg (SAST)"
-
-msgid "Alert Management"
-msgstr "Alarmverwaltung"
-
-msgid "All emails are stored, virus detections are logged for monitoring"
-msgstr "Alle E-Mails werden gespeichert, Virenerkennungen werden zur Überwachung protokolliert"
-
-msgid "America/Anchorage (AKST)"
-msgstr "Amerika/Anchorage (AKST)"
-
-msgid "America/Argentina (BRT)"
-msgstr "Amerika/Argentinien (BRT)"
-
-msgid "America/Chicago (CST)"
-msgstr "Amerika/Chicago (CST)"
-
-msgid "America/Denver (MST)"
-msgstr "Amerika/Denver (MST)"
-
-msgid "America/Los Angeles (PST)"
-msgstr "Amerika/Los Angeles (PST)"
-
-msgid "America/Mexico City (CST)"
-msgstr "Amerika/Mexiko-Stadt (CST)"
-
-msgid "America/New York (EST)"
-msgstr "Amerika/New York (EST)"
-
-msgid "America/Sao Paulo (BRT)"
-msgstr "Amerika/São Paulo (BRT)"
-
-msgid "America/Toronto (EST)"
-msgstr "Amerika/Toronto (EST)"
-
-msgid "America/Vancouver (PST)"
-msgstr "Amerika/Vancouver (PST)"
-
-msgid "Asia/Bangkok (ICT)"
-msgstr "Asien/Bangkok (ICT)"
-
-msgid "Asia/Dubai (GST)"
-msgstr "Asien/Dubai (GST)"
-
-msgid "Asia/Hong Kong (HKT)"
-msgstr "Asien/Hongkong (HKT)"
-
-msgid "Asia/Jerusalem (IST)"
-msgstr "Asien/Jerusalem (IST)"
-
-msgid "Asia/Karachi (PKT)"
-msgstr "Asien/Karachi (PKT)"
-
-msgid "Asia/Kolkata (IST)"
-msgstr "Asien/Kolkata (IST)"
-
-msgid "Asia/Seoul (KST)"
-msgstr "Asien/Seoul (KST)"
-
-msgid "Asia/Singapore (SGT)"
-msgstr "Asien/Singapur (SGT)"
-
-msgid "Asia/Tokyo (JST)"
-msgstr "Asien/Tokio (JST)"
-
-msgid "Australia/Adelaide (ACST)"
-msgstr "Australien/Adelaide (ACST)"
-
-msgid "Australia/Brisbane (AEST)"
-msgstr "Australien/Brisbane (AEST)"
-
-msgid "Australia/Melbourne (AEST)"
-msgstr "Australien/Melbourne (AEST)"
-
-msgid "Australia/Perth (AWST)"
-msgstr "Australien/Perth (AWST)"
-
-msgid "Australia/Sydney (AEST)"
-msgstr "Australien/Sydney (AEST)"
-
-msgid "Auto Logout (minutes)"
-msgstr "Automatische Abmeldung (Minuten)"
-
-msgid "Automatically delete emails older than the retention period"
-msgstr "E-Mails, die älter als die Aufbewahrungsfrist sind, automatisch löschen"
-
-msgid "Automatically log out users after this many minutes of inactivity. Set to 0 to disable auto-logout."
-msgstr "Benutzer nach dieser Anzahl von Minuten Inaktivität automatisch abmelden. Auf 0 setzen, um die automatische Abmeldung zu deaktivieren."
-
-msgid "ClamAV Host"
-msgstr "ClamAV-Host"
-
-msgid "ClamAV Port"
-msgstr "ClamAV-Port"
-
-msgid "Configure how content is displayed throughout the application"
-msgstr "Konfigurieren Sie, wie Inhalte in der gesamten Anwendung angezeigt werden"
-
-msgid "Dark"
-msgstr "Dunkel"
-
-msgid "Date display format throughout the application"
-msgstr "Datumsanzeigeformat in der gesamten Anwendung"
-
-msgid "Day(s)"
-msgstr "Tag(e)"
-
-msgid "Default Theme"
-msgstr "Standardthema"
-
-msgid "Delete from Mail Server During Retention Cleanup"
-msgstr "Vom Mail-Server während der Aufräumarbeiten löschen"
-
-msgid "Disabled"
-msgstr "Deaktiviert"
-
-msgid "Display name for alert emails"
-msgstr "Anzeigename für Warn-E-Mails"
-
-msgid "Donate"
-msgstr "Spenden"
-
-msgid "Email Notifications"
-msgstr "E-Mail-Benachrichtigungen"
-
-msgid "Email Retention Policy"
-msgstr "E-Mail-Aufbewahrungsrichtlinie"
-
-msgid "Email address to send alerts from"
-msgstr "E-Mail-Adresse, von der Warnungen gesendet werden"
-
-msgid "Emails"
-msgstr "E-Mails"
-
-msgid "Emails older than this period will be automatically deleted"
-msgstr "E-Mails, die älter sind als dieser Zeitraum, werden automatisch gelöscht"
-
-msgid "Emails with viruses are not stored in the database"
-msgstr "E-Mails mit Viren werden nicht in der Datenbank gespeichert"
-
-msgid "Emails with viruses are stored but marked as infected for review"
-msgstr "E-Mails mit Viren werden gespeichert, aber zur Überprüfung als infiziert markiert"
-
-msgid "Enable Automatic Email Purging"
-msgstr "Automatische E-Mail-Bereinigung aktivieren"
-
-msgid "Enable Email Alerts"
-msgstr "E-Mail-Warnungen aktivieren"
-
-msgid "Enable Virus Scanning"
-msgstr "Virenscan aktivieren"
-
-msgid "Enabled"
-msgstr "Aktiviert"
-
-msgid "Encrypt quarantined data at rest"
-msgstr "Quarantänedaten in Ruhe verschlüsseln"
-
-msgid "Enter your email address to reset your password or unlock your account"
-msgstr "Geben Sie Ihre E-Mail-Adresse ein, um Ihr Passwort zurückzusetzen oder Ihr Konto zu entsperren"
-
-msgid "Enter your new password below"
-msgstr "Geben Sie unten Ihr neues Passwort ein"
-
-msgid "Europe/Amsterdam (CET)"
-msgstr "Europa/Amsterdam (CET)"
-
-msgid "Europe/Berlin (CET)"
-msgstr "Europa/Berlin (CET)"
-
-msgid "Europe/Dublin (GMT)"
-msgstr "Europa/Dublin (GMT)"
-
-msgid "Europe/London (GMT)"
-msgstr "Europa/London (GMT)"
-
-msgid "Europe/Madrid (CET)"
-msgstr "Europa/Madrid (CET)"
-
-msgid "Europe/Moscow (MSK)"
-msgstr "Europa/Moskau (MSK)"
-
-msgid "Europe/Paris (CET)"
-msgstr "Europa/Paris (CET)"
-
-msgid "Europe/Rome (CET)"
-msgstr "Europa/Rom (CET)"
-
-msgid "Europe/Zurich (CET)"
-msgstr "Europa/Zurich (CET)"
-
-msgid "Fetch Accounts"
-msgstr "Konten abrufen"
-
-msgid "Files larger than this size will not be scanned by ClamAV"
-msgstr "Dateien, die größer als diese Größe sind, werden nicht von ClamAV gescannt"
-
-msgid "Forgot Password"
-msgstr "Passwort vergessen"
-
-msgid "From Email Address"
-msgstr "Absender-E-Mail-Adresse"
-
-msgid "From Name"
-msgstr "Absendername"
-
-msgid "General Settings"
-msgstr "Allgemeine Einstellungen"
-
-msgid "Global Settings"
-msgstr "Globale Einstellungen"
-
-msgid "Help"
-msgstr "Hilfe"
-
-msgid "Hostname or IP address of the ClamAV daemon (default: clamav for Docker)"
-msgstr "Hostname oder IP-Adresse des ClamAV-Daemons (Standard: clamav für Docker)"
-
-msgid "January 15, 2024"
-msgstr "15. Januar 2024"
-
-msgid "Light"
-msgstr "Hell"
-
-msgid "Log Only (Store all emails, log detections)"
-msgstr "Nur protokollieren (alle E-Mails speichern, Erkennungen protokollieren)"
-
-msgid "Log Only:"
-msgstr "Nur protokollieren:"
-
-msgid "Logs"
-msgstr "Protokolle"
-
-msgid "Max File Size to Scan (bytes)"
-msgstr "Maximale Dateigröße zum Scannen (Bytes)"
-
-msgid "Month(s)"
-msgstr "Monat(e)"
-
-msgid "Never"
-msgstr "Nie"
-
-msgid "Number of days to retain quarantined messages before automatic purge"
-msgstr "Anzahl der Tage zum Aufbewahren von Nachrichten in Quarantäne vor automatischer Bereinigung"
-
-msgid "Operations & Monitoring"
-msgstr "Betrieb & Überwachung"
-
-msgid "Pacific/Auckland (NZST)"
-msgstr "Pazifik/Auckland (NZST)"
-
-msgid "Pacific/Guam (ChST)"
-msgstr "Pazifik/Guam (ChST)"
-
-msgid "Pacific/Honolulu (HST)"
-msgstr "Pazifik/Honolulu (HST)"
-
-msgid "Password for SMTP authentication (use app passwords for Gmail)"
-msgstr "Passwort für die SMTP-Authentifizierung (verwenden Sie App-Passwörter für Gmail)"
-
-msgid "Port number for the ClamAV daemon (default: 3310)"
-msgstr "Portnummer für den ClamAV-Daemon (Standard: 3310)"
-
-msgid "Quarantine"
-msgstr "Quarantäne"
-
-msgid "Quarantine (Store with virus flag)"
-msgstr "Quarantäne (mit Virusmarkierung speichern)"
-
-msgid "Quarantine Retention (days)"
-msgstr "Quarantäne-Aufbewahrung (Tage)"
-
-msgid "Quarantine Settings"
-msgstr "Quarantäne-Einstellungen"
-
-msgid "Quarantine:"
-msgstr "Quarantäne:"
-
-msgid "Receive email alerts and notifications for system events"
-msgstr "E-Mail-Benachrichtigungen für Systemereignisse erhalten"
-
-msgid "Reject (Do not store infected emails)"
-msgstr "Ablehnen (infizierte E-Mails nicht speichern)"
-
-msgid "Reject:"
-msgstr "Ablehnen:"
-
-msgid "Reports"
-msgstr "Berichte"
-
-msgid "Requires CLAMAV_QUARANTINE_KEY to be configured in the environment or config file (see README)"
-msgstr "Erfordert, dass CLAMAV_QUARANTINE_KEY in der Umgebung oder der Konfigurationsdatei konfiguriert ist (siehe README)"
-
-msgid "Retention Period"
-msgstr "Aufbewahrungszeitraum"
-
-msgid "Role Management"
-msgstr "Rollenverwaltung"
-
-msgid "SMTP Email Configuration"
-msgstr "SMTP-E-Mail-Konfiguration"
-
-msgid "SMTP Host"
-msgstr "SMTP-Host"
-
-msgid "SMTP Password"
-msgstr "SMTP-Passwort"
-
-msgid "SMTP Port"
-msgstr "SMTP-Port"
-
-msgid "SMTP Username"
-msgstr "SMTP-Benutzername"
-
-msgid "SMTP server hostname or IP address"
-msgstr "SMTP-Server-Hostname oder IP-Adresse"
-
-msgid "SMTP server port (587 for TLS, 465 for SSL, 25 for plain)"
-msgstr "SMTP-Server-Port (587 für TLS, 465 für SSL, 25 für plain)"
-
-msgid "Save Settings"
-msgstr "Einstellungen speichern"
-
-msgid "Scan incoming emails for viruses using ClamAV"
-msgstr "Eingehende E-Mails mit ClamAV auf Viren scannen"
-
-msgid "Send Test Email"
-msgstr "Test-E-Mail senden"
-
-msgid "Send email notifications for system alerts and important events"
-msgstr "E-Mail-Benachrichtigungen für Systemwarnungen und wichtige Ereignisse senden"
-
-msgid "Set Your Password"
-msgstr "Legen Sie Ihr Passwort fest"
-
-msgid "Store quarantined emails in database"
-msgstr "Quarantänisierte E-Mails in der Datenbank speichern"
-
-msgid "System (use browser / user preference)"
-msgstr "System (Browser-/Benutzereinstellung verwenden)"
-
-msgid "System Management"
-msgstr "Systemverwaltung"
-
-msgid "Time Format"
-msgstr "Zeitformat"
-
-msgid "Time display format throughout the application"
-msgstr "Anzeigeformat der Zeit in der gesamten Anwendung"
-
-msgid "Timezone"
-msgstr "Zeitzone"
-
-msgid "Timezone for displaying dates and times throughout the application"
-msgstr "Zeitzone für die Anzeige von Datum und Uhrzeit in der gesamten Anwendung"
-
-msgid "Transfer"
-msgstr "Übertragen"
-
-msgid "UTC"
-msgstr "UTC"
-
-msgid "Use STARTTLS for secure connection (recommended for most servers)"
-msgstr "STARTTLS für sichere Verbindung verwenden (für die meisten Server empfohlen)"
-
-msgid "Use TLS Encryption"
-msgstr "TLS-Verschlüsselung verwenden"
-
-msgid "User Management"
-msgstr "Benutzerverwaltung"
-
-msgid "Username for SMTP authentication (usually your email address)"
-msgstr "Benutzername für die SMTP-Authentifizierung (normalerweise Ihre E-Mail-Adresse)"
-
-msgid "Virus Scanning (ClamAV)"
-msgstr "Virenscanning (ClamAV)"
-
-msgid "When enabled, infected message payloads are moved to the quarantined_emails table (recommended for auditability)"
-msgstr "Wenn aktiviert, werden infizierte Nachrichtenanhänge in die Tabelle quarantined_emails verschoben (für Prüfpfade empfohlen)"
-
-msgid "When enabled, retention cleanup will also attempt to delete emails from the original IMAP mail servers for both regular emails and quarantined emails"
-msgstr "Wenn aktiviert, versucht die Aufbewahrungsbereinigung auch, E-Mails von den ursprünglichen IMAP-Mailservern sowohl für normale als auch für quarantänisierte E-Mails zu löschen"
-
-msgid "Worker Status"
-msgstr "Worker-Status"
-
-msgid "Year(s)"
-msgstr "Jahr(e)"
-
-msgid "admin@example.com"
-msgstr "admin@example.com"
-
+#: templates/base.html:50
 msgid "aygle Mail Archiver"
 msgstr "aygle Mail Archiver"
 
-msgid "New Fetch Account"
+#: templates/base.html:59
+msgid "Dashboard"
+msgstr "Dashboard"
+
+#: templates/base.html:63
+msgid "Emails"
+msgstr "E-Mails"
+
+#: templates/base.html:76
+msgid "Operations & Monitoring"
+msgstr "Betrieb & Überwachung"
+
+#: templates/base.html:80
+msgid "Fetch Accounts"
+msgstr "Konten abrufen"
+
+#: templates/base.html:86
+msgid "Worker Status"
+msgstr "Worker-Status"
+
+#: templates/base.html:92
+msgid "Reports"
+msgstr "Berichte"
+
+#: templates/base.html:98
+msgid "Quarantine"
+msgstr "Quarantäne"
+
+#: templates/base.html:104
+msgid "Transfer"
+msgstr "Übertragen"
+
+#: templates/base.html:110
+msgid "System Management"
+msgstr "Systemverwaltung"
+
+#: templates/base.html:114
+msgid "Alert Management"
+msgstr "Alarmverwaltung"
+
+#: templates/base.html:120 templates/global-settings.html:3
+msgid "Global Settings"
+msgstr "Globale Einstellungen"
+
+#: templates/base.html:126
+msgid "User Management"
+msgstr "Benutzerverwaltung"
+
+#: templates/base.html:132
+msgid "Role Management"
+msgstr "Rollenverwaltung"
+
+#: templates/base.html:138
+msgid "Logs"
+msgstr "Protokolle"
+
+#: templates/base.html:147
+msgid "Help"
+msgstr "Hilfe"
+
+#: templates/base.html:151
+msgid "About"
+msgstr "Über"
+
+#: templates/base.html:155
+msgid "Donate"
+msgstr "Spenden"
+
+#: templates/base.html:176
+msgid "View Alerts"
+msgstr "Warnungen anzeigen"
+
+#: templates/base.html:194
+msgid "Profile"
+msgstr "Profil"
+
+#: templates/base.html:198
+msgid "User Settings"
+msgstr "Benutzereinstellungen"
+
+#: templates/base.html:200 templates/base.html:203 templates/login.html:22
+msgid "Toggle theme"
+msgstr "Thema umschalten"
+
+#: templates/base.html:208 templates/change-password.html:3
+#: templates/change-password.html:10 templates/change-password.html:30
+msgid "Change Password"
+msgstr "Passwort ändern"
+
+#: templates/base.html:213
+msgid "Logout"
+msgstr "Abmelden"
+
+#: templates/base.html:220
+msgid "Login"
+msgstr "Anmelden"
+
+#: templates/base.html:357
+msgid "Theme saved"
+msgstr "Thema gespeichert"
+
+#: templates/base.html:359 templates/base.html:362
+msgid "Theme saved locally"
+msgstr "Thema lokal gespeichert"
+
+#: templates/base.html:365
+msgid "Theme applied"
+msgstr "Thema angewendet"
+
+#: templates/change-password.html:16
+msgid "Current Password"
+msgstr "Aktuelles Passwort"
+
+#: templates/change-password.html:17
+msgid "Enter your current password"
+msgstr "Geben Sie Ihr aktuelles Passwort ein"
+
+#: templates/change-password.html:20 templates/reset-password.html:39
+msgid "New Password"
+msgstr "Neues Passwort"
+
+#: templates/change-password.html:21 templates/reset-password.html:40
+msgid "Enter your new password"
+msgstr "Geben Sie Ihr neues Passwort ein"
+
+#: templates/change-password.html:24 templates/reset-password.html:47
+msgid "Confirm New Password"
+msgstr "Neues Passwort bestätigen"
+
+#: templates/change-password.html:25 templates/reset-password.html:48
+msgid "Confirm your new password"
+msgstr "Bestätigen Sie Ihr neues Passwort"
+
+#: templates/forgot-password.html:36 templates/login.html:27
+#: templates/reset-password.html:22 templates/setup.html:70
+#: templates/user-settings.html:96
+msgid "Language"
+msgstr "Sprache"
+
+#: templates/forgot-password.html:38 templates/forgot-password.html:53
+#: templates/login.html:29 templates/login.html:72
+#: templates/reset-password.html:24 templates/setup.html:72
+#: templates/setup.html:100
+msgid "English"
+msgstr "English"
+
+#: templates/forgot-password.html:39 templates/forgot-password.html:54
+#: templates/login.html:30 templates/login.html:73
+#: templates/reset-password.html:25 templates/setup.html:73
+#: templates/setup.html:101
+msgid "Español"
+msgstr "Español"
+
+#: templates/forgot-password.html:40 templates/forgot-password.html:55
+#: templates/login.html:31 templates/login.html:74
+#: templates/reset-password.html:26 templates/setup.html:74
+#: templates/setup.html:102
+msgid "Français"
+msgstr "Français"
+
+#: templates/forgot-password.html:41 templates/forgot-password.html:56
+#: templates/login.html:32 templates/login.html:75
+#: templates/reset-password.html:27 templates/setup.html:75
+#: templates/setup.html:103
+msgid "Deutsch"
+msgstr "Deutsch"
+
+#: templates/forgot-password.html:42 templates/forgot-password.html:57
+#: templates/login.html:33 templates/login.html:76
+#: templates/reset-password.html:28 templates/setup.html:76
+#: templates/setup.html:104
+msgid "中文"
+msgstr "中文"
+
+#: templates/forgot-password.html:48
+msgid "Forgot Password"
+msgstr "Passwort vergessen"
+
+#: templates/forgot-password.html:49
+msgid "Enter your email address to reset your password or unlock your account"
+msgstr ""
+"Geben Sie Ihre E-Mail-Adresse ein, um Ihr Passwort zurückzusetzen oder "
+"Ihr Konto zu entsperren"
+
+#: templates/forgot-password.html:64 templates/setup.html:129
+msgid "Email Address"
+msgstr "E-Mail-Adresse"
+
+#: templates/forgot-password.html:65
+msgid "Enter your email address"
+msgstr "Geben Sie Ihre E-Mail-Adresse ein"
+
+#: templates/forgot-password.html:70
+msgid "Send Reset Link"
+msgstr "Link zum Zurücksetzen senden"
+
+#: templates/forgot-password.html:77 templates/reset-password.html:60
+msgid "Back to Login"
+msgstr "Zurück zur Anmeldung"
+
+#: templates/global-settings.html:15
+msgid "General Settings"
+msgstr "Allgemeine Einstellungen"
+
+#: templates/global-settings.html:20 templates/user-settings.html:19
+msgid "Items Per Page"
+msgstr "Elemente pro Seite"
+
+#: templates/global-settings.html:22 templates/user-settings.html:21
+msgid "Number of emails to display per page in lists"
+msgstr "Anzahl der E-Mails, die pro Seite in Listen angezeigt werden"
+
+#: templates/global-settings.html:26 templates/user-settings.html:25
+msgid "Date Format"
+msgstr "Datumsformat"
+
+#: templates/global-settings.html:28
+msgid "15/01/2024"
+msgstr "15/01/2024"
+
+#: templates/global-settings.html:29
+msgid "2024-01-15"
+msgstr "2024-01-15"
+
+# Machine-translated additions (prefill)
+#: templates/global-settings.html:30
+msgid "01/15/2024"
+msgstr "01/15/2024"
+
+#: templates/global-settings.html:31
+msgid "15 Jan 2024"
+msgstr "15. Jan 2024"
+
+#: templates/global-settings.html:32
+msgid "January 15, 2024"
+msgstr "15. Januar 2024"
+
+#: templates/global-settings.html:34
+msgid "Date display format throughout the application"
+msgstr "Datumsanzeigeformat in der gesamten Anwendung"
+
+#: templates/global-settings.html:38
+msgid "Time Format"
+msgstr "Zeitformat"
+
+#: templates/global-settings.html:40
+msgid "14:30 (24-hour)"
+msgstr "14:30 (24-Stunden)"
+
+#: templates/global-settings.html:41
+msgid "14:30:45 (24-hour with seconds)"
+msgstr "14:30:45 (24-Stunden mit Sekunden)"
+
+#: templates/global-settings.html:42
+msgid "02:30 PM (12-hour)"
+msgstr "02:30 PM (12-Stunden)"
+
+#: templates/global-settings.html:43
+msgid "02:30:45 PM (12-hour with seconds)"
+msgstr "02:30:45 PM (12-Stunden mit Sekunden)"
+
+#: templates/global-settings.html:45
+msgid "Time display format throughout the application"
+msgstr "Anzeigeformat der Zeit in der gesamten Anwendung"
+
+#: templates/global-settings.html:49
+msgid "Timezone"
+msgstr "Zeitzone"
+
+#: templates/global-settings.html:51
+msgid "UTC"
+msgstr "UTC"
+
+#: templates/global-settings.html:52
+msgid "Pacific/Honolulu (HST)"
+msgstr "Pazifik/Honolulu (HST)"
+
+#: templates/global-settings.html:53
+msgid "America/Anchorage (AKST)"
+msgstr "Amerika/Anchorage (AKST)"
+
+#: templates/global-settings.html:54
+msgid "America/Los Angeles (PST)"
+msgstr "Amerika/Los Angeles (PST)"
+
+#: templates/global-settings.html:55
+msgid "America/Vancouver (PST)"
+msgstr "Amerika/Vancouver (PST)"
+
+#: templates/global-settings.html:56
+msgid "America/Denver (MST)"
+msgstr "Amerika/Denver (MST)"
+
+#: templates/global-settings.html:57
+msgid "America/Chicago (CST)"
+msgstr "Amerika/Chicago (CST)"
+
+#: templates/global-settings.html:58
+msgid "America/Mexico City (CST)"
+msgstr "Amerika/Mexiko-Stadt (CST)"
+
+#: templates/global-settings.html:59
+msgid "America/New York (EST)"
+msgstr "Amerika/New York (EST)"
+
+#: templates/global-settings.html:60
+msgid "America/Toronto (EST)"
+msgstr "Amerika/Toronto (EST)"
+
+#: templates/global-settings.html:61
+msgid "America/Argentina (BRT)"
+msgstr "Amerika/Argentinien (BRT)"
+
+#: templates/global-settings.html:62
+msgid "America/Sao Paulo (BRT)"
+msgstr "Amerika/São Paulo (BRT)"
+
+#: templates/global-settings.html:63
+msgid "Europe/London (GMT)"
+msgstr "Europa/London (GMT)"
+
+#: templates/global-settings.html:64
+msgid "Europe/Dublin (GMT)"
+msgstr "Europa/Dublin (GMT)"
+
+#: templates/global-settings.html:65
+msgid "Europe/Berlin (CET)"
+msgstr "Europa/Berlin (CET)"
+
+#: templates/global-settings.html:66
+msgid "Europe/Paris (CET)"
+msgstr "Europa/Paris (CET)"
+
+#: templates/global-settings.html:67
+msgid "Europe/Madrid (CET)"
+msgstr "Europa/Madrid (CET)"
+
+#: templates/global-settings.html:68
+msgid "Europe/Rome (CET)"
+msgstr "Europa/Rom (CET)"
+
+#: templates/global-settings.html:69
+msgid "Europe/Amsterdam (CET)"
+msgstr "Europa/Amsterdam (CET)"
+
+#: templates/global-settings.html:70
+msgid "Europe/Zurich (CET)"
+msgstr "Europa/Zurich (CET)"
+
+#: templates/global-settings.html:71
+msgid "Europe/Moscow (MSK)"
+msgstr "Europa/Moskau (MSK)"
+
+#: templates/global-settings.html:72
+msgid "Africa/Cairo (EET)"
+msgstr "Afrika/Kairo (EET)"
+
+#: templates/global-settings.html:73
+msgid "Africa/Johannesburg (SAST)"
+msgstr "Afrika/Johannesburg (SAST)"
+
+#: templates/global-settings.html:74
+msgid "Asia/Dubai (GST)"
+msgstr "Asien/Dubai (GST)"
+
+#: templates/global-settings.html:75
+msgid "Asia/Jerusalem (IST)"
+msgstr "Asien/Jerusalem (IST)"
+
+#: templates/global-settings.html:76
+msgid "Asia/Kolkata (IST)"
+msgstr "Asien/Kolkata (IST)"
+
+#: templates/global-settings.html:77
+msgid "Asia/Karachi (PKT)"
+msgstr "Asien/Karachi (PKT)"
+
+#: templates/global-settings.html:78
+msgid "Asia/Bangkok (ICT)"
+msgstr "Asien/Bangkok (ICT)"
+
+#: templates/global-settings.html:79
+msgid "Asia/Singapore (SGT)"
+msgstr "Asien/Singapur (SGT)"
+
+#: templates/global-settings.html:80
+msgid "Asia/Hong Kong (HKT)"
+msgstr "Asien/Hongkong (HKT)"
+
+#: templates/global-settings.html:81
+msgid "Asia/Tokyo (JST)"
+msgstr "Asien/Tokio (JST)"
+
+#: templates/global-settings.html:82
+msgid "Asia/Seoul (KST)"
+msgstr "Asien/Seoul (KST)"
+
+#: templates/global-settings.html:83
+msgid "Australia/Perth (AWST)"
+msgstr "Australien/Perth (AWST)"
+
+#: templates/global-settings.html:84
+msgid "Australia/Adelaide (ACST)"
+msgstr "Australien/Adelaide (ACST)"
+
+#: templates/global-settings.html:85
+msgid "Australia/Brisbane (AEST)"
+msgstr "Australien/Brisbane (AEST)"
+
+#: templates/global-settings.html:86
+msgid "Australia/Sydney (AEST)"
+msgstr "Australien/Sydney (AEST)"
+
+#: templates/global-settings.html:87
+msgid "Australia/Melbourne (AEST)"
+msgstr "Australien/Melbourne (AEST)"
+
+#: templates/global-settings.html:88
+msgid "Pacific/Auckland (NZST)"
+msgstr "Pazifik/Auckland (NZST)"
+
+#: templates/global-settings.html:89
+msgid "Pacific/Guam (ChST)"
+msgstr "Pazifik/Guam (ChST)"
+
+#: templates/global-settings.html:91
+msgid "Timezone for displaying dates and times throughout the application"
+msgstr "Zeitzone für die Anzeige von Datum und Uhrzeit in der gesamten Anwendung"
+
+#: templates/global-settings.html:95
+msgid "Default Theme"
+msgstr "Standardthema"
+
+#: templates/global-settings.html:97
+msgid "System (use browser / user preference)"
+msgstr "System (Browser-/Benutzereinstellung verwenden)"
+
+#: templates/global-settings.html:98
+msgid "Light"
+msgstr "Hell"
+
+#: templates/global-settings.html:99
+msgid "Dark"
+msgstr "Dunkel"
+
+#: templates/global-settings.html:101
+msgid ""
+"Global default theme for users who have not set a personal preference "
+"(users' own preference overrides this)"
 msgstr ""
 
-msgid "Account Name"
-msgstr ""
+#: templates/global-settings.html:105
+msgid "Auto Logout (minutes)"
+msgstr "Automatische Abmeldung (Minuten)"
 
-msgid "A friendly name to identify this account"
+#: templates/global-settings.html:107
+msgid ""
+"Automatically log out users after this many minutes of inactivity. Set to"
+" 0 to disable auto-logout."
 msgstr ""
+"Benutzer nach dieser Anzahl von Minuten Inaktivität automatisch abmelden."
+" Auf 0 setzen, um die automatische Abmeldung zu deaktivieren."
 
-msgid "Account Type"
-msgstr ""
+#: templates/global-settings.html:119
+msgid "Email Retention Policy"
+msgstr "E-Mail-Aufbewahrungsrichtlinie"
 
-msgid "IMAP"
-msgstr ""
+#: templates/global-settings.html:126
+msgid "Enable Automatic Email Purging"
+msgstr "Automatische E-Mail-Bereinigung aktivieren"
 
-msgid "Gmail API"
-msgstr ""
+#: templates/global-settings.html:127
+msgid "Automatically delete emails older than the retention period"
+msgstr "E-Mails, die älter als die Aufbewahrungsfrist sind, automatisch löschen"
 
-msgid "Office 365 API"
-msgstr ""
+#: templates/global-settings.html:134
+msgid "Delete from Mail Server During Retention Cleanup"
+msgstr "Vom Mail-Server während der Aufräumarbeiten löschen"
 
-msgid "Select the type of email service to fetch from"
+#: templates/global-settings.html:135
+msgid ""
+"When enabled, retention cleanup will also attempt to delete emails from "
+"the original IMAP mail servers for both regular emails and quarantined "
+"emails"
 msgstr ""
+"Wenn aktiviert, versucht die Aufbewahrungsbereinigung auch, E-Mails von "
+"den ursprünglichen IMAP-Mailservern sowohl für normale als auch für "
+"quarantänisierte E-Mails zu löschen"
 
-msgid "IMAP Configuration"
-msgstr ""
+#: templates/global-settings.html:140
+msgid "Retention Period"
+msgstr "Aufbewahrungszeitraum"
 
-msgid "Host"
-msgstr ""
+#: templates/global-settings.html:147
+msgid "Day(s)"
+msgstr "Tag(e)"
 
-msgid "Port"
-msgstr ""
+#: templates/global-settings.html:148
+msgid "Month(s)"
+msgstr "Monat(e)"
 
-msgid "Leave blank to keep the existing password"
-msgstr ""
+#: templates/global-settings.html:149
+msgid "Year(s)"
+msgstr "Jahr(e)"
 
-msgid "Fetch Settings"
-msgstr ""
+#: templates/global-settings.html:153
+msgid "Emails older than this period will be automatically deleted"
+msgstr "E-Mails, die älter sind als dieser Zeitraum, werden automatisch gelöscht"
 
-msgid "Recommended for secure connections (port 993)"
-msgstr ""
+#: templates/global-settings.html:163
+msgid "Virus Scanning (ClamAV)"
+msgstr "Virenscanning (ClamAV)"
 
-msgid "How often to check for new emails (minimum 60 seconds)"
-msgstr ""
+#: templates/global-settings.html:170
+msgid "Enable Virus Scanning"
+msgstr "Virenscan aktivieren"
 
-msgid "Require STARTTLS"
-msgstr ""
+#: templates/global-settings.html:171
+msgid "Scan incoming emails for viruses using ClamAV"
+msgstr "Eingehende E-Mails mit ClamAV auf Viren scannen"
 
-msgid "For plain connections that upgrade to TLS (port 143)"
-msgstr ""
+#: templates/global-settings.html:176
+msgid "ClamAV Host"
+msgstr "ClamAV-Host"
 
-msgid "Delete Email After Processing"
-msgstr ""
+#: templates/global-settings.html:178
+msgid "Hostname or IP address of the ClamAV daemon (default: clamav for Docker)"
+msgstr "Hostname oder IP-Adresse des ClamAV-Daemons (Standard: clamav für Docker)"
 
-msgid "Gmail: moves to Trash | Office 365: moves to Deleted Items | IMAP: marks as deleted (recoverable)"
-msgstr ""
+#: templates/global-settings.html:182
+msgid "ClamAV Port"
+msgstr "ClamAV-Port"
 
-msgid "Permanently Expunge Deleted (IMAP only)"
-msgstr ""
+#: templates/global-settings.html:184
+msgid "Port number for the ClamAV daemon (default: 3310)"
+msgstr "Portnummer für den ClamAV-Daemon (Standard: 3310)"
 
-msgid "Warning: Permanently removes deleted emails from server - cannot be recovered"
-msgstr ""
+#: templates/global-settings.html:188
+msgid "Action When Virus Detected"
+msgstr "Aktion bei Virenerkennung"
 
-msgid "OAuth Setup Required"
-msgstr ""
+#: templates/global-settings.html:190
+msgid "Quarantine (Store with virus flag)"
+msgstr "Quarantäne (mit Virusmarkierung speichern)"
 
-msgid "To use Gmail or Office 365, you need to:"
-msgstr ""
+#: templates/global-settings.html:191
+msgid "Reject (Do not store infected emails)"
+msgstr "Ablehnen (infizierte E-Mails nicht speichern)"
 
-msgid "Create an OAuth app in Google/Microsoft developer console"
-msgstr ""
+#: templates/global-settings.html:192
+msgid "Log Only (Store all emails, log detections)"
+msgstr "Nur protokollieren (alle E-Mails speichern, Erkennungen protokollieren)"
 
-msgid "Enter your Client ID and Client Secret below"
-msgstr ""
+#: templates/global-settings.html:195
+msgid "Quarantine:"
+msgstr "Quarantäne:"
 
-msgid "Click \"Authorise\" to grant access"
+#: templates/global-settings.html:195
+msgid "Emails with viruses are stored but marked as infected for review"
 msgstr ""
+"E-Mails mit Viren werden gespeichert, aber zur Überprüfung als infiziert "
+"markiert"
 
-msgid "Create Account"
-msgstr ""
+#: templates/global-settings.html:196
+msgid "Reject:"
+msgstr "Ablehnen:"
 
-msgid "OAuth Client ID"
-msgstr ""
+#: templates/global-settings.html:196
+msgid "Emails with viruses are not stored in the database"
+msgstr "E-Mails mit Viren werden nicht in der Datenbank gespeichert"
 
-msgid "From your Google/Microsoft OAuth app"
-msgstr ""
+#: templates/global-settings.html:197
+msgid "Log Only:"
+msgstr "Nur protokollieren:"
 
-msgid "OAuth Client Secret"
+#: templates/global-settings.html:197
+msgid "All emails are stored, virus detections are logged for monitoring"
 msgstr ""
+"Alle E-Mails werden gespeichert, Virenerkennungen werden zur Überwachung "
+"protokolliert"
 
-msgid "Keep this secret secure"
-msgstr ""
+#: templates/global-settings.html:202
+msgid "Max File Size to Scan (bytes)"
+msgstr "Maximale Dateigröße zum Scannen (Bytes)"
 
-msgid "Add Fetch Account"
-msgstr ""
+#: templates/global-settings.html:204
+msgid "Files larger than this size will not be scanned by ClamAV"
+msgstr "Dateien, die größer als diese Größe sind, werden nicht von ClamAV gescannt"
 
-msgid "Name"
-msgstr ""
+#: templates/global-settings.html:214
+msgid "Quarantine Settings"
+msgstr "Quarantäne-Einstellungen"
 
-msgid "Type"
-msgstr ""
+#: templates/global-settings.html:221
+msgid "Store quarantined emails in database"
+msgstr "Quarantänisierte E-Mails in der Datenbank speichern"
 
-msgid "Host/Service"
+#: templates/global-settings.html:222
+msgid ""
+"When enabled, infected message payloads are moved to the "
+"quarantined_emails table (recommended for auditability)"
 msgstr ""
+"Wenn aktiviert, werden infizierte Nachrichtenanhänge in die Tabelle "
+"quarantined_emails verschoben (für Prüfpfade empfohlen)"
 
-msgid "User"
-msgstr ""
+#: templates/global-settings.html:227
+msgid "Quarantine Retention (days)"
+msgstr "Quarantäne-Aufbewahrung (Tage)"
 
-msgid "Poll Interval"
+#: templates/global-settings.html:229
+msgid "Number of days to retain quarantined messages before automatic purge"
 msgstr ""
+"Anzahl der Tage zum Aufbewahren von Nachrichten in Quarantäne vor "
+"automatischer Bereinigung"
 
-msgid "Last Success"
-msgstr ""
+#: templates/global-settings.html:235
+msgid "Encrypt quarantined data at rest"
+msgstr "Quarantänedaten in Ruhe verschlüsseln"
 
-msgid "Actions"
+#: templates/global-settings.html:236
+msgid ""
+"Requires CLAMAV_QUARANTINE_KEY to be configured in the environment or "
+"config file (see README)"
 msgstr ""
+"Erfordert, dass CLAMAV_QUARANTINE_KEY in der Umgebung oder der "
+"Konfigurationsdatei konfiguriert ist (siehe README)"
 
-msgid "Gmail"
-msgstr ""
+#: templates/global-settings.html:248
+msgid "SMTP Email Configuration"
+msgstr "SMTP-E-Mail-Konfiguration"
 
-msgid "O365"
-msgstr ""
+#: templates/global-settings.html:257
+msgid "Enable Email Alerts"
+msgstr "E-Mail-Warnungen aktivieren"
 
-msgid "SSL Enabled"
+#: templates/global-settings.html:258
+msgid "Send email notifications for system alerts and important events"
 msgstr ""
+"E-Mail-Benachrichtigungen für Systemwarnungen und wichtige Ereignisse "
+"senden"
 
-msgid "Edit"
-msgstr ""
+#: templates/global-settings.html:263
+msgid "SMTP Host"
+msgstr "SMTP-Host"
 
-msgid "Test Connection"
-msgstr ""
+#: templates/global-settings.html:265
+msgid "SMTP server hostname or IP address"
+msgstr "SMTP-Server-Hostname oder IP-Adresse"
 
-msgid "Delete"
-msgstr ""
+#: templates/global-settings.html:269
+msgid "SMTP Port"
+msgstr "SMTP-Port"
 
-msgid "No fetch accounts configured."
-msgstr ""
+#: templates/global-settings.html:271
+msgid "SMTP server port (587 for TLS, 465 for SSL, 25 for plain)"
+msgstr "SMTP-Server-Port (587 für TLS, 465 für SSL, 25 für plain)"
 
-msgid "Previous"
-msgstr ""
+#: templates/global-settings.html:275
+msgid "SMTP Username"
+msgstr "SMTP-Benutzername"
 
-msgid "Next"
+#: templates/global-settings.html:277
+msgid "Username for SMTP authentication (usually your email address)"
 msgstr ""
+"Benutzername für die SMTP-Authentifizierung (normalerweise Ihre E-Mail-"
+"Adresse)"
 
-msgid "Delete Fetch Account"
-msgstr ""
+#: templates/global-settings.html:281
+msgid "SMTP Password"
+msgstr "SMTP-Passwort"
 
-msgid "Warning:"
+#: templates/global-settings.html:283
+msgid "Password for SMTP authentication (use app passwords for Gmail)"
 msgstr ""
+"Passwort für die SMTP-Authentifizierung (verwenden Sie App-Passwörter für"
+" Gmail)"
 
-msgid "You are about to delete the fetch account:"
-msgstr ""
+#: templates/global-settings.html:289
+msgid "Use TLS Encryption"
+msgstr "TLS-Verschlüsselung verwenden"
 
-msgid "Loading email count..."
+#: templates/global-settings.html:290
+msgid "Use STARTTLS for secure connection (recommended for most servers)"
 msgstr ""
+"STARTTLS für sichere Verbindung verwenden (für die meisten Server "
+"empfohlen)"
 
-msgid "What would you like to do?"
-msgstr ""
+#: templates/global-settings.html:295
+msgid "From Email Address"
+msgstr "Absender-E-Mail-Adresse"
 
-msgid "Delete Account Only (retain emails)"
-msgstr ""
+#: templates/global-settings.html:297
+msgid "Email address to send alerts from"
+msgstr "E-Mail-Adresse, von der Warnungen gesendet werden"
 
-msgid "Delete Account + All Emails"
-msgstr ""
+#: templates/global-settings.html:301
+msgid "From Name"
+msgstr "Absendername"
 
-msgid "Edit Fetch Account"
-msgstr ""
+#: templates/global-settings.html:303
+msgid "Display name for alert emails"
+msgstr "Anzeigename für Warn-E-Mails"
 
-msgid "Update Account"
-msgstr ""
+#: templates/global-settings.html:309
+msgid "Cancel"
+msgstr "Abbrechen"
 
-msgid "This account has"
-msgstr ""
+#: templates/global-settings.html:313
+msgid "Save Settings"
+msgstr "Einstellungen speichern"
 
-msgid "associated with it."
-msgstr ""
+#: templates/global-settings.html:326
+msgid "Send Test Email"
+msgstr "Test-E-Mail senden"
 
-msgid "email"
-msgstr ""
+#: templates/login.html:53
+msgid "Sign in to access your archived emails"
+msgstr "Melden Sie sich an, um auf Ihre archivierten E-Mails zuzugreifen"
 
-msgid "emails"
-msgstr ""
+#: templates/login.html:60 templates/setup.html:108
+msgid "Username"
+msgstr "Benutzername"
 
-msgid "Delete Account Only (retain"
-msgstr ""
+#: templates/login.html:61
+msgid "Enter your username"
+msgstr "Geben Sie Ihren Benutzernamen ein"
 
-msgid "Delete Account + All"
-msgstr ""
+#: templates/login.html:65 templates/setup.html:136
+msgid "Password"
+msgstr "Passwort"
 
-msgid "Global default theme for users who have not set a personal preference (users' own preference overrides this)"
+#: templates/login.html:66
+msgid "Enter your password"
+msgstr "Geben Sie Ihr Passwort ein"
+
+#: templates/login.html:82
+msgid "Sign In"
+msgstr "Anmelden"
+
+#: templates/login.html:91
+msgid "Forgot Password?"
+msgstr "Passwort vergessen?"
+
+# Added from templates/profile.html
+#: templates/profile.html:3
+msgid "My Profile"
+msgstr "Mein Profil"
+
+#: templates/profile.html:13
+msgid "Personal Information"
+msgstr "Persönliche Informationen"
+
+#: templates/profile.html:22 templates/setup.html:115
+msgid "First Name"
+msgstr "Vorname"
+
+#: templates/profile.html:27
+msgid "First name"
+msgstr "Vorname"
+
+#: templates/profile.html:31 templates/setup.html:122
+msgid "Last Name"
+msgstr "Nachname"
+
+#: templates/profile.html:36
+msgid "Last name"
+msgstr "Nachname"
+
+#: templates/profile.html:41
+msgid "Email"
+msgstr "E-Mail"
+
+#: templates/profile.html:47
+msgid "your.email@example.com"
+msgstr "deine.email@beispiel.de"
+
+#: templates/profile.html:54
+msgid "Username:"
+msgstr "Benutzername:"
+
+#: templates/profile.html:57
+msgid "Roles:"
+msgstr "Rollen:"
+
+#: templates/profile.html:61
+msgid "No roles assigned"
+msgstr "Keine Rollen zugewiesen"
+
+#: templates/profile.html:66
+msgid "Last Login:"
+msgstr "Letzte Anmeldung:"
+
+#: templates/profile.html:70 templates/profile.html:88
+msgid "Never"
+msgstr "Nie"
+
+#: templates/profile.html:75
+msgid "Last Login IP:"
+msgstr "IP der letzten Anmeldung:"
+
+#: templates/profile.html:84
+msgid "Last Seen:"
+msgstr "Zuletzt gesehen:"
+
+#: templates/profile.html:93
+msgid "Online Status:"
+msgstr "Online-Status:"
+
+#: templates/profile.html:95
+msgid "Online"
+msgstr "Online"
+
+#: templates/profile.html:97
+msgid "Offline"
+msgstr "Offline"
+
+#: templates/profile.html:102
+msgid "Account Created:"
+msgstr "Konto erstellt:"
+
+#: templates/profile.html:116
+msgid "Update Information"
+msgstr "Informationen aktualisieren"
+
+#: templates/reset-password.html:18 templates/reset-password.html:53
+msgid "Reset Password"
+msgstr "Passwort zurücksetzen"
+
+#: templates/reset-password.html:19
+msgid "Enter your new password below"
+msgstr "Geben Sie unten Ihr neues Passwort ein"
+
+#: templates/reset-password.html:42
+msgid ""
+"Password must be at least 8 characters long and contain uppercase, "
+"lowercase, and numeric characters."
 msgstr ""
+"Das Passwort muss mindestens 8 Zeichen lang sein und Groß-, "
+"Kleinbuchstaben sowie Ziffern enthalten."
+
+#: templates/set-password.html:10
+msgid "Set Your Password"
+msgstr "Legen Sie Ihr Passwort fest"
+
+#: templates/setup.html:4
+msgid "Initial Setup - Daygle Mail Archiver"
+msgstr "Erstkonfiguration - Daygle Mail Archiver"
+
+#: templates/setup.html:84
+msgid "Welcome to Daygle Mail Archiver"
+msgstr "Willkommen bei Daygle Mail Archiver"
+
+#: templates/setup.html:85
+msgid "Let's set up your administrator account to get started"
+msgstr "Lassen Sie uns Ihr Administratorkonto einrichten, um zu beginnen"
+
+#: templates/setup.html:90
+msgid "First Time Setup:"
+msgstr "Ersteinrichtung:"
+
+#: templates/setup.html:90
+msgid ""
+"This wizard will create your primary administrator account. This account "
+"will have full access to all system features."
+msgstr ""
+"Dieser Assistent erstellt Ihr primäres Administratorkonto. Dieses Konto "
+"hat vollständigen Zugriff auf alle Systemfunktionen."
+
+#: templates/setup.html:110
+msgid "administrator"
+msgstr "administrator"
+
+#: templates/setup.html:111
+msgid "Choose a unique username for the administrator account"
+msgstr "Wählen Sie einen eindeutigen Benutzernamen für das Administratorkonto"
+
+#: templates/setup.html:117
+msgid "John"
+msgstr "John"
+
+#: templates/setup.html:118
+msgid "Optional - your first name"
+msgstr "Optional - Ihr Vorname"
+
+#: templates/setup.html:124
+msgid "Smith"
+msgstr "Muster"
+
+#: templates/setup.html:125
+msgid "Optional - your last name"
+msgstr "Optional - Ihr Nachname"
+
+#: templates/setup.html:131
+msgid "admin@example.com"
+msgstr "admin@example.com"
+
+#: templates/setup.html:132
+msgid "Optional - for notifications and account recovery"
+msgstr "Optional - für Benachrichtigungen und Kontowiederherstellung"
+
+#: templates/setup.html:137
+msgid "Choose a strong password"
+msgstr "Wählen Sie ein sicheres Passwort"
+
+#: templates/setup.html:138
+msgid "Must be at least 8 characters and include a mix of letters and numbers"
+msgstr ""
+"Muss mindestens 8 Zeichen lang sein und eine Mischung aus Buchstaben und "
+"Zahlen enthalten"
+
+#: templates/setup.html:142
+msgid "Confirm Password"
+msgstr "Passwort bestätigen"
+
+#: templates/setup.html:143
+msgid "Confirm password"
+msgstr "Passwort bestätigen"
+
+#: templates/setup.html:149
+msgid "Create Administrator"
+msgstr "Administrator erstellen"
+
+#: templates/user-settings.html:12
+msgid "Display & Formatting Settings"
+msgstr "Anzeige- und Formatierungseinstellungen"
+
+#: templates/user-settings.html:16
+msgid "Configure how content is displayed throughout the application"
+msgstr "Konfigurieren Sie, wie Inhalte in der gesamten Anwendung angezeigt werden"
+
+#: templates/user-settings.html:104
+msgid "Interface language"
+msgstr "Schnittstellensprache"
+
+#: templates/user-settings.html:154
+msgid "Email Notifications"
+msgstr "E-Mail-Benachrichtigungen"
+
+#: templates/user-settings.html:156
+msgid "Enabled"
+msgstr "Aktiviert"
+
+#: templates/user-settings.html:157
+msgid "Disabled"
+msgstr "Deaktiviert"
+
+#: templates/user-settings.html:159
+msgid "Receive email alerts and notifications for system events"
+msgstr "E-Mail-Benachrichtigungen für Systemereignisse erhalten"
+
+#~ msgid "Customise Dashboard"
+#~ msgstr "Dashboard anpassen"
+
+#~ msgid "Add Widget"
+#~ msgstr "Widget hinzufügen"
+
+#~ msgid "Save Layout"
+#~ msgstr "Layout speichern"
+
+#~ msgid "Reset Layout"
+#~ msgstr "Layout zurücksetzen"
+
+#~ msgid "API unreachable - retrying..."
+#~ msgstr "API nicht erreichbar - versuche erneut..."
+
+#~ msgid "Retry now"
+#~ msgstr "Jetzt erneut versuchen"
+
+#~ msgid "Add Widgets"
+#~ msgstr "Widgets hinzufügen"
+
+#~ msgid "Select widgets to add to your dashboard:"
+#~ msgstr "Wählen Sie Widgets aus, die dem Dashboard hinzugefügt werden sollen:"
+
+#~ msgid "Remove widget"
+#~ msgstr "Widget entfernen"
+
+#~ msgid "Total Emails"
+#~ msgstr "Gesamt-E-Mails"
+
+#~ msgid "Total archived emails"
+#~ msgstr "Gesamt archivierte E-Mails"
+
+#~ msgid "Emails Today"
+#~ msgstr "E-Mails heute"
+
+#~ msgid "Emails received today"
+#~ msgstr "Heute empfangene E-Mails"
+
+#~ msgid "Database Size"
+#~ msgstr "Datenbankgröße"
+
+#~ msgid "Current database size"
+#~ msgstr "Aktuelle Datenbankgröße"
+
+#~ msgid "Active Accounts"
+#~ msgstr "Aktive Konten"
+
+#~ msgid "Configured fetch accounts"
+#~ msgstr "Konfigurierte Abrufkonten"
+
+#~ msgid "Workers Online"
+#~ msgstr "Worker online"
+
+#~ msgid "Active worker processes"
+#~ msgstr "Aktive Worker-Prozesse"
+
+#~ msgid "Last 7 Days"
+#~ msgstr "Letzte 7 Tage"
+
+#~ msgid "Emails in past week"
+#~ msgstr "E-Mails in der letzten Woche"
+
+#~ msgid "Last 30 Days"
+#~ msgstr "Letzte 30 Tage"
+
+#~ msgid "Emails in past month"
+#~ msgstr "E-Mails im letzten Monat"
+
+#~ msgid "Storage Used"
+#~ msgstr "Genutzter Speicher"
+
+#~ msgid "Total storage consumed"
+#~ msgstr "Gesamter verbrauchter Speicher"
+
+#~ msgid "Clean Emails"
+#~ msgstr "Saubere E-Mails"
+
+#~ msgid "Virus-free emails"
+#~ msgstr "Virusfreie E-Mails"
+
+#~ msgid "Quarantined"
+#~ msgstr "Quarantäne"
+
+#~ msgid "Emails with viruses"
+#~ msgstr "E-Mails mit Viren"
+
+#~ msgid "Rejected"
+#~ msgstr "Abgelehnt"
+
+#~ msgid "Emails blocked by antivirus"
+#~ msgstr "Von Antivirus blockierte E-Mails"
+
+#~ msgid "System Uptime"
+#~ msgstr "Systemlaufzeit"
+
+#~ msgid "Time since last restart"
+#~ msgstr "Zeit seit letztem Neustart"
+
+#~ msgid "New Fetch Account"
+#~ msgstr ""
+
+#~ msgid "Account Name"
+#~ msgstr ""
+
+#~ msgid "A friendly name to identify this account"
+#~ msgstr ""
+
+#~ msgid "Account Type"
+#~ msgstr ""
+
+#~ msgid "IMAP"
+#~ msgstr ""
+
+#~ msgid "Gmail API"
+#~ msgstr ""
+
+#~ msgid "Office 365 API"
+#~ msgstr ""
+
+#~ msgid "Select the type of email service to fetch from"
+#~ msgstr ""
+
+#~ msgid "IMAP Configuration"
+#~ msgstr ""
+
+#~ msgid "Host"
+#~ msgstr ""
+
+#~ msgid "Port"
+#~ msgstr ""
+
+#~ msgid "Leave blank to keep the existing password"
+#~ msgstr ""
+
+#~ msgid "Fetch Settings"
+#~ msgstr ""
+
+#~ msgid "Recommended for secure connections (port 993)"
+#~ msgstr ""
+
+#~ msgid "How often to check for new emails (minimum 60 seconds)"
+#~ msgstr ""
+
+#~ msgid "Require STARTTLS"
+#~ msgstr ""
+
+#~ msgid "For plain connections that upgrade to TLS (port 143)"
+#~ msgstr ""
+
+#~ msgid "Delete Email After Processing"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Gmail: moves to Trash | Office "
+#~ "365: moves to Deleted Items | "
+#~ "IMAP: marks as deleted (recoverable)"
+#~ msgstr ""
+
+#~ msgid "Permanently Expunge Deleted (IMAP only)"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Warning: Permanently removes deleted emails"
+#~ " from server - cannot be recovered"
+#~ msgstr ""
+
+#~ msgid "OAuth Setup Required"
+#~ msgstr ""
+
+#~ msgid "To use Gmail or Office 365, you need to:"
+#~ msgstr ""
+
+#~ msgid "Create an OAuth app in Google/Microsoft developer console"
+#~ msgstr ""
+
+#~ msgid "Enter your Client ID and Client Secret below"
+#~ msgstr ""
+
+#~ msgid "Click \"Authorise\" to grant access"
+#~ msgstr ""
+
+#~ msgid "Create Account"
+#~ msgstr ""
+
+#~ msgid "OAuth Client ID"
+#~ msgstr ""
+
+#~ msgid "From your Google/Microsoft OAuth app"
+#~ msgstr ""
+
+#~ msgid "OAuth Client Secret"
+#~ msgstr ""
+
+#~ msgid "Keep this secret secure"
+#~ msgstr ""
+
+#~ msgid "Add Fetch Account"
+#~ msgstr ""
+
+#~ msgid "Name"
+#~ msgstr ""
+
+#~ msgid "Type"
+#~ msgstr ""
+
+#~ msgid "Host/Service"
+#~ msgstr ""
+
+#~ msgid "User"
+#~ msgstr ""
+
+#~ msgid "Poll Interval"
+#~ msgstr ""
+
+#~ msgid "Last Success"
+#~ msgstr ""
+
+#~ msgid "Actions"
+#~ msgstr ""
+
+#~ msgid "Gmail"
+#~ msgstr ""
+
+#~ msgid "O365"
+#~ msgstr ""
+
+#~ msgid "SSL Enabled"
+#~ msgstr ""
+
+#~ msgid "Edit"
+#~ msgstr ""
+
+#~ msgid "Test Connection"
+#~ msgstr ""
+
+#~ msgid "Delete"
+#~ msgstr ""
+
+#~ msgid "No fetch accounts configured."
+#~ msgstr ""
+
+#~ msgid "Previous"
+#~ msgstr ""
+
+#~ msgid "Next"
+#~ msgstr ""
+
+#~ msgid "Delete Fetch Account"
+#~ msgstr ""
+
+#~ msgid "Warning:"
+#~ msgstr ""
+
+#~ msgid "You are about to delete the fetch account:"
+#~ msgstr ""
+
+#~ msgid "Loading email count..."
+#~ msgstr ""
+
+#~ msgid "What would you like to do?"
+#~ msgstr ""
+
+#~ msgid "Delete Account Only (retain emails)"
+#~ msgstr ""
+
+#~ msgid "Delete Account + All Emails"
+#~ msgstr ""
+
+#~ msgid "Edit Fetch Account"
+#~ msgstr ""
+
+#~ msgid "Update Account"
+#~ msgstr ""
+
+#~ msgid "This account has"
+#~ msgstr ""
+
+#~ msgid "associated with it."
+#~ msgstr ""
+
+#~ msgid "email"
+#~ msgstr ""
+
+#~ msgid "emails"
+#~ msgstr ""
+
+#~ msgid "Delete Account Only (retain"
+#~ msgstr ""
+
+#~ msgid "Delete Account + All"
+#~ msgstr ""
+
