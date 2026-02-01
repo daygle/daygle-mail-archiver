@@ -286,14 +286,14 @@ Action Taken: {action}"""
     # Insert into emails table (store compressed bytes unless quarantined)
     if not quarantined:
         try:
-                    # compute signature of uncompressed raw email
-                    try:
-                        from utils.email_parser import compute_signature
-                        sig = compute_signature(raw_bytes)
-                    except Exception:
-                        sig = None
+            # compute signature of uncompressed raw email
+            try:
+                from utils.email_parser import compute_signature
+                sig = compute_signature(raw_bytes)
+            except Exception:
+                sig = None
 
-                    execute(
+            execute(
                 """
                 INSERT INTO emails (source, folder, uid, subject, sender, recipients, date, message_id, raw_email, signature, compressed, virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined)
                 VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :message_id, :raw_email, :signature, :compressed, :virus_scanned, :virus_detected, :virus_name, :scan_timestamp, :quarantined)
@@ -307,30 +307,30 @@ Action Taken: {action}"""
                     signature = COALESCE(EXCLUDED.signature, emails.signature),
                     compressed = EXCLUDED.compressed,
                     virus_scanned = EXCLUDED.virus_scanned,
-                virus_detected = EXCLUDED.virus_detected,
-                virus_name = EXCLUDED.virus_name,
-                scan_timestamp = EXCLUDED.scan_timestamp,
-                quarantined = EXCLUDED.quarantined
-            """,
-            {
-                "source": source,
-                "folder": folder,
-                "uid": uid,
-                "subject": subject,
-                "sender": sender,
-                "recipients": recipients,
-                "date": date_header,
-                "message_id": message_id,
-                "raw_email": compressed_bytes,
-                "signature": sig,
-                "compressed": bool(compressed_bytes),
-                "virus_scanned": virus_scanned,
-                "virus_detected": virus_detected,
-                "virus_name": virus_name,
-                "scan_timestamp": scan_timestamp,
-                "quarantined": quarantined,
-            },
-        )
+                    virus_detected = EXCLUDED.virus_detected,
+                    virus_name = EXCLUDED.virus_name,
+                    scan_timestamp = EXCLUDED.scan_timestamp,
+                    quarantined = EXCLUDED.quarantined
+                """,
+                {
+                    "source": source,
+                    "folder": folder,
+                    "uid": uid,
+                    "subject": subject,
+                    "sender": sender,
+                    "recipients": recipients,
+                    "date": date_header,
+                    "message_id": message_id,
+                    "raw_email": compressed_bytes,
+                    "signature": sig,
+                    "compressed": bool(compressed_bytes),
+                    "virus_scanned": virus_scanned,
+                    "virus_detected": virus_detected,
+                    "virus_name": virus_name,
+                    "scan_timestamp": scan_timestamp,
+                    "quarantined": quarantined,
+                },
+            )
         except Exception as e:
             log_error(source, f"Failed to store email in database: {e}")
             return False
