@@ -82,12 +82,15 @@
                             <input type="checkbox" id="select-all" class="form-check-input">
                         </th>
                         {% endif %}
-                        <th class="hide-mobile">ID</th>
-                        <th>Integrity</th>
+                        <th>Date</th>
+                        <th class="hide-mobile">Account</th>
+                        <th class="hide-mobile">Folder</th>
+                        <th>From</th>
+                        <th class="hide-mobile">To</th>
                         <th>Subject</th>
-                        <th>Sender</th>
                         <th class="hide-mobile">Virus</th>
-                        <th>Quarantined At</th>
+                        <th>Quarantined</th>
+                        <th class="hide-mobile">Integrity</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -101,26 +104,43 @@
                         </td>
                         {% endif %}
 
-                        <td class="hide-mobile">{{ i.id }}</td>
-
+                        <td>{{ i.date_formatted or i.date or 'N/A' }}</td>
+                        <td class="hide-mobile">
+                            <span class="badge badge-primary">{{ i.original_source or 'N/A' }}</span>
+                        </td>
+                        <td class="hide-mobile">
+                            <span class="badge badge-secondary">{{ i.original_folder or 'N/A' }}</span>
+                        </td>
+                        <td>{{ i.sender or 'unknown' }}</td>
+                        <td class="hide-mobile">{{ i.recipients or 'N/A' }}</td>
                         <td>
-                            {% if i.integrity == 'ok' %}
-                            <span class="badge bg-success" title="{{ i.integrity_reason or 'Valid' }}"><i class="fas fa-check"></i> Valid</span>
-                            {% elif i.integrity == 'modified' %}
-                            <span class="badge bg-danger" title="{{ i.integrity_reason or 'Modified' }}"><i class="fas fa-exclamation-triangle"></i> Invalid</span>
-                            {% elif i.integrity == 'no_signature' %}
-                            <span class="badge bg-secondary" title="{{ i.integrity_reason or 'No Signature' }}"><i class="fas fa-question"></i> No Signature</span>
-                            {% elif i.integrity == 'encrypted' %}
-                            <span class="badge bg-warning" title="{{ i.integrity_reason or 'Encrypted' }}"><i class="fas fa-lock"></i> Encrypted</span>
+                            <a href="/quarantine/{{ i.id }}" class="link">
+                                {{ i.subject or '(no subject)' }}
+                            </a>
+                        </td>
+                        <td class="hide-mobile">
+                            {% if i.virus_name %}
+                            <span class="badge badge-danger" title="{{ i.virus_name }}">
+                                <i class="fas fa-exclamation-triangle"></i> {{ i.virus_name }}
+                            </span>
                             {% else %}
-                            <span class="badge bg-secondary" title="{{ i.integrity_reason or 'Unknown' }}"><i class="fas fa-question"></i> Unknown</span>
+                            <span style="color: var(--text-secondary);">N/A</span>
                             {% endif %}
                         </td>
-
-                        <td>{{ i.subject or '(no subject)' }}</td>
-                        <td>{{ i.sender or 'unknown' }}</td>
-                        <td class="hide-mobile">{{ i.virus_name or 'N/A' }}</td>
                         <td>{{ i.quarantined_at_formatted or i.quarantined_at }}</td>
+                        <td class="hide-mobile">
+                            {% if i.integrity == 'ok' %}
+                            <span class="badge badge-success" title="{{ i.integrity_reason or 'Valid' }}">Valid</span>
+                            {% elif i.integrity == 'modified' %}
+                            <span class="badge badge-danger" title="{{ i.integrity_reason or 'Modified' }}">Invalid</span>
+                            {% elif i.integrity == 'no_signature' %}
+                            <span class="badge badge-secondary" title="{{ i.integrity_reason or 'No Signature' }}">No Sig</span>
+                            {% elif i.integrity == 'encrypted' %}
+                            <span class="badge badge-warning" title="{{ i.integrity_reason or 'Encrypted' }}">Encrypted</span>
+                            {% else %}
+                            <span class="badge badge-secondary" title="{{ i.integrity_reason or 'Unknown' }}">Unknown</span>
+                            {% endif %}
+                        </td>
 
                         <td>
                             <div class="flex gap-2">
@@ -146,7 +166,7 @@
 
                     {% if items|length == 0 %}
                     <tr>
-                        <td colspan="{% if 'restore_quarantine' in perms or 'delete_quarantine' in perms %}9{% else %}8{% endif %}" class="text-center empty-state">
+                        <td colspan="{% if 'restore_quarantine' in perms or 'delete_quarantine' in perms %}11{% else %}10{% endif %}" class="text-center empty-state">
                             <div>
                                 <i class="fas fa-shield-virus empty-icon"></i>
                                 <p>No quarantined messages</p>

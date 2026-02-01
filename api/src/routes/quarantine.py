@@ -186,7 +186,7 @@ def list_quarantine(request: Request, _=require_permission(PERMISSIONS["view_qua
 
     rows = query(
         f'''
-        SELECT id, subject, sender, recipients, virus_name,
+        SELECT id, original_source, original_folder, date, subject, sender, recipients, virus_name,
                quarantined_at, expires_at, raw_email, compressed, signature
         FROM quarantined_emails
         {where_sql}
@@ -287,6 +287,21 @@ def list_quarantine(request: Request, _=require_permission(PERMISSIONS["view_qua
             ir["quarantined_at_formatted"] = format_datetime(ir["quarantined_at"], user_id)
         else:
             ir["quarantined_at_formatted"] = ir["quarantined_at"]
+        
+        # Format date field
+        if ir.get("date"):
+            if hasattr(ir["date"], 'strftime'):
+                ir["date_formatted"] = format_datetime(ir["date"], user_id)
+            else:
+                # Try to parse the date string
+                from email.utils import parsedate_to_datetime
+                try:
+                    parsed_date = parsedate_to_datetime(ir["date"])
+                    ir["date_formatted"] = format_datetime(parsed_date, user_id)
+                except (ValueError, TypeError):
+                    ir["date_formatted"] = ir["date"]
+        else:
+            ir["date_formatted"] = ir.get("date")
 
         processed.append(ir)
 
