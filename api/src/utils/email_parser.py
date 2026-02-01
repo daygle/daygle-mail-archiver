@@ -5,6 +5,9 @@ import hashlib
 import base64
 
 def decompress(raw: bytes, compressed: bool) -> bytes:
+    # Handle memoryview objects from database
+    if isinstance(raw, memoryview):
+        raw = raw.tobytes()
     return gzip.decompress(raw) if compressed else raw
 
 def parse_email(raw: bytes):
