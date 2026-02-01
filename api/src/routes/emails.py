@@ -199,11 +199,12 @@ def _insert_raw_email(raw: bytes, request: Request, source: str = "import", fold
         parsed = parse_email(raw)
 
         # Compute next uid for this source/folder to avoid collisions
+        # Use negative UIDs for imported emails to avoid conflicts with fetched emails (which use positive UIDs)
         next_uid_row = query(
-            "SELECT COALESCE(MAX(uid), 0) + 1 AS next_uid FROM emails WHERE source = :source AND folder = :folder",
+            "SELECT COALESCE(MIN(uid) - 1, -1) AS next_uid FROM emails WHERE source = :source AND folder = :folder AND uid < 0",
             {"source": source, "folder": folder},
         ).mappings().first()
-        uid = int(next_uid_row["next_uid"]) if next_uid_row else 1
+        uid = int(next_uid_row["next_uid"]) if next_uid_row else -1
 
         compressed_raw = gzip.compress(raw)
         try:

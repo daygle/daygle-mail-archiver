@@ -304,7 +304,7 @@ Action Taken: {action}"""
                     date = EXCLUDED.date,
                     message_id = EXCLUDED.message_id,
                     raw_email = EXCLUDED.raw_email,
-                    signature = EXCLUDED.signature,
+                    signature = COALESCE(EXCLUDED.signature, emails.signature),
                     compressed = EXCLUDED.compressed,
                     virus_scanned = EXCLUDED.virus_scanned,
                 virus_detected = EXCLUDED.virus_detected,
