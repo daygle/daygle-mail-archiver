@@ -76,7 +76,7 @@
                 <i class="fas fa-folder-tree me-2"></i>Organization
             </h6>
             <div class="row g-3">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="email-detail-item">
                         <label class="email-detail-label">Account</label>
                         <div class="email-detail-value">
@@ -84,11 +84,27 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="email-detail-item">
                         <label class="email-detail-label">Folder</label>
                         <div class="email-detail-value">
                             <span class="badge badge-secondary">{{ email.folder }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Integrity</label>
+                        <div class="email-detail-value">
+                            {% if integrity == 'ok' %}
+                            <span class="badge bg-success" title="{{ integrity_reason or 'Valid' }}"><i class="fas fa-check"></i> Valid</span>
+                            {% elif integrity == 'modified' %}
+                            <span class="badge bg-danger" title="{{ integrity_reason or 'Modified' }}"><i class="fas fa-exclamation-triangle"></i> Invalid</span>
+                            {% elif integrity == 'no_signature' %}
+                            <span class="badge bg-secondary" title="{{ integrity_reason or 'No Signature' }}"><i class="fas fa-question"></i> No Signature</span>
+                            {% else %}
+                            <span class="badge bg-secondary" title="{{ integrity_reason or 'Unknown' }}"><i class="fas fa-question"></i> Unknown</span>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
