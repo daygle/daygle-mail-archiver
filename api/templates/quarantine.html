@@ -84,7 +84,6 @@
                         {% endif %}
                         <th>Date</th>
                         <th class="hide-mobile">Account</th>
-                        <th class="hide-mobile">Folder</th>
                         <th>From</th>
                         <th class="hide-mobile">To</th>
                         <th>Subject</th>
@@ -107,9 +106,6 @@
                         <td>{{ i.date_formatted or i.date or 'N/A' }}</td>
                         <td class="hide-mobile">
                             <span class="badge badge-primary">{{ i.original_source or 'N/A' }}</span>
-                        </td>
-                        <td class="hide-mobile">
-                            <span class="badge badge-secondary">{{ i.original_folder or 'N/A' }}</span>
                         </td>
                         <td>{{ i.sender or 'unknown' }}</td>
                         <td class="hide-mobile">{{ i.recipients or 'N/A' }}</td>
