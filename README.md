@@ -12,13 +12,16 @@ This project is built with explicit, maintainable configuration, modular backend
 - **Automatic Email Archiving**: Continuously polls accounts and stores emails
 - **Search & Filter**: Full-text search across subjects, senders, and recipients
 - **Raw Email Storage**: Complete RFC822 format with compression
+- **Email Integrity Verification**: Cryptographic signature verification for archived emails
 - **Retention Policies**: Automatic purging based on configurable rules
 - **Deletion Tracking**: Dashboard analytics for manual and automated deletions
 - **Mail Server Cleanup**: Optional deletion from mail servers during retention cleanup
 - **User Management**: Multi-user system with role-based access via granular roles and permissions
+- **User Status Tracking**: Real-time online/offline status indicators and session management
 - **OAuth2 Integration**: Secure authentication for Gmail and Office 365
 - **Worker Status Monitoring**: Real-time health monitoring of fetch workers
-- **Dashboard Analytics**: Visual charts and customisable widget layouts
+- **Dashboard Analytics**: Visual charts and customisable widget layouts with per-widget configuration
+- **Widget Customization**: Drag-and-drop layout, visibility toggles, and date range settings per widget
 - **Test Connection**: Test IMAP, Gmail, and Office 365 connections from the UI
 - **Database Backup & Restore**: Built-in backup functionality
 - **Audit Logging**: Complete audit trail of all system actions
@@ -26,6 +29,7 @@ This project is built with explicit, maintainable configuration, modular backend
 - **Advanced Reporting**: Email volume trends, account activity, user analytics, and system health reports
 - **Email Alerts**: Configurable SMTP alerts for system events, virus detections, and critical issues
 - **Alert Management**: Real-time alert dashboard with acknowledgment and email notifications
+- **User Preferences**: Per-user email notification settings, theme, timezone, and date/time formats
 
 ---
 
@@ -181,7 +185,7 @@ cd /opt/daygle-mail-archiver
 
 ## 🔄 Updating
 
-Check for updates via the command line:
+System updates are managed via the command line (the web-based update checker has been removed in favor of the more reliable CLI approach).
 
 ```bash
 # Check for updates
