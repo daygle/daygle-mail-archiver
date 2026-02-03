@@ -472,6 +472,8 @@ msgid ""
 "Global default theme for users who have not set a personal preference "
 "(users' own preference overrides this)"
 msgstr ""
+"Thème global par défaut pour les utilisateurs qui n'ont pas défini de préférence personnelle "
+"(la préférence de l'utilisateur remplace ce paramètre)"
 
 #: templates/global-settings.html:105
 msgid "Auto Logout (minutes)"
