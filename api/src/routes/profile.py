@@ -69,7 +69,7 @@ def profile_form(
     # Compute online status using same logic as users list
     online_status = 'offline'
     if user and user.get("last_seen"):
-        now_check = query("SELECT CASE WHEN NOW() - :last_seen > INTERVAL ':minutes minutes' THEN 'offline' ELSE 'online' END AS status", {"last_seen": user["last_seen"], "minutes": auto_logout_minutes}).mappings().first()
+        now_check = query("SELECT CASE WHEN NOW() - :last_seen > (INTERVAL '1 minute' * :minutes) THEN 'offline' ELSE 'online' END AS status", {"last_seen": user["last_seen"], "minutes": auto_logout_minutes}).mappings().first()
         online_status = now_check["status"]
 
     msg = request.session.pop("flash", None)

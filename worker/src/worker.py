@@ -789,7 +789,7 @@ def purge_old_emails():
                                 for uid in uids:
                                     try:
                                         conn.uid("STORE", str(uid), "+FLAGS", "(\\Deleted)")
-                                    except:
+                                    except Exception:
                                         pass
                                 # Expunge to permanently remove
                                 conn.expunge()
@@ -875,7 +875,7 @@ def purge_old_emails():
                                             if uid:  # Only try to delete if UID exists
                                                 try:
                                                     conn.uid("STORE", str(uid), "+FLAGS", "(\\Deleted)")
-                                                except:
+                                                except Exception:
                                                     pass
                                         # Expunge to permanently remove
                                         conn.expunge()

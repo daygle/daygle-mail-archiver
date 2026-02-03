@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, Form
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 import bcrypt
 import re
 from typing import List
@@ -39,7 +39,7 @@ def list_users(
             STRING_AGG(r.display_name, ', ') AS roles,
             CASE 
                 WHEN u.last_seen IS NULL THEN 'offline'
-                WHEN NOW() - u.last_seen > INTERVAL ':minutes minutes' THEN 'offline'
+                WHEN NOW() - u.last_seen > (INTERVAL '1 minute' * :minutes) THEN 'offline'
                 ELSE 'online'
             END AS online_status
         FROM users u
@@ -194,7 +194,7 @@ def get_user(
         online_status = "offline"
         if user["last_seen"]:
             # Use the same logic as in the users list
-            now_check = query("SELECT CASE WHEN NOW() - :last_seen > INTERVAL ':minutes minutes' THEN 'offline' ELSE 'online' END AS status", 
+            now_check = query("SELECT CASE WHEN NOW() - :last_seen > (INTERVAL '1 minute' * :minutes) THEN 'offline' ELSE 'online' END AS status", 
                             {"last_seen": user["last_seen"], "minutes": auto_logout_minutes}).mappings().first()
             online_status = now_check["status"]
 
@@ -287,6 +287,9 @@ def update_user(
             SELECT role_id FROM user_roles WHERE user_id = :id
         """, {"id": user_id}).mappings().all()
 
+        current_role_ids = {str(r["role_id"]) for r in current_role_rows}
+        new_role_ids = {str(r) for r in role_ids}
+
         # Prevent self‑lockout: user cannot remove their own admin-level access
         if user_id == current_user_id:
             # Check if the new role set still includes a role with manage_users permission
@@ -302,9 +305,6 @@ def update_user(
             if not (new_role_ids & admin_role_ids):
                 flash(request, "You cannot remove your own administrative access.", "error")
                 return RedirectResponse("/users", status_code=303)
-
-        current_role_ids = {str(r["role_id"]) for r in current_role_rows}
-        new_role_ids = {str(r) for r in role_ids}
 
         # Detect no-op
         if (

@@ -6,8 +6,6 @@ from fastapi.responses import RedirectResponse, JSONResponse
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.cors import CORSMiddleware
 import logging
-import gettext
-import locale
 
 from .routes import (
     emails, fetch_accounts, global_settings, login, users, profile, logs,
@@ -43,10 +41,13 @@ app = FastAPI(
 
 # ---------------------------------------------------------
 # CORS Middleware
+# NOTE: For production, configure specific allowed origins.
+# Using allow_origins=["*"] with allow_credentials=True is
+# insecure and may not work as expected in all browsers.
 # ---------------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure properly for production
+    allow_origins=["*"],  # TODO: Configure specific origins for production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
