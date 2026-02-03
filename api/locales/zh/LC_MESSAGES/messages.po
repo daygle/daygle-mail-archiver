@@ -467,6 +467,8 @@ msgid ""
 "Global default theme for users who have not set a personal preference "
 "(users' own preference overrides this)"
 msgstr ""
+"未设置个人偏好的用户的全局默认主题 "
+"（用户的个人偏好会覆盖此设置）"
 
 #: templates/global-settings.html:105
 msgid "Auto Logout (minutes)"

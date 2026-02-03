@@ -26,67 +26,67 @@ msgstr "Dashboard"
 
 #: templates/base.html:63
 msgid "Emails"
-msgstr ""
+msgstr "Emails"
 
 #: templates/base.html:76
 msgid "Operations & Monitoring"
-msgstr ""
+msgstr "Operations & Monitoring"
 
 #: templates/base.html:80
 msgid "Fetch Accounts"
-msgstr ""
+msgstr "Fetch Accounts"
 
 #: templates/base.html:86
 msgid "Worker Status"
-msgstr ""
+msgstr "Worker Status"
 
 #: templates/base.html:92
 msgid "Reports"
-msgstr ""
+msgstr "Reports"
 
 #: templates/base.html:98
 msgid "Quarantine"
-msgstr ""
+msgstr "Quarantine"
 
 #: templates/base.html:104
 msgid "Transfer"
-msgstr ""
+msgstr "Transfer"
 
 #: templates/base.html:110
 msgid "System Management"
-msgstr ""
+msgstr "System Management"
 
 #: templates/base.html:114
 msgid "Alert Management"
-msgstr ""
+msgstr "Alert Management"
 
 #: templates/base.html:120 templates/global-settings.html:3
 msgid "Global Settings"
-msgstr ""
+msgstr "Global Settings"
 
 #: templates/base.html:126
 msgid "User Management"
-msgstr ""
+msgstr "User Management"
 
 #: templates/base.html:132
 msgid "Role Management"
-msgstr ""
+msgstr "Role Management"
 
 #: templates/base.html:138
 msgid "Logs"
-msgstr ""
+msgstr "Logs"
 
 #: templates/base.html:147
 msgid "Help"
-msgstr ""
+msgstr "Help"
 
 #: templates/base.html:151
 msgid "About"
-msgstr ""
+msgstr "About"
 
 #: templates/base.html:155
 msgid "Donate"
-msgstr ""
+msgstr "Donate"
 
 #: templates/base.html:176
 msgid "View Alerts"
@@ -196,11 +196,11 @@ msgstr "中文"
 
 #: templates/forgot-password.html:48
 msgid "Forgot Password"
-msgstr ""
+msgstr "Forgot Password"
 
 #: templates/forgot-password.html:49
 msgid "Enter your email address to reset your password or unlock your account"
-msgstr ""
+msgstr "Enter your email address to reset your password or unlock your account"
 
 #: templates/forgot-password.html:64 templates/setup.html:129
 msgid "Email Address"
@@ -220,7 +220,7 @@ msgstr "Back to Login"
 
 #: templates/global-settings.html:15
 msgid "General Settings"
-msgstr ""
+msgstr "General Settings"
 
 #: templates/global-settings.html:20 templates/user-settings.html:19
 msgid "Items Per Page"
@@ -236,263 +236,267 @@ msgstr "Date Format"
 
 #: templates/global-settings.html:28
 msgid "15/01/2024"
-msgstr ""
+msgstr "15/01/2024"
 
 #: templates/global-settings.html:29
 msgid "2024-01-15"
-msgstr ""
+msgstr "2024-01-15"
 
 #: templates/global-settings.html:30
 msgid "01/15/2024"
-msgstr ""
+msgstr "01/15/2024"
 
 #: templates/global-settings.html:31
 msgid "15 Jan 2024"
-msgstr ""
+msgstr "15 Jan 2024"
 
 #: templates/global-settings.html:32
 msgid "January 15, 2024"
-msgstr ""
+msgstr "January 15, 2024"
 
 #: templates/global-settings.html:34
 msgid "Date display format throughout the application"
-msgstr ""
+msgstr "Date display format throughout the application"
 
 #: templates/global-settings.html:38
 msgid "Time Format"
-msgstr ""
+msgstr "Time Format"
 
 #: templates/global-settings.html:40
 msgid "14:30 (24-hour)"
-msgstr ""
+msgstr "14:30 (24-hour)"
 
 #: templates/global-settings.html:41
 msgid "14:30:45 (24-hour with seconds)"
-msgstr ""
+msgstr "14:30:45 (24-hour with seconds)"
 
 #: templates/global-settings.html:42
 msgid "02:30 PM (12-hour)"
-msgstr ""
+msgstr "02:30 PM (12-hour)"
 
 #: templates/global-settings.html:43
 msgid "02:30:45 PM (12-hour with seconds)"
-msgstr ""
+msgstr "02:30:45 PM (12-hour with seconds)"
 
 #: templates/global-settings.html:45
 msgid "Time display format throughout the application"
-msgstr ""
+msgstr "Time display format throughout the application"
 
 #: templates/global-settings.html:49
 msgid "Timezone"
-msgstr ""
+msgstr "Timezone"
 
 #: templates/global-settings.html:51
 msgid "UTC"
-msgstr ""
+msgstr "UTC"
 
 #: templates/global-settings.html:52
 msgid "Pacific/Honolulu (HST)"
-msgstr ""
+msgstr "Pacific/Honolulu (HST)"
 
 #: templates/global-settings.html:53
 msgid "America/Anchorage (AKST)"
-msgstr ""
+msgstr "America/Anchorage (AKST)"
 
 #: templates/global-settings.html:54
 msgid "America/Los Angeles (PST)"
-msgstr ""
+msgstr "America/Los Angeles (PST)"
 
 #: templates/global-settings.html:55
 msgid "America/Vancouver (PST)"
-msgstr ""
+msgstr "America/Vancouver (PST)"
 
 #: templates/global-settings.html:56
 msgid "America/Denver (MST)"
-msgstr ""
+msgstr "America/Denver (MST)"
 
 #: templates/global-settings.html:57
 msgid "America/Chicago (CST)"
-msgstr ""
+msgstr "America/Chicago (CST)"
 
 #: templates/global-settings.html:58
 msgid "America/Mexico City (CST)"
-msgstr ""
+msgstr "America/Mexico City (CST)"
 
 #: templates/global-settings.html:59
 msgid "America/New York (EST)"
-msgstr ""
+msgstr "America/New York (EST)"
 
 #: templates/global-settings.html:60
 msgid "America/Toronto (EST)"
-msgstr ""
+msgstr "America/Toronto (EST)"
 
 #: templates/global-settings.html:61
 msgid "America/Argentina (BRT)"
-msgstr ""
+msgstr "America/Argentina (BRT)"
 
 #: templates/global-settings.html:62
 msgid "America/Sao Paulo (BRT)"
-msgstr ""
+msgstr "America/Sao Paulo (BRT)"
 
 #: templates/global-settings.html:63
 msgid "Europe/London (GMT)"
-msgstr ""
+msgstr "Europe/London (GMT)"
 
 #: templates/global-settings.html:64
 msgid "Europe/Dublin (GMT)"
-msgstr ""
+msgstr "Europe/Dublin (GMT)"
 
 #: templates/global-settings.html:65
 msgid "Europe/Berlin (CET)"
-msgstr ""
+msgstr "Europe/Berlin (CET)"
 
 #: templates/global-settings.html:66
 msgid "Europe/Paris (CET)"
-msgstr ""
+msgstr "Europe/Paris (CET)"
 
 #: templates/global-settings.html:67
 msgid "Europe/Madrid (CET)"
-msgstr ""
+msgstr "Europe/Madrid (CET)"
 
 #: templates/global-settings.html:68
 msgid "Europe/Rome (CET)"
-msgstr ""
+msgstr "Europe/Rome (CET)"
 
 #: templates/global-settings.html:69
 msgid "Europe/Amsterdam (CET)"
-msgstr ""
+msgstr "Europe/Amsterdam (CET)"
 
 #: templates/global-settings.html:70
 msgid "Europe/Zurich (CET)"
-msgstr ""
+msgstr "Europe/Zurich (CET)"
 
 #: templates/global-settings.html:71
 msgid "Europe/Moscow (MSK)"
-msgstr ""
+msgstr "Europe/Moscow (MSK)"
 
 #: templates/global-settings.html:72
 msgid "Africa/Cairo (EET)"
-msgstr ""
+msgstr "Africa/Cairo (EET)"
 
 #: templates/global-settings.html:73
 msgid "Africa/Johannesburg (SAST)"
-msgstr ""
+msgstr "Africa/Johannesburg (SAST)"
 
 #: templates/global-settings.html:74
 msgid "Asia/Dubai (GST)"
-msgstr ""
+msgstr "Asia/Dubai (GST)"
 
 #: templates/global-settings.html:75
 msgid "Asia/Jerusalem (IST)"
-msgstr ""
+msgstr "Asia/Jerusalem (IST)"
 
 #: templates/global-settings.html:76
 msgid "Asia/Kolkata (IST)"
-msgstr ""
+msgstr "Asia/Kolkata (IST)"
 
 #: templates/global-settings.html:77
 msgid "Asia/Karachi (PKT)"
-msgstr ""
+msgstr "Asia/Karachi (PKT)"
 
 #: templates/global-settings.html:78
 msgid "Asia/Bangkok (ICT)"
-msgstr ""
+msgstr "Asia/Bangkok (ICT)"
 
 #: templates/global-settings.html:79
 msgid "Asia/Singapore (SGT)"
-msgstr ""
+msgstr "Asia/Singapore (SGT)"
 
 #: templates/global-settings.html:80
 msgid "Asia/Hong Kong (HKT)"
-msgstr ""
+msgstr "Asia/Hong Kong (HKT)"
 
 #: templates/global-settings.html:81
 msgid "Asia/Tokyo (JST)"
-msgstr ""
+msgstr "Asia/Tokyo (JST)"
 
 #: templates/global-settings.html:82
 msgid "Asia/Seoul (KST)"
-msgstr ""
+msgstr "Asia/Seoul (KST)"
 
 #: templates/global-settings.html:83
 msgid "Australia/Perth (AWST)"
-msgstr ""
+msgstr "Australia/Perth (AWST)"
 
 #: templates/global-settings.html:84
 msgid "Australia/Adelaide (ACST)"
-msgstr ""
+msgstr "Australia/Adelaide (ACST)"
 
 #: templates/global-settings.html:85
 msgid "Australia/Brisbane (AEST)"
-msgstr ""
+msgstr "Australia/Brisbane (AEST)"
 
 #: templates/global-settings.html:86
 msgid "Australia/Sydney (AEST)"
-msgstr ""
+msgstr "Australia/Sydney (AEST)"
 
 #: templates/global-settings.html:87
 msgid "Australia/Melbourne (AEST)"
-msgstr ""
+msgstr "Australia/Melbourne (AEST)"
 
 #: templates/global-settings.html:88
 msgid "Pacific/Auckland (NZST)"
-msgstr ""
+msgstr "Pacific/Auckland (NZST)"
 
 #: templates/global-settings.html:89
 msgid "Pacific/Guam (ChST)"
-msgstr ""
+msgstr "Pacific/Guam (ChST)"
 
 #: templates/global-settings.html:91
 msgid "Timezone for displaying dates and times throughout the application"
-msgstr ""
+msgstr "Timezone for displaying dates and times throughout the application"
 
 #: templates/global-settings.html:95
 msgid "Default Theme"
-msgstr ""
+msgstr "Default Theme"
 
 #: templates/global-settings.html:97
 msgid "System (use browser / user preference)"
-msgstr ""
+msgstr "System (use browser / user preference)"
 
 #: templates/global-settings.html:98
 msgid "Light"
-msgstr ""
+msgstr "Light"
 
 #: templates/global-settings.html:99
 msgid "Dark"
-msgstr ""
+msgstr "Dark"
 
 #: templates/global-settings.html:101
 msgid ""
 "Global default theme for users who have not set a personal preference "
 "(users' own preference overrides this)"
 msgstr ""
+"Global default theme for users who have not set a personal preference "
+"(users' own preference overrides this)"
 
 #: templates/global-settings.html:105
 msgid "Auto Logout (minutes)"
-msgstr ""
+msgstr "Auto Logout (minutes)"
 
 #: templates/global-settings.html:107
 msgid ""
 "Automatically log out users after this many minutes of inactivity. Set to"
 " 0 to disable auto-logout."
 msgstr ""
+"Automatically log out users after this many minutes of inactivity. Set to"
+" 0 to disable auto-logout."
 
 #: templates/global-settings.html:119
 msgid "Email Retention Policy"
-msgstr ""
+msgstr "Email Retention Policy"
 
 #: templates/global-settings.html:126
 msgid "Enable Automatic Email Purging"
-msgstr ""
+msgstr "Enable Automatic Email Purging"
 
 #: templates/global-settings.html:127
 msgid "Automatically delete emails older than the retention period"
-msgstr ""
+msgstr "Automatically delete emails older than the retention period"
 
 #: templates/global-settings.html:134
 msgid "Delete from Mail Server During Retention Cleanup"
-msgstr ""
+msgstr "Delete from Mail Server During Retention Cleanup"
 
 #: templates/global-settings.html:135
 msgid ""
@@ -500,202 +504,209 @@ msgid ""
 "the original IMAP mail servers for both regular emails and quarantined "
 "emails"
 msgstr ""
+"When enabled, retention cleanup will also attempt to delete emails from "
+"the original IMAP mail servers for both regular emails and quarantined "
+"emails"
 
 #: templates/global-settings.html:140
 msgid "Retention Period"
-msgstr ""
+msgstr "Retention Period"
 
 #: templates/global-settings.html:147
 msgid "Day(s)"
-msgstr ""
+msgstr "Day(s)"
 
 #: templates/global-settings.html:148
 msgid "Month(s)"
-msgstr ""
+msgstr "Month(s)"
 
 #: templates/global-settings.html:149
 msgid "Year(s)"
-msgstr ""
+msgstr "Year(s)"
 
 #: templates/global-settings.html:153
 msgid "Emails older than this period will be automatically deleted"
-msgstr ""
+msgstr "Emails older than this period will be automatically deleted"
 
 #: templates/global-settings.html:163
 msgid "Virus Scanning (ClamAV)"
-msgstr ""
+msgstr "Virus Scanning (ClamAV)"
 
 #: templates/global-settings.html:170
 msgid "Enable Virus Scanning"
-msgstr ""
+msgstr "Enable Virus Scanning"
 
 #: templates/global-settings.html:171
 msgid "Scan incoming emails for viruses using ClamAV"
-msgstr ""
+msgstr "Scan incoming emails for viruses using ClamAV"
 
 #: templates/global-settings.html:176
 msgid "ClamAV Host"
-msgstr ""
+msgstr "ClamAV Host"
 
 #: templates/global-settings.html:178
 msgid "Hostname or IP address of the ClamAV daemon (default: clamav for Docker)"
-msgstr ""
+msgstr "Hostname or IP address of the ClamAV daemon (default: clamav for Docker)"
 
 #: templates/global-settings.html:182
 msgid "ClamAV Port"
-msgstr ""
+msgstr "ClamAV Port"
 
 #: templates/global-settings.html:184
 msgid "Port number for the ClamAV daemon (default: 3310)"
-msgstr ""
+msgstr "Port number for the ClamAV daemon (default: 3310)"
 
 #: templates/global-settings.html:188
 msgid "Action When Virus Detected"
-msgstr ""
+msgstr "Action When Virus Detected"
 
 #: templates/global-settings.html:190
 msgid "Quarantine (Store with virus flag)"
-msgstr ""
+msgstr "Quarantine (Store with virus flag)"
 
 #: templates/global-settings.html:191
 msgid "Reject (Do not store infected emails)"
-msgstr ""
+msgstr "Reject (Do not store infected emails)"
 
 #: templates/global-settings.html:192
 msgid "Log Only (Store all emails, log detections)"
-msgstr ""
+msgstr "Log Only (Store all emails, log detections)"
 
 #: templates/global-settings.html:195
 msgid "Quarantine:"
-msgstr ""
+msgstr "Quarantine:"
 
 #: templates/global-settings.html:195
 msgid "Emails with viruses are stored but marked as infected for review"
-msgstr ""
+msgstr "Emails with viruses are stored but marked as infected for review"
 
 #: templates/global-settings.html:196
 msgid "Reject:"
-msgstr ""
+msgstr "Reject:"
 
 #: templates/global-settings.html:196
 msgid "Emails with viruses are not stored in the database"
-msgstr ""
+msgstr "Emails with viruses are not stored in the database"
 
 #: templates/global-settings.html:197
 msgid "Log Only:"
-msgstr ""
+msgstr "Log Only:"
 
 #: templates/global-settings.html:197
 msgid "All emails are stored, virus detections are logged for monitoring"
-msgstr ""
+msgstr "All emails are stored, virus detections are logged for monitoring"
 
 #: templates/global-settings.html:202
 msgid "Max File Size to Scan (bytes)"
-msgstr ""
+msgstr "Max File Size to Scan (bytes)"
 
 #: templates/global-settings.html:204
 msgid "Files larger than this size will not be scanned by ClamAV"
-msgstr ""
+msgstr "Files larger than this size will not be scanned by ClamAV"
 
 #: templates/global-settings.html:214
 msgid "Quarantine Settings"
-msgstr ""
+msgstr "Quarantine Settings"
 
 #: templates/global-settings.html:221
 msgid "Store quarantined emails in database"
-msgstr ""
+msgstr "Store quarantined emails in database"
 
 #: templates/global-settings.html:222
 msgid ""
 "When enabled, infected message payloads are moved to the "
 "quarantined_emails table (recommended for auditability)"
 msgstr ""
+"When enabled, infected message payloads are moved to the "
+"quarantined_emails table (recommended for auditability)"
 
 #: templates/global-settings.html:227
 msgid "Quarantine Retention (days)"
-msgstr ""
+msgstr "Quarantine Retention (days)"
 
 #: templates/global-settings.html:229
 msgid "Number of days to retain quarantined messages before automatic purge"
-msgstr ""
+msgstr "Number of days to retain quarantined messages before automatic purge"
 
 #: templates/global-settings.html:235
 msgid "Encrypt quarantined data at rest"
-msgstr ""
+msgstr "Encrypt quarantined data at rest"
 
 #: templates/global-settings.html:236
 msgid ""
 "Requires CLAMAV_QUARANTINE_KEY to be configured in the environment or "
 "config file (see README)"
 msgstr ""
+"Requires CLAMAV_QUARANTINE_KEY to be configured in the environment or "
+"config file (see README)"
 
 #: templates/global-settings.html:248
 msgid "SMTP Email Configuration"
-msgstr ""
+msgstr "SMTP Email Configuration"
 
 #: templates/global-settings.html:257
 msgid "Enable Email Alerts"
-msgstr ""
+msgstr "Enable Email Alerts"
 
 #: templates/global-settings.html:258
 msgid "Send email notifications for system alerts and important events"
-msgstr ""
+msgstr "Send email notifications for system alerts and important events"
 
 #: templates/global-settings.html:263
 msgid "SMTP Host"
-msgstr ""
+msgstr "SMTP Host"
 
 #: templates/global-settings.html:265
 msgid "SMTP server hostname or IP address"
-msgstr ""
+msgstr "SMTP server hostname or IP address"
 
 #: templates/global-settings.html:269
 msgid "SMTP Port"
-msgstr ""
+msgstr "SMTP Port"
 
 #: templates/global-settings.html:271
 msgid "SMTP server port (587 for TLS, 465 for SSL, 25 for plain)"
-msgstr ""
+msgstr "SMTP server port (587 for TLS, 465 for SSL, 25 for plain)"
 
 #: templates/global-settings.html:275
 msgid "SMTP Username"
-msgstr ""
+msgstr "SMTP Username"
 
 #: templates/global-settings.html:277
 msgid "Username for SMTP authentication (usually your email address)"
-msgstr ""
+msgstr "Username for SMTP authentication (usually your email address)"
 
 #: templates/global-settings.html:281
 msgid "SMTP Password"
-msgstr ""
+msgstr "SMTP Password"
 
 #: templates/global-settings.html:283
 msgid "Password for SMTP authentication (use app passwords for Gmail)"
-msgstr ""
+msgstr "Password for SMTP authentication (use app passwords for Gmail)"
 
 #: templates/global-settings.html:289
 msgid "Use TLS Encryption"
-msgstr ""
+msgstr "Use TLS Encryption"
 
 #: templates/global-settings.html:290
 msgid "Use STARTTLS for secure connection (recommended for most servers)"
-msgstr ""
+msgstr "Use STARTTLS for secure connection (recommended for most servers)"
 
 #: templates/global-settings.html:295
 msgid "From Email Address"
-msgstr ""
+msgstr "From Email Address"
 
 #: templates/global-settings.html:297
 msgid "Email address to send alerts from"
-msgstr ""
+msgstr "Email address to send alerts from"
 
 #: templates/global-settings.html:301
 msgid "From Name"
-msgstr ""
+msgstr "From Name"
 
 #: templates/global-settings.html:303
 msgid "Display name for alert emails"
-msgstr ""
+msgstr "Display name for alert emails"
 
 #: templates/global-settings.html:309
 msgid "Cancel"
@@ -703,11 +714,11 @@ msgstr "Cancel"
 
 #: templates/global-settings.html:313
 msgid "Save Settings"
-msgstr ""
+msgstr "Save Settings"
 
 #: templates/global-settings.html:326
 msgid "Send Test Email"
-msgstr ""
+msgstr "Send Test Email"
 
 #: templates/login.html:53
 msgid "Sign in to access your archived emails"
@@ -788,7 +799,7 @@ msgstr "Last Login:"
 
 #: templates/profile.html:70 templates/profile.html:88
 msgid "Never"
-msgstr ""
+msgstr "Never"
 
 #: templates/profile.html:75
 msgid "Last Login IP:"
@@ -824,7 +835,7 @@ msgstr "Reset Password"
 
 #: templates/reset-password.html:19
 msgid "Enter your new password below"
-msgstr ""
+msgstr "Enter your new password below"
 
 #: templates/reset-password.html:42
 msgid ""
@@ -836,7 +847,7 @@ msgstr ""
 
 #: templates/set-password.html:10
 msgid "Set Your Password"
-msgstr ""
+msgstr "Set Your Password"
 
 #: templates/setup.html:4
 msgid "Initial Setup - Daygle Mail Archiver"
@@ -888,7 +899,7 @@ msgstr "Optional - your last name"
 
 #: templates/setup.html:131
 msgid "admin@example.com"
-msgstr ""
+msgstr "admin@example.com"
 
 #: templates/setup.html:132
 msgid "Optional - for notifications and account recovery"
@@ -928,19 +939,19 @@ msgstr "Interface language"
 
 #: templates/user-settings.html:154
 msgid "Email Notifications"
-msgstr ""
+msgstr "Email Notifications"
 
 #: templates/user-settings.html:156
 msgid "Enabled"
-msgstr ""
+msgstr "Enabled"
 
 #: templates/user-settings.html:157
 msgid "Disabled"
-msgstr ""
+msgstr "Disabled"
 
 #: templates/user-settings.html:159
 msgid "Receive email alerts and notifications for system events"
-msgstr ""
+msgstr "Receive email alerts and notifications for system events"
 
 #~ msgid "Customise Dashboard"
 #~ msgstr "Customise Dashboard"
