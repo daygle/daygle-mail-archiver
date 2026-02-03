@@ -12,4 +12,3 @@ pytz
 python-dotenv
 pyclamd
 Babel
-babel

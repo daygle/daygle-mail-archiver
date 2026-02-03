@@ -128,8 +128,6 @@ def list_quarantine(request: Request, _=require_permission(PERMISSIONS["view_qua
     if not request.session.get('user_id'):
         request.session['flash'] = 'Please login to access Quarantine'
         return RedirectResponse('/login', status_code=303)
-        request.session['flash'] = 'Access denied'
-        return RedirectResponse('/dashboard', status_code=303)
 
     # Get user_id for timezone formatting
     user_id = request.session.get('user_id')

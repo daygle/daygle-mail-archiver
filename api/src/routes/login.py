@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Request, Form
-from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.responses import RedirectResponse
 import bcrypt
 import re
 import secrets
-import hashlib
 from datetime import datetime, timedelta
 from typing import List
 
@@ -11,8 +10,6 @@ from ..utils.db import query, execute
 from ..utils.logger import log
 from ..utils.templates import templates
 from ..utils.email import send_email
-from ..utils.permissions import PermissionChecker
-from ..utils.i18n import get_gettext
 
 router = APIRouter()
 
@@ -347,9 +344,9 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
     if new_attempts >= max_attempts:
         execute("""
             UPDATE users
-            SET failed_login_attempts = :a, locked_until = NOW() + INTERVAL ':m minutes'
+            SET failed_login_attempts = :a, locked_until = NOW() + INTERVAL '15 minutes'
             WHERE id = :id
-        """, {"a": new_attempts, "m": lock_minutes, "id": user["id"]})
+        """, {"a": new_attempts, "id": user["id"]})
 
         return templates.TemplateResponse(
             "login.html",

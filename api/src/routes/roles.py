@@ -184,8 +184,6 @@ def edit_role_form(
         },
     )
 
-from ..utils.permissions import require_permission, PERMISSIONS
-
 
 # ---------------------------------------------------------
 # UPDATE ROLE
