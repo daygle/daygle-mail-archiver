@@ -64,7 +64,7 @@ class O365Client:
             response.raise_for_status()
             data = response.json()
             return data.get("@odata.deltaLink")
-        except:
+        except Exception:
             return None
     
     def list_delta(self, delta_link: str) -> List[Dict]:
@@ -74,7 +74,7 @@ class O365Client:
             response.raise_for_status()
             data = response.json()
             return data.get("value", [])
-        except:
+        except Exception:
             return []
     
     def fetch_new_emails(self, last_delta_link: Optional[str] = None) -> List[str]:
@@ -122,7 +122,7 @@ class O365Client:
             response.raise_for_status()
             data = response.json()
             return data.get("mail") or data.get("userPrincipalName")
-        except:
+        except Exception:
             return None
     
     def delete_message(self, email_id: str) -> bool:

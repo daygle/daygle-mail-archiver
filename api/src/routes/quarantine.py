@@ -104,7 +104,7 @@ def _delete_quarantined_from_mail_server_and_db(ids: List[int]) -> tuple[int, li
             if conn:
                 try:
                     conn.logout()
-                except:
+                except Exception:
                     pass
 
     # Track deletion statistics

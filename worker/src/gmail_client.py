@@ -74,7 +74,7 @@ class GmailClient:
             response.raise_for_status()
             profile = response.json()
             return profile.get("historyId")
-        except:
+        except Exception:
             return None
     
     def list_history(self, start_history_id: str) -> List[Dict]:
@@ -89,7 +89,7 @@ class GmailClient:
             response.raise_for_status()
             data = response.json()
             return data.get("history", [])
-        except:
+        except Exception:
             return []
     
     def fetch_new_emails(self, last_sync_token: Optional[str] = None) -> List[str]:

@@ -392,7 +392,7 @@ def test_account_connection(request: Request, id: int):
                 if conn:
                     try:
                         conn.logout()
-                    except:
+                    except Exception:
                         pass
             
         elif account_type == "gmail":
@@ -542,7 +542,7 @@ def test_connection(
         if conn:
             try:
                 conn.logout()
-            except:
+            except Exception:
                 pass
 
     account = {

@@ -191,7 +191,7 @@ def system_status(request: Request):
         db_status = "healthy"
         try:
             query("SELECT 1")
-        except:
+        except Exception:
             db_status = "error"
 
         # Get worker status from last heartbeat in fetch_accounts
@@ -452,7 +452,7 @@ def get_system_uptime(request: Request):
         try:
             username = getattr(request, 'session', {}).get("username", "unknown")
             log("error", "Dashboard", f"Failed to fetch system uptime for user '{username}': {str(e)}", "")
-        except:
+        except Exception:
             pass  # Don't fail if logging fails
         return JSONResponse({"error": "Failed to load data"}, status_code=500)
 

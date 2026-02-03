@@ -831,7 +831,7 @@ def _delete_emails_from_mail_server_and_db(ids: List[int]) -> tuple[int, list[st
             if conn:
                 try:
                     conn.logout()
-                except:
+                except Exception:
                     pass
 
     # Track deletion statistics
