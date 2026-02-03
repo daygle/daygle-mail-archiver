@@ -97,6 +97,7 @@
     <div class="card-body">
         <p class="mb-16"><strong>Viewing Emails:</strong> Navigate to the Emails page to see all archived emails. You can search, filter by folder, view full content, and download raw .eml files (requires <code>download_eml</code> permission).</p>
         <p class="mb-16"><strong>Deleting Emails:</strong> Click the delete button next to an email for individual deletion, or use bulk delete (requires <code>delete_emails</code> permission).</p>
+        <p class="mb-16"><strong>Email Verification:</strong> Each archived email has a cryptographic signature (SHA256 hash) for integrity verification. Click "Verify" when viewing an email to check if it has been modified since archiving.</p>
         <div class="alert alert-warning mb-0">
             <i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> Deletions are permanent and cannot be undone. Users without the required permissions cannot delete emails or download .eml files.
         </div>
@@ -145,8 +146,9 @@
         <p class="mb-16"><strong>Retention Policy:</strong> Configure automatic deletion of old emails.</p>
         <p class="mb-16"><strong>Page Size & Date Format:</strong> Control items per page and global date/time formatting.</p>
         <p class="mb-16"><strong>Theme Settings:</strong> Set the default theme for all users.</p>
+        <p class="mb-16"><strong>SMTP Configuration:</strong> Configure email server settings for system alert notifications.</p>
         <div class="alert alert-info mb-0">
-            <i class="fas fa-info-circle"></i> Retention cleanup runs automatically during worker cycles. Users can customise their own date/time/theme preferences in User Settings.
+            <i class="fas fa-info-circle"></i> Retention cleanup runs automatically during worker cycles. Users can customise their own date/time/theme preferences in User Settings. System updates are managed via the command-line update script (web-based update checker has been removed).
         </div>
     </div>
 </div>
@@ -161,6 +163,15 @@
     </div>
     <div class="card-body">
         <p class="mb-16">The Dashboard provides statistics about your email archive including volume trends, top senders, deletions, and storage metrics.</p>
+        
+        <p class="mb-12"><strong>Widget Customization:</strong></p>
+        <ul class="pl-24 mb-16">
+            <li class="mb-8">Drag and drop widgets to rearrange layout</li>
+            <li class="mb-8">Click widget settings icon to configure date ranges and visibility</li>
+            <li class="mb-8">Toggle individual widgets on/off based on your preferences</li>
+            <li class="mb-8">Widget layouts are saved per user and persist across sessions</li>
+        </ul>
+        
         <p class="mb-0">Charts update automatically as new data becomes available.</p>
     </div>
 </div>
@@ -225,6 +236,9 @@
 
         <p class="mb-12"><strong>User Roles:</strong></p>
         <p class="mb-16">Roles map to granular permissions. Assign roles to grant the required capabilities.</p>
+
+        <p class="mb-12"><strong>Online/Offline Status:</strong></p>
+        <p class="mb-16">The User Management page displays real-time online/offline status indicators next to each user. A user is considered online if their last activity was within their configured auto-logout time window (default: 30 minutes).</p>
 
         <p class="mb-0"><strong>Managing Your Profile:</strong> All users can update their own profile and password.</p>
     </div>
@@ -307,6 +321,39 @@
 
         <div class="alert alert-warning mb-0">
             <i class="fas fa-exclamation-triangle"></i> <strong>Caution:</strong> Only release emails if you are certain they are safe.
+        </div>
+    </div>
+</div>
+
+<!-- Email Integrity & Verification -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-shield-check"></i>
+            <span>Email Integrity & Verification</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <p class="mb-16">Every archived email includes a cryptographic signature (SHA256 hash) to ensure data integrity and detect tampering.</p>
+
+        <p class="mb-12"><strong>How It Works:</strong></p>
+        <ul class="pl-24 mb-16">
+            <li class="mb-8">When an email is archived, a SHA256 signature is computed and stored</li>
+            <li class="mb-8">The signature is based on the raw email content (RFC822 format)</li>
+            <li class="mb-8">Click "Verify" when viewing an email to check its integrity</li>
+            <li class="mb-8">Verification recomputes the signature and compares it to the stored value</li>
+        </ul>
+
+        <p class="mb-12"><strong>Verification Results:</strong></p>
+        <ul class="pl-24 mb-16">
+            <li class="mb-8"><strong>Valid:</strong> Email has not been modified since archiving</li>
+            <li class="mb-8"><strong>Invalid:</strong> Email content has been altered (indicates potential tampering)</li>
+            <li class="mb-8"><strong>Missing Signature:</strong> Email was archived before integrity checks were implemented</li>
+        </ul>
+
+        <div class="alert alert-info mb-0">
+            <i class="fas fa-info-circle"></i>
+            <strong>Security:</strong> Email signatures provide tamper detection but not encryption. For encrypted storage, enable quarantine encryption for virus-infected emails.
         </div>
     </div>
 </div>
@@ -400,6 +447,8 @@
             <li class="mb-8"><strong>Date Format:</strong> Customise how dates are displayed</li>
             <li class="mb-8"><strong>Time Format:</strong> Select 12-hour or 24-hour time display</li>
             <li class="mb-8"><strong>Timezone:</strong> Set your local timezone for accurate timestamps</li>
+            <li class="mb-8"><strong>Email Notifications:</strong> Toggle whether you receive email notifications for system alerts</li>
+            <li class="mb-8"><strong>Auto-Logout:</strong> Configure session timeout duration (how long before automatic logout due to inactivity)</li>
         </ul>
 
         <p class="mb-0">Personal settings are saved per user and persist across sessions. Theme changes take effect immediately.</p>
@@ -510,6 +559,38 @@
             <i class="fas fa-exclamation-circle"></i>
             <strong>Security Warning:</strong>
             Store backups securely - they contain all email data, encryption keys, and credentials.
+        </div>
+    </div>
+</div>
+
+<!-- System Updates -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-sync-alt"></i>
+            <span>System Updates</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <p class="mb-16">
+            System updates are managed via the command-line update script. The web-based update checker has been removed in favor of this more reliable CLI approach.
+        </p>
+
+        <p class="mb-12"><strong>Checking for Updates:</strong></p>
+        <pre class="code-block"><code>cd /opt/daygle-mail-archiver</code></pre>
+        <pre class="code-block"><code>./update.sh --check</code></pre>
+
+        <p class="mb-12"><strong>Updating the System:</strong></p>
+        <pre class="code-block"><code>./update.sh</code></pre>
+        <p class="mb-16">This will interactively guide you through the update process.</p>
+
+        <p class="mb-12"><strong>Unattended Update:</strong></p>
+        <pre class="code-block"><code>./update.sh --force</code></pre>
+
+        <div class="alert alert-warning mb-0">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Important:</strong>
+            Always create a backup before updating using <code>./scripts/backup_restore.sh backup</code>. The update script does not automatically back up your database.
         </div>
     </div>
 </div>
