@@ -211,24 +211,6 @@ button:focus-visible,
     width: 0;
 }
 
-.sidebar-logo {
-    height: 32px;
-    width: auto;
-    transition: opacity var(--transition-fast);
-}
-
-.sidebar-title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    white-space: nowrap;
-    opacity: 1;
-    transition: opacity var(--transition-fast);
-}
-
-.sidebar.collapsed .sidebar-title {
-    opacity: 0;
-    width: 0;
-}
 
 /* sidebar-toggle removed - unused */
 
@@ -323,24 +305,6 @@ button:focus-visible,
     overflow: hidden;
 }
 
-.nav-icon {
-    min-width: 20px;
-    font-size: 1.125rem;
-    text-align: center;
-}
-
-.nav-text {
-    flex: 1;
-    opacity: 1;
-    transition: opacity var(--transition-fast);
-}
-
-.sidebar.collapsed .nav-text {
-    opacity: 0;
-    width: 0;
-    overflow: hidden;
-}
-
 .sidebar.collapsed .nav-section-title {
     display: none;
 }
@@ -353,12 +317,6 @@ button:focus-visible,
 
 .sidebar.collapsed .nav-arrow {
     display: none;
-}
-
-.nav-chevron {
-    font-size: 0.75rem;
-    transition: transform var(--transition-fast);
-    opacity: 1;
 }
 
 /* Help page layout improvements */
@@ -396,11 +354,6 @@ pre.code-block code {
 }
 .help-grid .alert { margin-bottom: 0; }
 
-
-.sidebar.collapsed .nav-chevron {
-    opacity: 0;
-}
-
 .nav-submenu {
     max-height: 0;
     overflow: hidden;
@@ -410,22 +363,6 @@ pre.code-block code {
 .nav-submenu.open,
 .nav-submenu.expanded {
     max-height: 500px;
-}
-
-.nav-submenu-toggle {
-    background: transparent;
-    border: none;
-    width: 100%;
-    text-align: left;
-    cursor: pointer;
-}
-
-.nav-submenu-toggle .nav-arrow {
-    transition: transform var(--transition-fast);
-}
-
-.nav-link[aria-expanded="true"] .nav-chevron {
-    transform: rotate(90deg);
 }
 
 .nav-submenu .nav-link {
