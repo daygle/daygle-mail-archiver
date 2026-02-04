@@ -457,46 +457,47 @@
         (function() {
             let tableContainers = [];
             
+            function updateScrollIndicator(container) {
+                const isScrolledToEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 5;
+                if (isScrolledToEnd) {
+                    container.classList.add('scrolled-end');
+                } else {
+                    container.classList.remove('scrolled-end');
+                }
+            }
+            
             function handleTableScroll() {
                 // Only run on mobile/tablet sizes
                 if (window.innerWidth > 768) return;
                 
-                // Initialize containers if needed
-                if (tableContainers.length === 0) {
-                    tableContainers = Array.from(document.querySelectorAll('.table-container'));
-                }
-                
                 tableContainers.forEach(container => {
                     const isScrollable = container.scrollWidth > container.clientWidth;
-                    const isScrolledToEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 5;
-                    
-                    if (isScrollable && !isScrolledToEnd) {
-                        container.classList.remove('scrolled-end');
+                    if (isScrollable) {
+                        updateScrollIndicator(container);
                     } else {
                         container.classList.add('scrolled-end');
                     }
                 });
             }
             
-            // Check scroll on load
-            window.addEventListener('load', handleTableScroll);
-            
-            // Add resize listener unconditionally so it works when resizing to mobile
-            window.addEventListener('resize', handleTableScroll);
-            
-            // Add scroll listener to each table container
+            // Initialize on DOM ready
             document.addEventListener('DOMContentLoaded', function() {
-                document.querySelectorAll('.table-container').forEach(container => {
+                tableContainers = Array.from(document.querySelectorAll('.table-container'));
+                
+                // Add scroll listener to each table container
+                tableContainers.forEach(container => {
                     container.addEventListener('scroll', function() {
-                        const isScrolledToEnd = this.scrollLeft + this.clientWidth >= this.scrollWidth - 5;
-                        if (isScrolledToEnd) {
-                            this.classList.add('scrolled-end');
-                        } else {
-                            this.classList.remove('scrolled-end');
-                        }
+                        updateScrollIndicator(this);
                     });
                 });
+                
+                // Initial check
+                handleTableScroll();
             });
+            
+            // Check on load and resize
+            window.addEventListener('load', handleTableScroll);
+            window.addEventListener('resize', handleTableScroll);
         })();
 
     </script>

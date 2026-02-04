@@ -765,10 +765,11 @@ textarea.form-control {
         right: 0;
         bottom: 0;
         width: 30px;
-        background: linear-gradient(to left, var(--border-color), transparent);
+        background: linear-gradient(to left, var(--bg-secondary), transparent);
         pointer-events: none;
-        opacity: 0.8;
+        opacity: 1;
         transition: opacity 0.3s;
+        box-shadow: inset -10px 0 10px -10px var(--text-secondary);
     }
     
     /* Hide the shadow when scrolled to the end */
