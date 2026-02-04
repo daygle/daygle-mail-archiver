@@ -453,6 +453,40 @@
 
         // Language selection removed: language is managed via User Settings only.
 
+        // Table scroll indicator for mobile
+        (function() {
+            function handleTableScroll() {
+                const tableContainers = document.querySelectorAll('.table-container');
+                tableContainers.forEach(container => {
+                    const isScrollable = container.scrollWidth > container.clientWidth;
+                    const isScrolledToEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 5;
+                    
+                    if (isScrollable && !isScrolledToEnd) {
+                        container.classList.remove('scrolled-end');
+                    } else {
+                        container.classList.add('scrolled-end');
+                    }
+                });
+            }
+            
+            // Check scroll on load and resize
+            if (window.innerWidth <= 768) {
+                window.addEventListener('load', handleTableScroll);
+                window.addEventListener('resize', handleTableScroll);
+                
+                // Add scroll listener to each table container
+                document.querySelectorAll('.table-container').forEach(container => {
+                    container.addEventListener('scroll', function() {
+                        const isScrolledToEnd = this.scrollLeft + this.clientWidth >= this.scrollWidth - 5;
+                        if (isScrolledToEnd) {
+                            this.classList.add('scrolled-end');
+                        } else {
+                            this.classList.remove('scrolled-end');
+                        }
+                    });
+                });
+            }
+        })();
 
     </script>
 

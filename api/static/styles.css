@@ -808,6 +808,36 @@ textarea.form-control {
     border-radius: var(--radius-lg);
     overflow-x: auto;
     border: 1px solid var(--border-color);
+    /* Smooth scrolling for better mobile experience */
+    -webkit-overflow-scrolling: touch;
+    /* Add scroll snap for better table navigation on mobile */
+    scroll-behavior: smooth;
+}
+
+/* Visual indicator for horizontal scrolling on mobile */
+@media (max-width: 768px) {
+    .table-container {
+        position: relative;
+    }
+    
+    /* Subtle shadow to indicate more content on the right */
+    .table-container::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 30px;
+        background: linear-gradient(to left, rgba(0, 0, 0, 0.1), transparent);
+        pointer-events: none;
+        opacity: 1;
+        transition: opacity 0.3s;
+    }
+    
+    /* Hide the shadow when scrolled to the end */
+    .table-container.scrolled-end::after {
+        opacity: 0;
+    }
 }
 
 /* Roles & Permissions UI styles moved from templates to central CSS */
@@ -934,6 +964,8 @@ textarea.form-control {
 .table {
     width: 100%;
     border-collapse: collapse;
+    /* Ensure table itself doesn't force a light background so it inherits the card/theme */
+    background: transparent;
 }
 
 .table thead {
@@ -950,11 +982,6 @@ textarea.form-control {
     letter-spacing: 0.05em;
     border-bottom: 1px solid var(--border-color);
     vertical-align: middle;
-} 
-
-.table {
-    /* Ensure table itself doesn't force a light background so it inherits the card/theme */
-    background: transparent;
 }
 
 .table td {
@@ -1617,6 +1644,19 @@ textarea.form-control {
         gap: 8px;
     }
     
+    /* Make button groups in card headers wrap and stack nicely on mobile */
+    .card-header .flex.gap-2,
+    .card-header .flex {
+        flex-wrap: wrap;
+        width: 100%;
+        justify-content: flex-start;
+    }
+    
+    .card-header .btn-sm {
+        flex: 0 1 auto;
+        white-space: nowrap;
+    }
+    
     .card-title {
         font-size: 1rem;
     }
@@ -1947,27 +1987,6 @@ textarea.form-control {
 .text-left { text-align: left; }
 
 .mt-1 { margin-top: 0.5rem; }
-
-/* Responsive table column helpers
-   - Use `.hide-mobile` on `th`/`td` to hide on small screens (<= 767px)
-   - Use `.hide-sm` to hide on small and below (<= 575px)
-   - Use `.show-xs` to force show on extra-small when needed
-*/
-.hide-mobile { display: table-cell; }
-.hide-sm { display: table-cell; }
-
-@media (max-width: 767px) {
-    .hide-mobile { display: none !important; }
-}
-
-@media (max-width: 575px) {
-    .hide-sm { display: none !important; }
-}
-
-/* Ensure hidden table header/cell spacing doesn't collapse on some browsers */
-th.hide-mobile, td.hide-mobile, th.hide-sm, td.hide-sm {
-    white-space: nowrap;
-}
 .mt-2 { margin-top: 1rem; }
 .mt-3 { margin-top: 1.5rem; }
 .mt-4 { margin-top: 2rem; }
@@ -1984,11 +2003,18 @@ th.hide-mobile, td.hide-mobile, th.hide-sm, td.hide-sm {
 .gap-3 { gap: 1rem; }
 .gap-4 { gap: 2rem; }
 
-/* Fix: ensure `.hide-mobile` consistently hides table headers and cells
-   on small screens (<= 768px). This overrides duplicate/conflicting
-   definitions earlier in the file and targets both `th` and `td`. */
+/* Responsive table column helpers
+   - Use `.hide-mobile` on `th`/`td` to hide on small screens (<= 768px)
+   - Use `.hide-sm` to hide on small and below (<= 575px)
+*/
 th.hide-mobile, td.hide-mobile, .hide-mobile {
     display: table-cell;
+    white-space: nowrap;
+}
+
+.hide-sm { 
+    display: table-cell; 
+    white-space: nowrap;
 }
 
 @media (max-width: 768px) {
@@ -1998,6 +2024,12 @@ th.hide-mobile, td.hide-mobile, .hide-mobile {
     /* Ensure button/link text hidden as well (higher specificity) */
     button .hide-mobile, a .hide-mobile, .btn .hide-mobile {
         display: none !important;
+    }
+}
+
+@media (max-width: 575px) {
+    th.hide-sm, td.hide-sm, .hide-sm { 
+        display: none !important; 
     }
 }
 
@@ -2111,6 +2143,21 @@ pre.code-block, pre.code-block code {
 
     /* Grid helpers: collapse 4-column grids to single column */
     .grid-cols-4 { grid-template-columns: 1fr; }
+    
+    /* Stack two-column grids on small screens */
+    .two-col-grid { 
+        grid-template-columns: 1fr;
+    }
+    
+    /* Stack form actions on small screens */
+    .form-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+    }
 
     /* Empty state smaller padding and icon sizes on small screens */
     .empty-state { padding: 24px 0; }
