@@ -455,8 +455,17 @@
 
         // Table scroll indicator for mobile
         (function() {
+            let tableContainers = [];
+            
             function handleTableScroll() {
-                const tableContainers = document.querySelectorAll('.table-container');
+                // Only run on mobile/tablet sizes
+                if (window.innerWidth > 768) return;
+                
+                // Initialize containers if needed
+                if (tableContainers.length === 0) {
+                    tableContainers = Array.from(document.querySelectorAll('.table-container'));
+                }
+                
                 tableContainers.forEach(container => {
                     const isScrollable = container.scrollWidth > container.clientWidth;
                     const isScrolledToEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 5;
@@ -469,12 +478,14 @@
                 });
             }
             
-            // Check scroll on load and resize
-            if (window.innerWidth <= 768) {
-                window.addEventListener('load', handleTableScroll);
-                window.addEventListener('resize', handleTableScroll);
-                
-                // Add scroll listener to each table container
+            // Check scroll on load
+            window.addEventListener('load', handleTableScroll);
+            
+            // Add resize listener unconditionally so it works when resizing to mobile
+            window.addEventListener('resize', handleTableScroll);
+            
+            // Add scroll listener to each table container
+            document.addEventListener('DOMContentLoaded', function() {
                 document.querySelectorAll('.table-container').forEach(container => {
                     container.addEventListener('scroll', function() {
                         const isScrolledToEnd = this.scrollLeft + this.clientWidth >= this.scrollWidth - 5;
@@ -485,7 +496,7 @@
                         }
                     });
                 });
-            }
+            });
         })();
 
     </script>

@@ -765,9 +765,9 @@ textarea.form-control {
         right: 0;
         bottom: 0;
         width: 30px;
-        background: linear-gradient(to left, rgba(0, 0, 0, 0.1), transparent);
+        background: linear-gradient(to left, var(--border-color), transparent);
         pointer-events: none;
-        opacity: 1;
+        opacity: 0.8;
         transition: opacity 0.3s;
     }
     
