@@ -453,6 +453,53 @@
 
         // Language selection removed: language is managed via User Settings only.
 
+        // Table scroll indicator for mobile
+        (function() {
+            let tableContainers = [];
+            const SCROLL_THRESHOLD = 5; // 5px threshold to account for subpixel rendering differences
+            
+            function updateScrollIndicator(container) {
+                const isScrolledToEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - SCROLL_THRESHOLD;
+                if (isScrolledToEnd) {
+                    container.classList.add('scrolled-end');
+                } else {
+                    container.classList.remove('scrolled-end');
+                }
+            }
+            
+            function handleTableScroll() {
+                // Only run on mobile/tablet sizes
+                if (window.innerWidth > 768) return;
+                
+                tableContainers.forEach(container => {
+                    const isScrollable = container.scrollWidth > container.clientWidth;
+                    if (isScrollable) {
+                        updateScrollIndicator(container);
+                    } else {
+                        container.classList.add('scrolled-end');
+                    }
+                });
+            }
+            
+            // Initialize on DOM ready
+            document.addEventListener('DOMContentLoaded', function() {
+                tableContainers = Array.from(document.querySelectorAll('.table-container'));
+                
+                // Add scroll listener to each table container
+                tableContainers.forEach(container => {
+                    container.addEventListener('scroll', function() {
+                        updateScrollIndicator(this);
+                    });
+                });
+                
+                // Initial check
+                handleTableScroll();
+            });
+            
+            // Check on load and resize
+            window.addEventListener('load', handleTableScroll);
+            window.addEventListener('resize', handleTableScroll);
+        })();
 
     </script>
 
