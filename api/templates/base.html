@@ -456,9 +456,10 @@
         // Table scroll indicator for mobile
         (function() {
             let tableContainers = [];
+            const SCROLL_THRESHOLD = 5; // 5px threshold to account for subpixel rendering differences
             
             function updateScrollIndicator(container) {
-                const isScrolledToEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 5;
+                const isScrolledToEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - SCROLL_THRESHOLD;
                 if (isScrolledToEnd) {
                     container.classList.add('scrolled-end');
                 } else {

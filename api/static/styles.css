@@ -757,7 +757,8 @@ textarea.form-control {
         position: relative;
     }
     
-    /* Subtle shadow to indicate more content on the right */
+    /* Gradient overlay with shadow to indicate more content on the right */
+    /* Creates subtle inset shadow effect for better visibility across themes */
     .table-container::after {
         content: '';
         position: absolute;
@@ -769,6 +770,7 @@ textarea.form-control {
         pointer-events: none;
         opacity: 1;
         transition: opacity 0.3s;
+        /* Inset shadow: horizontal offset, blur, spread, color */
         box-shadow: inset -10px 0 10px -10px var(--text-secondary);
     }
     
