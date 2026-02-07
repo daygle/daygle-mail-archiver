@@ -158,10 +158,10 @@ Configure SMTP settings in **Global Settings** → **SMTP Email Configuration** 
 Daygle Mail Archiver supports multiple languages:
 
 - 🇬🇧 **English (en)** - Default
-- 🇪🇸 **Spanish (es)** - Español (93% translated)
-- 🇫🇷 **French (fr)** - Français (90% translated)
-- 🇩🇪 **German (de)** - Deutsch (92% translated)
-- 🇨🇳 **Chinese (zh)** - 中文 (99% translated)
+- 🇪🇸 **Spanish (es)** - Español
+- 🇫🇷 **French (fr)** - Français
+- 🇩🇪 **German (de)** - Deutsch
+- 🇨🇳 **Chinese (zh)** - 中文
 
 Users can select their preferred language:
 - On the login page (language picker in top-right)
