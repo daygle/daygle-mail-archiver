@@ -205,7 +205,37 @@ See [Updating](https://github.com/daygle/daygle-mail-archiver/wiki/Updating) in 
 
 ---
 
-## 🤝 Contributing
+## 🔑 OAuth2 Setup (Gmail & Office 365)
+
+Fetch accounts using the Gmail API or Office 365 Graph API require an OAuth2 app to be configured before authorisation can complete.
+
+### Office 365 / Azure AD
+
+1. Sign in to the [Azure portal](https://portal.azure.com/) and open **Azure Active Directory** → **App registrations** → **New registration**.
+2. Give the app a name, select the supported account types, and leave the Redirect URI blank for now.
+3. After creating the app, note the **Application (client) ID** – this is your **OAuth Client ID**.
+4. Go to **Certificates & secrets** → **New client secret**, create a secret, and copy the **Value** – this is your **OAuth Client Secret**.
+5. Go to **API permissions** → **Add a permission** → **Microsoft Graph** → **Delegated permissions** → add `Mail.Read` and `offline_access`.  Click **Grant admin consent** if required.
+6. In Daygle Mail Archiver: go to **Fetch Accounts**, create a new **Office 365 API** account, enter the Client ID and Secret, and save.
+7. Open the account for editing.  The **Redirect URI** (e.g. `http://your-host:8000/oauth/o365/callback/<id>`) is shown in the OAuth Configuration section.
+8. Back in Azure: **Authentication** → **Add a platform** → **Web** → paste the Redirect URI, then save.
+9. Return to the edit form and click **Authorise** to complete the OAuth flow.
+
+### Gmail
+
+1. Open the [Google Cloud Console](https://console.cloud.google.com/), create a project, and enable the **Gmail API**.
+2. Go to **APIs & Services** → **Credentials** → **Create credentials** → **OAuth client ID**.  Choose **Web application**.
+3. Note the **Client ID** and **Client Secret**.
+4. In Daygle Mail Archiver: go to **Fetch Accounts**, create a new **Gmail API** account, enter the Client ID and Secret, and save.
+5. Open the account for editing.  The **Redirect URI** (e.g. `http://your-host:8000/oauth/gmail/callback/<id>`) is shown in the OAuth Configuration section.
+6. Back in Google Cloud Console: add the Redirect URI to **Authorised redirect URIs**, then save.
+7. Return to the edit form and click **Authorise** to complete the OAuth flow.
+
+> **Note:** The `<id>` in the redirect URI is your fetch account's numeric ID, visible in the edit form.
+
+---
+
+
 
 Contributions are welcome! Please:
 
