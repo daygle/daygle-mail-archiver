@@ -80,6 +80,21 @@ def save_settings(
         # Sanitize theme
         default_theme = default_theme if default_theme in ("system", "light", "dark") else "system"
 
+        # Encrypt SMTP password before storage.
+        # If the submitted password field is empty the user did not change it,
+        # so keep the currently stored (already-encrypted) value.
+        if smtp_password:
+            try:
+                from ..utils.crypto import encrypt_password
+                smtp_password_stored = encrypt_password(smtp_password)
+            except Exception as e:
+                # Encryption unavailable (e.g. IMAP_PASSWORD_KEY not configured);
+                # fall back to storing as-is so SMTP still functions, but warn the admin.
+                log("warning", "Settings", f"SMTP password encryption failed; storing in plaintext: {e}")
+                smtp_password_stored = smtp_password
+        else:
+            smtp_password_stored = old_settings.get("smtp_password", "")
+
         settings_data = [
             ("page_size", str(page_size)),
             ("date_format", date_format),
@@ -102,7 +117,7 @@ def save_settings(
             ("smtp_host", smtp_host),
             ("smtp_port", str(smtp_port)),
             ("smtp_username", smtp_username),
-            ("smtp_password", smtp_password),
+            ("smtp_password", smtp_password_stored),
             ("smtp_use_tls", str(smtp_use_tls).lower()),
             ("smtp_from_email", smtp_from_email),
             ("smtp_from_name", smtp_from_name),

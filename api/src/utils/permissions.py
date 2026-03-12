@@ -52,10 +52,6 @@ class PermissionChecker:
 
             self._permissions_cache = [row["name"] for row in rows]
 
-            # Optional: cache in session for the duration of the session
-            cache_key = f"user_permissions_{user_id}"
-            self.request.session[cache_key] = self._permissions_cache
-
             return self._permissions_cache
 
         except Exception as e:
