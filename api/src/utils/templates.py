@@ -2,6 +2,7 @@
 Shared Jinja2 templates configuration with custom filters
 """
 from pathlib import Path
+from email.utils import getaddresses
 from fastapi.templating import Jinja2Templates
 from .timezone import convert_utc_to_user_timezone, format_datetime
 from .i18n import get_gettext
@@ -64,6 +65,24 @@ def format_user_datetime_filter(utc_datetime, user_id, date_format=None):
 # Register filters
 templates.env.filters['to_user_timezone'] = to_user_timezone_filter
 templates.env.filters['format_user_datetime'] = format_user_datetime_filter
+
+def extract_emails_filter(value: str) -> str:
+    """Jinja2 filter to extract only email addresses from a header value.
+
+    Converts display-name + address strings such as
+    ``John Doe <john@example.com>`` to just ``john@example.com``.
+    Multiple comma-separated addresses are each stripped of their display
+    name and rejoined with ``', '``.
+    """
+    if not value:
+        return value
+    parsed = getaddresses([value])
+    addresses = [addr for _name, addr in parsed if addr]
+    return ", ".join(addresses) if addresses else value
+
+
+# Register filters
+templates.env.filters['extract_emails'] = extract_emails_filter
 
 # Register time helper filter (human-friendly relative times)
 try:
