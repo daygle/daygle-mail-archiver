@@ -101,7 +101,7 @@ msgid "User Settings"
 msgstr "Configuración de usuario"
 
 #: templates/base.html:200 templates/base.html:203 templates/login.html:22
-msgid "Toggle theme"
+msgid "Toggle Theme"
 msgstr "Cambiar tema"
 
 #: templates/base.html:208 templates/change-password.html:3

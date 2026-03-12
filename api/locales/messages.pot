@@ -103,7 +103,7 @@ msgid "User Settings"
 msgstr ""
 
 #: templates/base.html:200 templates/base.html:203 templates/login.html:22
-msgid "Toggle theme"
+msgid "Toggle Theme"
 msgstr ""
 
 #: templates/base.html:208 templates/change-password.html:3
