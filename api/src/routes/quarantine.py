@@ -10,7 +10,7 @@ from ..utils.crypto import decrypt_password
 from cryptography.fernet import Fernet
 from ..utils.alerts import create_alert
 from ..utils.email_parser import compute_signature
-from ..utils.timezone import format_datetime
+from ..utils.timezone import format_datetime, format_email_date
 from ..utils.permissions import PermissionChecker, require_permission, PERMISSIONS
 
 router = APIRouter()
@@ -283,19 +283,7 @@ def list_quarantine(request: Request, _=require_permission(PERMISSIONS["view_qua
             ir["quarantined_at_formatted"] = ir["quarantined_at"]
         
         # Format date field
-        if ir.get("date"):
-            if hasattr(ir["date"], 'strftime'):
-                ir["date_formatted"] = format_datetime(ir["date"], user_id)
-            else:
-                # Try to parse the date string
-                from email.utils import parsedate_to_datetime
-                try:
-                    parsed_date = parsedate_to_datetime(ir["date"])
-                    ir["date_formatted"] = format_datetime(parsed_date, user_id)
-                except (ValueError, TypeError):
-                    ir["date_formatted"] = ir["date"]
-        else:
-            ir["date_formatted"] = ir.get("date")
+        ir["date_formatted"] = format_email_date(ir.get("date"), ir.get("quarantined_at"), user_id)
 
         processed.append(ir)
 
