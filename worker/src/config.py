@@ -64,8 +64,8 @@ class Config:
             if all([self._config.get('DB_USER'), self._config.get('DB_PASS'), 
                    self._config.get('DB_NAME')]):
                 self._config['DB_DSN'] = (
-                    f"postgresql+psycopg2://{self._config['DB_USER']}:"
-                    f"{self._config['DB_PASS']}@{db_host}:{db_port}/"
+                    f"postgresql+psycopg2://{quote_plus(self._config['DB_USER'])}:"
+                    f"{quote_plus(self._config['DB_PASS'])}@{db_host}:{db_port}/"
                     f"{self._config['DB_NAME']}"
                 )
         
@@ -86,15 +86,20 @@ class Config:
             if env_value:
                 self._config[var] = env_value
 
-        # If DB_DSN is still not set, construct it from POSTGRES_* variables
-        # so the worker always uses the same credentials as the database container.
-        if not self._config.get('DB_DSN'):
+        # Construct (or reconstruct) DB_DSN from POSTGRES_* variables when:
+        # 1. DB_DSN is not yet set, OR
+        # 2. Any POSTGRES_* env var is explicitly provided (env vars take priority over conf).
+        # This ensures the database container and worker always use the same credentials.
+        if not os.getenv('DB_DSN'):
             pg_user = self._config.get('POSTGRES_USER')
             pg_pass = self._config.get('POSTGRES_PASSWORD')
             pg_db = self._config.get('POSTGRES_DB')
             pg_host = os.getenv('POSTGRES_HOST', 'db')
             pg_port = os.getenv('POSTGRES_PORT', '5432')
-            if pg_user and pg_pass and pg_db:
+            has_postgres_env = any(
+                os.getenv(v) for v in ('POSTGRES_USER', 'POSTGRES_PASSWORD', 'POSTGRES_DB')
+            )
+            if (has_postgres_env or not self._config.get('DB_DSN')) and pg_user and pg_pass and pg_db:
                 self._config['DB_DSN'] = (
                     f"postgresql+psycopg2://{quote_plus(pg_user)}:{quote_plus(pg_pass)}"
                     f"@{pg_host}:{pg_port}/{pg_db}"
