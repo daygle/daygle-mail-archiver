@@ -129,6 +129,8 @@ def create_account(
     delete_after_processing: bool = Form(False),
     expunge_deleted: bool = Form(False),
     enabled: bool = Form(True),
+    oauth_client_id: str = Form(""),
+    oauth_client_secret: str = Form(""),
 ):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
@@ -141,11 +143,13 @@ def create_account(
             INSERT INTO fetch_accounts
             (name, account_type, host, port, username, password_encrypted,
              use_ssl, require_starttls, poll_interval_seconds,
-             delete_after_processing, expunge_deleted, enabled)
+             delete_after_processing, expunge_deleted, enabled,
+             oauth_client_id, oauth_client_secret)
             VALUES
             (:name, :account_type, :host, :port, :username, :password_encrypted,
              :use_ssl, :require_starttls, :poll_interval_seconds,
-             :delete_after_processing, :expunge_deleted, :enabled)
+             :delete_after_processing, :expunge_deleted, :enabled,
+             :oauth_client_id, :oauth_client_secret)
             """,
             {
                 "name": name,
@@ -160,6 +164,8 @@ def create_account(
                 "delete_after_processing": delete_after_processing,
                 "expunge_deleted": expunge_deleted,
                 "enabled": enabled,
+                "oauth_client_id": oauth_client_id or None,
+                "oauth_client_secret": oauth_client_secret or None,
             },
         )
 
@@ -224,6 +230,8 @@ def update_account(
     delete_after_processing: bool = Form(False),
     expunge_deleted: bool = Form(False),
     enabled: bool = Form(True),
+    oauth_client_id: str = Form(""),
+    oauth_client_secret: str = Form(""),
 ):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
@@ -235,9 +243,14 @@ def update_account(
         enc = None
         password_sql = ""
 
+    if oauth_client_secret.strip():
+        oauth_secret_sql = ", oauth_client_secret = :oauth_client_secret"
+    else:
+        oauth_secret_sql = ""
+
     try:
         # Check current values to detect no-op updates
-        current = query("SELECT name, account_type, host, port, username, use_ssl, require_starttls, poll_interval_seconds, delete_after_processing, expunge_deleted, enabled FROM fetch_accounts WHERE id = :id", {"id": id}).mappings().first()
+        current = query("SELECT name, account_type, host, port, username, use_ssl, require_starttls, poll_interval_seconds, delete_after_processing, expunge_deleted, enabled, oauth_client_id FROM fetch_accounts WHERE id = :id", {"id": id}).mappings().first()
         if current:
             # Normalize values for comparison
             same = (
@@ -251,11 +264,30 @@ def update_account(
                 (int(current.get('poll_interval_seconds') or 0) == int(poll_interval_seconds or 0)) and
                 (bool(current.get('delete_after_processing')) == bool(delete_after_processing)) and
                 (bool(current.get('expunge_deleted')) == bool(expunge_deleted)) and
-                (bool(current.get('enabled')) == bool(enabled))
+                (bool(current.get('enabled')) == bool(enabled)) and
+                ((current.get('oauth_client_id') or '') == (oauth_client_id or ''))
             )
-            if same and not password.strip():
+            if same and not password.strip() and not oauth_client_secret.strip():
                 flash(request, "No changes detected.", 'info')
                 return RedirectResponse("/fetch-accounts", status_code=303)
+        params = {
+            "id": id,
+            "name": name,
+            "account_type": account_type,
+            "host": host,
+            "port": port,
+            "username": username,
+            "password_encrypted": enc,
+            "use_ssl": use_ssl,
+            "require_starttls": require_starttls,
+            "poll_interval_seconds": poll_interval_seconds,
+            "delete_after_processing": delete_after_processing,
+            "expunge_deleted": expunge_deleted,
+            "enabled": enabled,
+            "oauth_client_id": oauth_client_id or None,
+        }
+        if oauth_client_secret.strip():
+            params["oauth_client_secret"] = oauth_client_secret
         query(
             f"""
             UPDATE fetch_accounts
@@ -270,24 +302,11 @@ def update_account(
                 poll_interval_seconds = :poll_interval_seconds,
                 delete_after_processing = :delete_after_processing,
                 expunge_deleted = :expunge_deleted,
-                enabled = :enabled
+                enabled = :enabled,
+                oauth_client_id = :oauth_client_id{oauth_secret_sql}
             WHERE id = :id
             """,
-            {
-                "id": id,
-                "name": name,
-                "account_type": account_type,
-                "host": host,
-                "port": port,
-                "username": username,
-                "password_encrypted": enc,
-                "use_ssl": use_ssl,
-                "require_starttls": require_starttls,
-                "poll_interval_seconds": poll_interval_seconds,
-                "delete_after_processing": delete_after_processing,
-                "expunge_deleted": expunge_deleted,
-                "enabled": enabled,
-            },
+            params,
         )
 
         username_session = request.session.get("username", "unknown")
