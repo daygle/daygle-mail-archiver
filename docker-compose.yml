@@ -22,6 +22,9 @@ services:
     container_name: daygle-mail-archiver-api
     environment:
       DB_DSN: ${DB_DSN:-}
+      POSTGRES_DB: ${POSTGRES_DB:-daygle_mail_archiver}
+      POSTGRES_USER: ${POSTGRES_USER:-daygle_mail_archiver}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}
       SESSION_SECRET: ${SESSION_SECRET:-}
       IMAP_PASSWORD_KEY: ${IMAP_PASSWORD_KEY:-}
       CLAMAV_HOST: ${CLAMAV_HOST:-clamav}
@@ -46,6 +49,9 @@ services:
     container_name: daygle-mail-archiver-worker
     environment:
       DB_DSN: ${DB_DSN:-}
+      POSTGRES_DB: ${POSTGRES_DB:-daygle_mail_archiver}
+      POSTGRES_USER: ${POSTGRES_USER:-daygle_mail_archiver}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}
       IMAP_PASSWORD_KEY: ${IMAP_PASSWORD_KEY:-}
       CLAMAV_QUARANTINE_KEY: ${CLAMAV_QUARANTINE_KEY:-}
       CLAMAV_HOST: ${CLAMAV_HOST:-clamav}

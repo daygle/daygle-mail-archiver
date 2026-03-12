@@ -12,6 +12,7 @@ import os
 import configparser
 from pathlib import Path
 from typing import Optional
+from urllib.parse import quote_plus
 
 
 class Config:
@@ -77,12 +78,27 @@ class Config:
         """Load configuration from environment variables (highest priority)."""
         env_vars = [
             'DB_NAME', 'DB_USER', 'DB_PASS', 'DB_DSN',
-            'IMAP_PASSWORD_KEY', 'CLAMAV_QUARANTINE_KEY'
+            'IMAP_PASSWORD_KEY', 'CLAMAV_QUARANTINE_KEY',
+            'POSTGRES_DB', 'POSTGRES_USER', 'POSTGRES_PASSWORD',
         ]
         for var in env_vars:
             env_value = os.getenv(var)
             if env_value:
                 self._config[var] = env_value
+
+        # If DB_DSN is still not set, construct it from POSTGRES_* variables
+        # so the worker always uses the same credentials as the database container.
+        if not self._config.get('DB_DSN'):
+            pg_user = self._config.get('POSTGRES_USER')
+            pg_pass = self._config.get('POSTGRES_PASSWORD')
+            pg_db = self._config.get('POSTGRES_DB')
+            pg_host = os.getenv('POSTGRES_HOST', 'db')
+            pg_port = os.getenv('POSTGRES_PORT', '5432')
+            if pg_user and pg_pass and pg_db:
+                self._config['DB_DSN'] = (
+                    f"postgresql+psycopg2://{quote_plus(pg_user)}:{quote_plus(pg_pass)}"
+                    f"@{pg_host}:{pg_port}/{pg_db}"
+                )
     
     def get(self, key: str, default: Optional[str] = None) -> Optional[str]:
         """Get a configuration value by key."""
