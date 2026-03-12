@@ -9,6 +9,7 @@ Priority order (highest to lowest):
 2. daygle_mail_archiver.conf file (INI format) - primary configuration file
 """
 import os
+import logging
 import configparser
 from pathlib import Path
 from typing import Optional
@@ -19,7 +20,7 @@ try:
     env_dev_file = Path(__file__).parent.parent.parent.parent / ".env-dev"
     if env_dev_file.exists():
         load_dotenv(env_dev_file)
-        print(f"Loaded development environment from {env_dev_file}")
+        logging.debug("Loaded development environment from .env-dev")
 except ImportError:
     # python-dotenv not installed, continue without it
     pass

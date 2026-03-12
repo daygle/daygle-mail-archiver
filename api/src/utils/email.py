@@ -1,6 +1,7 @@
 """
 Email utility functions for sending alerts and notifications
 """
+import html
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -31,12 +32,23 @@ def get_smtp_config() -> dict:
         settings[key] = result["value"] if result else ""
 
     # Convert string values to appropriate types
+    raw_password = settings.get('smtp_password', '')
+    # Attempt to decrypt the SMTP password (stored encrypted).
+    # Fall back to the raw value to support legacy plaintext entries.
+    if raw_password:
+        try:
+            from .crypto import decrypt_password
+            raw_password = decrypt_password(raw_password)
+        except Exception as e:
+            log("debug", "Email", f"SMTP password decryption skipped (legacy plaintext or unavailable key): {e}")
+            # Value is either plaintext (legacy) or crypto unavailable; use as-is
+
     return {
         'enabled': settings.get('smtp_enabled', 'false').lower() == 'true',
         'host': settings.get('smtp_host', ''),
         'port': int(settings.get('smtp_port', '587')),
         'username': settings.get('smtp_username', ''),
-        'password': settings.get('smtp_password', ''),
+        'password': raw_password,
         'use_tls': settings.get('smtp_use_tls', 'true').lower() == 'true',
         'from_email': settings.get('smtp_from_email', ''),
         'from_name': settings.get('smtp_from_name', 'Daygle Mail Archiver')
@@ -153,10 +165,10 @@ def send_alert_email(
         <body>
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                 <h2 style="color: {'#dc3545' if alert_type == 'error' else '#ffc107' if alert_type == 'warning' else '#17a2b8'}">
-                    {alert_type.upper()} Alert
+                    {html.escape(alert_type.upper())} Alert
                 </h2>
                 <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;">
-                    {message.replace('\n', '<br>')}
+                    {html.escape(message).replace('\n', '<br>')}
                 </div>
                 <hr>
                 <p style="color: #6c757d; font-size: 12px;">

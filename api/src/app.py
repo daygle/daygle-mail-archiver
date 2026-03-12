@@ -31,7 +31,7 @@ def get_client_ip(request: Request) -> str:
 # ---------------------------------------------------------
 SESSION_SECRET = get_config("SESSION_SECRET", "change-me")
 if SESSION_SECRET == "change-me":
-    logging.warning("⚠️  SESSION_SECRET is set to default value. Please set a secure secret in production!")
+    logging.error("⚠️  SESSION_SECRET is set to default value. Please set a secure secret in production!")
 
 app = FastAPI(
     title="Daygle Mail Archiver",
@@ -48,7 +48,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # TODO: Configure specific origins for production
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -61,7 +61,7 @@ app.add_middleware(
     secret_key=SESSION_SECRET,
     max_age=86400,  # 24 hours
     same_site="lax",
-    https_only=False  # Set to True in production
+    https_only=False
 )
 
 # ---------------------------------------------------------
