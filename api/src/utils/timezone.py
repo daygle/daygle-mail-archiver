@@ -2,6 +2,7 @@
 Timezone conversion utilities for displaying dates in user's preferred timezone
 """
 from datetime import datetime
+from email.utils import parsedate_to_datetime
 import pytz
 from .db import query
 
@@ -149,3 +150,35 @@ def format_datetime(utc_datetime, user_id, date_format: str = None, time_format:
     
     # Format the datetime
     return local_datetime.strftime(full_format)
+
+
+def format_email_date(date_value, fallback_datetime, user_id):
+    """
+    Format an email's date field, falling back to a fallback datetime when the
+    date header is missing or unparseable.
+
+    Args:
+        date_value: RFC822 date string or datetime object from the email's Date header
+                    (may be None/empty)
+        fallback_datetime: A datetime object to use when date_value is absent or
+                           unparseable (e.g. created_at)
+        user_id: The ID of the user (for timezone/format preferences)
+
+    Returns:
+        Formatted datetime string, or None if no usable date is available
+    """
+    if date_value:
+        if hasattr(date_value, 'strftime'):
+            # Already a datetime object
+            return format_datetime(date_value, user_id)
+        try:
+            return format_datetime(parsedate_to_datetime(date_value), user_id)
+        except (ValueError, TypeError):
+            # Unparseable string – fall through to use the fallback timestamp
+            pass
+
+    # No Date header or unparseable value: use the fallback timestamp
+    if fallback_datetime:
+        return format_datetime(fallback_datetime, user_id)
+
+    return None

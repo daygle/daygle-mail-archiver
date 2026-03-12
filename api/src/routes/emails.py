@@ -3,7 +3,6 @@ import io
 import gzip
 import zipfile
 import mailbox
-from email.utils import parsedate_to_datetime
 from fastapi import APIRouter, Request, Form, UploadFile, File
 from fastapi.responses import RedirectResponse, StreamingResponse, HTMLResponse
 from imaplib import IMAP4, IMAP4_SSL
@@ -13,7 +12,7 @@ from ..utils.email_parser import decompress, parse_email, compute_signature
 from ..utils.crypto import decrypt_password
 from ..utils.logger import log
 from ..utils.templates import templates
-from ..utils.timezone import format_datetime
+from ..utils.timezone import format_datetime, format_email_date
 from ..utils.alerts import create_alert
 from ..utils.permissions import PermissionChecker, require_permission, PERMISSIONS
 from ..utils.clamav_scanner import ClamAVScanner
@@ -141,19 +140,7 @@ def list_emails(
             integrity_reason = f"Could not read attachment file from storage: {str(e)}"
 
         # Format email date according to user preferences
-        if rr["date"]:
-            if hasattr(rr["date"], 'strftime'):  # Check if it's a datetime object
-                rr["date_formatted"] = format_datetime(rr["date"], user_id)
-            else:
-                # Try to parse the date string
-                try:
-                    parsed_date = parsedate_to_datetime(rr["date"])
-                    rr["date_formatted"] = format_datetime(parsed_date, user_id)
-                except (ValueError, TypeError):
-                    # If parsing fails, keep the original string
-                    rr["date_formatted"] = rr["date"]
-        else:
-            rr["date_formatted"] = rr["date"]  # Keep as None/empty if already None
+        rr["date_formatted"] = format_email_date(rr["date"], rr.get("created_at"), user_id)
 
         # remove large raw fields before sending to template
         rr.pop("raw_email", None)
@@ -414,19 +401,7 @@ def view_email(request: Request, email_id: int):
         row["scan_timestamp_formatted"] = None
     
     # Format email date if it's a datetime object
-    if row["date"]:
-        if hasattr(row["date"], 'strftime'):  # Check if it's a datetime object
-            row["date_formatted"] = format_datetime(row["date"], user_id)
-        else:
-            # Try to parse the date string
-            try:
-                parsed_date = parsedate_to_datetime(row["date"])
-                row["date_formatted"] = format_datetime(parsed_date, user_id)
-            except (ValueError, TypeError):
-                # If parsing fails, keep the original string
-                row["date_formatted"] = row["date"]
-    else:
-        row["date_formatted"] = row["date"]  # Keep as None/empty if already None
+    row["date_formatted"] = format_email_date(row["date"], row.get("created_at"), user_id)
 
     raw = decompress(row["raw_email"], row["compressed"])
     # Ensure bytes type for parsing and preview
