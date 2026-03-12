@@ -10,6 +10,7 @@ from imap_client import ImapConnection
 from gmail_client import GmailClient
 from o365_client import O365Client
 from clamav_scanner import ClamAVScanner
+from utils.email_parser import decode_header
 
 POLL_INTERVAL_FALLBACK = 300  # seconds
 
@@ -166,17 +167,19 @@ def store_email(
     """
     # Parse email once for efficiency
     msg = email.message_from_bytes(email_bytes)
-    subject = msg.get("Subject", "")
-    sender = msg.get("From")
+    subject = decode_header(msg.get("Subject", ""))
+    sender_raw = msg.get("From")
+    sender = decode_header(sender_raw) if sender_raw is not None else None
     # Combine To/Cc into recipients string
     recipients_list = []
     for h in ("To", "Cc"):
         vals = msg.get_all(h, [])
         if vals:
-            recipients_list.extend(vals)
+            recipients_list.extend(decode_header(v) for v in vals)
     recipients = ", ".join(recipients_list) if recipients_list else None
     date_header = msg.get("Date")
-    message_id = msg.get("Message-ID")
+    message_id_raw = msg.get("Message-ID")
+    message_id = decode_header(message_id_raw) if message_id_raw is not None else None
 
     # Compress the raw email for storage
     try:
