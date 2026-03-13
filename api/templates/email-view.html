@@ -3,204 +3,209 @@
 {% block page_title %}Email View{% endblock %}
 
 {% block content %}
-<!-- Email Metadata Card -->
-<div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <div class="card-title">
-            <i class="fas fa-envelope-open"></i>
-            <span>Email Details</span>
-        </div>
-        <a href="/emails" class="btn btn-secondary btn-sm flex-shrink-1 w-auto">
-            <i class="fas fa-arrow-left"></i>
-            <span class="hide-mobile">Back</span>
-        </a>
-    </div>
-    <div class="card-body">
-        <!-- Email Header Information -->
-        <div class="mb-4">
-            <h5 class="mb-3 text-primary">
-                <i class="fas fa-envelope-open-text me-2"></i>Email Information
-            </h5>
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <div class="email-detail-item">
-                        <label class="email-detail-label">Subject</label>
-                        <div class="email-detail-value">
-                            <strong class="text-break">{{ email.subject or "(no subject)" }}</strong>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="email-detail-item">
-                        <label class="email-detail-label">Date</label>
-                        <div class="email-detail-value">{{ email.date_formatted or email.date }}</div>
-                    </div>
-                </div>
-            </div>
-            <div class="row g-3 mt-2">
-                <div class="col-12">
-                    <div class="email-detail-item">
-                        <label class="email-detail-label">Message ID</label>
-                        <div class="email-detail-value">
-                            <code class="text-break">{{ email.message_id or headers.get('message_id') or headers.get('Message-ID') or "(no message id)" }}</code>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!-- Two-column layout: Email Body (left 3/4) + Email Details (right 1/4) -->
+<div id="email-main-layout" class="row g-4 mb-4">
 
-        <!-- Sender & Recipients -->
-        <div class="mb-4">
-            <h6 class="mb-3 text-muted">
-                <i class="fas fa-users me-2"></i>Participants
-            </h6>
-            <div class="row g-3">
-                <div class="col-12">
-                    <div class="email-detail-item">
-                        <label class="email-detail-label">From</label>
-                        <div class="email-detail-value text-break">{{ email.sender }}</div>
-                    </div>
-                </div>
-                <div class="col-12">
-                    <div class="email-detail-item">
-                        <label class="email-detail-label">To</label>
-                        <div class="email-detail-value text-break">{{ email.recipients }}</div>
-                    </div>
+    <!-- Email Body (left, 3/4) -->
+    <div class="col-lg-9">
+        <div class="card h-100">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Email Body</span>
                 </div>
             </div>
-        </div>
-
-        <!-- Account & Fetch Account Details -->
-        <div class="mb-4">
-            <h6 class="mb-3 text-muted">
-                <i class="fas fa-folder-tree me-2"></i>Fetch Account Details
-            </h6>
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <div class="email-detail-item">
-                        <label class="email-detail-label">Account</label>
-                        <div class="email-detail-value">
-                            <span class="badge badge-primary">{{ email.source }}</span>
-                        </div>
+            <div class="card-body">
+                {% if body.html %}
+                    <iframe
+                        srcdoc="{{ body.html | escape }}"
+                        sandbox
+                        style="width: 100%; min-height: 400px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--bg-primary);">
+                    </iframe>
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i> Embedded images are displayed inline where available
+                        </small>
                     </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="email-detail-item">
-                        <label class="email-detail-label">Folder</label>
-                        <div class="email-detail-value">
-                            <span class="badge badge-secondary">{{ email.folder }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Security & Status -->
-        <div class="mb-4">
-            <h6 class="mb-3 text-muted">
-                <i class="fas fa-shield-alt me-2"></i>Security & Status
-            </h6>
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <div class="email-detail-item">
-                        <label class="email-detail-label">Integrity</label>
-                        <div class="email-detail-value">
-                            {% if integrity == 'ok' %}
-                            <span class="badge bg-success" title="{{ integrity_reason or 'Valid' }}"><i class="fas fa-check"></i> Valid</span>
-                            {% elif integrity == 'modified' %}
-                            <span class="badge bg-danger" title="{{ integrity_reason or 'Modified' }}"><i class="fas fa-exclamation-triangle"></i> Invalid</span>
-                            {% elif integrity == 'no_signature' %}
-                            <span class="badge bg-secondary" title="{{ integrity_reason or 'No Signature' }}"><i class="fas fa-question"></i> No Signature</span>
-                            {% else %}
-                            <span class="badge bg-secondary" title="{{ integrity_reason or 'Unknown' }}"><i class="fas fa-question"></i> Unknown</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                {% if email.virus_scanned %}
-                <div class="col-md-6">
-                    <div class="email-detail-item">
-                        <label class="email-detail-label">Virus Scan</label>
-                        <div class="email-detail-value">
-                            {% if email.virus_detected %}
-                            <span class="badge badge-danger">
-                                <i class="fas fa-exclamation-triangle"></i> INFECTED: {{ email.virus_name }}
-                            </span>
-                            {% else %}
-                            <span class="badge badge-success">
-                                <i class="fas fa-check"></i> Clean
-                            </span>
-                            {% endif %}
-                            {% if email.scan_timestamp %}
-                            <br><small class="text-secondary">
-                                Scanned: {{ email.scan_timestamp_formatted or 'N/A' }}
-                            </small>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
+                {% else %}
+                    <pre style="background: var(--bg-secondary); padding: 16px; border-radius: var(--radius-md); overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;">{{ body.text }}</pre>
                 {% endif %}
             </div>
         </div>
     </div>
-    <div class="card-footer">
-        <div class="d-flex justify-content-end gap-2 flex-wrap">
-            {% if 'export_emails' in perms %}
-            <a href="/emails/{{ email.id }}/download" class="btn btn-primary btn-sm flex-shrink-1 w-auto">
-                <i class="fas fa-download"></i>
-                <span class="hide-mobile">Download EML</span>
-            </a>
-            {% endif %}
-            {% if 'manage_quarantine' in perms %}
-            {% if not email.quarantined %}
-            <form method="post" action="/emails/{{ email.id }}/quarantine" style="display:inline;">
-                <button type="submit" class="btn btn-warning btn-sm flex-shrink-1 w-auto">
-                    <i class="fas fa-shield-virus"></i>
-                    <span class="hide-mobile">Quarantine</span>
-                </button>
-            </form>
-            {% endif %}
-            <button type="button" class="btn btn-danger btn-sm flex-shrink-1 w-auto" onclick="showDeleteConfirmation()">
-                <i class="fas fa-trash"></i>
-                <span class="hide-mobile">Delete</span>
-            </button>
-            {% endif %}
-        </div>
-    </div>
-</div>
 
-
-<!-- Body Card -->
-<div class="card">
-    <div class="card-header">
-        <div class="card-title">
-            <i class="fas fa-file-alt"></i>
-            <span>Email Body</span>
-        </div>
-    </div>
-    <div class="card-body">
-
-
-
-        {% if body.html %}
-            <iframe
-                srcdoc="{{ body.html | escape }}"
-                sandbox
-                style="width: 100%; min-height: 400px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--bg-primary);">
-            </iframe>
-            <div class="mt-2">
-                <small class="text-muted">
-                    <i class="fas fa-info-circle"></i> Embedded images are displayed inline where available
-                </small>
+    <!-- Email Details (right, 1/4) -->
+    <div class="col-lg-3">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="card-title">
+                    <i class="fas fa-envelope-open"></i>
+                    <span>Email Details</span>
+                </div>
+                <a href="/emails" class="btn btn-secondary btn-sm flex-shrink-1 w-auto">
+                    <i class="fas fa-arrow-left"></i>
+                    <span class="hide-mobile">Back</span>
+                </a>
             </div>
-        {% else %}
-            <pre style="background: var(--bg-secondary); padding: 16px; border-radius: var(--radius-md); overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;">{{ body.text }}</pre>
-        {% endif %}
+            <div class="card-body">
+                <!-- Email Header Information -->
+                <div class="mb-4">
+                    <h5 class="mb-3 text-primary">
+                        <i class="fas fa-envelope-open-text me-2"></i>Email Information
+                    </h5>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="email-detail-item">
+                                <label class="email-detail-label">Subject</label>
+                                <div class="email-detail-value">
+                                    <strong class="text-break">{{ email.subject or "(no subject)" }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="email-detail-item">
+                                <label class="email-detail-label">Date</label>
+                                <div class="email-detail-value">{{ email.date_formatted or email.date }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-2">
+                        <div class="col-12">
+                            <div class="email-detail-item">
+                                <label class="email-detail-label">Message ID</label>
+                                <div class="email-detail-value">
+                                    <code class="text-break">{{ email.message_id or headers.get('message_id') or headers.get('Message-ID') or "(no message id)" }}</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sender & Recipients -->
+                <div class="mb-4">
+                    <h6 class="mb-3 text-muted">
+                        <i class="fas fa-users me-2"></i>Participants
+                    </h6>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="email-detail-item">
+                                <label class="email-detail-label">From</label>
+                                <div class="email-detail-value text-break">{{ email.sender }}</div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="email-detail-item">
+                                <label class="email-detail-label">To</label>
+                                <div class="email-detail-value text-break">{{ email.recipients }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account & Fetch Account Details -->
+                <div class="mb-4">
+                    <h6 class="mb-3 text-muted">
+                        <i class="fas fa-folder-tree me-2"></i>Fetch Account Details
+                    </h6>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="email-detail-item">
+                                <label class="email-detail-label">Account</label>
+                                <div class="email-detail-value">
+                                    <span class="badge badge-primary">{{ email.source }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="email-detail-item">
+                                <label class="email-detail-label">Folder</label>
+                                <div class="email-detail-value">
+                                    <span class="badge badge-secondary">{{ email.folder }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security & Status -->
+                <div class="mb-4">
+                    <h6 class="mb-3 text-muted">
+                        <i class="fas fa-shield-alt me-2"></i>Security & Status
+                    </h6>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="email-detail-item">
+                                <label class="email-detail-label">Integrity</label>
+                                <div class="email-detail-value">
+                                    {% if integrity == 'ok' %}
+                                    <span class="badge bg-success" title="{{ integrity_reason or 'Valid' }}"><i class="fas fa-check"></i> Valid</span>
+                                    {% elif integrity == 'modified' %}
+                                    <span class="badge bg-danger" title="{{ integrity_reason or 'Modified' }}"><i class="fas fa-exclamation-triangle"></i> Invalid</span>
+                                    {% elif integrity == 'no_signature' %}
+                                    <span class="badge bg-secondary" title="{{ integrity_reason or 'No Signature' }}"><i class="fas fa-question"></i> No Signature</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary" title="{{ integrity_reason or 'Unknown' }}"><i class="fas fa-question"></i> Unknown</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% if email.virus_scanned %}
+                        <div class="col-12">
+                            <div class="email-detail-item">
+                                <label class="email-detail-label">Virus Scan</label>
+                                <div class="email-detail-value">
+                                    {% if email.virus_detected %}
+                                    <span class="badge badge-danger">
+                                        <i class="fas fa-exclamation-triangle"></i> INFECTED: {{ email.virus_name }}
+                                    </span>
+                                    {% else %}
+                                    <span class="badge badge-success">
+                                        <i class="fas fa-check"></i> Clean
+                                    </span>
+                                    {% endif %}
+                                    {% if email.scan_timestamp %}
+                                    <br><small class="text-secondary">
+                                        Scanned: {{ email.scan_timestamp_formatted or 'N/A' }}
+                                    </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-end gap-2 flex-wrap">
+                    {% if 'export_emails' in perms %}
+                    <a href="/emails/{{ email.id }}/download" class="btn btn-primary btn-sm flex-shrink-1 w-auto">
+                        <i class="fas fa-download"></i>
+                        <span class="hide-mobile">Download EML</span>
+                    </a>
+                    {% endif %}
+                    {% if 'manage_quarantine' in perms %}
+                    {% if not email.quarantined %}
+                    <form method="post" action="/emails/{{ email.id }}/quarantine" style="display:inline;">
+                        <button type="submit" class="btn btn-warning btn-sm flex-shrink-1 w-auto">
+                            <i class="fas fa-shield-virus"></i>
+                            <span class="hide-mobile">Quarantine</span>
+                        </button>
+                    </form>
+                    {% endif %}
+                    <button type="button" class="btn btn-danger btn-sm flex-shrink-1 w-auto" onclick="showDeleteConfirmation()">
+                        <i class="fas fa-trash"></i>
+                        <span class="hide-mobile">Delete</span>
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
+
 </div>
 
 <!-- Raw Preview Card (Fallback) -->
-<div class="card mt-4">
+<div id="email-raw-preview" class="card mt-4">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-code"></i>
@@ -258,12 +263,9 @@
 
 <script>
   function showDeleteConfirmation() {
-    // Hide all cards and show delete confirmation
-    document.querySelectorAll('.card').forEach(function(card) {
-      if (card.id !== 'delete-confirmation') {
-        card.style.display = 'none';
-      }
-    });
+    // Hide main layout and raw preview, show delete confirmation
+    document.getElementById('email-main-layout').style.display = 'none';
+    document.getElementById('email-raw-preview').style.display = 'none';
     document.getElementById('delete-confirmation').style.display = 'block';
     
     // Scroll to top
@@ -271,12 +273,9 @@
   }
 
   function hideDeleteConfirmation() {
-    // Show all cards and hide delete confirmation
-    document.querySelectorAll('.card').forEach(function(card) {
-      if (card.id !== 'delete-confirmation') {
-        card.style.display = 'block';
-      }
-    });
+    // Restore main layout and raw preview, hide delete confirmation
+    document.getElementById('email-main-layout').style.display = '';
+    document.getElementById('email-raw-preview').style.display = '';
     document.getElementById('delete-confirmation').style.display = 'none';
     
     // Scroll to top
