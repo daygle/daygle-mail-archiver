@@ -214,19 +214,19 @@ def list_quarantine(
         params['subject'] = f'%{subject}%'
 
     if date_from:
-        where_clauses.append("COALESCE(date_parsed, quarantined_at) >= :date_from::date")
+        where_clauses.append("COALESCE(date_parsed, quarantined_at) >= CAST(:date_from AS DATE)")
         params['date_from'] = date_from
 
     if date_to:
-        where_clauses.append("COALESCE(date_parsed, quarantined_at) < (:date_to::date + INTERVAL '1 day')")
+        where_clauses.append("COALESCE(date_parsed, quarantined_at) < (CAST(:date_to AS DATE) + INTERVAL '1 day')")
         params['date_to'] = date_to
 
     if quarantined_from:
-        where_clauses.append("quarantined_at >= :quarantined_from::date")
+        where_clauses.append("quarantined_at >= CAST(:quarantined_from AS DATE)")
         params['quarantined_from'] = quarantined_from
 
     if quarantined_to:
-        where_clauses.append("quarantined_at < (:quarantined_to::date + INTERVAL '1 day')")
+        where_clauses.append("quarantined_at < (CAST(:quarantined_to AS DATE) + INTERVAL '1 day')")
         params['quarantined_to'] = quarantined_to
 
     where_sql = " AND ".join(where_clauses) if where_clauses else ""
