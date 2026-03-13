@@ -16,7 +16,7 @@ def get_user_timezone(user_id) -> str:
         user_id: The ID of the user (can be int, string, or None)
         
     Returns:
-        Timezone string (e.g., 'Australia/Melbourne')
+        Timezone string (e.g., 'UTC')
     """
     # Handle None or invalid user_id
     if user_id is None:
@@ -46,12 +46,12 @@ def get_global_timezone() -> str:
     Get the global timezone setting.
     
     Returns:
-        Timezone string (e.g., 'Australia/Melbourne')
+        Timezone string (e.g., 'UTC')
     """
     setting = query("SELECT value FROM settings WHERE key = 'timezone'").mappings().first()
     if setting and setting["value"]:
         return setting["value"]
-    return "Australia/Melbourne"
+    return "UTC"
 
 
 def convert_utc_to_timezone(utc_datetime, target_timezone: str):
@@ -127,7 +127,7 @@ def format_datetime(utc_datetime, user_id, date_format: str = None, time_format:
     if date_format is None:
         # First get global date format
         global_setting = query("SELECT value FROM settings WHERE key = 'date_format'").mappings().first()
-        date_format = global_setting["value"] if global_setting else "%d/%m/%Y"
+        date_format = global_setting["value"] if global_setting else "%d %b %Y"
         
         # Override with user's date format if set
         user = query("SELECT date_format FROM users WHERE id = :id", {"id": user_id}).mappings().first()
