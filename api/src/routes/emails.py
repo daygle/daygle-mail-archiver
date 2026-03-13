@@ -55,6 +55,11 @@ def list_emails(
     q: str | None = None,
     account: str | None = None,
     folder: str | None = None,
+    sender: str | None = None,
+    recipient: str | None = None,
+    subject: str | None = None,
+    date_from: str | None = None,
+    date_to: str | None = None,
     filter: str | None = None,
     sort_by: str | None = None,
     sort_order: str | None = None,
@@ -102,6 +107,26 @@ def list_emails(
     if folder:
         where.append("folder = :folder")
         params["folder"] = folder
+
+    if sender:
+        where.append("sender ILIKE :sender")
+        params["sender"] = f"%{sender}%"
+
+    if recipient:
+        where.append("recipients ILIKE :recipient")
+        params["recipient"] = f"%{recipient}%"
+
+    if subject:
+        where.append("subject ILIKE :subject")
+        params["subject"] = f"%{subject}%"
+
+    if date_from:
+        where.append("COALESCE(date_parsed, created_at) >= :date_from::date")
+        params["date_from"] = date_from
+
+    if date_to:
+        where.append("COALESCE(date_parsed, created_at) < (:date_to::date + INTERVAL '1 day')")
+        params["date_to"] = date_to
 
     # Sanitise the filter value to prevent injection via the predefined allow-list
     if filter and filter in VALID_EMAIL_FILTERS:
@@ -206,6 +231,11 @@ def list_emails(
             "q": q or "",
             "account": account or "",
             "folder": folder or "",
+            "sender": sender or "",
+            "recipient": recipient or "",
+            "subject": subject or "",
+            "date_from": date_from or "",
+            "date_to": date_to or "",
             "filter": filter or "",
             "sort_by": sort_by or "",
             "sort_order": sort_order or "",

@@ -138,6 +138,14 @@ def list_quarantine(
     _=require_permission(PERMISSIONS["view_quarantine"]),
     q: str = None,
     virus: str = None,
+    account: str = None,
+    sender: str = None,
+    recipient: str = None,
+    subject: str = None,
+    date_from: str = None,
+    date_to: str = None,
+    quarantined_from: str = None,
+    quarantined_to: str = None,
     page: int = 1,
     sort_by: str = None,
     sort_order: str = None,
@@ -188,6 +196,38 @@ def list_quarantine(
     if virus:
         where_clauses.append("virus_name ILIKE :virus")
         params['virus'] = f'%{virus}%'
+
+    if account:
+        where_clauses.append("original_source ILIKE :account")
+        params['account'] = f'%{account}%'
+
+    if sender:
+        where_clauses.append("sender ILIKE :sender")
+        params['sender'] = f'%{sender}%'
+
+    if recipient:
+        where_clauses.append("recipients ILIKE :recipient")
+        params['recipient'] = f'%{recipient}%'
+
+    if subject:
+        where_clauses.append("subject ILIKE :subject")
+        params['subject'] = f'%{subject}%'
+
+    if date_from:
+        where_clauses.append("COALESCE(date_parsed, quarantined_at) >= :date_from::date")
+        params['date_from'] = date_from
+
+    if date_to:
+        where_clauses.append("COALESCE(date_parsed, quarantined_at) < (:date_to::date + INTERVAL '1 day')")
+        params['date_to'] = date_to
+
+    if quarantined_from:
+        where_clauses.append("quarantined_at >= :quarantined_from::date")
+        params['quarantined_from'] = quarantined_from
+
+    if quarantined_to:
+        where_clauses.append("quarantined_at < (:quarantined_to::date + INTERVAL '1 day')")
+        params['quarantined_to'] = quarantined_to
 
     where_sql = " AND ".join(where_clauses) if where_clauses else ""
     if where_sql:
@@ -324,6 +364,14 @@ def list_quarantine(
             'items': processed,
             'q': q or '',
             'virus': virus or '',
+            'account': account or '',
+            'sender': sender or '',
+            'recipient': recipient or '',
+            'subject': subject or '',
+            'date_from': date_from or '',
+            'date_to': date_to or '',
+            'quarantined_from': quarantined_from or '',
+            'quarantined_to': quarantined_to or '',
             'page': page,
             'page_size': page_size,
             'total': total,
