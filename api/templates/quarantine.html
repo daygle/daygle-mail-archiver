@@ -140,7 +140,7 @@
                         <td>{{ (i.sender | extract_emails) or 'unknown' }}</td>
                         {% set recipients_str = (i.recipients | extract_emails) or 'N/A' %}
                         <td class="hide-mobile col-wrap" title="{{ recipients_str }}">{{ recipients_str }}</td>
-                        <td>
+                        <td class="col-wrap" title="{{ i.subject or '(no subject)' }}">
                             <a href="/quarantine/{{ i.id }}" class="link">
                                 {{ i.subject or '(no subject)' }}
                             </a>

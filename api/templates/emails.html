@@ -161,9 +161,9 @@
                             <td>{{ email.sender | extract_emails }}</td>
                             {% set recipients_str = email.recipients | extract_emails %}
                             <td class="hide-mobile col-wrap" title="{{ recipients_str }}">{{ recipients_str }}</td>
-                            <td>
+                            <td class="col-wrap" title="{{ email.subject or '(no subject)' }}">
                                 <a href="/emails/{{ email.id }}" class="link">
-                                    {{ email.subject or "(no subject)" }}
+                                    {{ email.subject or '(no subject)' }}
                                 </a>
                             </td>
                             <td>
