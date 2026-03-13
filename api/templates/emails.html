@@ -144,7 +144,7 @@
                                 <span class="badge badge-secondary">{{ email.folder }}</span>
                             </td>
                             <td>{{ email.sender | extract_emails }}</td>
-                            <td class="hide-mobile">{{ email.recipients | extract_emails }}</td>
+                            <td class="hide-mobile col-wrap">{{ email.recipients | extract_emails }}</td>
                             <td>
                                 <a href="/emails/{{ email.id }}" class="link">
                                     {{ email.subject or "(no subject)" }}
