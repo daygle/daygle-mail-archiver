@@ -228,7 +228,8 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
 
     if not user:
         try:
-            log("warning", "Login", f"Failed login attempt for unknown user: {username}")
+            client_ip = get_client_ip(request)
+            log("warning", "Auth", f"login failed for unknown user: {username}", f"IP: {client_ip}")
         except Exception:
             pass
         return templates.TemplateResponse("login.html", {"request": request, "error": "Invalid credentials"})
@@ -326,12 +327,12 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
             except Exception:
                 pass
 
-            pass
+            log("info", "Auth", f"login successful for user: {username}", f"IP: {client_ip}")
             return RedirectResponse("/dashboard", status_code=303)
 
     except Exception as e:
         try:
-            log("error", "Login", f"Password verification error for {username}: {str(e)}")
+            log("error", "Auth", f"login failed for user: {username} - verification error: {str(e)}")
         except Exception:
             pass
         return templates.TemplateResponse("login.html", {"request": request, "error": "System error. Please try again."})
@@ -340,6 +341,7 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
     new_attempts = user["failed_login_attempts"] + 1
     max_attempts = 5
     lock_minutes = 15
+    client_ip = get_client_ip(request)
 
     if new_attempts >= max_attempts:
         execute("""
@@ -348,6 +350,7 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
             WHERE id = :id
         """, {"a": new_attempts, "id": user["id"]})
 
+        log("warning", "Auth", f"login failed for user: {username} - account locked after {new_attempts} attempts", f"IP: {client_ip}")
         return templates.TemplateResponse(
             "login.html",
             {"request": request, "error": f"Account locked. Try again in {lock_minutes} minutes."},
@@ -359,6 +362,7 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
         WHERE id = :id
     """, {"a": new_attempts, "id": user["id"]})
 
+    log("warning", "Auth", f"login failed for user: {username}", f"IP: {client_ip}")
     remaining = max_attempts - new_attempts
     return templates.TemplateResponse(
         "login.html",
