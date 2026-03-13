@@ -82,13 +82,24 @@
                             <input type="checkbox" id="select-all" class="form-check-input">
                         </th>
                         {% endif %}
-                        <th>Date</th>
-                        <th class="hide-mobile">Account</th>
-                        <th>From</th>
+                        {% macro sort_link(col, label, extra_class="") %}
+                            {% set next_order = "desc" if (sort_by == col and sort_order == "asc") else "asc" %}
+                            <a href="/quarantine?page=1&page_size={{ page_size }}&q={{ q }}&virus={{ virus }}&sort_by={{ col }}&sort_order={{ next_order }}" class="sort-header{% if sort_by == col %} active{% endif %} {{ extra_class }}">
+                                {{ label }}
+                                {% if sort_by == col %}
+                                    <i class="fas fa-sort-{{ 'up' if sort_order == 'asc' else 'down' }} sort-icon"></i>
+                                {% else %}
+                                    <i class="fas fa-sort sort-icon"></i>
+                                {% endif %}
+                            </a>
+                        {% endmacro %}
+                        <th>{{ sort_link("date", "Date") }}</th>
+                        <th class="hide-mobile">{{ sort_link("original_source", "Account") }}</th>
+                        <th>{{ sort_link("sender", "From") }}</th>
                         <th class="hide-mobile">To</th>
-                        <th>Subject</th>
-                        <th class="hide-mobile">Virus</th>
-                        <th>Quarantined</th>
+                        <th>{{ sort_link("subject", "Subject") }}</th>
+                        <th class="hide-mobile">{{ sort_link("virus_name", "Virus") }}</th>
+                        <th>{{ sort_link("quarantined_at", "Quarantined") }}</th>
                         <th class="hide-mobile">Integrity</th>
                         <th>Actions</th>
                     </tr>
@@ -173,7 +184,77 @@
                 </tbody>
             </table>
         </div>
+        </form>
     </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="card-footer">
+        {% set base_url = "/quarantine?page_size=" ~ page_size ~ "&q=" ~ q ~ "&virus=" ~ virus ~ ("&sort_by=" ~ sort_by if sort_by else "") ~ ("&sort_order=" ~ sort_order if sort_order else "") %}
+
+        <div class="pagination-bar">
+            <!-- Previous button -->
+            {% if page > 1 %}
+            <a href="{{ base_url }}&page={{ page - 1 }}" class="page-link" title="Previous">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% else %}
+            <span class="page-link disabled"><i class="fas fa-chevron-left"></i></span>
+            {% endif %}
+
+            <!-- First page -->
+            {% if page > 3 %}
+            <a href="{{ base_url }}&page=1" class="page-link">1</a>
+            {% if page > 4 %}
+            <span class="page-link ellipsis">&hellip;</span>
+            {% endif %}
+            {% endif %}
+
+            <!-- Window of pages -->
+            {% for p in range([1, page - 2] | max, [total_pages + 1, page + 3] | min) %}
+            {% if p == page %}
+            <span class="page-link active">{{ p }}</span>
+            {% else %}
+            <a href="{{ base_url }}&page={{ p }}" class="page-link">{{ p }}</a>
+            {% endif %}
+            {% endfor %}
+
+            <!-- Last page -->
+            {% if page < total_pages - 2 %}
+            {% if page < total_pages - 3 %}
+            <span class="page-link ellipsis">&hellip;</span>
+            {% endif %}
+            <a href="{{ base_url }}&page={{ total_pages }}" class="page-link">{{ total_pages }}</a>
+            {% endif %}
+
+            <!-- Next button -->
+            {% if page < total_pages %}
+            <a href="{{ base_url }}&page={{ page + 1 }}" class="page-link" title="Next">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            {% else %}
+            <span class="page-link disabled"><i class="fas fa-chevron-right"></i></span>
+            {% endif %}
+
+            <!-- Jump to page -->
+            <form method="get" action="/quarantine" class="page-jump">
+                <input type="hidden" name="page_size" value="{{ page_size }}">
+                <input type="hidden" name="q" value="{{ q }}">
+                <input type="hidden" name="virus" value="{{ virus }}">
+                {% if sort_by %}<input type="hidden" name="sort_by" value="{{ sort_by }}">{% endif %}
+                {% if sort_order %}<input type="hidden" name="sort_order" value="{{ sort_order }}">{% endif %}
+                <span>Go to</span>
+                <input type="number" name="page" min="1" max="{{ total_pages }}" value="{{ page }}" aria-label="Jump to page">
+                <button type="submit" class="btn btn-secondary btn-sm">Go</button>
+            </form>
+        </div>
+
+        <!-- Record count summary -->
+        <div class="pagination-info">
+            Showing {{ ((page - 1) * page_size + 1) }}–{{ [page * page_size, total] | min }} of {{ total }} quarantined messages
+        </div>
+    </div>
+    {% endif %}
 </div>
 
 <!-- Restore Confirmation Section -->
@@ -339,7 +420,21 @@
         if (!confirm('Delete this quarantined message permanently?')) return;
         submitQuarantineAction('delete', id);
     };
+
+    // Scroll-to-top button
+    const scrollBtn = document.getElementById('scroll-to-top-btn');
+    window.addEventListener('scroll', function () {
+        scrollBtn.classList.toggle('visible', window.scrollY > 300);
+    });
+    scrollBtn.addEventListener('click', function () {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
 })();
 </script>
+
+<!-- Scroll to top button -->
+<button id="scroll-to-top-btn" class="scroll-to-top" aria-label="Scroll to top" title="Back to top">
+    <i class="fas fa-arrow-up"></i>
+</button>
 
 {% endblock %}
