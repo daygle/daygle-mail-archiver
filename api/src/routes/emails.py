@@ -121,8 +121,13 @@ def list_emails(
     # Build ORDER BY from validated allowlist to prevent SQL injection
     sort_col = VALID_EMAIL_SORT_COLUMNS.get(sort_by, "created_at")
     sort_dir = "ASC" if sort_order == "asc" else "DESC"
-    # Secondary sort ensures stable ordering when primary column has ties
-    order_sql = f"{sort_col} {sort_dir}, id {sort_dir}"
+    # For the date column (stored as TEXT), use the pre-parsed TIMESTAMPTZ column for
+    # correct chronological ordering. Fall back to created_at when date_parsed is NULL.
+    if sort_col == "date":
+        order_sql = f"COALESCE(date_parsed, created_at) {sort_dir}, id {sort_dir}"
+    else:
+        # Secondary sort ensures stable ordering when primary column has ties
+        order_sql = f"{sort_col} {sort_dir}, id {sort_dir}"
 
     rows = query(
         f"""

@@ -196,7 +196,12 @@ def list_quarantine(
     # Build ORDER BY from validated allowlist to prevent SQL injection
     sort_col = VALID_QUARANTINE_SORT_COLUMNS.get(sort_by, "quarantined_at")
     sort_dir = "ASC" if sort_order == "asc" else "DESC"
-    order_sql = f"{sort_col} {sort_dir}, id {sort_dir}"
+    # For the date column (stored as TEXT), use the pre-parsed TIMESTAMPTZ column for
+    # correct chronological ordering. Fall back to quarantined_at when date_parsed is NULL.
+    if sort_col == "date":
+        order_sql = f"COALESCE(date_parsed, quarantined_at) {sort_dir}, id {sort_dir}"
+    else:
+        order_sql = f"{sort_col} {sort_dir}, id {sort_dir}"
 
     # Get total count for pagination
     total_row = query(
