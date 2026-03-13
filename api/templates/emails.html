@@ -5,6 +5,24 @@
 {% block content %}
 {% set perms = request.session.permissions or [] %}
 
+{% if filter %}
+{% set filter_labels = {
+    'missing_subject': 'Missing Subjects',
+    'missing_sender': 'Missing Senders',
+    'missing_recipients': 'Missing Recipients',
+    'unscanned': 'Unscanned Emails',
+    'virus_detected': 'Virus Detected'
+} %}
+<div class="alert alert-info" style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+    <i class="fas fa-filter"></i>
+    <span>Filtered by data quality report: <strong>{{ filter_labels.get(filter, filter) }}</strong></span>
+    <a href="/emails" class="btn btn-secondary btn-sm" style="margin-left: auto;">
+        <i class="fas fa-times"></i>
+        <span>Clear Filter</span>
+    </a>
+</div>
+{% endif %}
+
 <!-- Filters Card (Initially Hidden) -->
 <div id="filterCard" class="card mb-4" style="display: none;">
     <div class="card-header flex-between">
@@ -172,7 +190,7 @@
         <div class="flex items-center justify-between">
             <div>
                 {% if page > 1 %}
-                <a href="/emails?page={{ page - 1 }}&page_size={{ page_size }}&q={{ q }}&account={{ account }}&folder={{ folder }}" class="btn btn-secondary">
+                <a href="/emails?page={{ page - 1 }}&page_size={{ page_size }}&q={{ q }}&account={{ account }}&folder={{ folder }}{% if filter %}&filter={{ filter }}{% endif %}" class="btn btn-secondary">
                     <i class="fas fa-chevron-left"></i>
                     <span class="hide-mobile">Previous</span>
                 </a>
@@ -183,7 +201,7 @@
 
             <div>
                 {% if (page * page_size) < total %}
-                <a href="/emails?page={{ page + 1 }}&page_size={{ page_size }}&q={{ q }}&account={{ account }}&folder={{ folder }}" class="btn btn-secondary">
+                <a href="/emails?page={{ page + 1 }}&page_size={{ page_size }}&q={{ q }}&account={{ account }}&folder={{ folder }}{% if filter %}&filter={{ filter }}{% endif %}" class="btn btn-secondary">
                     <span class="hide-mobile">Next</span>
                     <i class="fas fa-chevron-right"></i>
                 </a>

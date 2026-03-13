@@ -729,6 +729,7 @@ def storage_utilization_report(request: Request, start_date: str = None, end_dat
         # Largest emails
         largest_query = """
             SELECT
+                id,
                 subject,
                 sender,
                 recipients,
@@ -761,6 +762,7 @@ def storage_utilization_report(request: Request, start_date: str = None, end_dat
                 created_at = convert_utc_to_user_timezone(email["created_at"], user_id).strftime(get_user_date_format(request))
 
             formatted_largest.append({
+                "id": email["id"],
                 "subject": email["subject"] or "(No Subject)",
                 "sender": email["sender"] or "Unknown",
                 "receiver": email["recipients"] or "Unknown",
