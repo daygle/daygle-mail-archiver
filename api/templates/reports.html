@@ -890,10 +890,10 @@ function loadStorageUtilizationReport() {
             clearReportMessageForInput(document.getElementById('globalStartDate'));
             
             // Update metrics
-            document.getElementById('totalStorage').textContent = data.total_storage || '-';
-            document.getElementById('avgEmailSize').textContent = data.avg_email_size || '-';
-            document.getElementById('compressionRatio').textContent = data.compression_savings || '-';
-            document.getElementById('totalEmails').textContent = data.total_emails || '-';
+            document.getElementById('totalStorage').textContent = data.total_storage_mb !== undefined ? data.total_storage_mb + ' MB' : '-';
+            document.getElementById('avgEmailSize').textContent = data.avg_email_size_kb !== undefined ? data.avg_email_size_kb + ' KB' : '-';
+            document.getElementById('compressionRatio').textContent = data.compression_ratio_percent !== undefined ? data.compression_ratio_percent + '%' : '-';
+            document.getElementById('totalEmails').textContent = data.total_emails !== undefined ? data.total_emails : '-';
             
             // Update storage trends chart
             if (window.storageTrendsChart && typeof window.storageTrendsChart.destroy === 'function') {
@@ -903,10 +903,10 @@ function loadStorageUtilizationReport() {
             window.storageTrendsChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: data.storage_trends?.labels || [],
+                    labels: data.storage_labels || [],
                     datasets: [{
                         label: 'Storage Used (MB)',
-                        data: data.storage_trends?.data || [],
+                        data: data.storage_sizes_mb || [],
                         borderColor: 'rgb(75, 192, 192)',
                         tension: 0.1
                     }]
@@ -976,9 +976,9 @@ function loadRetentionPolicyReport() {
             clearReportMessageForInput(document.getElementById('globalStartDate'));
             
             // Update metrics
-            document.getElementById('totalManualDeletions').textContent = data.manual_deletions || '-';
-            document.getElementById('totalRetentionDeletions').textContent = data.retention_deletions || '-';
-            document.getElementById('totalServerDeletions').textContent = data.server_deletions || '-';
+            document.getElementById('totalManualDeletions').textContent = data.total_manual_deletions !== undefined ? data.total_manual_deletions : '-';
+            document.getElementById('totalRetentionDeletions').textContent = data.total_retention_deletions !== undefined ? data.total_retention_deletions : '-';
+            document.getElementById('totalServerDeletions').textContent = data.total_server_deletions !== undefined ? data.total_server_deletions : '-';
             
             // Update retention chart
             if (window.retentionChart && typeof window.retentionChart.destroy === 'function') {
@@ -991,7 +991,7 @@ function loadRetentionPolicyReport() {
                     labels: ['Manual Email Deletions', 'Retention Email Deletions', 'Email Deleted from Mail Server'],
                     datasets: [{
                         label: 'Deletions',
-                        data: [data.manual_deletions || 0, data.retention_deletions || 0, data.server_deletions || 0],
+                        data: [data.total_manual_deletions || 0, data.total_retention_deletions || 0, data.total_server_deletions || 0],
                         backgroundColor: ['rgba(255, 99, 132, 0.8)', 'rgba(54, 162, 235, 0.8)', 'rgba(255, 205, 86, 0.8)']
                     }]
                 },
@@ -1063,9 +1063,12 @@ function loadSystemPerformanceReport() {
             clearReportMessageForInput(document.getElementById('globalStartDate'));
             
             // Update metrics
-            document.getElementById('currentActiveWorkers').textContent = data.active_workers || '-';
-            document.getElementById('currentTotalWorkers').textContent = data.total_workers || '-';
-            document.getElementById('avgProcessingRate').textContent = data.avg_processing_rate || '-';
+            document.getElementById('currentActiveWorkers').textContent = data.current_active_workers !== undefined ? data.current_active_workers : '-';
+            document.getElementById('currentTotalWorkers').textContent = data.current_total_workers !== undefined ? data.current_total_workers : '-';
+            const avgRate = data.emails_per_hour && data.emails_per_hour.length > 0
+                ? Math.round(data.emails_per_hour.reduce((a, b) => a + b, 0) / data.emails_per_hour.length)
+                : 0;
+            document.getElementById('avgProcessingRate').textContent = avgRate !== undefined ? avgRate : '-';
             
             // Update performance chart
             if (window.performanceChart && typeof window.performanceChart.destroy === 'function') {
@@ -1075,10 +1078,10 @@ function loadSystemPerformanceReport() {
             window.performanceChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: data.processing_rates?.labels || [],
+                    labels: data.processing_labels || [],
                     datasets: [{
                         label: 'Emails Processed per Hour',
-                        data: data.processing_rates?.data || [],
+                        data: data.emails_per_hour || [],
                         borderColor: 'rgb(153, 102, 255)',
                         tension: 0.1
                     }]
@@ -1102,10 +1105,10 @@ function loadSystemPerformanceReport() {
             window.workerActivityChart = new Chart(ctx2, {
                 type: 'bar',
                 data: {
-                    labels: data.worker_activity?.labels || [],
+                    labels: data.worker_labels || [],
                     datasets: [{
                         label: 'Worker Activity',
-                        data: data.worker_activity?.data || [],
+                        data: data.active_workers || [],
                         backgroundColor: 'rgba(255, 159, 64, 0.8)'
                     }]
                 },
