@@ -38,24 +38,47 @@
         <form method="get" action="/emails">
             <div class="grid grid-cols-4 gap-3">
                 <div>
-                    <input type="text" name="q" value="{{ q }}" placeholder="Search subject, sender, recipients" class="form-control">
+                    <label class="form-label">Account</label>
+                    <input type="text" name="account" value="{{ account }}" placeholder="Account / source" class="form-control">
                 </div>
                 <div>
-                    <input type="text" name="account" value="{{ account }}" placeholder="Account" class="form-control">
-                </div>
-                <div>
+                    <label class="form-label">Folder</label>
                     <input type="text" name="folder" value="{{ folder }}" placeholder="Folder" class="form-control">
                 </div>
-                <div class="flex gap-2">
-                    <button type="submit" class="btn btn-primary flex-1">
-                        <i class="fas fa-search"></i>
-                        <span class="hide-mobile">Search</span>
-                    </button>
-                    <a href="/emails" class="btn btn-secondary">
-                        <i class="fas fa-times"></i>
-                        <span class="hide-mobile">Clear</span>
-                    </a>
+                <div>
+                    <label class="form-label">From</label>
+                    <input type="text" name="sender" value="{{ sender }}" placeholder="Sender address" class="form-control">
                 </div>
+                <div>
+                    <label class="form-label">To</label>
+                    <input type="text" name="recipient" value="{{ recipient }}" placeholder="Recipient address" class="form-control">
+                </div>
+                <div>
+                    <label class="form-label">Subject</label>
+                    <input type="text" name="subject" value="{{ subject }}" placeholder="Subject" class="form-control">
+                </div>
+                <div>
+                    <label class="form-label">Date From</label>
+                    <input type="date" name="date_from" value="{{ date_from }}" class="form-control">
+                </div>
+                <div>
+                    <label class="form-label">Date To</label>
+                    <input type="date" name="date_to" value="{{ date_to }}" class="form-control">
+                </div>
+                <div>
+                    <label class="form-label">Keyword Search</label>
+                    <input type="text" name="q" value="{{ q }}" placeholder="Search subject, sender, recipients" class="form-control">
+                </div>
+            </div>
+            <div class="flex gap-2" style="margin-top: 12px;">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i>
+                    <span class="hide-mobile">Search</span>
+                </button>
+                <a href="/emails" class="btn btn-secondary">
+                    <i class="fas fa-times"></i>
+                    <span class="hide-mobile">Clear</span>
+                </a>
             </div>
         </form>
     </div>
@@ -73,11 +96,6 @@
                 <i class="fas fa-filter"></i>
                 <span class="hide-mobile">Search & Filter</span>
             </button>
-
-            <a href="/emails/import-export" class="btn btn-primary btn-sm">
-                <i class="fas fa-file-import"></i>
-                <span class="hide-mobile">Import</span>
-            </a>
 
             {% if 'delete_emails' in perms %}
             <button type="button" class="btn btn-warning btn-sm" id="quarantine-selected-btn" disabled onclick="showQuarantineModal()">
@@ -105,7 +123,7 @@
                             {% endif %}
                             {% macro sort_link(col, label, extra_class="") %}
                                 {% set next_order = "desc" if (sort_by == col and sort_order == "asc") else "asc" %}
-                                <a href="/emails?page=1&page_size={{ page_size }}&q={{ q }}&account={{ account }}&folder={{ folder }}{% if filter %}&filter={{ filter }}{% endif %}&sort_by={{ col }}&sort_order={{ next_order }}" class="sort-header{% if sort_by == col %} active{% endif %} {{ extra_class }}">
+                                <a href="/emails?page=1&page_size={{ page_size }}&q={{ q }}&account={{ account }}&folder={{ folder }}&sender={{ sender }}&recipient={{ recipient }}&subject={{ subject }}&date_from={{ date_from }}&date_to={{ date_to }}{% if filter %}&filter={{ filter }}{% endif %}&sort_by={{ col }}&sort_order={{ next_order }}" class="sort-header{% if sort_by == col %} active{% endif %} {{ extra_class }}">
                                     {{ label }}
                                     {% if sort_by == col %}
                                         <i class="fas fa-sort-{{ 'up' if sort_order == 'asc' else 'down' }} sort-icon"></i>
@@ -200,7 +218,7 @@
     {% set total_pages = ((total / page_size) | round(0, 'ceil') | int) %}
     {% if total_pages > 1 %}
     <div class="card-footer">
-        {% set base_url = "/emails?page_size=" ~ page_size ~ "&q=" ~ q ~ "&account=" ~ account ~ "&folder=" ~ folder ~ ("&filter=" ~ filter if filter else "") ~ ("&sort_by=" ~ sort_by if sort_by else "") ~ ("&sort_order=" ~ sort_order if sort_order else "") %}
+        {% set base_url = "/emails?page_size=" ~ page_size ~ "&q=" ~ q ~ "&account=" ~ account ~ "&folder=" ~ folder ~ "&sender=" ~ sender ~ "&recipient=" ~ recipient ~ "&subject=" ~ subject ~ "&date_from=" ~ date_from ~ "&date_to=" ~ date_to ~ ("&filter=" ~ filter if filter else "") ~ ("&sort_by=" ~ sort_by if sort_by else "") ~ ("&sort_order=" ~ sort_order if sort_order else "") %}
 
         <!-- Page number buttons -->
         <div class="pagination-bar">
@@ -253,6 +271,11 @@
                 <input type="hidden" name="q" value="{{ q }}">
                 <input type="hidden" name="account" value="{{ account }}">
                 <input type="hidden" name="folder" value="{{ folder }}">
+                <input type="hidden" name="sender" value="{{ sender }}">
+                <input type="hidden" name="recipient" value="{{ recipient }}">
+                <input type="hidden" name="subject" value="{{ subject }}">
+                <input type="hidden" name="date_from" value="{{ date_from }}">
+                <input type="hidden" name="date_to" value="{{ date_to }}">
                 {% if filter %}<input type="hidden" name="filter" value="{{ filter }}">{% endif %}
                 {% if sort_by %}<input type="hidden" name="sort_by" value="{{ sort_by }}">{% endif %}
                 {% if sort_order %}<input type="hidden" name="sort_order" value="{{ sort_order }}">{% endif %}
@@ -391,7 +414,7 @@
       }
     };
 
-    const hasFilters = {{ 'true' if q or account or folder else 'false' }};
+    const hasFilters = {{ 'true' if q or account or folder or sender or recipient or subject or date_from or date_to else 'false' }};
     if (hasFilters) {
       toggleFilters();
     }
