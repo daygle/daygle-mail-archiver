@@ -1,6 +1,7 @@
 from typing import List
 import io
 import gzip
+import urllib.parse
 import zipfile
 import mailbox
 from fastapi import APIRouter, Request, Form, UploadFile, File
@@ -8,7 +9,7 @@ from fastapi.responses import RedirectResponse, StreamingResponse, HTMLResponse
 from imaplib import IMAP4, IMAP4_SSL
 
 from ..utils.db import query, execute
-from ..utils.email_parser import decompress, parse_email, compute_signature
+from ..utils.email_parser import decompress, parse_email, compute_signature, get_attachment_parts
 from ..utils.crypto import decrypt_password
 from ..utils.logger import log
 from ..utils.templates import templates
@@ -560,6 +561,48 @@ def download_email(request: Request, email_id: int):
         iter([raw]),
         media_type="message/rfc822",
         headers={"Content-Disposition": f'attachment; filename="email-{email_id}.eml"'},
+    )
+
+
+@router.get("/emails/{email_id}/attachments/{index}")
+def download_attachment(request: Request, email_id: int, index: int):
+    if not require_login(request):
+        return RedirectResponse("/login", status_code=303)
+
+    checker = PermissionChecker(request)
+    if not checker.has_permission("export_emails"):
+        return HTMLResponse("Access denied: Insufficient permissions to download attachments", status_code=403)
+
+    row = query(
+        "SELECT raw_email, compressed FROM emails WHERE id = :id",
+        {"id": email_id},
+    ).mappings().first()
+
+    if not row:
+        return HTMLResponse("Not found", status_code=404)
+
+    raw = decompress(row["raw_email"], row["compressed"])
+    if isinstance(raw, memoryview):
+        raw = raw.tobytes()
+
+    attachment_parts = get_attachment_parts(raw)
+
+    if index < 0 or index >= len(attachment_parts):
+        return HTMLResponse("Attachment not found", status_code=404)
+
+    part = attachment_parts[index]
+    data = part.get_payload(decode=True) or b""
+    filename = part.get_filename() or f"attachment-{index}"
+    content_type = part.get_content_type() or "application/octet-stream"
+    encoded_filename = urllib.parse.quote(filename)
+
+    username = request.session.get("username", "unknown")
+    log("info", "Emails", f"User '{username}' downloaded attachment {index} from email ID {email_id}", "")
+
+    return StreamingResponse(
+        iter([data]),
+        media_type=content_type,
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"},
     )
 
 
