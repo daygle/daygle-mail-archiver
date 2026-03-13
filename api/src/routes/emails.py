@@ -1,5 +1,6 @@
 from typing import List
 import io
+import os
 import gzip
 import urllib.parse
 import zipfile
@@ -574,12 +575,21 @@ def download_attachment(request: Request, email_id: int, index: int):
         return HTMLResponse("Access denied: Insufficient permissions to download attachments", status_code=403)
 
     row = query(
-        "SELECT raw_email, compressed FROM emails WHERE id = :id",
+        "SELECT raw_email, compressed, virus_detected, virus_name FROM emails WHERE id = :id",
         {"id": email_id},
     ).mappings().first()
 
     if not row:
         return HTMLResponse("Not found", status_code=404)
+
+    if row["virus_detected"]:
+        virus_name = row["virus_name"] or "Unknown"
+        username = request.session.get("username", "unknown")
+        log("warning", "Emails", f"User '{username}' attempted to download attachment from infected email ID {email_id} ({virus_name})", "")
+        return HTMLResponse(
+            f"Download blocked: this email contains a virus ({virus_name}). Remove the virus flag before downloading.",
+            status_code=403,
+        )
 
     raw = decompress(row["raw_email"], row["compressed"])
     if isinstance(raw, memoryview):
@@ -592,7 +602,9 @@ def download_attachment(request: Request, email_id: int, index: int):
 
     part = attachment_parts[index]
     data = part.get_payload(decode=True) or b""
-    filename = part.get_filename() or f"attachment-{index}"
+    raw_filename = part.get_filename() or f"attachment-{index}"
+    # Sanitise: strip directory components and replace any remaining path separators
+    filename = os.path.basename(raw_filename).replace("/", "_").replace("\\", "_") or f"attachment-{index}"
     content_type = part.get_content_type() or "application/octet-stream"
     encoded_filename = urllib.parse.quote(filename)
 
