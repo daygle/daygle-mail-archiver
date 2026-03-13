@@ -5,6 +5,30 @@
 {% block content %}
 {% set perms = request.session.permissions or [] %}
 
+<!-- Button bar above the quarantine layout -->
+<div id="quarantine-action-bar" class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <a href="/quarantine" class="btn btn-secondary btn-sm flex-shrink-1 w-auto">
+        <i class="fas fa-arrow-left"></i>
+        <span class="hide-mobile">Back</span>
+    </a>
+    <div class="d-flex gap-2 flex-wrap">
+        {% if 'restore_quarantine' in perms %}
+        <form method="post" action="/quarantine/{{ item.id }}/restore" style="display:inline;">
+            <button type="submit" class="btn btn-success btn-sm flex-shrink-1 w-auto">
+                <i class="fas fa-undo"></i>
+                <span class="hide-mobile">Restore</span>
+            </button>
+        </form>
+        {% endif %}
+        {% if 'delete_quarantine' in perms %}
+        <button type="button" class="btn btn-danger btn-sm flex-shrink-1 w-auto" onclick="showDeleteConfirmation()">
+            <i class="fas fa-trash"></i>
+            <span class="hide-mobile">Delete</span>
+        </button>
+        {% endif %}
+    </div>
+</div>
+
 <!-- Two-column layout: Email Body (left 3/4) + Quarantine Details (right 1/4) -->
 <div id="quarantine-main-layout" class="row g-4 mb-4">
 
@@ -41,15 +65,11 @@
     <!-- Quarantine Email Details (right, 1/4) -->
     <div class="col-lg-3">
         <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="card-header">
                 <div class="card-title">
                     <i class="fas fa-biohazard"></i>
                     <span>Quarantined Email Details</span>
                 </div>
-                <a href="/quarantine" class="btn btn-secondary btn-sm flex-shrink-1 w-auto">
-                    <i class="fas fa-arrow-left"></i>
-                    <span class="hide-mobile">Back</span>
-                </a>
             </div>
             <div class="card-body">
 
@@ -188,30 +208,6 @@
 
             </div>
 
-            <!-- RBAC Footer Buttons -->
-            {% if 'restore_quarantine' in perms or 'delete_quarantine' in perms %}
-            <div class="card-footer">
-                <div class="d-flex justify-content-end gap-2 flex-wrap">
-
-                    {% if 'restore_quarantine' in perms %}
-                    <form method="post" action="/quarantine/{{ item.id }}/restore" style="display:inline;">
-                        <button type="submit" class="btn btn-success btn-sm flex-shrink-1 w-auto">
-                            <i class="fas fa-undo"></i>
-                            <span class="hide-mobile">Restore</span>
-                        </button>
-                    </form>
-                    {% endif %}
-
-                    {% if 'delete_quarantine' in perms %}
-                    <button type="button" class="btn btn-danger btn-sm flex-shrink-1 w-auto" onclick="showDeleteConfirmation()">
-                        <i class="fas fa-trash"></i>
-                        <span class="hide-mobile">Delete</span>
-                    </button>
-                    {% endif %}
-
-                </div>
-            </div>
-            {% endif %}
         </div>
     </div>
 
@@ -272,6 +268,7 @@
 
 <script>
   function showDeleteConfirmation() {
+    document.getElementById('quarantine-action-bar').style.display = 'none';
     document.getElementById('quarantine-main-layout').style.display = 'none';
     document.getElementById('quarantine-raw-preview').style.display = 'none';
     document.getElementById('delete-confirmation').style.display = 'block';
@@ -279,6 +276,7 @@
   }
 
   function hideDeleteConfirmation() {
+    document.getElementById('quarantine-action-bar').style.display = '';
     document.getElementById('quarantine-main-layout').style.display = '';
     document.getElementById('quarantine-raw-preview').style.display = '';
     document.getElementById('delete-confirmation').style.display = 'none';

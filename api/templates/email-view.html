@@ -4,6 +4,37 @@
 
 {% block content %}
 {% set perms = request.session.permissions or [] %}
+
+<!-- Button bar above the email layout -->
+<div id="email-action-bar" class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <a href="/emails" class="btn btn-secondary btn-sm flex-shrink-1 w-auto">
+        <i class="fas fa-arrow-left"></i>
+        <span class="hide-mobile">Back</span>
+    </a>
+    <div class="d-flex gap-2 flex-wrap">
+        {% if 'export_emails' in perms %}
+        <a href="/emails/{{ email.id }}/download" class="btn btn-primary btn-sm flex-shrink-1 w-auto">
+            <i class="fas fa-download"></i>
+            <span class="hide-mobile">Download EML</span>
+        </a>
+        {% endif %}
+        {% if 'manage_quarantine' in perms %}
+        {% if not email.quarantined %}
+        <form method="post" action="/emails/{{ email.id }}/quarantine" style="display:inline;">
+            <button type="submit" class="btn btn-warning btn-sm flex-shrink-1 w-auto">
+                <i class="fas fa-shield-virus"></i>
+                <span class="hide-mobile">Quarantine</span>
+            </button>
+        </form>
+        {% endif %}
+        <button type="button" class="btn btn-danger btn-sm flex-shrink-1 w-auto" onclick="showDeleteConfirmation()">
+            <i class="fas fa-trash"></i>
+            <span class="hide-mobile">Delete</span>
+        </button>
+        {% endif %}
+    </div>
+</div>
+
 <!-- Two-column layout: Email Body (left 3/4) + Email Details (right 1/4) -->
 <div id="email-main-layout" class="row g-4 mb-4">
 
@@ -38,15 +69,11 @@
     <!-- Email Details (right, 1/4) -->
     <div class="col-lg-3">
         <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="card-header">
                 <div class="card-title">
                     <i class="fas fa-envelope-open"></i>
                     <span>Email Details</span>
                 </div>
-                <a href="/emails" class="btn btn-secondary btn-sm flex-shrink-1 w-auto">
-                    <i class="fas fa-arrow-left"></i>
-                    <span class="hide-mobile">Back</span>
-                </a>
             </div>
             <div class="card-body">
                 <!-- Email Header Information -->
@@ -234,30 +261,6 @@
                     </div>
                 </div>
             </div>
-            <div class="card-footer">
-                <div class="d-flex justify-content-end gap-2 flex-wrap">
-                    {% if 'export_emails' in perms %}
-                    <a href="/emails/{{ email.id }}/download" class="btn btn-primary btn-sm flex-shrink-1 w-auto">
-                        <i class="fas fa-download"></i>
-                        <span class="hide-mobile">Download EML</span>
-                    </a>
-                    {% endif %}
-                    {% if 'manage_quarantine' in perms %}
-                    {% if not email.quarantined %}
-                    <form method="post" action="/emails/{{ email.id }}/quarantine" style="display:inline;">
-                        <button type="submit" class="btn btn-warning btn-sm flex-shrink-1 w-auto">
-                            <i class="fas fa-shield-virus"></i>
-                            <span class="hide-mobile">Quarantine</span>
-                        </button>
-                    </form>
-                    {% endif %}
-                    <button type="button" class="btn btn-danger btn-sm flex-shrink-1 w-auto" onclick="showDeleteConfirmation()">
-                        <i class="fas fa-trash"></i>
-                        <span class="hide-mobile">Delete</span>
-                    </button>
-                    {% endif %}
-                </div>
-            </div>
         </div>
     </div>
 
@@ -322,7 +325,8 @@
 
 <script>
   function showDeleteConfirmation() {
-    // Hide main layout and raw preview, show delete confirmation
+    // Hide main layout, action bar and raw preview, show delete confirmation
+    document.getElementById('email-action-bar').style.display = 'none';
     document.getElementById('email-main-layout').style.display = 'none';
     document.getElementById('email-raw-preview').style.display = 'none';
     document.getElementById('delete-confirmation').style.display = 'block';
@@ -332,7 +336,8 @@
   }
 
   function hideDeleteConfirmation() {
-    // Restore main layout and raw preview, hide delete confirmation
+    // Restore main layout, action bar and raw preview, hide delete confirmation
+    document.getElementById('email-action-bar').style.display = '';
     document.getElementById('email-main-layout').style.display = '';
     document.getElementById('email-raw-preview').style.display = '';
     document.getElementById('delete-confirmation').style.display = 'none';
