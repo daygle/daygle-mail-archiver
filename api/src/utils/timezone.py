@@ -1,7 +1,7 @@
 """
 Timezone conversion utilities for displaying dates in user's preferred timezone
 """
-from datetime import datetime
+from datetime import datetime, timedelta
 from email.utils import parsedate_to_datetime
 import pytz
 from .db import query
@@ -182,3 +182,51 @@ def format_email_date(date_value, fallback_datetime, user_id):
         return format_datetime(fallback_datetime, user_id)
 
     return None
+
+
+def user_date_to_utc_range_start(date_str: str, user_id) -> datetime:
+    """
+    Convert a date string (YYYY-MM-DD) representing a date in the user's timezone to
+    a UTC datetime for the start of that day (midnight in the user's timezone).
+
+    Args:
+        date_str: Date string in YYYY-MM-DD format
+        user_id: The ID of the user
+
+    Returns:
+        UTC-aware datetime object representing the start of the day in user's timezone
+    """
+    user_tz_str = get_user_timezone(user_id)
+    try:
+        user_tz = pytz.timezone(user_tz_str)
+    except Exception:
+        user_tz = pytz.utc
+
+    d = datetime.strptime(date_str, '%Y-%m-%d')
+    local_midnight = user_tz.localize(d)
+    return local_midnight.astimezone(pytz.utc)
+
+
+def user_date_to_utc_range_end(date_str: str, user_id) -> datetime:
+    """
+    Convert a date string (YYYY-MM-DD) representing a date in the user's timezone to
+    a UTC datetime for the exclusive end of that day (midnight at the start of the next
+    day in the user's timezone).
+
+    Args:
+        date_str: Date string in YYYY-MM-DD format
+        user_id: The ID of the user
+
+    Returns:
+        UTC-aware datetime object representing the start of the next day in user's timezone
+    """
+    user_tz_str = get_user_timezone(user_id)
+    try:
+        user_tz = pytz.timezone(user_tz_str)
+    except Exception:
+        user_tz = pytz.utc
+
+    d = datetime.strptime(date_str, '%Y-%m-%d')
+    d_next = d + timedelta(days=1)
+    local_midnight_next = user_tz.localize(d_next)
+    return local_midnight_next.astimezone(pytz.utc)
