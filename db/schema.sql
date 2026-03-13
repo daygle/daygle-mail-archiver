@@ -122,9 +122,9 @@ CREATE TABLE IF NOT EXISTS users (
     last_name TEXT,
     email TEXT,
     page_size INTEGER NOT NULL DEFAULT 50,
-    date_format TEXT NOT NULL DEFAULT '%d/%m/%Y',
+    date_format TEXT NOT NULL DEFAULT '%d %b %Y',
     time_format TEXT NOT NULL DEFAULT '%H:%M',
-    timezone TEXT NOT NULL DEFAULT 'Australia/Melbourne',
+    timezone TEXT NOT NULL DEFAULT 'UTC',
     theme_preference TEXT NOT NULL DEFAULT 'system',
     email_notifications BOOLEAN NOT NULL DEFAULT TRUE,
     language TEXT NOT NULL DEFAULT 'en',
@@ -201,9 +201,9 @@ CREATE TABLE IF NOT EXISTS settings (
 
 -- Insert default settings
 INSERT INTO settings (key, value) VALUES ('page_size', '50') ON CONFLICT (key) DO NOTHING;
-INSERT INTO settings (key, value) VALUES ('date_format', '%d/%m/%Y') ON CONFLICT (key) DO NOTHING;
+INSERT INTO settings (key, value) VALUES ('date_format', '%d %b %Y') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('time_format', '%H:%M') ON CONFLICT (key) DO NOTHING;
-INSERT INTO settings (key, value) VALUES ('timezone', 'Australia/Melbourne') ON CONFLICT (key) DO NOTHING;
+INSERT INTO settings (key, value) VALUES ('timezone', 'UTC') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('default_theme', 'system') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('enable_purge', 'false') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('retention_value', '1') ON CONFLICT (key) DO NOTHING;
