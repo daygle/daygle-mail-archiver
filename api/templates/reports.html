@@ -139,7 +139,7 @@
                 </div>
                 <div class="metric-card">
                     <div class="metric-value" id="avgHeartbeat">-</div>
-                    <div class="metric-label">Avg Hours Since Heartbeat</div>
+                    <div class="metric-label">Avg Minutes Since Heartbeat</div>
                 </div>
             </div>
             <div class="chart-container">
@@ -182,6 +182,7 @@
                         <tr>
                             <th>Subject</th>
                             <th>Sender</th>
+                            <th>Receiver</th>
                             <th>Size</th>
                             <th>Date</th>
                         </tr>
@@ -511,7 +512,10 @@ function initializeCharts() {
                 data: [],
                 borderColor: '#f59e0b',
                 backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                tension: 0.4
+                tension: 0.4,
+                fill: true,
+                pointRadius: 5,
+                pointHoverRadius: 7
             }]
         },
         options: {
@@ -712,11 +716,11 @@ function loadAccountActivityReport() {
                 let statusClass = 'status-offline';
                 let statusText = 'Offline';
                 if (account.enabled) {
-                    const hoursSinceHeartbeat = typeof account.hours_since_heartbeat === 'number' ? account.hours_since_heartbeat : 999;
-                    if (hoursSinceHeartbeat < 1) {
+                    const minutesSinceHeartbeat = typeof account.minutes_since_heartbeat === 'number' ? account.minutes_since_heartbeat : 99999;
+                    if (minutesSinceHeartbeat < 60) {
                         statusClass = 'status-online';
                         statusText = 'Online';
-                    } else if (hoursSinceHeartbeat < 24) {
+                    } else if (minutesSinceHeartbeat < 1440) {
                         statusClass = 'status-warning';
                         statusText = 'Warning';
                     } else {
@@ -732,7 +736,7 @@ function loadAccountActivityReport() {
                         <td><span class="status-indicator ${statusClass}"></span>${statusText}</td>
                         <td>${account.last_success || 'Never'}</td>
                         <td>${typeof account.emails_today === 'number' ? account.emails_today : 0}</td>
-                        <td>${typeof account.hours_since_heartbeat === 'number' ? account.hours_since_heartbeat + 'h ago' : 'Unknown'}</td>
+                        <td>${typeof account.minutes_since_heartbeat === 'number' ? account.minutes_since_heartbeat + 'm ago' : 'Unknown'}</td>
                     </tr>
                 `;
             }).join('');
@@ -777,10 +781,10 @@ function loadSystemHealthReport() {
 
             // Update metrics with safe defaults
             document.getElementById('databaseSize').textContent = data.database_size || 'Unknown';
-            const avgHeartbeat = data.worker_stats && typeof data.worker_stats.avg_hours_since_heartbeat === 'number'
-                ? data.worker_stats.avg_hours_since_heartbeat
+            const avgHeartbeat = data.worker_stats && typeof data.worker_stats.avg_minutes_since_heartbeat === 'number'
+                ? data.worker_stats.avg_minutes_since_heartbeat
                 : 0;
-            document.getElementById('avgHeartbeat').textContent = `${avgHeartbeat}h`;
+            document.getElementById('avgHeartbeat').textContent = `${avgHeartbeat}m`;
 
             // Update chart with safe defaults
             const errorLabels = Array.isArray(data.error_labels) ? data.error_labels : [];
@@ -931,6 +935,7 @@ function loadStorageUtilizationReport() {
                     row.innerHTML = `
                         <td>${email.subject || 'No Subject'}</td>
                         <td>${email.sender || 'Unknown'}</td>
+                        <td>${email.receiver || 'Unknown'}</td>
                         <td>${email.size_mb !== undefined ? email.size_mb + ' MB' : '-'}</td>
                         <td>${email.created_at || '-'}</td>
                     `;

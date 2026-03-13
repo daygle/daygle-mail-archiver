@@ -216,9 +216,9 @@ def account_activity_report(request: Request, start_date: str = None, end_date: 
                 fa.last_success,
                 fa.last_error,
                 CASE
-                    WHEN fa.last_heartbeat IS NOT NULL THEN EXTRACT(EPOCH FROM (NOW() - fa.last_heartbeat)) / 3600
+                    WHEN fa.last_heartbeat IS NOT NULL THEN EXTRACT(EPOCH FROM (NOW() - fa.last_heartbeat)) / 60
                     ELSE 0
-                END as hours_since_heartbeat,
+                END as minutes_since_heartbeat,
                 COUNT(e.id) as emails_synced_today
             FROM fetch_accounts fa
             LEFT JOIN emails e ON e.source = fa.name AND DATE(e.created_at) = CURRENT_DATE
@@ -243,19 +243,19 @@ def account_activity_report(request: Request, start_date: str = None, end_date: 
 
                     last_success = convert_utc_to_user_timezone(dt, user_id).strftime(get_user_date_format(request))
 
-                # Safely convert hours_since_heartbeat to float
+                # Safely convert minutes_since_heartbeat to float
                 try:
-                    hours_value = row["hours_since_heartbeat"]
-                    if hours_value is None:
-                        hours_float = 0.0
-                    elif isinstance(hours_value, str):
-                        hours_float = float(hours_value) if hours_value.strip() else 0.0
+                    minutes_value = row["minutes_since_heartbeat"]
+                    if minutes_value is None:
+                        minutes_float = 0.0
+                    elif isinstance(minutes_value, str):
+                        minutes_float = float(minutes_value) if minutes_value.strip() else 0.0
                     else:
-                        hours_float = float(hours_value)
-                    hours_rounded = round(hours_float, 1)
+                        minutes_float = float(minutes_value)
+                    minutes_rounded = round(minutes_float, 1)
                 except (ValueError, TypeError) as e:
-                    log("error", "Reports", f"Error converting hours_since_heartbeat: {hours_value}, error: {e}", "")
-                    hours_rounded = 0.0
+                    log("error", "Reports", f"Error converting minutes_since_heartbeat: {minutes_value}, error: {e}", "")
+                    minutes_rounded = 0.0
 
                 # Safely convert emails_synced_today to int
                 try:
@@ -276,7 +276,7 @@ def account_activity_report(request: Request, start_date: str = None, end_date: 
                     "enabled": bool(row["enabled"]),  # Convert SQLite integer to boolean
                     "last_success": last_success,
                     "last_error": row["last_error"],
-                    "hours_since_heartbeat": hours_rounded,
+                    "minutes_since_heartbeat": minutes_rounded,
                     "emails_today": emails_int
                 })
             except Exception as e:
@@ -466,7 +466,7 @@ def system_health_report(request: Request, start_date: str = None, end_date: str
                 COUNT(*) as total_accounts,
                 COUNT(CASE WHEN enabled THEN 1 END) as enabled_accounts,
                 COUNT(CASE WHEN last_error IS NOT NULL THEN 1 END) as accounts_with_errors,
-                AVG(EXTRACT(EPOCH FROM (NOW() - last_heartbeat)) / 3600) as avg_hours_since_heartbeat
+                AVG(EXTRACT(EPOCH FROM (NOW() - last_heartbeat)) / 60) as avg_minutes_since_heartbeat
             FROM fetch_accounts
         """).mappings().first()
 
@@ -475,7 +475,7 @@ def system_health_report(request: Request, start_date: str = None, end_date: str
             "total_accounts": 0,
             "enabled_accounts": 0,
             "accounts_with_errors": 0,
-            "avg_hours_since_heartbeat": 0.0
+            "avg_minutes_since_heartbeat": 0.0
         }
         
         if worker_results:
@@ -485,12 +485,12 @@ def system_health_report(request: Request, start_date: str = None, end_date: str
                     if value is None:
                         continue
                     elif isinstance(value, str):
-                        if key == "avg_hours_since_heartbeat":
+                        if key == "avg_minutes_since_heartbeat":
                             worker_stats[key] = round(float(value) if value.strip() else 0.0, 1)
                         else:
                             worker_stats[key] = int(value) if value.strip() else 0
                     else:
-                        if key == "avg_hours_since_heartbeat":
+                        if key == "avg_minutes_since_heartbeat":
                             worker_stats[key] = round(float(value), 1)
                         else:
                             worker_stats[key] = int(value)
@@ -731,6 +731,7 @@ def storage_utilization_report(request: Request, start_date: str = None, end_dat
             SELECT
                 subject,
                 sender,
+                recipients,
                 LENGTH(raw_email) as size_bytes,
                 created_at
             FROM emails
@@ -762,6 +763,7 @@ def storage_utilization_report(request: Request, start_date: str = None, end_dat
             formatted_largest.append({
                 "subject": email["subject"] or "(No Subject)",
                 "sender": email["sender"] or "Unknown",
+                "receiver": email["recipients"] or "Unknown",
                 "size_mb": size_mb,
                 "created_at": created_at
             })
@@ -971,7 +973,7 @@ def system_performance_report(request: Request, start_date: str = None, end_date
                 DATE(last_heartbeat) as heartbeat_date,
                 COUNT(*) as total_workers,
                 COUNT(CASE WHEN last_heartbeat >= NOW() - INTERVAL '5 minutes' THEN 1 END) as active_workers,
-                AVG(EXTRACT(EPOCH FROM (NOW() - last_heartbeat)) / 3600) as avg_hours_since_heartbeat
+                AVG(EXTRACT(EPOCH FROM (NOW() - last_heartbeat)) / 60) as avg_minutes_since_heartbeat
             FROM fetch_accounts
             WHERE enabled = TRUE
             AND last_heartbeat >= :start_date AND last_heartbeat <= :end_date
@@ -991,7 +993,7 @@ def system_performance_report(request: Request, start_date: str = None, end_date
 
             active_workers.append(int(row["active_workers"] or 0))
             total_workers.append(int(row["total_workers"] or 0))
-            avg_response_times.append(round(float(row["avg_hours_since_heartbeat"] or 0), 2))
+            avg_response_times.append(round(float(row["avg_minutes_since_heartbeat"] or 0), 2))
 
         # Processing performance (emails processed per hour)
         processing_results = query("""
