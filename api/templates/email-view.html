@@ -3,6 +3,7 @@
 {% block page_title %}Email View{% endblock %}
 
 {% block content %}
+{% set perms = request.session.permissions or [] %}
 <!-- Two-column layout: Email Body (left 3/4) + Email Details (right 1/4) -->
 <div id="email-main-layout" class="row g-4 mb-4">
 
@@ -126,6 +127,64 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Attachments -->
+                {% if body.attachments %}
+                <div class="mb-4">
+                    <h6 class="mb-3 text-muted">
+                        <i class="fas fa-paperclip me-2"></i>Attachments ({{ body.attachments | length }})
+                    </h6>
+                    <div class="row g-2">
+                        {% for att in body.attachments %}
+                        <div class="col-12">
+                            <div class="d-flex align-items-center justify-content-between gap-2 p-2" style="background: var(--bg-secondary); border-radius: var(--radius-md);">
+                                <div class="text-truncate" style="min-width: 0;">
+                                    <i class="fas fa-file me-1 text-muted"></i>
+                                    <span class="text-break" title="{{ att.filename or 'attachment' }}">{{ att.filename or "(unnamed)" }}</span>
+                                    <br>
+                                    <small class="text-muted">{{ att.content_type }} &mdash;
+                                        {%- if att.size < 1024 %}
+                                            {{ att.size }} B
+                                        {%- elif att.size < 1048576 %}
+                                            {{ (att.size / 1024) | round(1) }} KB
+                                        {%- else %}
+                                            {{ (att.size / 1048576) | round(1) }} MB
+                                        {%- endif %}
+                                    </small>
+                                    <br>
+                                    {% if email.virus_scanned %}
+                                        {% if email.virus_detected %}
+                                        <span class="badge badge-danger mt-1" title="Virus detected: {{ email.virus_name }}">
+                                            <i class="fas fa-exclamation-triangle"></i> INFECTED: {{ email.virus_name }}
+                                        </span>
+                                        {% else %}
+                                        <span class="badge badge-success mt-1">
+                                            <i class="fas fa-check"></i> Scanned: Clean
+                                        </span>
+                                        {% endif %}
+                                    {% else %}
+                                    <span class="badge badge-secondary mt-1">
+                                        <i class="fas fa-question"></i> Not scanned
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                {% if 'export_emails' in perms %}
+                                    {% if email.virus_detected %}
+                                    <span class="btn btn-danger btn-sm flex-shrink-0 disabled" title="Download blocked: virus detected">
+                                        <i class="fas fa-ban"></i>
+                                    </span>
+                                    {% else %}
+                                    <a href="/emails/{{ email.id }}/attachments/{{ loop.index0 }}" class="btn btn-secondary btn-sm flex-shrink-0" title="Download attachment">
+                                        <i class="fas fa-download"></i>
+                                    </a>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
 
                 <!-- Security & Status -->
                 <div class="mb-4">

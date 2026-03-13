@@ -17,6 +17,7 @@ def parse_email(raw: bytes):
         text = ""
         html = ""
         embedded_images = {}
+        attachments = []
 
         if m.is_multipart():
             for part in m.walk():
@@ -82,6 +83,12 @@ def parse_email(raw: bytes):
                     # For now, we'll skip images without Content-ID
 
                 if "attachment" in disp:
+                    filename = part.get_filename() or ""
+                    attachments.append({
+                        "filename": filename,
+                        "content_type": ctype,
+                        "size": len(part.get_payload(decode=True) or b""),
+                    })
                     continue
 
                 if ctype == "text/plain":
@@ -127,7 +134,7 @@ def parse_email(raw: bytes):
             
 
 
-        return {"text": text, "html": html, "embedded_images": embedded_images}
+        return {"text": text, "html": html, "embedded_images": embedded_images, "attachments": attachments}
 
     headers = {
         "subject": msg.get("Subject", ""),
@@ -142,6 +149,18 @@ def parse_email(raw: bytes):
         "headers": headers,
         "body": extract_body(msg),
     }
+
+
+def get_attachment_parts(raw: bytes):
+    """Return a list of MIME parts that are email attachments (Content-Disposition: attachment)."""
+    msg = message_from_bytes(raw)
+    parts = []
+    if msg.is_multipart():
+        for part in msg.walk():
+            disp = str(part.get("Content-Disposition") or "").lower()
+            if "attachment" in disp:
+                parts.append(part)
+    return parts
 
 
 def compute_signature(raw: bytes) -> str:
