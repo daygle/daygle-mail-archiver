@@ -119,7 +119,8 @@
                             <span class="badge badge-primary">{{ i.original_source or 'N/A' }}</span>
                         </td>
                         <td>{{ (i.sender | extract_emails) or 'unknown' }}</td>
-                        <td class="hide-mobile col-wrap">{{ (i.recipients | extract_emails) or 'N/A' }}</td>
+                        {% set recipients_str = (i.recipients | extract_emails) or 'N/A' %}
+                        <td class="hide-mobile col-wrap" title="{{ recipients_str }}">{{ recipients_str }}</td>
                         <td>
                             <a href="/quarantine/{{ i.id }}" class="link">
                                 {{ i.subject or '(no subject)' }}
