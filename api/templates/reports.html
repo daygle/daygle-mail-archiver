@@ -931,8 +931,8 @@ function loadStorageUtilizationReport() {
                     row.innerHTML = `
                         <td>${email.subject || 'No Subject'}</td>
                         <td>${email.sender || 'Unknown'}</td>
-                        <td>${email.size || '-'}</td>
-                        <td>${email.date || '-'}</td>
+                        <td>${email.size_mb !== undefined ? email.size_mb + ' MB' : '-'}</td>
+                        <td>${email.created_at || '-'}</td>
                     `;
                     tbody.appendChild(row);
                 });
@@ -1023,10 +1023,13 @@ function loadRetentionPolicyReport() {
             // Update retention settings
             const settingsDiv = document.getElementById('retentionSettingsDisplay');
             if (data.retention_settings) {
+                const retentionValue = data.retention_settings.retention_value;
+                const retentionUnit = data.retention_settings.retention_unit;
+                const autoDelete = (retentionValue && retentionUnit) ? `${retentionValue} ${retentionUnit}` : 'Not set';
+                const deleteFromServer = (data.retention_settings.retention_delete_from_mail_server === true || data.retention_settings.retention_delete_from_mail_server === 'true') ? 'Yes' : 'No';
                 settingsDiv.innerHTML = `
-                    <p><strong>Auto-delete after:</strong> ${data.retention_settings.auto_delete_days || 'Not set'} days</p>
-                    <p><strong>Max emails per account:</strong> ${data.retention_settings.max_emails_per_account || 'Not set'}</p>
-                    <p><strong>Max storage per account:</strong> ${data.retention_settings.max_storage_per_account || 'Not set'}</p>
+                    <p><strong>Auto-delete after:</strong> ${autoDelete}</p>
+                    <p><strong>Delete from mail server:</strong> ${deleteFromServer}</p>
                 `;
             }
         })
