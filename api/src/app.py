@@ -1,3 +1,4 @@
+import asyncio
 import os
 from pathlib import Path
 from fastapi import FastAPI, Request
@@ -238,11 +239,79 @@ def health_check():
     }
 
 # ---------------------------------------------------------
+# Backfill date_parsed for rows where it is NULL but the raw date header is present.
+# This is a one-time migration for deployments that existed before the date_parsed
+# column was introduced. Without this, date-range filtering falls back to created_at
+# (the archival timestamp) instead of the email's actual date, causing the filter
+# to return zero results when the user selects a date range.
+# ---------------------------------------------------------
+def _backfill_date_parsed():
+    """Populate date_parsed for emails/quarantined_emails where it is still NULL."""
+    from email.utils import parsedate_to_datetime as _parsedate
+
+    _BATCH = 500  # rows per query to keep memory usage bounded
+
+    for table in ("emails", "quarantined_emails"):
+        try:
+            offset = 0
+            while True:
+                try:
+                    rows = query(
+                        f"SELECT id, date FROM {table}"
+                        " WHERE date_parsed IS NULL AND date IS NOT NULL"
+                        f" ORDER BY id LIMIT {_BATCH} OFFSET {offset}",
+                        {},
+                    ).mappings().all()
+                except Exception as exc:
+                    logging.warning(f"date_parsed backfill: could not query {table}: {exc}")
+                    break
+
+                if not rows:
+                    break
+
+                updates = []
+                for row in rows:
+                    try:
+                        parsed = _parsedate(row["date"])
+                        updates.append({"dp": parsed, "id": row["id"]})
+                    except Exception:
+                        pass  # unparseable date — leave date_parsed as NULL
+
+                if updates:
+                    for upd in updates:
+                        try:
+                            execute(
+                                f"UPDATE {table} SET date_parsed = :dp"
+                                " WHERE id = :id AND date_parsed IS NULL",
+                                upd,
+                            )
+                        except Exception as exc:
+                            logging.debug(
+                                f"date_parsed backfill: could not update {table}"
+                                f" id={upd['id']}: {exc}"
+                            )
+                    log(
+                        "info", "System",
+                        f"Backfilled date_parsed for {len(updates)} row(s) in {table}", "",
+                    )
+
+                offset += _BATCH
+                if len(rows) < _BATCH:
+                    break  # last batch — no more rows
+        except Exception as exc:
+            logging.warning(f"date_parsed backfill: unexpected error for {table}: {exc}")
+
+
+# ---------------------------------------------------------
 # Startup / Shutdown Logging
 # ---------------------------------------------------------
 @app.on_event("startup")
 async def startup_event():
     log("info", "System", "Daygle Mail Archiver API started", "")
+    # Run the date_parsed backfill in a thread so it does not block request handling.
+    # Errors are logged inside _backfill_date_parsed; we intentionally don't await the
+    # task so startup completes immediately.
+    asyncio.create_task(asyncio.to_thread(_backfill_date_parsed))
 
 @app.on_event("shutdown")
 async def shutdown_event():
