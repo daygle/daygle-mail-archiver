@@ -3,6 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from collections import defaultdict
 from typing import List, Dict, Any
 from datetime import datetime, timedelta, date
+from email.utils import getaddresses
 
 from ..utils.db import query
 from ..utils.logger import log
@@ -754,6 +755,13 @@ def storage_utilization_report(request: Request, start_date: str = None, end_dat
             compression_ratio = round((compressed_emails / total_emails) * 30, 1)
 
         # Format largest emails
+        def extract_email_addresses(value: str) -> str:
+            if not value:
+                return "Unknown"
+            parsed = getaddresses([value])
+            addresses = [addr for _name, addr in parsed if addr]
+            return ", ".join(addresses) if addresses else value
+
         formatted_largest = []
         for email in largest_emails:
             size_mb = round(int(email["size_bytes"] or 0) / (1024 * 1024), 2)
@@ -764,8 +772,8 @@ def storage_utilization_report(request: Request, start_date: str = None, end_dat
             formatted_largest.append({
                 "id": email["id"],
                 "subject": email["subject"] or "(No Subject)",
-                "sender": email["sender"] or "Unknown",
-                "receiver": email["recipients"] or "Unknown",
+                "sender": extract_email_addresses(email["sender"]),
+                "receiver": extract_email_addresses(email["recipients"]),
                 "size_mb": size_mb,
                 "created_at": created_at
             })
