@@ -2,6 +2,7 @@ import time
 import gzip
 import email
 from datetime import datetime, timezone, timedelta
+from email.utils import parsedate_to_datetime
 from collections import defaultdict
 
 from db import query, execute
@@ -178,6 +179,13 @@ def store_email(
             recipients_list.extend(decode_header(v) for v in vals)
     recipients = ", ".join(recipients_list) if recipients_list else None
     date_header = msg.get("Date")
+    # Parse the RFC822 date string into a timezone-aware datetime for reliable sorting
+    date_parsed = None
+    if date_header:
+        try:
+            date_parsed = parsedate_to_datetime(date_header)
+        except (ValueError, TypeError):
+            date_parsed = None
     message_id_raw = msg.get("Message-ID")
     message_id = decode_header(message_id_raw) if message_id_raw is not None else None
 
@@ -258,8 +266,8 @@ Action Taken: {action}"""
                     execute(
                         """
                         INSERT INTO quarantined_emails
-                        (original_source, original_folder, original_uid, subject, sender, recipients, date, message_id, raw_email, signature, compressed, virus_name, reason, quarantined_at, expires_at, quarantined_by)
-                        VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :message_id, :raw_email, :signature, TRUE, :virus_name, :reason, NOW(), :expires_at, :quarantined_by)
+                        (original_source, original_folder, original_uid, subject, sender, recipients, date, date_parsed, message_id, raw_email, signature, compressed, virus_name, reason, quarantined_at, expires_at, quarantined_by)
+                        VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :date_parsed, :message_id, :raw_email, :signature, TRUE, :virus_name, :reason, NOW(), :expires_at, :quarantined_by)
                         """,
                         {
                             "source": source,
@@ -269,6 +277,7 @@ Action Taken: {action}"""
                             "sender": sender,
                             "recipients": recipients,
                             "date": date_header,
+                            "date_parsed": date_parsed,
                             "message_id": message_id,
                             "raw_email": raw_to_store,
                             "signature": sig,
@@ -298,13 +307,14 @@ Action Taken: {action}"""
 
             execute(
                 """
-                INSERT INTO emails (source, folder, uid, subject, sender, recipients, date, message_id, raw_email, signature, compressed, virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined)
-                VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :message_id, :raw_email, :signature, :compressed, :virus_scanned, :virus_detected, :virus_name, :scan_timestamp, :quarantined)
+                INSERT INTO emails (source, folder, uid, subject, sender, recipients, date, date_parsed, message_id, raw_email, signature, compressed, virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined)
+                VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :date_parsed, :message_id, :raw_email, :signature, :compressed, :virus_scanned, :virus_detected, :virus_name, :scan_timestamp, :quarantined)
                 ON CONFLICT (source, folder, uid) DO UPDATE SET
                     subject = EXCLUDED.subject,
                     sender = EXCLUDED.sender,
                     recipients = EXCLUDED.recipients,
                     date = EXCLUDED.date,
+                    date_parsed = EXCLUDED.date_parsed,
                     message_id = EXCLUDED.message_id,
                     raw_email = EXCLUDED.raw_email,
                     signature = COALESCE(EXCLUDED.signature, emails.signature),
@@ -323,6 +333,7 @@ Action Taken: {action}"""
                     "sender": sender,
                     "recipients": recipients,
                     "date": date_header,
+                    "date_parsed": date_parsed,
                     "message_id": message_id,
                     "raw_email": compressed_bytes,
                     "signature": sig,

@@ -301,6 +301,53 @@ start_containers() {
     log_success "Containers started successfully"
 }
 
+# Function to apply database schema migrations
+apply_schema() {
+    if [ "$SKIP_START" = true ]; then
+        log_info "Skipping database schema update (--skip-start flag set)"
+        log_info "To apply schema updates manually, run:"
+        log_info "  $DOCKER_COMPOSE exec db psql -U ${POSTGRES_USER:-daygle_mail_archiver} -d ${POSTGRES_DB:-daygle_mail_archiver} -f /docker-entrypoint-initdb.d/schema.sql"
+        return
+    fi
+
+    log_info "Applying database schema updates..."
+    cd "$ROOT_DIR"
+
+    local pg_user="${POSTGRES_USER:-daygle_mail_archiver}"
+    local pg_db="${POSTGRES_DB:-daygle_mail_archiver}"
+
+    # Wait for the database to be ready (it should already be healthy after start_containers,
+    # but we poll for up to 30 seconds to handle any edge-case timing)
+    local attempts=0
+    until $DOCKER_COMPOSE exec -T db pg_isready -U "$pg_user" -d "$pg_db" > /dev/null 2>&1; do
+        if [ $attempts -ge 15 ]; then
+            log_warning "Database did not become ready in time - skipping schema update"
+            log_info "You can apply schema updates manually with:"
+            log_info "  $DOCKER_COMPOSE exec db psql -U $pg_user -d $pg_db -f /docker-entrypoint-initdb.d/schema.sql"
+            return
+        fi
+        sleep 2
+        attempts=$((attempts + 1))
+    done
+
+    # schema.sql is written entirely with idempotent SQL (CREATE TABLE IF NOT EXISTS,
+    # ALTER TABLE ... ADD COLUMN IF NOT EXISTS, INSERT ... ON CONFLICT DO NOTHING),
+    # so it is safe to re-run against an existing database.
+    # Suppress harmless NOTICE messages that appear when objects already exist.
+    local schema_output
+    if schema_output=$($DOCKER_COMPOSE exec -T db \
+            env PGOPTIONS="-c client_min_messages=WARNING" \
+            psql -U "$pg_user" -d "$pg_db" -q \
+            -f /docker-entrypoint-initdb.d/schema.sql 2>&1); then
+        log_success "Database schema updated"
+    else
+        log_warning "Schema update completed with errors:"
+        echo "$schema_output" | grep -iv "^notice:" || true
+        log_info "You can apply schema updates manually with:"
+        log_info "  $DOCKER_COMPOSE exec db psql -U $pg_user -d $pg_db -f /docker-entrypoint-initdb.d/schema.sql"
+    fi
+}
+
 # Function to clean up old Docker resources
 cleanup_docker() {
     log_info "Cleaning up old Docker resources..."
@@ -429,6 +476,7 @@ main() {
         update_code
         pull_images
         start_containers
+        apply_schema
         cleanup_docker
         
         # Show success message

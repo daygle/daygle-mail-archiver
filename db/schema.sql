@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS emails (
     sender TEXT,
     recipients TEXT,
     date TEXT,
+    date_parsed TIMESTAMPTZ,
     message_id TEXT,
 
     -- Raw email storage
@@ -243,6 +244,7 @@ CREATE TABLE IF NOT EXISTS quarantined_emails (
     sender TEXT,
     recipients TEXT,
     date TEXT,
+    date_parsed TIMESTAMPTZ,
     message_id TEXT,
     raw_email BYTEA,
     signature TEXT,
@@ -259,6 +261,17 @@ CREATE INDEX IF NOT EXISTS quarantined_emails_quarantined_at_idx ON quarantined_
 -- Add optional foreign key on emails to reference quarantine record (nullable)
 ALTER TABLE emails
     ADD COLUMN IF NOT EXISTS quarantine_id INTEGER REFERENCES quarantined_emails(id) ON DELETE SET NULL;
+
+-- Add date_parsed column for chronological sorting of emails by their RFC822 date header
+-- (migration for existing deployments; new installations already have this in CREATE TABLE above)
+ALTER TABLE emails
+    ADD COLUMN IF NOT EXISTS date_parsed TIMESTAMPTZ;
+ALTER TABLE quarantined_emails
+    ADD COLUMN IF NOT EXISTS date_parsed TIMESTAMPTZ;
+
+-- Indexes on date_parsed (placed after ALTER TABLE to ensure the column exists in existing deployments)
+CREATE INDEX IF NOT EXISTS emails_date_parsed_idx ON emails(date_parsed DESC);
+CREATE INDEX IF NOT EXISTS quarantined_emails_date_parsed_idx ON quarantined_emails(date_parsed DESC);
 
 -- Add last_seen column to users table for online/offline tracking
 ALTER TABLE users
