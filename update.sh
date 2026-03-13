@@ -35,6 +35,7 @@ TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 FORCE=false
 SKIP_START=false
 CHECK_ONLY=false
+APPLY_DB=false
 
 
 # Function to print colored messages
@@ -70,6 +71,7 @@ EOF
     -c, --check           Check for updates without applying them
     -f, --force           Update without confirmation prompts
     --skip-start          Don't start containers after update
+    --apply-db            Apply database schema updates only (no code/image update)
     -h, --help            Show this help message
 EOF
     
@@ -87,6 +89,9 @@ EOF
 
   # Update but don't start containers (for manual inspection)
   ./update.sh --skip-start
+
+  # Apply database schema updates only (containers must already be running)
+  ./update.sh --apply-db
 EOF
     
     echo ""
@@ -408,6 +413,10 @@ parse_args() {
                 SKIP_START=true
                 shift
                 ;;
+            --apply-db)
+                APPLY_DB=true
+                shift
+                ;;
             
             -h|--help)
                 show_usage
@@ -448,6 +457,14 @@ main() {
         log_error "docker-compose.yml not found"
         log_info "Please run this script from the Daygle Mail Archiver installation directory"
         exit 1
+    fi
+    
+    # --apply-db: skip all update steps and just apply DB schema to running containers
+    if [ "$APPLY_DB" = true ]; then
+        log_info "Applying database schema updates only..."
+        apply_schema
+        log_success "Database schema update complete"
+        exit 0
     fi
     
     # Check for updates
