@@ -3310,3 +3310,134 @@ a:hover {
         font-size: 0.95rem;
     }
 }
+
+/* Sortable table headers */
+.sort-header {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    text-decoration: none;
+    color: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.sort-header:hover {
+    color: var(--accent-primary);
+}
+
+.sort-icon {
+    font-size: 0.75em;
+    opacity: 0.4;
+}
+
+.sort-header.active .sort-icon {
+    opacity: 1;
+    color: var(--accent-primary);
+}
+
+/* Scroll to top button */
+.scroll-to-top {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 1000;
+    display: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--accent-primary);
+    color: white;
+    border: none;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+    font-size: 1rem;
+}
+
+.scroll-to-top:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.scroll-to-top.visible {
+    display: flex;
+}
+
+/* Improved pagination bar */
+.pagination-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.page-link.active {
+    background: var(--accent-primary);
+    color: white;
+    border-color: var(--accent-primary);
+    pointer-events: none;
+}
+
+.page-link.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.page-link.ellipsis {
+    border-color: transparent;
+    background: transparent;
+    pointer-events: none;
+    color: var(--text-secondary);
+}
+
+/* Page jump form */
+.page-jump {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.page-jump input[type="number"] {
+    width: 58px;
+    padding: 5px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    text-align: center;
+}
+
+.page-jump input[type="number"]:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}
+
+.pagination-info {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin-top: 6px;
+}
+
+@media (max-width: 768px) {
+    .page-jump {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .scroll-to-top {
+        bottom: 16px;
+        right: 16px;
+        width: 36px;
+        height: 36px;
+        font-size: 0.9rem;
+    }
+}

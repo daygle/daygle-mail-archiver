@@ -36,6 +36,16 @@ VALID_EMAIL_FILTERS = {
     "virus_detected",
 }
 
+# Mapping of user-facing sort keys to actual DB column names (allowlist to prevent injection)
+VALID_EMAIL_SORT_COLUMNS = {
+    "date": "date",
+    "source": "source",
+    "folder": "folder",
+    "sender": "sender",
+    "subject": "subject",
+    "created_at": "created_at",
+}
+
 
 @router.get("/emails", response_class=HTMLResponse)
 def list_emails(
@@ -46,6 +56,8 @@ def list_emails(
     account: str | None = None,
     folder: str | None = None,
     filter: str | None = None,
+    sort_by: str | None = None,
+    sort_order: str | None = None,
 ):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
@@ -106,6 +118,12 @@ def list_emails(
 
     where_sql = "AND " + " AND ".join(where) if where else ""
 
+    # Build ORDER BY from validated allowlist to prevent SQL injection
+    sort_col = VALID_EMAIL_SORT_COLUMNS.get(sort_by, "created_at")
+    sort_dir = "ASC" if sort_order == "asc" else "DESC"
+    # Secondary sort ensures stable ordering when primary column has ties
+    order_sql = f"{sort_col} {sort_dir}, id {sort_dir}"
+
     rows = query(
         f"""
         SELECT id, source, folder, uid, subject, sender, recipients, date, created_at,
@@ -113,7 +131,7 @@ def list_emails(
         FROM emails
         WHERE quarantined = FALSE
         {where_sql}
-        ORDER BY created_at DESC
+        ORDER BY {order_sql}
         LIMIT :limit OFFSET :offset
         """,
         {**params, "limit": page_size, "offset": offset},
@@ -184,6 +202,8 @@ def list_emails(
             "account": account or "",
             "folder": folder or "",
             "filter": filter or "",
+            "sort_by": sort_by or "",
+            "sort_order": sort_order or "",
             "flash": msg,
         },
     )

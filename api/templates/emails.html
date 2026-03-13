@@ -103,12 +103,23 @@
                                 <input type="checkbox" id="select-all" class="form-check-input">
                             </th>
                             {% endif %}
-                            <th>Date</th>
-                            <th class="hide-mobile">Account</th>
-                            <th class="hide-mobile">Folder</th>
-                            <th>From</th>
+                            {% macro sort_link(col, label, extra_class="") %}
+                                {% set next_order = "desc" if (sort_by == col and sort_order == "asc") else "asc" %}
+                                <a href="/emails?page=1&page_size={{ page_size }}&q={{ q }}&account={{ account }}&folder={{ folder }}{% if filter %}&filter={{ filter }}{% endif %}&sort_by={{ col }}&sort_order={{ next_order }}" class="sort-header{% if sort_by == col %} active{% endif %} {{ extra_class }}">
+                                    {{ label }}
+                                    {% if sort_by == col %}
+                                        <i class="fas fa-sort-{{ 'up' if sort_order == 'asc' else 'down' }} sort-icon"></i>
+                                    {% else %}
+                                        <i class="fas fa-sort sort-icon"></i>
+                                    {% endif %}
+                                </a>
+                            {% endmacro %}
+                            <th>{{ sort_link("date", "Date") }}</th>
+                            <th class="hide-mobile">{{ sort_link("source", "Account") }}</th>
+                            <th class="hide-mobile">{{ sort_link("folder", "Folder") }}</th>
+                            <th>{{ sort_link("sender", "From") }}</th>
                             <th class="hide-mobile">To</th>
-                            <th>Subject</th>
+                            <th>{{ sort_link("subject", "Subject") }}</th>
                             <th>Integrity</th>
                             <th class="col-center">
                                 <i class="fas fa-shield-virus" title="Virus Scan"></i>
@@ -185,28 +196,74 @@
     </div>
 
     <!-- Pagination -->
-    {% if page > 1 or (page * page_size) < total %}
+    {% set total_pages = ((total / page_size) | round(0, 'ceil') | int) %}
+    {% if total_pages > 1 %}
     <div class="card-footer">
-        <div class="flex items-center justify-between">
-            <div>
-                {% if page > 1 %}
-                <a href="/emails?page={{ page - 1 }}&page_size={{ page_size }}&q={{ q }}&account={{ account }}&folder={{ folder }}{% if filter %}&filter={{ filter }}{% endif %}" class="btn btn-secondary">
-                    <i class="fas fa-chevron-left"></i>
-                    <span class="hide-mobile">Previous</span>
-                </a>
-                {% endif %}
-            </div>
+        {% set base_url = "/emails?page_size=" ~ page_size ~ "&q=" ~ q ~ "&account=" ~ account ~ "&folder=" ~ folder ~ ("&filter=" ~ filter if filter else "") ~ ("&sort_by=" ~ sort_by if sort_by else "") ~ ("&sort_order=" ~ sort_order if sort_order else "") %}
 
-            <span class="text-secondary">Page {{ page }} of {{ (total / page_size) | round(0, 'ceil') | int }}</span>
+        <!-- Page number buttons -->
+        <div class="pagination-bar">
+            <!-- Previous button -->
+            {% if page > 1 %}
+            <a href="{{ base_url }}&page={{ page - 1 }}" class="page-link" title="Previous">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% else %}
+            <span class="page-link disabled"><i class="fas fa-chevron-left"></i></span>
+            {% endif %}
 
-            <div>
-                {% if (page * page_size) < total %}
-                <a href="/emails?page={{ page + 1 }}&page_size={{ page_size }}&q={{ q }}&account={{ account }}&folder={{ folder }}{% if filter %}&filter={{ filter }}{% endif %}" class="btn btn-secondary">
-                    <span class="hide-mobile">Next</span>
-                    <i class="fas fa-chevron-right"></i>
-                </a>
-                {% endif %}
-            </div>
+            <!-- First page -->
+            {% if page > 3 %}
+            <a href="{{ base_url }}&page=1" class="page-link">1</a>
+            {% if page > 4 %}
+            <span class="page-link ellipsis">&hellip;</span>
+            {% endif %}
+            {% endif %}
+
+            <!-- Window of pages -->
+            {% for p in range([1, page - 2] | max, [total_pages + 1, page + 3] | min) %}
+            {% if p == page %}
+            <span class="page-link active">{{ p }}</span>
+            {% else %}
+            <a href="{{ base_url }}&page={{ p }}" class="page-link">{{ p }}</a>
+            {% endif %}
+            {% endfor %}
+
+            <!-- Last page -->
+            {% if page < total_pages - 2 %}
+            {% if page < total_pages - 3 %}
+            <span class="page-link ellipsis">&hellip;</span>
+            {% endif %}
+            <a href="{{ base_url }}&page={{ total_pages }}" class="page-link">{{ total_pages }}</a>
+            {% endif %}
+
+            <!-- Next button -->
+            {% if page < total_pages %}
+            <a href="{{ base_url }}&page={{ page + 1 }}" class="page-link" title="Next">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            {% else %}
+            <span class="page-link disabled"><i class="fas fa-chevron-right"></i></span>
+            {% endif %}
+
+            <!-- Jump to page -->
+            <form method="get" action="/emails" class="page-jump" id="emails-jump-form">
+                <input type="hidden" name="page_size" value="{{ page_size }}">
+                <input type="hidden" name="q" value="{{ q }}">
+                <input type="hidden" name="account" value="{{ account }}">
+                <input type="hidden" name="folder" value="{{ folder }}">
+                {% if filter %}<input type="hidden" name="filter" value="{{ filter }}">{% endif %}
+                {% if sort_by %}<input type="hidden" name="sort_by" value="{{ sort_by }}">{% endif %}
+                {% if sort_order %}<input type="hidden" name="sort_order" value="{{ sort_order }}">{% endif %}
+                <span>Go to</span>
+                <input type="number" name="page" min="1" max="{{ total_pages }}" value="{{ page }}" aria-label="Jump to page">
+                <button type="submit" class="btn btn-secondary btn-sm">Go</button>
+            </form>
+        </div>
+
+        <!-- Record count summary -->
+        <div class="pagination-info">
+            Showing {{ ((page - 1) * page_size + 1) }}–{{ [page * page_size, total] | min }} of {{ total }} emails
         </div>
     </div>
     {% endif %}
@@ -391,5 +448,21 @@
       bulkForm.submit();
     };
   })();
+
+  // Scroll-to-top button
+  (function () {
+    const btn = document.getElementById('scroll-to-top-btn');
+    window.addEventListener('scroll', function () {
+      btn.classList.toggle('visible', window.scrollY > 300);
+    });
+    btn.addEventListener('click', function () {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  })();
 </script>
+
+<!-- Scroll to top button -->
+<button id="scroll-to-top-btn" class="scroll-to-top" aria-label="Scroll to top" title="Back to top">
+    <i class="fas fa-arrow-up"></i>
+</button>
 {% endblock %}

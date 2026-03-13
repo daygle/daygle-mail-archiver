@@ -15,6 +15,16 @@ from ..utils.permissions import PermissionChecker, require_permission, PERMISSIO
 
 router = APIRouter()
 
+# Mapping of user-facing sort keys to actual DB column names (allowlist to prevent injection)
+VALID_QUARANTINE_SORT_COLUMNS = {
+    "date": "date",
+    "original_source": "original_source",
+    "sender": "sender",
+    "subject": "subject",
+    "virus_name": "virus_name",
+    "quarantined_at": "quarantined_at",
+}
+
 def require_login(request: Request):
     return "user_id" in request.session
 
@@ -123,7 +133,15 @@ def _delete_quarantined_from_mail_server_and_db(ids: List[int]) -> tuple[int, li
 
 
 @router.get('/quarantine', response_class=HTMLResponse)
-def list_quarantine(request: Request, _=require_permission(PERMISSIONS["view_quarantine"]), q: str = None, virus: str = None, page: int = 1):
+def list_quarantine(
+    request: Request,
+    _=require_permission(PERMISSIONS["view_quarantine"]),
+    q: str = None,
+    virus: str = None,
+    page: int = 1,
+    sort_by: str = None,
+    sort_order: str = None,
+):
     # Require login first
     if not request.session.get('user_id'):
         request.session['flash'] = 'Please login to access Quarantine'
@@ -175,6 +193,11 @@ def list_quarantine(request: Request, _=require_permission(PERMISSIONS["view_qua
     if where_sql:
         where_sql = f"WHERE {where_sql}"
 
+    # Build ORDER BY from validated allowlist to prevent SQL injection
+    sort_col = VALID_QUARANTINE_SORT_COLUMNS.get(sort_by, "quarantined_at")
+    sort_dir = "ASC" if sort_order == "asc" else "DESC"
+    order_sql = f"{sort_col} {sort_dir}, id {sort_dir}"
+
     # Get total count for pagination
     total_row = query(
         f'SELECT COUNT(*) as total FROM quarantined_emails {where_sql}',
@@ -188,7 +211,7 @@ def list_quarantine(request: Request, _=require_permission(PERMISSIONS["view_qua
                quarantined_at, expires_at, raw_email, compressed, signature
         FROM quarantined_emails
         {where_sql}
-        ORDER BY quarantined_at DESC
+        ORDER BY {order_sql}
         LIMIT :limit OFFSET :offset
         ''',
         {**params, 'limit': page_size, 'offset': offset}
@@ -300,6 +323,8 @@ def list_quarantine(request: Request, _=require_permission(PERMISSIONS["view_qua
             'page_size': page_size,
             'total': total,
             'total_pages': total_pages,
+            'sort_by': sort_by or '',
+            'sort_order': sort_order or '',
             'flash': msg
         }
     )
