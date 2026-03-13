@@ -174,17 +174,23 @@ Users can select their preferred language:
 System updates are managed via the command line (the web-based update checker has been removed in favor of the more reliable CLI approach).
 
 ```bash
-# Check for updates
+# Check for updates (short form: -c)
 ./update.sh --check
 
 # Update system (interactive)
 ./update.sh
 
-# Update system without prompts
+# Update system without prompts (short form: -f)
 ./update.sh --force
 
 # Update but don’t start containers automatically (useful for inspection)
 ./update.sh --skip-start
+
+# Apply database schema updates only (containers must already be running)
+./update.sh --apply-db
+
+# Show all available options
+./update.sh --help
 ```
 
 What the update script does:
