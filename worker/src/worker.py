@@ -184,7 +184,7 @@ def store_email(
     if date_header:
         try:
             date_parsed = parsedate_to_datetime(date_header)
-        except Exception:
+        except (ValueError, TypeError):
             date_parsed = None
     message_id_raw = msg.get("Message-ID")
     message_id = decode_header(message_id_raw) if message_id_raw is not None else None
