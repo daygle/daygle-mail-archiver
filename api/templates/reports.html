@@ -374,11 +374,11 @@
                                 </tr>
                             </thead>
                             <tbody id="completenessTableBody">
-                                <tr><td>Missing Subjects</td><td id="missingSubjectsPercent">-</td></tr>
-                                <tr><td>Missing Senders</td><td id="missingSendersPercent">-</td></tr>
-                                <tr><td>Missing Recipients</td><td id="missingRecipientsPercent">-</td></tr>
-                                <tr><td>Unscanned Emails</td><td id="unscannedPercent">-</td></tr>
-                                <tr><td>Virus Detected</td><td id="virusDetectedPercent">-</td></tr>
+                                <tr><td><a href="/emails?filter=missing_subject" id="missingSubjectsLink" class="link">Missing Subjects</a></td><td id="missingSubjectsPercent">-</td></tr>
+                                <tr><td><a href="/emails?filter=missing_sender" id="missingSendersLink" class="link">Missing Senders</a></td><td id="missingSendersPercent">-</td></tr>
+                                <tr><td><a href="/emails?filter=missing_recipients" id="missingRecipientsLink" class="link">Missing Recipients</a></td><td id="missingRecipientsPercent">-</td></tr>
+                                <tr><td><a href="/emails?filter=unscanned" id="unscannedLink" class="link">Unscanned Emails</a></td><td id="unscannedPercent">-</td></tr>
+                                <tr><td><a href="/emails?filter=virus_detected" id="virusDetectedLink" class="link">Virus Detected</a></td><td id="virusDetectedPercent">-</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -933,7 +933,7 @@ function loadStorageUtilizationReport() {
                 data.largest_emails.forEach(email => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td>${email.subject || 'No Subject'}</td>
+                        <td><a href="/emails/${email.id}" class="link">${email.subject || 'No Subject'}</a></td>
                         <td>${email.sender || 'Unknown'}</td>
                         <td>${email.receiver || 'Unknown'}</td>
                         <td>${email.size_mb !== undefined ? email.size_mb + ' MB' : '-'}</td>
@@ -1271,6 +1271,14 @@ function loadDataQualityReport() {
             document.getElementById('missingRecipientsPercent').textContent = (data.completeness_stats?.missing_recipients_percent || 0) + '%';
             document.getElementById('unscannedPercent').textContent = (data.completeness_stats?.unscanned_percent || 0) + '%';
             document.getElementById('virusDetectedPercent').textContent = (data.completeness_stats?.virus_detected_percent || 0) + '%';
+
+            // Update completeness link hrefs with current account filter
+            const accountParam = account ? `&account=${encodeURIComponent(account)}` : '';
+            document.getElementById('missingSubjectsLink').href = `/emails?filter=missing_subject${accountParam}`;
+            document.getElementById('missingSendersLink').href = `/emails?filter=missing_sender${accountParam}`;
+            document.getElementById('missingRecipientsLink').href = `/emails?filter=missing_recipients${accountParam}`;
+            document.getElementById('unscannedLink').href = `/emails?filter=unscanned${accountParam}`;
+            document.getElementById('virusDetectedLink').href = `/emails?filter=virus_detected${accountParam}`;
             
             // Update size distribution chart
             if (window.sizeDistributionChart && typeof window.sizeDistributionChart.destroy === 'function') {

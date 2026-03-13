@@ -28,6 +28,15 @@ def flash(request: Request, message: str, category: str = 'info'):
     request.session["flash"] = {"message": message, "type": category}
 
 
+VALID_EMAIL_FILTERS = {
+    "missing_subject",
+    "missing_sender",
+    "missing_recipients",
+    "unscanned",
+    "virus_detected",
+}
+
+
 @router.get("/emails", response_class=HTMLResponse)
 def list_emails(
     request: Request,
@@ -36,6 +45,7 @@ def list_emails(
     q: str | None = None,
     account: str | None = None,
     folder: str | None = None,
+    filter: str | None = None,
 ):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
@@ -81,7 +91,20 @@ def list_emails(
         where.append("folder = :folder")
         params["folder"] = folder
 
-    where_sql = "WHERE " + " AND ".join(where) if where else ""
+    # Sanitise the filter value to prevent injection via the predefined allow-list
+    if filter and filter in VALID_EMAIL_FILTERS:
+        if filter == "missing_subject":
+            where.append("(subject IS NULL OR subject = '')")
+        elif filter == "missing_sender":
+            where.append("(sender IS NULL OR sender = '')")
+        elif filter == "missing_recipients":
+            where.append("(recipients IS NULL OR recipients = '')")
+        elif filter == "unscanned":
+            where.append("(virus_scanned IS NULL OR virus_scanned = FALSE)")
+        elif filter == "virus_detected":
+            where.append("virus_detected = TRUE")
+
+    where_sql = "AND " + " AND ".join(where) if where else ""
 
     rows = query(
         f"""
@@ -160,6 +183,7 @@ def list_emails(
             "q": q or "",
             "account": account or "",
             "folder": folder or "",
+            "filter": filter or "",
             "flash": msg,
         },
     )
