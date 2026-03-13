@@ -87,7 +87,7 @@ def logs(
     if date_to:
         try:
             # Parse date and add to conditions (include full day)
-            where_conditions.append("timestamp < :date_to::date + interval '1 day'")
+            where_conditions.append("timestamp < CAST(:date_to AS DATE) + interval '1 day'")
             params["date_to"] = date_to
         except ValueError:
             pass  # Invalid date format, skip filter

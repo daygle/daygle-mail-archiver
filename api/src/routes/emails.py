@@ -121,11 +121,11 @@ def list_emails(
         params["subject"] = f"%{subject}%"
 
     if date_from:
-        where.append("COALESCE(date_parsed, created_at) >= :date_from::date")
+        where.append("COALESCE(date_parsed, created_at) >= CAST(:date_from AS DATE)")
         params["date_from"] = date_from
 
     if date_to:
-        where.append("COALESCE(date_parsed, created_at) < (:date_to::date + INTERVAL '1 day')")
+        where.append("COALESCE(date_parsed, created_at) < (CAST(:date_to AS DATE) + INTERVAL '1 day')")
         params["date_to"] = date_to
 
     # Sanitise the filter value to prevent injection via the predefined allow-list
