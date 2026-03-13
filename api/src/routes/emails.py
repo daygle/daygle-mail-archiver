@@ -12,7 +12,7 @@ from ..utils.email_parser import decompress, parse_email, compute_signature
 from ..utils.crypto import decrypt_password
 from ..utils.logger import log
 from ..utils.templates import templates
-from ..utils.timezone import format_datetime, format_email_date
+from ..utils.timezone import format_datetime, format_email_date, user_date_to_utc_range_start, user_date_to_utc_range_end
 from ..utils.alerts import create_alert
 from ..utils.permissions import PermissionChecker, require_permission, PERMISSIONS
 from ..utils.clamav_scanner import ClamAVScanner
@@ -121,12 +121,12 @@ def list_emails(
         params["subject"] = f"%{subject}%"
 
     if date_from:
-        where.append("COALESCE(date_parsed, created_at) >= CAST(:date_from AS DATE)")
-        params["date_from"] = date_from
+        where.append("COALESCE(date_parsed, created_at) >= :date_from_utc")
+        params["date_from_utc"] = user_date_to_utc_range_start(date_from, user_id)
 
     if date_to:
-        where.append("COALESCE(date_parsed, created_at) < (CAST(:date_to AS DATE) + INTERVAL '1 day')")
-        params["date_to"] = date_to
+        where.append("COALESCE(date_parsed, created_at) < :date_to_utc")
+        params["date_to_utc"] = user_date_to_utc_range_end(date_to, user_id)
 
     # Sanitise the filter value to prevent injection via the predefined allow-list
     if filter and filter in VALID_EMAIL_FILTERS:

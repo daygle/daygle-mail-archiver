@@ -10,7 +10,7 @@ from ..utils.crypto import decrypt_password
 from cryptography.fernet import Fernet
 from ..utils.alerts import create_alert
 from ..utils.email_parser import compute_signature
-from ..utils.timezone import format_datetime, format_email_date
+from ..utils.timezone import format_datetime, format_email_date, user_date_to_utc_range_start, user_date_to_utc_range_end
 from ..utils.permissions import PermissionChecker, require_permission, PERMISSIONS
 
 router = APIRouter()
@@ -214,20 +214,20 @@ def list_quarantine(
         params['subject'] = f'%{subject}%'
 
     if date_from:
-        where_clauses.append("COALESCE(date_parsed, quarantined_at) >= CAST(:date_from AS DATE)")
-        params['date_from'] = date_from
+        where_clauses.append("COALESCE(date_parsed, quarantined_at) >= :date_from_utc")
+        params['date_from_utc'] = user_date_to_utc_range_start(date_from, user_id)
 
     if date_to:
-        where_clauses.append("COALESCE(date_parsed, quarantined_at) < (CAST(:date_to AS DATE) + INTERVAL '1 day')")
-        params['date_to'] = date_to
+        where_clauses.append("COALESCE(date_parsed, quarantined_at) < :date_to_utc")
+        params['date_to_utc'] = user_date_to_utc_range_end(date_to, user_id)
 
     if quarantined_from:
-        where_clauses.append("quarantined_at >= CAST(:quarantined_from AS DATE)")
-        params['quarantined_from'] = quarantined_from
+        where_clauses.append("quarantined_at >= :quarantined_from_utc")
+        params['quarantined_from_utc'] = user_date_to_utc_range_start(quarantined_from, user_id)
 
     if quarantined_to:
-        where_clauses.append("quarantined_at < (CAST(:quarantined_to AS DATE) + INTERVAL '1 day')")
-        params['quarantined_to'] = quarantined_to
+        where_clauses.append("quarantined_at < :quarantined_to_utc")
+        params['quarantined_to_utc'] = user_date_to_utc_range_end(quarantined_to, user_id)
 
     where_sql = " AND ".join(where_clauses) if where_clauses else ""
     if where_sql:
