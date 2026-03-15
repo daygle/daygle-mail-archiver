@@ -16,7 +16,7 @@
     <div class="card-body">
         <p class="mb-16">Learn how to use Daygle Mail Archiver to fetch, store, and manage your emails.</p>
         <ol class="pl-24 mb-0">
-            <li class="mb-12"><strong>Set up a Fetch Account:</strong> Go to Settings → Fetch Accounts and add a new email account (IMAP, Gmail, or Office 365)</li>
+            <li class="mb-12"><strong>Set up a Fetch Account:</strong> Go to Fetch Accounts and add a new email account (IMAP, Gmail, or Office 365)</li>
             <li class="mb-12"><strong>Enable the account:</strong> Ensure the “Enabled” checkbox is selected</li>
             <li class="mb-12"><strong>Start the worker:</strong> The worker will automatically fetch emails based on the poll interval</li>
             <li class="mb-0"><strong>View your emails:</strong> Navigate to the Emails page to browse and search archived emails</li>
@@ -34,12 +34,12 @@
     </div>
     <div class="card-body">
         <ol class="pl-24 mb-0">
-            <li class="mb-12">Go to <strong>Settings → Fetch Accounts</strong> and click <strong>"Add New Account"</strong></li>
+            <li class="mb-12">Go to <strong>Fetch Accounts</strong> and click <strong>"Add Fetch Account"</strong></li>
             <li class="mb-12">Select <strong>"IMAP"</strong> as the account type</li>
             <li class="mb-12">Enter your IMAP server details (host, port, username, password, SSL)</li>
             <li class="mb-12">Set the poll interval (how often to check for new emails)</li>
-            <li class="mb-12">Click <strong>"Test"</strong> to verify the connection</li>
-            <li class="mb-0">Click <strong>"Create Account"</strong> to save</li>
+            <li class="mb-12">Click <strong>"Create Account"</strong> to save</li>
+            <li class="mb-0">Use the <strong>"Test"</strong> button on the accounts list to verify the connection</li>
         </ol>
     </div>
 </div>
@@ -55,12 +55,12 @@
     <div class="card-body">
         <ol class="pl-24 mb-0">
             <li class="mb-12">Create a Google Cloud project and enable Gmail API</li>
-            <li class="mb-12">Create OAuth 2.0 credentials and register the redirect URI used by the application. Example (per-account callback): <code>http://your-domain/oauth/gmail/callback/{account_id}</code></li>
-            <li class="mb-12">Request offline access and the required Gmail scopes</li>
-            <li class="mb-12">Add a new account and select <strong>"Gmail API"</strong></li>
-            <li class="mb-12">Enter your OAuth Client ID and Client Secret</li>
-            <li class="mb-12">Save the account, then click <strong>"Authorise Gmail"</strong></li>
-            <li class="mb-0">Complete the Google authorisation flow</li>
+            <li class="mb-12">Create OAuth 2.0 credentials (Client ID and Client Secret)</li>
+            <li class="mb-12">Go to <strong>Fetch Accounts</strong>, click <strong>"Add Fetch Account"</strong>, and select <strong>"Gmail API"</strong></li>
+            <li class="mb-12">Enter your OAuth Client ID and Client Secret, then click <strong>"Create Account"</strong></li>
+            <li class="mb-12">Open the account for editing — the <strong>Redirect URI</strong> (e.g. <code>http://your-domain/oauth/gmail/callback/{account_id}</code>) is displayed in the OAuth Configuration section</li>
+            <li class="mb-12">In Google Cloud Console: add the Redirect URI to <strong>Authorised redirect URIs</strong> and save</li>
+            <li class="mb-0">Return to the edit form and click <strong>"Authorise"</strong> to complete the OAuth flow</li>
         </ol>
     </div>
 </div>
@@ -76,12 +76,12 @@
     <div class="card-body">
         <ol class="pl-24 mb-0">
             <li class="mb-12">Register an app in Azure AD / Microsoft 365 Admin Center</li>
-            <li class="mb-12">Add Mail.Read permission and create a client secret</li>
-            <li class="mb-12">Register the redirect URI (per-account callback). Example: <code>http://your-domain/oauth/o365/callback/{account_id}</code></li>
-            <li class="mb-12">Add a new account and select <strong>"Office 365 API"</strong></li>
-            <li class="mb-12">Enter your OAuth Client ID and Client Secret</li>
-            <li class="mb-12">Save the account, then click <strong>"Authorise Office 365"</strong></li>
-            <li class="mb-0">Complete the Microsoft authorisation flow</li>
+            <li class="mb-12">Add <code>Mail.Read</code> and <code>offline_access</code> permissions and create a client secret</li>
+            <li class="mb-12">Go to <strong>Fetch Accounts</strong>, click <strong>"Add Fetch Account"</strong>, and select <strong>"Office 365 API"</strong></li>
+            <li class="mb-12">Enter your OAuth Client ID and Client Secret, then click <strong>"Create Account"</strong></li>
+            <li class="mb-12">Open the account for editing — the <strong>Redirect URI</strong> (e.g. <code>http://your-domain/oauth/o365/callback/{account_id}</code>) is displayed in the OAuth Configuration section</li>
+            <li class="mb-12">In Azure AD: <strong>Authentication → Add a platform → Web</strong> → paste the Redirect URI and save</li>
+            <li class="mb-0">Return to the edit form and click <strong>"Authorise"</strong> to complete the Microsoft authorisation flow</li>
         </ol>
     </div>
 </div>
@@ -477,7 +477,7 @@
         <p class="mb-12"><strong>Configuration:</strong></p>
         <ul class="pl-24 mb-16">
             <li class="mb-8">ClamAV must be running and accessible to the worker process</li>
-            <li class="mb-8">Configure ClamAV host and port in environment variables</li>
+            <li class="mb-8">Configure ClamAV host and port in <strong>Global Settings → Virus Scanning (ClamAV)</strong></li>
             <li class="mb-8">Quarantined emails are retained for 90 days by default</li>
             <li class="mb-8">Quarantine data can be encrypted with a dedicated key</li>
         </ul>
@@ -538,22 +538,22 @@
 
         <p class="mb-12"><strong>Creating a Backup:</strong></p>
         <pre class="code-block"><code>cd /opt/daygle-mail-archiver</code></pre>
-        <pre class="code-block"><code>./scripts/backup_restore.sh backup</code></pre>
+        <pre class="code-block"><code>./backup_restore.sh backup</code></pre>
 
         <p class="mb-16">
             This creates a timestamped backup file in <code>./backups/</code> (or a custom directory) containing the PostgreSQL dump and configuration file.
         </p>
 
         <p class="mb-12"><strong>Listing Backups:</strong></p>
-        <pre class="code-block"><code>./scripts/backup_restore.sh list</code></pre>
+        <pre class="code-block"><code>./backup_restore.sh list</code></pre>
 
         <p class="mb-12"><strong>Restoring a Backup:</strong></p>
-        <pre class="code-block"><code>./scripts/backup_restore.sh restore backup_file.tar.gz</code></pre>
+        <pre class="code-block"><code>./backup_restore.sh restore backup_file.tar.gz</code></pre>
 
         <p class="mb-16">After restoring, restart services with <code>docker compose restart</code>.</p>
 
         <p class="mb-12"><strong>Deleting Old Backups:</strong></p>
-        <pre class="code-block"><code>./scripts/backup_restore.sh delete backup_file.tar.gz</code></pre>
+        <pre class="code-block"><code>./backup_restore.sh delete backup_file.tar.gz</code></pre>
 
         <div class="alert alert-danger mb-0">
             <i class="fas fa-exclamation-circle"></i>
@@ -590,7 +590,7 @@
         <div class="alert alert-warning mb-0">
             <i class="fas fa-exclamation-triangle"></i>
             <strong>Important:</strong>
-            Always create a backup before updating using <code>./scripts/backup_restore.sh backup</code>. The update script does not automatically back up your database.
+            Always create a backup before updating using <code>./backup_restore.sh backup</code>. The update script does not automatically back up your database.
         </div>
     </div>
 </div>
