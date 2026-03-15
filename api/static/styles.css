@@ -977,6 +977,7 @@ textarea.form-control {
 .badge {
     display: inline-flex;
     align-items: center;
+    gap: 0.3em;
     padding: 4px 10px;
     font-size: 0.75rem;
     font-weight: 600;
