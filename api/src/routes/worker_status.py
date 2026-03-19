@@ -1,10 +1,12 @@
+import importlib.metadata
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from datetime import datetime, timezone
 
 import pyclamd
 
-from ..utils.db import query
+from ..utils.db import query, engine
+from sqlalchemy import text as sa_text
 from ..utils.logger import log
 from ..utils.templates import templates
 from ..utils.permissions import require_permission, PERMISSIONS
@@ -15,9 +17,50 @@ router = APIRouter()
 DEFAULT_POLL_INTERVAL = 300  # 5 minutes in seconds
 HEARTBEAT_MULTIPLIER = 3  # Consider stale if no heartbeat in 3x poll interval
 
+_api_start_time: datetime = datetime.now(timezone.utc)
+_PACKAGE_NAME = "daygle-mail-archiver"
+
 
 def require_login(request: Request):
     return "user_id" in request.session
+
+
+def get_api_status() -> dict:
+    """Return basic API health info."""
+    try:
+        version = importlib.metadata.version(_PACKAGE_NAME)
+    except importlib.metadata.PackageNotFoundError:
+        version = None
+
+    uptime_seconds = int((datetime.now(timezone.utc) - _api_start_time).total_seconds())
+
+    days = uptime_seconds // 86400
+    hours = (uptime_seconds % 86400) // 3600
+    minutes = (uptime_seconds % 3600) // 60
+    seconds = uptime_seconds % 60
+
+    if days > 0:
+        uptime = f"{days}d {hours}h {minutes}m"
+    elif hours > 0:
+        uptime = f"{hours}h {minutes}m"
+    elif minutes > 0:
+        uptime = f"{minutes}m {seconds}s"
+    else:
+        uptime = f"{seconds}s"
+
+    return {"healthy": True, "version": version, "uptime": uptime}
+
+
+def get_database_status() -> dict:
+    """Check database connectivity and return a status dict."""
+    try:
+        with engine.connect() as conn:
+            row = conn.execute(sa_text("SELECT version()")).fetchone()
+            db_version = row[0] if row else None
+        return {"connected": True, "version": db_version}
+    except Exception as e:
+        log("warning", "Database Status", f"Failed to connect to database: {e}", "")
+        return {"connected": False, "version": None}
 
 
 def get_clamav_status() -> dict:
@@ -89,6 +132,8 @@ def worker_status(request: Request, _=require_permission(PERMISSIONS["view_worke
                 "accounts": [],
                 "system_health": "error",
                 "system_health_label": "Error Loading Status",
+                "api_status": get_api_status(),
+                "database": get_database_status(),
                 "clamav": get_clamav_status(),
                 "flash": flash,
             },
@@ -183,6 +228,8 @@ def worker_status(request: Request, _=require_permission(PERMISSIONS["view_worke
             "accounts": account_statuses,
             "system_health": system_health,
             "system_health_label": system_health_label,
+            "api_status": get_api_status(),
+            "database": get_database_status(),
             "clamav": get_clamav_status(),
             "flash": flash,
         },
