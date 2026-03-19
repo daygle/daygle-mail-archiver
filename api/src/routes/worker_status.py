@@ -2,6 +2,8 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from datetime import datetime, timezone
 
+import pyclamd
+
 from ..utils.db import query
 from ..utils.logger import log
 from ..utils.templates import templates
@@ -16,6 +18,43 @@ HEARTBEAT_MULTIPLIER = 3  # Consider stale if no heartbeat in 3x poll interval
 
 def require_login(request: Request):
     return "user_id" in request.session
+
+
+def get_clamav_status() -> dict:
+    """Check ClamAV daemon connectivity and return a status dict."""
+    try:
+        settings = query(
+            """
+            SELECT key, value FROM settings
+            WHERE key IN ('clamav_enabled', 'clamav_host', 'clamav_port')
+            """
+        ).mappings().all()
+        settings_dict = {row["key"]: row["value"] for row in settings}
+    except Exception as e:
+        log("warning", "ClamAV Status", f"Failed to load ClamAV settings: {e}", "")
+        settings_dict = {}
+
+    enabled = settings_dict.get("clamav_enabled", "true").lower() == "true"
+    host = settings_dict.get("clamav_host", "clamav")
+    port = int(settings_dict.get("clamav_port", "3310"))
+
+    if not enabled:
+        return {"enabled": False, "connected": False, "version": None, "host": host, "port": port}
+
+    try:
+        scanner = pyclamd.ClamdNetworkSocket(host=host, port=port)
+        if scanner.ping():
+            try:
+                version = scanner.version()
+            except Exception as e:
+                log("warning", "ClamAV Status", f"Failed to retrieve ClamAV version: {e}", "")
+                version = None
+            return {"enabled": True, "connected": True, "version": version, "host": host, "port": port}
+        else:
+            return {"enabled": True, "connected": False, "version": None, "host": host, "port": port}
+    except Exception as e:
+        log("warning", "ClamAV Status", f"Failed to connect to ClamAV at {host}:{port}: {e}", "")
+        return {"enabled": True, "connected": False, "version": None, "host": host, "port": port}
 
 
 @router.get("/worker-status", response_class=HTMLResponse)
@@ -50,6 +89,7 @@ def worker_status(request: Request, _=require_permission(PERMISSIONS["view_worke
                 "accounts": [],
                 "system_health": "error",
                 "system_health_label": "Error Loading Status",
+                "clamav": get_clamav_status(),
                 "flash": flash,
             },
         )
@@ -143,6 +183,7 @@ def worker_status(request: Request, _=require_permission(PERMISSIONS["view_worke
             "accounts": account_statuses,
             "system_health": system_health,
             "system_health_label": system_health_label,
+            "clamav": get_clamav_status(),
             "flash": flash,
         },
     )
