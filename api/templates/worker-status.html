@@ -3,6 +3,45 @@
 {% block page_title %}Worker Status{% endblock %}
 
 {% block content %}
+<div class="card mb-4">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-shield-alt"></i>
+            <span>ClamAV Status</span>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if not clamav.enabled %}
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge badge-secondary">
+                <i class="fas fa-ban"></i>
+                Disabled
+            </span>
+            <span style="color: var(--text-secondary);">Virus scanning is disabled. Enable it in <a href="/settings" class="link">Settings</a>.</span>
+        </div>
+        {% elif clamav.connected %}
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge badge-success">
+                <i class="fas fa-check-circle"></i>
+                Connected
+            </span>
+            <span style="color: var(--text-secondary);">{{ clamav.host }}:{{ clamav.port }}</span>
+            {% if clamav.version %}
+            <span style="color: var(--text-secondary);">— {{ clamav.version }}</span>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge badge-danger">
+                <i class="fas fa-times-circle"></i>
+                Unavailable
+            </span>
+            <span style="color: var(--text-secondary);">Cannot reach ClamAV daemon at {{ clamav.host }}:{{ clamav.port }}. Virus scanning is inactive.</span>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
 <div class="card">
     <div class="card-header">
         <div class="card-title">
