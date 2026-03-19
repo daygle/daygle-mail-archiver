@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block page_title %}Worker Status{% endblock %}
+{% block page_title %}System Status{% endblock %}
 
 {% block content %}
 <div class="card mb-4">
@@ -99,7 +99,7 @@
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-heartbeat"></i>
-            <span>Worker Status</span>
+            <span>Fetch Account Status</span>
         </div>
     </div>
     {% if accounts|length == 0 %}
@@ -198,10 +198,10 @@
     </div>
     <div class="card-footer">
         <div class="mb-3">
-            <div class="worker-legend">
+            <div class="fetch-status-legend">
                 <strong class="legend-title">Status Legend:</strong>
                 <div class="legend-grid">
-                    <div><span class="badge badge-success">Healthy</span> Worker is active and fetching successfully</div>
+                    <div><span class="badge badge-success">Healthy</span> Fetch account is active and running successfully</div>
                     <div><span class="badge badge-warning">Stale</span> No heartbeat in 3x the poll interval</div>
                     <div><span class="badge badge-danger">Error</span> Last fetch attempt encountered an error</div>
                     <div><span class="badge badge-info">Pending</span> Never been run yet</div>
