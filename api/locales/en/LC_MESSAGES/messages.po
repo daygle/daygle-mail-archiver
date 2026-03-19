@@ -37,8 +37,8 @@ msgid "Fetch Accounts"
 msgstr "Fetch Accounts"
 
 #: templates/base.html:86
-msgid "Worker Status"
-msgstr "Worker Status"
+msgid "System Status"
+msgstr "System Status"
 
 #: templates/base.html:92
 msgid "Reports"

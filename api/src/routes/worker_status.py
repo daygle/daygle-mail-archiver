@@ -100,9 +100,9 @@ def get_clamav_status() -> dict:
         return {"enabled": True, "connected": False, "version": None, "host": host, "port": port}
 
 
-@router.get("/worker-status", response_class=HTMLResponse)
+@router.get("/system-status", response_class=HTMLResponse)
 def worker_status(request: Request, _=require_permission(PERMISSIONS["view_worker_status"])):
-    """Display worker status for all fetch accounts"""
+    """Display system status for all services and fetch accounts"""
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
@@ -123,10 +123,10 @@ def worker_status(request: Request, _=require_permission(PERMISSIONS["view_worke
         """).mappings().all()
     except Exception as e:
         username = request.session.get("username", "unknown")
-        log("error", "Worker Status", f"Failed to fetch worker status for user '{username}': {str(e)}", "")
-        flash = "Failed to load worker status. Please try again."
+        log("error", "System Status", f"Failed to fetch system status for user '{username}': {str(e)}", "")
+        flash = "Failed to load system status. Please try again."
         return templates.TemplateResponse(
-            "worker-status.html",
+            "system-status.html",
             {
                 "request": request,
                 "accounts": [],
@@ -222,7 +222,7 @@ def worker_status(request: Request, _=require_permission(PERMISSIONS["view_worke
     flash = request.session.pop("flash", None)
     
     return templates.TemplateResponse(
-        "worker-status.html",
+        "system-status.html",
         {
             "request": request,
             "accounts": account_statuses,

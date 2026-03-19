@@ -36,8 +36,8 @@ msgid "Fetch Accounts"
 msgstr "获取账户"
 
 #: templates/base.html:86
-msgid "Worker Status"
-msgstr "工作进程状态"
+msgid "System Status"
+msgstr "系统状态"
 
 #: templates/base.html:92
 msgid "Reports"

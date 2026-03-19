@@ -81,9 +81,9 @@
                     </a>
                     {% endif %}
                     {% if 'view_worker_status' in request.session.get('permissions', []) %}
-                    <a href="/worker-status" class="nav-link {% if '/worker-status' in request.url.path %}active{% endif %}">
+                    <a href="/system-status" class="nav-link {% if '/system-status' in request.url.path %}active{% endif %}">
                         <i class="fas fa-heartbeat"></i>
-                        <span>{{ gettext("Worker Status") }}</span>
+                        <span>{{ gettext("System Status") }}</span>
                     </a>
                     {% endif %}
                     {% if 'view_reports' in request.session.get('permissions', []) %}

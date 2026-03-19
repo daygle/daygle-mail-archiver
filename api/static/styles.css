@@ -3202,21 +3202,21 @@ a:hover {
     text-align: center;
 }
 
-/* Worker Status - legend styling */
-.worker-legend .legend-title {
+/* System Status - legend styling */
+.fetch-status-legend .legend-title {
     font-size: 0.9375rem;
     display: block;
     color: var(--text-primary);
 }
 
-.worker-legend .legend-grid {
+.fetch-status-legend .legend-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 12px;
     margin-top: 12px;
 }
 
-.worker-legend .legend-grid div {
+.fetch-status-legend .legend-grid div {
     color: var(--text-secondary);
 }
 
