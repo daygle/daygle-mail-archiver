@@ -28,6 +28,27 @@ def log_warning(message: str, details: str = ""):
         pass
 
 
+def log_info(message: str, details: str = ""):
+    """Log info message to database."""
+    try:
+        execute(
+            """
+            INSERT INTO logs (timestamp, level, source, message, details)
+            VALUES (:ts, :level, :source, :message, :details)
+            """,
+            {
+                "ts": datetime.now(timezone.utc),
+                "level": "info",
+                "source": "ClamAV",
+                "message": message[:500],
+                "details": details[:4000],
+            },
+        )
+    except Exception:
+        # If logging fails, just continue - don't break email processing
+        pass
+
+
 def create_alert(alert_type: str, title: str, message: str, details: str = None, trigger_key: str = None):
     """
     Create a system alert (ClamAV-side implementation).
@@ -146,6 +167,28 @@ class ClamAVScanner:
             )
             self._enabled = False
     
+    def _get_clamav_status(self) -> str:
+        """Get the last known ClamAV availability status from the database."""
+        try:
+            row = query(
+                "SELECT value FROM settings WHERE key = 'clamav_status'"
+            ).mappings().first()
+            return row['value'] if row else 'unknown'
+        except Exception as e:
+            log_warning("Could not read ClamAV status from database", str(e))
+            return 'unknown'
+
+    def _set_clamav_status(self, status: str):
+        """Persist the ClamAV availability status to the database."""
+        try:
+            execute(
+                "INSERT INTO settings (key, value) VALUES ('clamav_status', :status) "
+                "ON CONFLICT (key) DO UPDATE SET value = :status",
+                {"status": status}
+            )
+        except Exception as e:
+            log_warning("Could not persist ClamAV status to database", str(e))
+
     def _connect(self) -> Optional[pyclamd.ClamdNetworkSocket]:
         """
         Connect to ClamAV daemon.
@@ -161,27 +204,43 @@ class ClamAVScanner:
             # Test connection
             if scanner.ping():
                 self._scanner = scanner
+                # Recover: if ClamAV was previously unavailable, fire a recovery alert
+                if self._get_clamav_status() == 'unavailable':
+                    log_info(f"ClamAV service at {self.host}:{self.port} is available again")
+                    create_alert(
+                        'info',
+                        'ClamAV Service Recovered',
+                        f'ClamAV daemon at {self.host}:{self.port} is available again',
+                        'Virus scanning has resumed.',
+                        'clamav_recovered'
+                    )
+                self._set_clamav_status('available')
                 return scanner
             else:
-                # ping() returned False - connection failed
+                # ping() returned False - only alert on first failure
                 log_warning(f"ClamAV ping failed at {self.host}:{self.port}")
-                create_alert(
-                    'error',
-                    'ClamAV Connection Failed',
-                    f'Cannot connect to ClamAV daemon at {self.host}:{self.port}',
-                    'Virus scanning is unavailable. Check ClamAV service status.',
-                    'clamav_unavailable'
-                )
+                if self._get_clamav_status() != 'unavailable':
+                    create_alert(
+                        'error',
+                        'ClamAV Connection Failed',
+                        f'Cannot connect to ClamAV daemon at {self.host}:{self.port}',
+                        'Virus scanning is unavailable. Check ClamAV service status.',
+                        'clamav_unavailable'
+                    )
+                    self._set_clamav_status('unavailable')
                 return None
         except Exception as e:
             log_warning(f"Could not connect to ClamAV at {self.host}:{self.port}", str(e))
-            create_alert(
-                'error',
-                'ClamAV Service Unavailable',
-                f'Failed to establish connection to ClamAV daemon',
-                f'Host: {self.host}:{self.port}, Error: {str(e)}. Virus scanning is disabled.',
-                'clamav_unavailable'
-            )
+            # Only alert on first failure, not on every subsequent connection attempt
+            if self._get_clamav_status() != 'unavailable':
+                create_alert(
+                    'error',
+                    'ClamAV Service Unavailable',
+                    f'Failed to establish connection to ClamAV daemon',
+                    f'Host: {self.host}:{self.port}, Error: {str(e)}. Virus scanning is disabled.',
+                    'clamav_unavailable'
+                )
+                self._set_clamav_status('unavailable')
             # Reset cached scanner on connection failure
             self._scanner = None
         
@@ -221,15 +280,9 @@ class ClamAVScanner:
         
         scanner = self._connect()
         if not scanner:
-            # If we can't connect, log warning and allow email through
+            # If we can't connect, log warning and allow email through.
+            # The alert was already fired by _connect() on the first failure.
             log_warning("ClamAV scanner not available, skipping virus scan")
-            create_alert(
-                'warning',
-                'ClamAV Scanner Unavailable',
-                'Virus scanning skipped due to ClamAV service unavailability',
-                f'Host: {self.host}:{self.port}. Email processing continues without virus scanning.',
-                'clamav_unavailable'
-            )
             return False, None, scan_timestamp
         
         try:
