@@ -230,6 +230,8 @@ INSERT INTO settings (key, value) VALUES ('clamav_quarantine_in_db', 'true') ON 
 INSERT INTO settings (key, value) VALUES ('clamav_quarantine_retention_days', '90') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('clamav_max_file_size', '10485760') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('clamav_quarantine_encrypt', 'false') ON CONFLICT (key) DO NOTHING;
+-- Tracks whether ClamAV was last seen as available or unavailable so alerts fire only on state transitions
+INSERT INTO settings (key, value) VALUES ('clamav_status', 'unknown') ON CONFLICT (key) DO NOTHING;
 
 -- User session settings
 INSERT INTO settings (key, value) VALUES ('auto_logout_minutes', '60') ON CONFLICT (key) DO NOTHING;
@@ -399,7 +401,8 @@ INSERT INTO alert_triggers (trigger_key, name, description, alert_type, enabled)
     ('system_startup', 'System Startup', 'Alert when the system starts up successfully', 'info', FALSE),
     ('maintenance_mode', 'Maintenance Mode', 'Alert when maintenance mode is enabled or disabled', 'info', TRUE),
     ('email_quarantined', 'Email Quarantined', 'Alert when an email is manually quarantined by a user', 'warning', TRUE),
-    ('quarantine_restored', 'Quarantine Restored', 'Alert when a quarantined email is restored by a user', 'warning', TRUE)
+    ('quarantine_restored', 'Quarantine Restored', 'Alert when a quarantined email is restored by a user', 'warning', TRUE),
+    ('clamav_recovered', 'ClamAV Recovered', 'Alert when ClamAV service becomes available again after being unavailable', 'info', TRUE)
 ON CONFLICT (trigger_key) DO UPDATE SET
     name = EXCLUDED.name,
     description = EXCLUDED.description,
