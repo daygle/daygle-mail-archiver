@@ -5,7 +5,7 @@ from typing import Optional
 from ..utils.db import query
 from ..utils.logger import log
 from ..utils.templates import templates
-from ..utils.alerts import create_alert, get_alerts, acknowledge_alert, get_unacknowledged_count
+from ..utils.alerts import create_alert, get_alerts, acknowledge_alert, acknowledge_all_alerts, get_unacknowledged_count
 from ..utils.timezone import convert_utc_to_user_timezone
 from ..utils.permissions import PermissionChecker, require_permission, PERMISSIONS
 from .reports import get_user_date_format
@@ -96,6 +96,36 @@ def alerts_page(
             "date_format": date_format
         }
     )
+
+@router.post("/api/alerts/acknowledge-all")
+def acknowledge_all_alerts_api(request: Request):
+    """Acknowledge all unacknowledged alerts"""
+    if not require_login(request):
+        return RedirectResponse("/login", status_code=303)
+
+    checker = PermissionChecker(request)
+    if not checker.has_permission("manage_alerts"):
+        return JSONResponse({"error": "Forbidden"}, status_code=403)
+
+    user_id = request.session.get("user_id")
+    if not user_id:
+        flash(request, "User not found", 'error')
+        return RedirectResponse("/alerts", status_code=303)
+
+    try:
+        count = acknowledge_all_alerts(user_id)
+        username = request.session.get("username", "unknown")
+        log("info", "Alerts", f"User '{username}' acknowledged all {count} alert(s)", "")
+        if count > 0:
+            flash(request, f"All {count} alert(s) acknowledged successfully!", 'success')
+        else:
+            flash(request, "No unacknowledged alerts to acknowledge", 'info')
+        return RedirectResponse("/alerts", status_code=303)
+    except Exception as e:
+        log("error", "Alerts", f"Failed to acknowledge all alerts: {str(e)}", "")
+        flash(request, "Failed to acknowledge all alerts", 'error')
+        return RedirectResponse("/alerts", status_code=303)
+
 
 @router.post("/api/alerts/{alert_id}/acknowledge")
 def acknowledge_alert_api(request: Request, alert_id: int):

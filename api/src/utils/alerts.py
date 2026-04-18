@@ -157,6 +157,33 @@ def get_alerts(
     return [dict(row) for row in results]
 
 
+def acknowledge_all_alerts(user_id: int) -> int:
+    """
+    Mark all unacknowledged alerts as acknowledged.
+
+    Args:
+        user_id: ID of the user acknowledging the alerts
+
+    Returns:
+        int: Number of alerts acknowledged
+    """
+    try:
+        result = execute("""
+            UPDATE alerts
+            SET acknowledged = TRUE, acknowledged_at = NOW(), acknowledged_by = :user_id
+            WHERE acknowledged = FALSE
+        """, {"user_id": user_id})
+
+        count = result.rowcount
+        if count > 0:
+            log("info", "Alert", f"All {count} unacknowledged alert(s) acknowledged by user {user_id}", "")
+        return count
+
+    except Exception as e:
+        log("error", "Alert", f"Failed to acknowledge all alerts: {str(e)}", "")
+        return 0
+
+
 def acknowledge_alert(alert_id: int, user_id: int) -> bool:
     """
     Mark an alert as acknowledged
