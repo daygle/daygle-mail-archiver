@@ -167,7 +167,9 @@
         </a>
         {% endif %}
 
-        {% for page_num in range(max(1, page - 2), min(total_pages + 1, page + 3)) %}
+        {% set start_page = page - 2 if (page - 2) > 1 else 1 %}
+        {% set end_page = page + 2 if (page + 2) < total_pages else total_pages %}
+        {% for page_num in range(start_page, end_page + 1) %}
         <a href="?page={{ page_num }}{% if alert_type %}&alert_type={{ alert_type }}{% endif %}{% if show_acknowledged %}&show_acknowledged=1{% endif %}"
            class="page-link {% if page_num == page %}active{% endif %}">{{ page_num }}</a>
         {% endfor %}
