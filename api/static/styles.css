@@ -354,6 +354,148 @@ pre.code-block code {
 }
 .help-grid .alert { margin-bottom: 0; }
 
+/* Help/About/Donate docs-style layout */
+.help-docs-layout {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+.help-toc-card {
+    position: sticky;
+    top: 16px;
+    height: fit-content;
+}
+
+.help-toc-nav {
+    display: flex;
+    flex-direction: column;
+}
+
+.help-toc-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    color: var(--text-primary);
+    text-decoration: none;
+    border-left: 3px solid transparent;
+    transition: all var(--transition-fast);
+}
+
+.help-toc-link:hover {
+    background: var(--bg-hover);
+    border-left-color: var(--accent-primary);
+    color: var(--accent-primary);
+}
+
+.help-toc-link i {
+    width: 1rem;
+    text-align: center;
+}
+
+.help-content {
+    min-width: 0;
+}
+
+.help-content > .card {
+    margin-bottom: 24px;
+}
+
+.help-content > .card:last-child {
+    margin-bottom: 0;
+}
+
+.help-body {
+    padding: 24px;
+}
+
+.help-section {
+    margin-bottom: 32px;
+}
+
+.help-section:last-child {
+    margin-bottom: 0;
+}
+
+.help-heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+}
+
+.help-icon {
+    color: var(--accent-primary);
+}
+
+.help-intro {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.help-body p {
+    color: var(--text-secondary);
+}
+
+.help-body ul,
+.help-body ol {
+    margin-left: 20px;
+}
+
+@media (max-width: 1100px) {
+    .help-docs-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .help-toc-card {
+        position: static;
+    }
+
+    .help-toc-nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .help-toc-link {
+        flex: 1 1 calc(50% - 8px);
+        border-left: none;
+        border-bottom: 2px solid transparent;
+    }
+
+    .help-toc-link:hover {
+        border-left: none;
+        border-bottom-color: var(--accent-primary);
+    }
+}
+
+@media (max-width: 768px) {
+    .help-toc-nav {
+        flex-direction: column;
+    }
+
+    .help-toc-link {
+        flex: 1 1 auto;
+        border-bottom: none;
+        border-left: 3px solid transparent;
+    }
+
+    .help-toc-link:hover {
+        border-bottom: none;
+        border-left-color: var(--accent-primary);
+    }
+
+    .help-body {
+        padding: 16px;
+    }
+}
+
 .nav-submenu {
     max-height: 0;
     overflow: hidden;

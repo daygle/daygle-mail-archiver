@@ -3,10 +3,43 @@
 {% block page_title %}Help & Documentation{% endblock %}
 
 {% block content %}
-<div class="help-grid">
+<div class="help-docs-layout">
+<aside class="help-toc-card">
+    <div class="card">
+        <div class="card-header">
+            <h4 class="card-title">
+                <i class="fas fa-book"></i>
+                <span>Contents</span>
+            </h4>
+        </div>
+        <div class="card-body p-0">
+            <nav class="help-toc-nav">
+                <a href="#quick-start" class="help-toc-link"><i class="fas fa-rocket"></i> Quick Start</a>
+                <a href="#imap-accounts" class="help-toc-link"><i class="fas fa-server"></i> IMAP Accounts</a>
+                <a href="#gmail-api" class="help-toc-link"><i class="fab fa-google"></i> Gmail API</a>
+                <a href="#office365-api" class="help-toc-link"><i class="fab fa-microsoft"></i> Office 365 API</a>
+                <a href="#managing-emails" class="help-toc-link"><i class="fas fa-inbox"></i> Managing Emails</a>
+                <a href="#import-export" class="help-toc-link"><i class="fas fa-exchange-alt"></i> Import/Export</a>
+                <a href="#system-status" class="help-toc-link"><i class="fas fa-heartbeat"></i> System Status</a>
+                <a href="#global-settings" class="help-toc-link"><i class="fas fa-sliders"></i> Global Settings</a>
+                <a href="#dashboard-analytics" class="help-toc-link"><i class="fas fa-chart-line"></i> Dashboard</a>
+                <a href="#troubleshooting" class="help-toc-link"><i class="fas fa-wrench"></i> Troubleshooting</a>
+                <a href="#user-management" class="help-toc-link"><i class="fas fa-users"></i> User Management</a>
+                <a href="#security-features" class="help-toc-link"><i class="fas fa-shield-alt"></i> Security</a>
+                <a href="#quarantine" class="help-toc-link"><i class="fas fa-shield-virus"></i> Quarantine</a>
+                <a href="#reports-analytics" class="help-toc-link"><i class="fas fa-chart-bar"></i> Reports</a>
+                <a href="#backup-restore" class="help-toc-link"><i class="fas fa-database"></i> Backup & Restore</a>
+                <a href="#system-updates" class="help-toc-link"><i class="fas fa-sync-alt"></i> System Updates</a>
+                <a href="#additional-resources" class="help-toc-link"><i class="fas fa-link"></i> Resources</a>
+            </nav>
+        </div>
+    </div>
+</aside>
+
+<main class="help-content">
 
 <!-- Quick Start Guide -->
-<div class="card">
+<div class="card" id="quick-start">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-rocket"></i>
@@ -25,7 +58,7 @@
 </div>
 
 <!-- Adding IMAP Accounts -->
-<div class="card">
+<div class="card" id="imap-accounts">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-server"></i>
@@ -45,7 +78,7 @@
 </div>
 
 <!-- Adding Gmail API Accounts -->
-<div class="card">
+<div class="card" id="gmail-api">
     <div class="card-header">
         <div class="card-title">
             <i class="fab fa-google"></i>
@@ -66,7 +99,7 @@
 </div>
 
 <!-- Adding Office 365 Accounts -->
-<div class="card">
+<div class="card" id="office365-api">
     <div class="card-header">
         <div class="card-title">
             <i class="fab fa-microsoft"></i>
@@ -87,7 +120,7 @@
 </div>
 
 <!-- Managing Emails -->
-<div class="card">
+<div class="card" id="managing-emails">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-inbox"></i>
@@ -105,7 +138,7 @@
 </div>
 
 <!-- Import/Export -->
-<div class="card">
+<div class="card" id="import-export">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-exchange-alt"></i>
@@ -121,7 +154,7 @@
 </div>
 
 <!-- System Status -->
-<div class="card">
+<div class="card" id="system-status">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-heartbeat"></i>
@@ -135,7 +168,7 @@
 </div>
 
 <!-- Global Settings -->
-<div class="card">
+<div class="card" id="global-settings">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-sliders"></i>
@@ -154,7 +187,7 @@
 </div>
 
 <!-- Dashboard Analytics -->
-<div class="card">
+<div class="card" id="dashboard-analytics">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-chart-line"></i>
@@ -177,7 +210,7 @@
 </div>
 
 <!-- Troubleshooting -->
-<div class="card">
+<div class="card" id="troubleshooting">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-wrench"></i>
@@ -216,7 +249,7 @@
 </div>
 
 <!-- User Management -->
-<div class="card">
+<div class="card" id="user-management">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-users"></i>
@@ -269,7 +302,7 @@
 </div>
 
 <!-- Security Features -->
-<div class="card">
+<div class="card" id="security-features">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-shield-alt"></i>
@@ -295,7 +328,7 @@
 </div>
 
 <!-- Quarantine Management -->
-<div class="card">
+<div class="card" id="quarantine">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-shield-virus"></i>
@@ -490,7 +523,7 @@
 </div>
 
 <!-- Reports Overview -->
-<div class="card">
+<div class="card" id="reports-analytics">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-chart-bar"></i>
@@ -524,7 +557,7 @@
 </div>
 
 <!-- Backup and Restore -->
-<div class="card">
+<div class="card" id="backup-restore">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-database"></i>
@@ -564,7 +597,7 @@
 </div>
 
 <!-- System Updates -->
-<div class="card">
+<div class="card" id="system-updates">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-sync-alt"></i>
@@ -596,7 +629,7 @@
 </div>
 
 <!-- Additional Resources -->
-<div class="card">
+<div class="card" id="additional-resources">
     <div class="card-header">
         <div class="card-title">
             <i class="fas fa-book"></i>
@@ -611,5 +644,8 @@
             <li class="mb-8"><strong>Donate:</strong> Support development via the <a href="/donate">Donate</a> page</li>
         </ul>
     </div>
+</div>
+</main>
+
 </div>
 {% endblock %}
