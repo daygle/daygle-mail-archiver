@@ -109,6 +109,10 @@ class ClamAVScanner:
         self._scanner = None
         self._enabled = True
         self._action = 'quarantine'
+        self._failure_count = 0
+        self._first_failure_time = None
+        self._failure_grace_seconds = 120
+        self._failure_alert_threshold = 3
         self._load_settings()
     
     def _load_settings(self):
@@ -189,6 +193,28 @@ class ClamAVScanner:
         except Exception as e:
             log_warning("Could not persist ClamAV status to database", str(e))
 
+    def _record_connection_failure(self) -> bool:
+        """Track repeated ClamAV connection failures and return whether an alert should be sent."""
+        now = datetime.now(timezone.utc)
+        if self._first_failure_time is None:
+            self._first_failure_time = now
+            self._failure_count = 1
+        else:
+            self._failure_count += 1
+
+        if self._failure_count >= self._failure_alert_threshold:
+            return True
+
+        if (now - self._first_failure_time).total_seconds() >= self._failure_grace_seconds:
+            return True
+
+        return False
+
+    def _reset_connection_failure(self):
+        """Reset the transient connection failure tracking."""
+        self._failure_count = 0
+        self._first_failure_time = None
+
     def _connect(self) -> Optional[pyclamd.ClamdNetworkSocket]:
         """
         Connect to ClamAV daemon.
@@ -204,6 +230,7 @@ class ClamAVScanner:
             # Test connection
             if scanner.ping():
                 self._scanner = scanner
+                self._reset_connection_failure()
                 # Recover: if ClamAV was previously unavailable, fire a recovery alert
                 if self._get_clamav_status() == 'unavailable':
                     log_info(f"ClamAV service at {self.host}:{self.port} is available again")
@@ -217,9 +244,10 @@ class ClamAVScanner:
                 self._set_clamav_status('available')
                 return scanner
             else:
-                # ping() returned False - only alert on first failure
+                # ping() returned False - only alert after repeated failures or a grace period
+                should_alert = self._record_connection_failure()
                 log_warning(f"ClamAV ping failed at {self.host}:{self.port}")
-                if self._get_clamav_status() != 'unavailable':
+                if should_alert and self._get_clamav_status() != 'unavailable':
                     create_alert(
                         'error',
                         'ClamAV Connection Failed',
@@ -231,8 +259,8 @@ class ClamAVScanner:
                 return None
         except Exception as e:
             log_warning(f"Could not connect to ClamAV at {self.host}:{self.port}", str(e))
-            # Only alert on first failure, not on every subsequent connection attempt
-            if self._get_clamav_status() != 'unavailable':
+            should_alert = self._record_connection_failure()
+            if should_alert and self._get_clamav_status() != 'unavailable':
                 create_alert(
                     'error',
                     'ClamAV Service Unavailable',
