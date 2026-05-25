@@ -15,6 +15,67 @@ from utils.email_parser import decode_header
 
 POLL_INTERVAL_FALLBACK = 300  # seconds
 
+
+def _parse_quoted_imap_token(value: str):
+    if not value or value[0] != '"':
+        return None, 0
+    out = []
+    i = 1
+    while i < len(value):
+        ch = value[i]
+        if ch == "\\":
+            if i + 1 >= len(value):
+                return None, 0
+            out.append(value[i + 1])
+            i += 2
+            continue
+        if ch == '"':
+            return "".join(out), i + 1
+        out.append(ch)
+        i += 1
+    return None, 0
+
+
+def _parse_list_mailbox(mbox):
+    mbox_str = (
+        mbox.decode("utf-8", errors="replace")
+        if isinstance(mbox, (bytes, bytearray))
+        else str(mbox)
+    )
+    mbox_str = mbox_str.strip()
+    if not mbox_str.startswith("("):
+        return None
+
+    flags_end = mbox_str.find(")")
+    if flags_end <= 0:
+        return None
+    flags_str = mbox_str[1:flags_end]
+    remainder = mbox_str[flags_end + 1 :].lstrip()
+    if not remainder:
+        return None
+
+    if remainder.startswith("NIL"):
+        remainder = remainder[3:].lstrip()
+    elif remainder.startswith('"'):
+        _, consumed = _parse_quoted_imap_token(remainder)
+        if consumed == 0:
+            return None
+        remainder = remainder[consumed:].lstrip()
+    else:
+        return None
+
+    if not remainder:
+        return None
+
+    folder = remainder.strip()
+    if folder.startswith('"'):
+        parsed_folder, consumed = _parse_quoted_imap_token(folder)
+        if consumed == 0 or folder[consumed:].strip():
+            return None
+        folder = parsed_folder
+
+    return {f.lower() for f in flags_str.split()}, folder
+
 # Initialise ClamAV scanner (singleton)
 clamav_scanner = None
 
@@ -416,11 +477,28 @@ def process_imap_account(account):
 
                 # Iterate over all mailboxes
                 for mbox in mailboxes:
-                    parts = mbox.decode().split(" ")
-                    folder = parts[-1].strip('"')
+                    if mbox is None:
+                        continue
+                    parsed = _parse_list_mailbox(mbox)
+                    if not parsed:
+                        continue
+
+                    flag_tokens, folder = parsed
+                    if "\\noselect" in flag_tokens or "\\nonexistent" in flag_tokens:
+                        continue
+
+                    if any(ch in folder for ch in (' ', '"', "\\", "\t")):
+                        folder_for_imap = '"' + folder.replace("\\", "\\\\").replace('"', r"\"") + '"'
+                    else:
+                        folder_for_imap = folder
 
                     # Select folder as readonly unless we need to delete
-                    conn.select(folder, readonly=not delete_after_processing)
+                    try:
+                        status_sel, _ = conn.select(folder_for_imap, readonly=not delete_after_processing)
+                    except imaplib.IMAP4.error:
+                        continue
+                    if status_sel != "OK":
+                        continue
 
                     last_uid = get_last_uid(account_id, folder)
 
