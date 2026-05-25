@@ -1,6 +1,7 @@
 import time
 import gzip
 import email
+import re
 from datetime import datetime, timezone, timedelta
 from email.utils import parsedate_to_datetime
 from collections import defaultdict
@@ -14,6 +15,9 @@ from clamav_scanner import ClamAVScanner
 from utils.email_parser import decode_header
 
 POLL_INTERVAL_FALLBACK = 300  # seconds
+MAILBOX_LIST_RE = re.compile(
+    r'^\((?P<flags>[^)]*)\)\s+(?:(?P<delim>"(?:\\.|[^"])*"|NIL))\s+(?P<name>.+?)\s*$'
+)
 
 # Initialise ClamAV scanner (singleton)
 clamav_scanner = None
@@ -416,11 +420,39 @@ def process_imap_account(account):
 
                 # Iterate over all mailboxes
                 for mbox in mailboxes:
-                    parts = mbox.decode().split(" ")
-                    folder = parts[-1].strip('"')
+                    if mbox is None:
+                        continue
+                    mbox_str = (
+                        mbox.decode("utf-8", errors="replace")
+                        if isinstance(mbox, (bytes, bytearray))
+                        else str(mbox)
+                    )
+                    match = MAILBOX_LIST_RE.match(mbox_str)
+                    if not match:
+                        continue
+
+                    flags_str = match.group("flags")
+                    raw_name = match.group("name").strip()
+                    folder = raw_name
+                    if folder.startswith('"') and folder.endswith('"'):
+                        folder = folder[1:-1].replace(r"\\", "\\").replace(r"\"", '"')
+
+                    flag_tokens = {f.lower() for f in flags_str.split()}
+                    if "\\noselect" in flag_tokens or "\\nonexistent" in flag_tokens:
+                        continue
+
+                    if any(ch in folder for ch in (' ', '"', "\\", "\t")):
+                        folder_for_imap = '"' + folder.replace("\\", "\\\\").replace('"', r"\"") + '"'
+                    else:
+                        folder_for_imap = folder
 
                     # Select folder as readonly unless we need to delete
-                    conn.select(folder, readonly=not delete_after_processing)
+                    try:
+                        status_sel, _ = conn.select(folder_for_imap, readonly=not delete_after_processing)
+                    except imaplib.IMAP4.error:
+                        continue
+                    if status_sel != "OK":
+                        continue
 
                     last_uid = get_last_uid(account_id, folder)
 
