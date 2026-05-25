@@ -1,7 +1,6 @@
 import time
 import gzip
 import email
-import re
 from datetime import datetime, timezone, timedelta
 from email.utils import parsedate_to_datetime
 from collections import defaultdict
@@ -15,9 +14,67 @@ from clamav_scanner import ClamAVScanner
 from utils.email_parser import decode_header
 
 POLL_INTERVAL_FALLBACK = 300  # seconds
-MAILBOX_LIST_RE = re.compile(
-    r'^\((?P<flags>[^)]*)\)\s+(?:(?P<delim>"(?:\\.|[^"])*"|NIL))\s+(?P<name>.+?)\s*$'
-)
+
+
+def _parse_quoted_imap_token(value: str):
+    if not value or value[0] != '"':
+        return None, 0
+    out = []
+    i = 1
+    while i < len(value):
+        ch = value[i]
+        if ch == "\\":
+            if i + 1 >= len(value):
+                return None, 0
+            out.append(value[i + 1])
+            i += 2
+            continue
+        if ch == '"':
+            return "".join(out), i + 1
+        out.append(ch)
+        i += 1
+    return None, 0
+
+
+def _parse_list_mailbox(mbox):
+    mbox_str = (
+        mbox.decode("utf-8", errors="replace")
+        if isinstance(mbox, (bytes, bytearray))
+        else str(mbox)
+    )
+    mbox_str = mbox_str.strip()
+    if not mbox_str.startswith("("):
+        return None
+
+    flags_end = mbox_str.find(")")
+    if flags_end <= 0:
+        return None
+    flags_str = mbox_str[1:flags_end]
+    remainder = mbox_str[flags_end + 1 :].lstrip()
+    if not remainder:
+        return None
+
+    if remainder.startswith("NIL"):
+        remainder = remainder[3:].lstrip()
+    elif remainder.startswith('"'):
+        _, consumed = _parse_quoted_imap_token(remainder)
+        if consumed == 0:
+            return None
+        remainder = remainder[consumed:].lstrip()
+    else:
+        return None
+
+    if not remainder:
+        return None
+
+    folder = remainder.strip()
+    if folder.startswith('"'):
+        parsed_folder, consumed = _parse_quoted_imap_token(folder)
+        if consumed == 0 or folder[consumed:].strip():
+            return None
+        folder = parsed_folder
+
+    return {f.lower() for f in flags_str.split()}, folder
 
 # Initialise ClamAV scanner (singleton)
 clamav_scanner = None
@@ -422,22 +479,11 @@ def process_imap_account(account):
                 for mbox in mailboxes:
                     if mbox is None:
                         continue
-                    mbox_str = (
-                        mbox.decode("utf-8", errors="replace")
-                        if isinstance(mbox, (bytes, bytearray))
-                        else str(mbox)
-                    )
-                    match = MAILBOX_LIST_RE.match(mbox_str)
-                    if not match:
+                    parsed = _parse_list_mailbox(mbox)
+                    if not parsed:
                         continue
 
-                    flags_str = match.group("flags")
-                    raw_name = match.group("name").strip()
-                    folder = raw_name
-                    if folder.startswith('"') and folder.endswith('"'):
-                        folder = folder[1:-1].replace(r"\\", "\\").replace(r"\"", '"')
-
-                    flag_tokens = {f.lower() for f in flags_str.split()}
+                    flag_tokens, folder = parsed
                     if "\\noselect" in flag_tokens or "\\nonexistent" in flag_tokens:
                         continue
 
