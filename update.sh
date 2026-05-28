@@ -213,8 +213,9 @@ update_code() {
     
     # Commit current state
     log_info "Saving current state..."
-    git add -u
-    git commit -am "Before update on ${TIMESTAMP}" > /dev/null 2>&1 || true
+    # Stage tracked + untracked files so local work is preserved before merge
+    git add -A
+    git commit -m "Before update on ${TIMESTAMP}" > /dev/null 2>&1 || true
     
     # Fetch and merge
     log_info "Fetching latest changes..."
