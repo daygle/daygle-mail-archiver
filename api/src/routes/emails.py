@@ -1228,10 +1228,12 @@ def _quarantine_emails(ids: List[int], quarantined_by: str) -> int:
                     INSERT INTO quarantined_emails
                     (original_source, original_folder, original_uid, subject, sender, recipients,
                      date, date_parsed, message_id, raw_email, signature, compressed, virus_name,
-                     virus_scanned, virus_detected, scan_timestamp, reason, quarantined_by)
+                     virus_scanned, virus_detected, scan_timestamp, reason, quarantined_by,
+                     original_created_at)
                     VALUES (:source, :folder, :uid, :subject, :sender, :recipients,
                      :date, :date_parsed, :message_id, :raw_email, :signature, :compressed, :virus_name,
-                     :vscanned, :vdetected, :scan_ts, :reason, :quarantined_by)
+                     :vscanned, :vdetected, :scan_ts, :reason, :quarantined_by,
+                     :original_created_at)
                     ON CONFLICT DO NOTHING
                 """), {
                     "source": email["source"],
@@ -1251,7 +1253,8 @@ def _quarantine_emails(ids: List[int], quarantined_by: str) -> int:
                     "vdetected": email.get("virus_detected"),
                     "scan_ts": email.get("scan_timestamp"),
                     "reason": "Manually Quarantined",
-                    "quarantined_by": quarantined_by
+                    "quarantined_by": quarantined_by,
+                    "original_created_at": email.get("created_at")
                 })
                 # If the same source/folder/UID is already quarantined, retain
                 # the existing quarantine record and leave this archive row

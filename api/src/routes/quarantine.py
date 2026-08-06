@@ -181,6 +181,7 @@ def _prepare_restore_item(item, fernet) -> tuple:
             "vdetected": vdetected,
             "vname": vname,
             "scan_ts": item.get("scan_timestamp"),
+            "original_created_at": item.get("original_created_at"),
         }, None
     except Exception as e:
         return None, f"Failed to prepare quarantined email {qid} for restore: {str(e)}"
@@ -205,20 +206,39 @@ def _restore_quarantine_item(item) -> tuple:
             # overwrite it (that could replace a clean re-fetched copy with the
             # infected quarantined one). Surface the conflict and keep the
             # quarantine record so nothing is lost.
-            result = conn.execute(
-                text(
-                    """
-                    INSERT INTO emails (source, folder, uid, subject, sender, recipients, date,
-                        date_parsed, message_id, raw_email, signature, compressed,
-                        virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined)
-                    VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date,
-                        :date_parsed, :message_id, :raw, :signature, TRUE,
-                        :vscanned, :vdetected, :vname, :scan_ts, FALSE)
-                    ON CONFLICT (source, folder, uid) DO NOTHING
-                    """
-                ),
-                payload,
-            )
+            # Use the original created_at if available, otherwise let the DB default to NOW()
+            if payload.get("original_created_at"):
+                result = conn.execute(
+                    text(
+                        """
+                        INSERT INTO emails (source, folder, uid, subject, sender, recipients, date,
+                            date_parsed, message_id, raw_email, signature, compressed,
+                            virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined,
+                            created_at)
+                        VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date,
+                            :date_parsed, :message_id, :raw, :signature, TRUE,
+                            :vscanned, :vdetected, :vname, :scan_ts, FALSE,
+                            :original_created_at)
+                        ON CONFLICT (source, folder, uid) DO NOTHING
+                        """
+                    ),
+                    payload,
+                )
+            else:
+                result = conn.execute(
+                    text(
+                        """
+                        INSERT INTO emails (source, folder, uid, subject, sender, recipients, date,
+                            date_parsed, message_id, raw_email, signature, compressed,
+                            virus_scanned, virus_detected, virus_name, scan_timestamp, quarantined)
+                        VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date,
+                            :date_parsed, :message_id, :raw, :signature, TRUE,
+                            :vscanned, :vdetected, :vname, :scan_ts, FALSE)
+                        ON CONFLICT (source, folder, uid) DO NOTHING
+                        """
+                    ),
+                    payload,
+                )
             if result.rowcount == 0:
                 raise RuntimeError(
                     f"An email with the same account/folder/UID already exists in the archive; "

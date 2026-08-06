@@ -286,6 +286,10 @@ ALTER TABLE quarantined_emails
     ADD COLUMN IF NOT EXISTS virus_detected BOOLEAN,
     ADD COLUMN IF NOT EXISTS scan_timestamp TIMESTAMPTZ;
 
+-- Preserve original created_at so restored emails retain their original timestamp
+ALTER TABLE quarantined_emails
+    ADD COLUMN IF NOT EXISTS original_created_at TIMESTAMPTZ;
+
 CREATE INDEX IF NOT EXISTS quarantined_emails_quarantined_at_idx ON quarantined_emails(quarantined_at DESC);
 
 -- Add the nullable link before duplicate cleanup references it. This ordering is
