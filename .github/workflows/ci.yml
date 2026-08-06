@@ -7,6 +7,7 @@ on:
 
 jobs:
   static-checks:
+    name: Static checks (py${{ matrix.python-version }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -32,3 +33,62 @@ jobs:
         # Restrict to checks that catch real defects (syntax errors, undefined
         # names, invalid comparisons) rather than style, so the gate is stable.
         run: ruff check --select E9,F63,F7,F82 api/src worker/src
+
+  docker-build:
+    name: Docker build (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [api, worker]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build ${{ matrix.service }} image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./${{ matrix.service }}
+          push: false
+          load: false
+          # Cache layers between runs to keep builds fast.
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+  schema-check:
+    name: Schema apply + idempotency
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: daygle_mail_archiver
+          POSTGRES_USER: daygle_mail_archiver
+          POSTGRES_PASSWORD: ci_test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U daygle_mail_archiver -d daygle_mail_archiver"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGUSER: daygle_mail_archiver
+      PGDATABASE: daygle_mail_archiver
+      PGPASSWORD: ci_test_password
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends postgresql-client
+
+      - name: Apply schema (fresh database)
+        run: psql -v ON_ERROR_STOP=1 -f db/schema.sql
+
+      - name: Apply schema again (must be idempotent)
+        # update.sh re-runs schema.sql on every update, so a second apply must
+        # succeed with no errors. ON_ERROR_STOP=1 fails the job on any error.
+        run: psql -v ON_ERROR_STOP=1 -f db/schema.sql
