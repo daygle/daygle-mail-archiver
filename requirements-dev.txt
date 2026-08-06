@@ -1,0 +1,4 @@
+# Development-only dependencies (not installed in production images).
+# Runtime dependencies are pinned in api/requirements.txt and worker/requirements.txt.
+-r api/requirements.txt
+pytest==8.3.5

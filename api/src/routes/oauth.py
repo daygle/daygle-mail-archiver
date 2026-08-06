@@ -1,4 +1,5 @@
 """OAuth2 routes for Gmail and Office 365 integration"""
+import secrets
 from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
 import urllib.parse
@@ -8,13 +9,47 @@ from datetime import datetime, timezone, timedelta
 from ..utils.db import query, execute
 from ..utils.logger import log
 from ..utils.crypto import encrypt_password
+from ..utils.config import get_config
 from ..utils.templates import templates
 
 router = APIRouter()
 
+# Scopes must cover the operations the worker performs. gmail.readonly / Mail.Read
+# only permit reading; "delete after processing" moves messages to Trash (Gmail)
+# or deletes them (Graph), which require write scopes.
+GMAIL_SCOPE = "https://www.googleapis.com/auth/gmail.modify"
+O365_SCOPE = "https://graph.microsoft.com/Mail.ReadWrite offline_access"
+
 
 def require_login(request: Request):
     return "user_id" in request.session
+
+
+def _build_redirect_uri(request: Request, provider: str, account_id: int) -> str:
+    """Build the OAuth redirect URI for the callback.
+
+    Uses PUBLIC_BASE_URL when configured so the URI matches what is registered
+    in Google/Azure even when the API runs behind a reverse proxy (otherwise
+    request.url_for reflects the internal scheme/host and the callback URI
+    mismatch causes OAuth to fail).
+    """
+    public_base = (get_config("PUBLIC_BASE_URL") or "").rstrip("/")
+    if public_base:
+        return f"{public_base}/oauth/{provider}/callback/{account_id}"
+    return str(request.url_for(f"{provider}_oauth_callback", account_id=account_id))
+
+
+def _new_oauth_state(request: Request, provider: str, account_id: int) -> str:
+    """Generate a CSRF state token and stash it in the session."""
+    state = secrets.token_urlsafe(32)
+    request.session[f"oauth_state_{provider}_{account_id}"] = state
+    return state
+
+
+def _verify_oauth_state(request: Request, provider: str, account_id: int, state) -> bool:
+    """Verify the state echoed back by the provider matches the one we sent."""
+    expected = request.session.pop(f"oauth_state_{provider}_{account_id}", None)
+    return bool(expected and state and secrets.compare_digest(expected, state))
 
 
 @router.get("/oauth/gmail/start/{account_id}")
@@ -37,14 +72,16 @@ def gmail_oauth_start(request: Request, account_id: int):
     log("info", "OAuth", f"User '{username}' initiated Gmail OAuth for account {account_id}", "")
     
     # Build OAuth URL
-    redirect_uri = request.url_for("gmail_oauth_callback", account_id=account_id)
+    redirect_uri = _build_redirect_uri(request, "gmail", account_id)
+    state = _new_oauth_state(request, "gmail", account_id)
     params = {
         "client_id": account["oauth_client_id"],
-        "redirect_uri": str(redirect_uri),
+        "redirect_uri": redirect_uri,
         "response_type": "code",
-        "scope": "https://www.googleapis.com/auth/gmail.readonly",
+        "scope": GMAIL_SCOPE,
         "access_type": "offline",
-        "prompt": "consent"
+        "prompt": "consent",
+        "state": state,
     }
     
     auth_url = "https://accounts.google.com/o/oauth2/v2/auth?" + urllib.parse.urlencode(params)
@@ -52,11 +89,18 @@ def gmail_oauth_start(request: Request, account_id: int):
 
 
 @router.get("/oauth/gmail/callback/{account_id}")
-def gmail_oauth_callback(request: Request, account_id: int, code: str = None, error: str = None):
+def gmail_oauth_callback(request: Request, account_id: int, code: str = None, error: str = None, state: str = None):
     """Handle Gmail OAuth callback"""
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
     
+    # Verify state first (and always clear it) so forged callbacks and provider
+    # error responses cannot bypass CSRF protection.
+    if not _verify_oauth_state(request, "gmail", account_id, state):
+        log("warning", "OAuth", f"OAuth state mismatch for Gmail account {account_id}")
+        request.session["flash"] = "OAuth authorisation failed: state verification failed. Please try again."
+        return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)
+
     if error:
         request.session["flash"] = f"OAuth error: {error}"
         return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)
@@ -77,7 +121,7 @@ def gmail_oauth_callback(request: Request, account_id: int, code: str = None, er
     
     # Exchange code for tokens
     token_url = "https://oauth2.googleapis.com/token"
-    redirect_uri = request.url_for("gmail_oauth_callback", account_id=account_id)
+    redirect_uri = _build_redirect_uri(request, "gmail", account_id)
     data = {
         "code": code,
         "client_id": account["oauth_client_id"],
@@ -161,13 +205,15 @@ def o365_oauth_start(request: Request, account_id: int):
     log("info", "OAuth", f"User '{username}' initiated Office 365 OAuth for account {account_id}", "")
     
     # Build OAuth URL
-    redirect_uri = request.url_for("o365_oauth_callback", account_id=account_id)
+    redirect_uri = _build_redirect_uri(request, "o365", account_id)
+    state = _new_oauth_state(request, "o365", account_id)
     params = {
         "client_id": account["oauth_client_id"],
-        "redirect_uri": str(redirect_uri),
+        "redirect_uri": redirect_uri,
         "response_type": "code",
-        "scope": "https://graph.microsoft.com/Mail.Read offline_access",
-        "response_mode": "query"
+        "scope": O365_SCOPE,
+        "response_mode": "query",
+        "state": state,
     }
     
     auth_url = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize?" + urllib.parse.urlencode(params)
@@ -175,11 +221,18 @@ def o365_oauth_start(request: Request, account_id: int):
 
 
 @router.get("/oauth/o365/callback/{account_id}")
-def o365_oauth_callback(request: Request, account_id: int, code: str = None, error: str = None):
+def o365_oauth_callback(request: Request, account_id: int, code: str = None, error: str = None, state: str = None):
     """Handle Office 365 OAuth callback"""
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
     
+    # Verify state first (and always clear it) so forged callbacks and provider
+    # error responses cannot bypass CSRF protection.
+    if not _verify_oauth_state(request, "o365", account_id, state):
+        log("warning", "OAuth", f"OAuth state mismatch for Office 365 account {account_id}")
+        request.session["flash"] = "OAuth authorisation failed: state verification failed. Please try again."
+        return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)
+
     if error:
         request.session["flash"] = f"OAuth error: {error}"
         return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)
@@ -200,7 +253,7 @@ def o365_oauth_callback(request: Request, account_id: int, code: str = None, err
     
     # Exchange code for tokens
     token_url = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
-    redirect_uri = request.url_for("o365_oauth_callback", account_id=account_id)
+    redirect_uri = _build_redirect_uri(request, "o365", account_id)
     data = {
         "code": code,
         "client_id": account["oauth_client_id"],

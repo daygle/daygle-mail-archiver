@@ -1,14 +1,15 @@
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import RedirectResponse, JSONResponse
+from sqlalchemy import text
 import bcrypt
 import re
 from typing import List
 
-from ..utils.db import query, execute
+from ..utils.db import query, execute, transaction
 from ..utils.logger import log
 from ..utils.templates import templates
 from ..utils.timezone import format_datetime
-from ..utils.permissions import require_permission, PERMISSIONS
+from ..utils.permissions import require_permission, PERMISSIONS, check_privileged_role_assignment
 
 router = APIRouter()
 
@@ -117,33 +118,54 @@ def create_user(
         flash(request, "At least one role must be assigned.", "error")
         return RedirectResponse("/users", status_code=303)
 
+    # Normalize + dedupe role ids before touching the DB
+    try:
+        role_ids = sorted({int(r) for r in role_ids})
+    except (TypeError, ValueError):
+        flash(request, "Invalid role selection.", "error")
+        return RedirectResponse("/users", status_code=303)
+
+    # A user manager cannot assign roles that carry privileged permissions they
+    # do not hold themselves (prevents self-escalation via a god-role).
+    error = check_privileged_role_assignment(request, role_ids)
+    if error:
+        flash(request, error, "error")
+        return RedirectResponse("/users", status_code=303)
+
     try:
         # Hash password
         hash_pw = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
-        # Create user
-        new_user = query("""
-            INSERT INTO users (username, password_hash, first_name, last_name, email, email_notifications, enabled)
-            VALUES (:u, :h, :fn, :ln, :e, :enf, :en)
-            RETURNING id
-        """, {
-            "u": username,
-            "h": hash_pw,
-            "fn": first_name,
-            "ln": last_name,
-            "e": email,
-            "enf": email_notifications,
-            "en": enabled
-        }).mappings().first()
+        # Create the user and assign roles atomically so a failure cannot leave
+        # a user account with no (or a partial set of) roles.
+        assigned_by = request.session.get("user_id")
+        assigned_by = int(assigned_by) if assigned_by else None
 
-        user_id = new_user["id"]
+        with transaction() as conn:
+            new_user = conn.execute(text("""
+                INSERT INTO users (username, password_hash, first_name, last_name, email, email_notifications, enabled)
+                VALUES (:u, :h, :fn, :ln, :e, :enf, :en)
+                RETURNING id
+            """), {
+                "u": username,
+                "h": hash_pw,
+                "fn": first_name,
+                "ln": last_name,
+                "e": email,
+                "enf": email_notifications,
+                "en": enabled
+            }).mappings().first()
 
-        # Assign roles
-        for role_id in role_ids:
-            execute("""
-                INSERT INTO user_roles (user_id, role_id)
-                VALUES (:user_id, :role_id)
-            """, {"user_id": user_id, "role_id": int(role_id)})
+            if not new_user or "id" not in new_user:
+                raise RuntimeError("INSERT INTO users did not return an id")
+
+            user_id = int(new_user["id"])
+
+            for role_id in role_ids:
+                conn.execute(text("""
+                    INSERT INTO user_roles (user_id, role_id, assigned_by)
+                    VALUES (:user_id, :role_id, :assigned_by)
+                """), {"user_id": user_id, "role_id": role_id, "assigned_by": assigned_by})
 
         log("info", "Users", f"Admin '{admin_username}' created user '{username}' with roles {role_ids}")
         flash(request, f"User '{username}' created successfully", "success")
@@ -274,6 +296,13 @@ def update_user(
         flash(request, "At least one role must be assigned.", "error")
         return RedirectResponse(f"/users/{user_id}/edit", status_code=303)
 
+    # Normalize + dedupe role ids before touching the DB
+    try:
+        new_role_ids = sorted({int(r) for r in role_ids})
+    except (TypeError, ValueError):
+        flash(request, "Invalid role selection.", "error")
+        return RedirectResponse(f"/users/{user_id}/edit", status_code=303)
+
     try:
         # Fetch current user values
         current = query("""
@@ -287,8 +316,7 @@ def update_user(
             SELECT role_id FROM user_roles WHERE user_id = :id
         """, {"id": user_id}).mappings().all()
 
-        current_role_ids = {str(r["role_id"]) for r in current_role_rows}
-        new_role_ids = {str(r) for r in role_ids}
+        current_role_ids = {int(r["role_id"]) for r in current_role_rows}
 
         # Prevent self‑lockout: user cannot remove their own admin-level access
         if user_id == current_user_id:
@@ -300,9 +328,9 @@ def update_user(
                 WHERE p.name = 'manage_users'
             """).mappings().all()
 
-            admin_role_ids = {str(r["role_id"]) for r in admin_roles}
+            admin_role_ids = {int(r["role_id"]) for r in admin_roles}
 
-            if not (new_role_ids & admin_role_ids):
+            if not (set(new_role_ids) & admin_role_ids):
                 flash(request, "You cannot remove your own administrative access.", "error")
                 return RedirectResponse("/users", status_code=303)
 
@@ -316,72 +344,91 @@ def update_user(
             and (current["email"] or None) == email
             and bool(current["email_notifications"]) == bool(email_notifications)
             and bool(current["enabled"]) == (True if user_id == current_user_id else bool(enabled))
-            and current_role_ids == new_role_ids
+            and current_role_ids == set(new_role_ids)
         ):
             flash(request, "No changes detected.", "info")
             return RedirectResponse("/users", status_code=303)
 
-        # Password update
-        if password:
-            if (
-                len(password) < 8
-                or not re.search(r"[a-z]", password)
-                or not re.search(r"[A-Z]", password)
-                or not re.search(r"[0-9]", password)
-            ):
-                flash(request, "Password must include upper, lower, number and be 8+ chars.", "error")
-                return RedirectResponse("/users", status_code=303)
+        # Only guard the assignment when the role set actually changes, so a user
+        # demoted by someone else can still update their own profile.
+        if current_role_ids != set(new_role_ids):
+            error = check_privileged_role_assignment(request, new_role_ids)
+            if error:
+                flash(request, error, "error")
+                return RedirectResponse(f"/users/{user_id}/edit", status_code=303)
 
-            hash_pw = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        # Password policy is validated up front so the failure surfaces as a
+        # specific message instead of a generic transaction rollback.
+        if password and (
+            len(password) < 8
+            or not re.search(r"[a-z]", password)
+            or not re.search(r"[A-Z]", password)
+            or not re.search(r"[0-9]", password)
+        ):
+            flash(request, "Password must include upper, lower, number and be 8+ chars.", "error")
+            return RedirectResponse("/users", status_code=303)
 
-            execute("""
-                UPDATE users
-                SET username = :u, first_name = :fn, last_name = :ln,
-                    email = :e, email_notifications = :enf,
-                    enabled = :en, password_hash = :h
-                WHERE id = :id
-            """, {
-                "u": username,
-                "fn": first_name,
-                "ln": last_name,
-                "e": email,
-                "enf": email_notifications,
-                "en": True if user_id == current_user_id else enabled,
-                "h": hash_pw,
-                "id": user_id
-            })
+        assigned_by = request.session.get("user_id")
+        assigned_by = int(assigned_by) if assigned_by else None
 
-            log("warning", "Users",
-                f"Admin '{admin_username}' updated user '{username}' (ID: {user_id}) including password reset")
+        # Update the user record and replace their role assignments atomically so
+        # a failure cannot leave the user updated but with no roles (lockout).
+        with transaction() as conn:
+            # Password update
+            if password:
+                hash_pw = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
-        else:
-            # Update without password
-            execute("""
-                UPDATE users
-                SET username = :u, first_name = :fn, last_name = :ln,
-                    email = :e, email_notifications = :enf,
-                    enabled = :en
-                WHERE id = :id
-            """, {
-                "u": username,
-                "fn": first_name,
-                "ln": last_name,
-                "e": email,
-                "enf": email_notifications,
-                "en": True if user_id == current_user_id else enabled,
-                "id": user_id
-            })
+                conn.execute(text("""
+                    UPDATE users
+                    SET username = :u, first_name = :fn, last_name = :ln,
+                        email = :e, email_notifications = :enf,
+                        enabled = :en, password_hash = :h
+                    WHERE id = :id
+                """), {
+                    "u": username,
+                    "fn": first_name,
+                    "ln": last_name,
+                    "e": email,
+                    "enf": email_notifications,
+                    "en": True if user_id == current_user_id else enabled,
+                    "h": hash_pw,
+                    "id": user_id
+                })
 
-            log("info", "Users",
-                f"Admin '{admin_username}' updated user '{username}' (ID: {user_id})")
+                log("warning", "Users",
+                    f"Admin '{admin_username}' updated user '{username}' (ID: {user_id}) including password reset")
 
-        # Update role assignments
-        execute("DELETE FROM user_roles WHERE user_id = :id", {"id": user_id})
-        for rid in new_role_ids:
-            execute("""
-                INSERT INTO user_roles (user_id, role_id)
-                VALUES (:user_id, :role_id)
-            """, {"user_id": user_id, "role_id": int(rid)})
+            else:
+                # Update without password
+                conn.execute(text("""
+                    UPDATE users
+                    SET username = :u, first_name = :fn, last_name = :ln,
+                        email = :e, email_notifications = :enf,
+                        enabled = :en
+                    WHERE id = :id
+                """), {
+                    "u": username,
+                    "fn": first_name,
+                    "ln": last_name,
+                    "e": email,
+                    "enf": email_notifications,
+                    "en": True if user_id == current_user_id else enabled,
+                    "id": user_id
+                })
+
+                log("info", "Users",
+                    f"Admin '{admin_username}' updated user '{username}' (ID: {user_id})")
+
+            # Replace role assignments
+            conn.execute(
+                text("DELETE FROM user_roles WHERE user_id = :id"),
+                {"id": user_id},
+            )
+            for rid in new_role_ids:
+                conn.execute(text("""
+                    INSERT INTO user_roles (user_id, role_id, assigned_by)
+                    VALUES (:user_id, :role_id, :assigned_by)
+                """), {"user_id": user_id, "role_id": rid, "assigned_by": assigned_by})
 
         flash(request, "User updated successfully.", "success")
 

@@ -2,14 +2,18 @@ from typing import List
 import io
 import os
 import gzip
+import tempfile
 import urllib.parse
 import zipfile
 import mailbox
+from email import message_from_bytes
 from fastapi import APIRouter, Request, Form, UploadFile, File
 from fastapi.responses import RedirectResponse, StreamingResponse, HTMLResponse
 from imaplib import IMAP4, IMAP4_SSL
+from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 
-from ..utils.db import query, execute
+from ..utils.db import query, execute, transaction
 from ..utils.email_parser import decompress, parse_email, compute_signature, get_attachment_parts
 from ..utils.crypto import decrypt_password
 from ..utils.logger import log
@@ -20,6 +24,18 @@ from ..utils.permissions import PermissionChecker, require_permission, PERMISSIO
 from ..utils.clamav_scanner import ClamAVScanner
 
 router = APIRouter()
+
+# Shared scanner for the import path. Constructing a ClamAVScanner per email
+# would run a settings DB query and open a clamd connection for every message
+# in a large mbox/zip import; caching a singleton mirrors the worker.
+_import_scanner = None
+
+
+def _get_import_scanner() -> ClamAVScanner:
+    global _import_scanner
+    if _import_scanner is None:
+        _import_scanner = ClamAVScanner()
+    return _import_scanner
 
 
 def require_login(request: Request):
@@ -37,6 +53,112 @@ VALID_EMAIL_FILTERS = {
     "unscanned",
     "virus_detected",
 }
+
+# Upper bound for a single uploaded import file (bytes). Prevents an upload
+# from being read fully into memory and exhausting the process.
+MAX_IMPORT_FILE_SIZE = 100 * 1024 * 1024
+
+# Cap on the number of per-file issues reported in the import flash message.
+MAX_IMPORT_ERRORS_SHOWN = 20
+
+
+def _iter_mbox_messages(content: bytes):
+    """Yield the raw RFC822 bytes of each message inside an mbox file.
+
+    ``mailbox.mbox`` requires a real filesystem path (it calls
+    ``os.path.expanduser`` on its argument), so the uploaded bytes are spooled
+    to a temporary file first. Iterating the parser - instead of splitting the
+    bytes on ``b"\nFrom "`` - also handles bodies whose lines start with
+    "From " (the mbox From_-escaping rule), skips file preambles, and handles
+    empty files.
+
+    A non-empty file containing no "From " envelope line at all (e.g. a bare
+    .eml renamed to .mbox) is treated as a single message, preserving the
+    behaviour of the old manual parser rather than silently importing nothing.
+    """
+    fd, path = tempfile.mkstemp(prefix="daygle-import-", suffix=".mbox")
+    yielded_any = False
+    try:
+        with os.fdopen(fd, "wb") as tmp:
+            tmp.write(content)
+        mbox = mailbox.mbox(path, create=False)
+        try:
+            for index, message in enumerate(mbox):
+                try:
+                    raw = message.as_bytes()
+                except Exception as e:
+                    log("error", "Import", f"Failed to read mbox message {index}: {str(e)}", "")
+                    continue
+                if raw:
+                    yielded_any = True
+                    yield raw
+        finally:
+            try:
+                mbox.close()
+            except Exception:
+                pass
+        if not yielded_any and content.strip():
+            yield content
+    finally:
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
+
+
+def _record_insert_result(status: str, label: str) -> tuple:
+    """Translate an ``_insert_raw_email`` status into import counters.
+
+    Returns ``(imported, rejected, error_message)`` - one of the first two is
+    1 on success/rejection, and ``error_message`` is set on failure so callers
+    don't each re-implement the tri-state dispatch.
+    """
+    if status == "ok":
+        return 1, 0, None
+    if status == "rejected":
+        return 0, 1, None
+    return 0, 0, f"{label}: failed to insert"
+
+
+def _build_import_flash(imported: int, rejected: int, errors: list) -> tuple:
+    """Build the (message, category) flash describing an import result.
+
+    Success and per-file issues are combined into a single message (the session
+    flash is a single slot, so two flash() calls would overwrite each other),
+    the error list is capped, and virus rejections are reported separately from
+    hard failures.
+    """
+    if imported > 0 or rejected > 0 or errors:
+        parts = []
+        if imported > 0:
+            parts.append(f"Imported {imported} message(s).")
+        if rejected > 0:
+            parts.append(f"{rejected} message(s) blocked (virus detected).")
+        if errors:
+            shown = errors[:MAX_IMPORT_ERRORS_SHOWN]
+            if len(errors) > MAX_IMPORT_ERRORS_SHOWN:
+                shown.append(f"... and {len(errors) - MAX_IMPORT_ERRORS_SHOWN} more issue(s)")
+            issues = "Issues: " + "; ".join(shown)
+            if imported == 0 and rejected == 0:
+                issues = "No messages were imported. " + issues
+            parts.append(issues)
+        # Anything blocked/failed is surfaced with a non-green flash; pure
+        # success is the only path to a green alert.
+        category = "error" if errors else ("warning" if rejected else "success")
+        return " ".join(parts), category
+    return "No messages were imported.", "info"
+
+
+def _quote_imap_folder(folder: str) -> str:
+    """Quote an IMAP mailbox name when it needs escaping for the protocol.
+
+    imaplib does not quote arguments itself, so a folder containing spaces
+    (e.g. "Sent Items") would be sent as ``SELECT Sent Items`` and rejected
+    by the server.
+    """
+    if any(ch in folder for ch in (' ', '"', "\\", "\t")):
+        return '"' + folder.replace("\\", "\\\\").replace('"', r"\"") + '"'
+    return folder
 
 # Mapping of user-facing sort keys to actual DB column names (allowlist to prevent injection)
 VALID_EMAIL_SORT_COLUMNS = {
@@ -83,12 +205,18 @@ def list_emails(
     if user_id:
         user_result = query("SELECT page_size FROM users WHERE id = :id", {"id": user_id}).mappings().first()
         if user_result and user_result["page_size"]:
-            page_size = user_result["page_size"]
+            try:
+                page_size = int(user_result["page_size"])
+            except (TypeError, ValueError):
+                page_size = 50
     
     if not user_id or not page_size:
         global_result = query("SELECT value FROM settings WHERE key = 'page_size'").mappings().first()
         if global_result:
-            page_size = int(global_result["value"])
+            try:
+                page_size = int(global_result["value"])
+            except (TypeError, ValueError):
+                page_size = 50
 
     page_size = min(max(10, page_size), 500)  # Ensure between 10-500
     page = max(1, page)  # Guard against page <= 0 producing a negative OFFSET
@@ -160,7 +288,11 @@ def list_emails(
     rows = query(
         f"""
         SELECT id, source, folder, uid, subject, sender, recipients, date, created_at,
-               virus_scanned, virus_detected, virus_name, raw_email, compressed, signature
+               virus_scanned, virus_detected, virus_name, signature,
+               -- Only transfer raw bytes for rows that have a signature to check;
+               -- signature-less rows short-circuit to 'no_signature' without them.
+               CASE WHEN signature IS NOT NULL THEN raw_email ELSE NULL END AS raw_email,
+               CASE WHEN signature IS NOT NULL THEN compressed ELSE NULL END AS compressed
         FROM emails
         WHERE quarantined = FALSE
         {where_sql}
@@ -187,17 +319,19 @@ def list_emails(
             stored_sig = rr.get("signature")
             raw_blob = rr.get("raw_email")
             compressed_flag = rr.get("compressed")
-            if raw_blob is not None:
+            if stored_sig is None:
+                # Nothing to compare against - skip decompressing and hashing
+                # the raw bytes entirely (the row's raw was not even fetched).
+                integrity = "no_signature"
+                integrity_reason = "No signature was stored when this email was archived"
+            elif raw_blob is not None:
                 raw = decompress(raw_blob, compressed_flag)
                 try:
                     current_sig = compute_signature(raw)
                 except Exception:
                     current_sig = None
 
-                if stored_sig is None:
-                    integrity = "no_signature"
-                    integrity_reason = "No signature was stored when this email was archived"
-                elif current_sig is None:
+                if current_sig is None:
                     integrity = "unknown"
                     integrity_reason = "Could not compute current signature"
                 elif stored_sig == current_sig:
@@ -252,9 +386,14 @@ def emails_transfer_page(request: Request):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
+    # The page hosts both the import and export forms; a user holding either
+    # permission may open it, with each card gated individually (the sidebar
+    # link is already shown for either permission).
     checker = PermissionChecker(request)
-    if not checker.has_permission("import_emails"):
-        return HTMLResponse("Access denied: Insufficient permissions to import emails", status_code=403)
+    can_import = checker.has_permission("import_emails")
+    can_export = checker.has_permission("export_emails")
+    if not can_import and not can_export:
+        return HTMLResponse("Access denied: Insufficient permissions to import or export emails", status_code=403)
 
     msg = request.session.pop("flash", None)
     # Provide list of fetch accounts so user can assign imported messages to a source
@@ -266,22 +405,27 @@ def emails_transfer_page(request: Request):
 
     return templates.TemplateResponse(
         "emails-import-export.html",
-        {"request": request, "flash": msg, "accounts": accounts},
+        {
+            "request": request,
+            "flash": msg,
+            "accounts": accounts,
+            "can_import": can_import,
+            "can_export": can_export,
+        },
     )
 
 
-def _insert_raw_email(raw: bytes, request: Request, source: str = "import", folder: str = "INBOX") -> bool:
+def _insert_raw_email(raw: bytes, request: Request, source: str = "import", folder: str = "INBOX") -> str:
+    """Insert one raw email into the archive.
+
+    Returns a status string:
+      - "ok"       - stored successfully
+      - "rejected" - blocked by the import virus policy (infected email)
+      - "error"    - could not be stored
+    """
     try:
         # Parse headers for metadata
         parsed = parse_email(raw)
-
-        # Compute next uid for this source/folder to avoid collisions
-        # Use negative UIDs for imported emails to avoid conflicts with fetched emails (which use positive UIDs)
-        next_uid_row = query(
-            "SELECT COALESCE(MIN(uid) - 1, -1) AS next_uid FROM emails WHERE source = :source AND folder = :folder AND uid < 0",
-            {"source": source, "folder": folder},
-        ).mappings().first()
-        uid = int(next_uid_row["next_uid"]) if next_uid_row else -1
 
         compressed_raw = gzip.compress(raw)
         try:
@@ -289,16 +433,17 @@ def _insert_raw_email(raw: bytes, request: Request, source: str = "import", fold
         except Exception:
             sig = None
 
-        # Virus scanning
+        # Virus scanning. virus_scanned is only true when a scan actually ran
+        # against clamd (see ClamAVScanner.scan) so an unavailable daemon never
+        # marks an imported email as "scanned".
         virus_scanned = False
         virus_detected = False
         virus_name = None
         scan_timestamp = None
 
-        scanner = ClamAVScanner()
+        scanner = _get_import_scanner()
         if scanner.is_enabled():
-            virus_detected, virus_name, scan_timestamp = scanner.scan(raw)
-            virus_scanned = True
+            virus_detected, virus_name, scan_timestamp, virus_scanned = scanner.scan(raw)
 
             if virus_detected:
                 username = request.session.get("username", "unknown")
@@ -314,41 +459,66 @@ From: {parsed["headers"].get("from", "Unknown")}
 Imported by: {username}
 Source: {source}
 Folder: {folder}""",
-                    'virus_detected',
+                    trigger_key='virus_detected',
                 )
 
                 # Reject infected emails during import
-                return False
+                return "rejected"
 
-        execute(
-            """
+        # Use negative UIDs for imported emails so they can never collide with
+        # fetched emails (which use positive UIDs). The uid is derived from
+        # MIN(uid)-1, which is racy under concurrent imports - retry a few times
+        # (recomputing the uid) if another import claimed the same slot.
+        def _next_import_uid() -> int:
+            row = query(
+                "SELECT COALESCE(MIN(uid) - 1, -1) AS next_uid FROM emails WHERE source = :source AND folder = :folder AND uid < 0",
+                {"source": source, "folder": folder},
+            ).mappings().first()
+            return int(row["next_uid"]) if row else -1
+
+        insert_sql = """
             INSERT INTO emails (source, folder, uid, subject, sender, recipients, date, raw_email, signature, compressed, virus_scanned, virus_detected, virus_name, scan_timestamp)
             VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :raw_email, :signature, :compressed, :virus_scanned, :virus_detected, :virus_name, :scan_timestamp)
-            """,
-            {
-                "source": source,
-                "folder": folder,
-                "uid": uid,
-                "subject": parsed["headers"].get("subject", ""),
-                "sender": parsed["headers"].get("from", ""),
-                "recipients": parsed["headers"].get("to", ""),
-                "date": parsed["headers"].get("date", ""),
-                "raw_email": compressed_raw,
-                "signature": sig,
-                "compressed": True,
-                "virus_scanned": virus_scanned,
-                "virus_detected": virus_detected,
-                "virus_name": virus_name,
-                "scan_timestamp": scan_timestamp,
-            },
-        )
+        """
+        inserted = False
+        for _attempt in range(3):
+            uid = _next_import_uid()
+            try:
+                execute(
+                    insert_sql,
+                    {
+                        "source": source,
+                        "folder": folder,
+                        "uid": uid,
+                        "subject": parsed["headers"].get("subject", ""),
+                        "sender": parsed["headers"].get("from", ""),
+                        "recipients": parsed["headers"].get("to", ""),
+                        "date": parsed["headers"].get("date", ""),
+                        "raw_email": compressed_raw,
+                        "signature": sig,
+                        "compressed": True,
+                        "virus_scanned": virus_scanned,
+                        "virus_detected": virus_detected,
+                        "virus_name": virus_name,
+                        "scan_timestamp": scan_timestamp,
+                    },
+                )
+                inserted = True
+                break
+            except IntegrityError:
+                # Another import claimed this uid concurrently; recompute and retry
+                continue
+
+        if not inserted:
+            log("error", "Import", f"Failed to insert imported email (uid contention) for source={source}, folder={folder}", "")
+            return "error"
 
         username = request.session.get("username", "unknown")
         log("info", "Import", f"User '{username}' imported an email (source={source}, folder={folder}, uid={uid})", "")
-        return True
+        return "ok"
     except Exception as e:
         log("error", "Import", f"Failed to insert imported email: {str(e)}", "")
-        return False
+        return "error"
 
 
 @router.post("/emails/import-export")
@@ -361,74 +531,105 @@ async def import_emails(request: Request, source: str = Form("import"), folder: 
         return HTMLResponse("Access denied: Insufficient permissions to import emails", status_code=403)
 
     imported = 0
+    rejected = 0
     errors = []
 
     for upload in files:
         filename = upload.filename or ""
         lower = filename.lower()
-        content = await upload.read()
+        # Read at most MAX_IMPORT_FILE_SIZE + 1 bytes so an oversized upload is
+        # rejected instead of being read fully into memory.
+        content = await upload.read(MAX_IMPORT_FILE_SIZE + 1)
+        if len(content) > MAX_IMPORT_FILE_SIZE:
+            errors.append(f"{filename}: file too large (max {MAX_IMPORT_FILE_SIZE // (1024 * 1024)} MB)")
+            continue
 
         try:
             if lower.endswith(".eml") or upload.content_type == "message/rfc822":
-                if _insert_raw_email(content, request, source=source, folder=folder):
-                    imported += 1
-                else:
-                    errors.append(f"{filename}: failed to insert")
+                status = _insert_raw_email(content, request, source=source, folder=folder)
+                _imp, _rej, _err = _record_insert_result(status, filename)
+                imported += _imp
+                rejected += _rej
+                if _err:
+                    errors.append(_err)
 
             elif lower.endswith(".mbox") or lower.endswith(".mbx") or upload.content_type == "application/mbox":
-                # Use mailbox to parse mbox content from memory
                 try:
-                    mbox = mailbox.mbox(io.BytesIO(content))
-                except Exception:
-                    # mailbox.mbox expects a file path; fallback to manual parse
-                    buf = io.BytesIO(content)
-                    data = buf.getvalue().split(b"\nFrom ")
-                    for i, part in enumerate(data):
-                        if not part.strip():
-                            continue
-                        # Ensure proper 'From ' prefix for the first part
-                        raw = part if part.startswith(b"From ") else b"From " + part
-                        if _insert_raw_email(raw, request, source=source, folder=folder):
-                            imported += 1
-                        else:
-                            errors.append(f"{filename} part {i}: failed to insert")
+                    for raw in _iter_mbox_messages(content):
+                        status = _insert_raw_email(raw, request, source=source, folder=folder)
+                        _imp, _rej, _err = _record_insert_result(status, filename)
+                        imported += _imp
+                        rejected += _rej
+                        if _err:
+                            errors.append(_err)
+                except Exception as e:
+                    errors.append(f"{filename}: failed to parse mbox ({str(e)})")
 
-            elif lower.endswith('.zip') or upload.content_type == 'application/zip':
+            elif lower.endswith(".zip") or upload.content_type == "application/zip":
                 try:
                     with zipfile.ZipFile(io.BytesIO(content)) as zf:
                         for info in zf.infolist():
                             if info.is_dir():
                                 continue
+                            inner_name = info.filename
+                            inner_lower = inner_name.lower()
+                            # Zip-bomb guard: the archive metadata declares the
+                            # uncompressed size before any data is read, so an
+                            # oversized entry is rejected up front instead of
+                            # being inflated fully into memory.
+                            if info.file_size > MAX_IMPORT_FILE_SIZE:
+                                errors.append(
+                                    f"{filename}:{inner_name}: entry too large "
+                                    f"(max {MAX_IMPORT_FILE_SIZE // (1024 * 1024)} MB)"
+                                )
+                                continue
                             try:
-                                inner_name = info.filename
-                                inner_lower = inner_name.lower()
-                                fcontent = zf.read(info.filename)
-                                if inner_lower.endswith('.eml') or inner_name.endswith('.msg'):
-                                    if _insert_raw_email(fcontent, request, source=source, folder=folder):
-                                        imported += 1
-                                    else:
-                                        errors.append(f"{filename}:{inner_name}: failed to insert")
-                                elif inner_lower.endswith('.mbox') or inner_lower.endswith('.mbx'):
-                                    # parse embedded mbox
-                                    parts = fcontent.split(b"\nFrom ")
-                                    for i, part in enumerate(parts):
-                                        if not part.strip():
-                                            continue
-                                        raw = part if part.startswith(b"From ") else b"From " + part
-                                        if _insert_raw_email(raw, request, source=source, folder=folder):
-                                            imported += 1
-                                        else:
-                                            errors.append(f"{filename}:{inner_name} part {i}: failed to insert")
-                                elif inner_lower.endswith('.pst'):
-                                    # PST support removed; skip
+                                # Read the entry through a capped stream: a
+                                # crafted archive can lie about its size in the
+                                # central directory, so also bound the actual
+                                # decompression rather than trusting metadata
+                                # alone (a valid oversized entry is still caught
+                                # by the check below).
+                                with zf.open(info) as member:
+                                    fcontent = member.read(MAX_IMPORT_FILE_SIZE + 1)
+                                if len(fcontent) > MAX_IMPORT_FILE_SIZE:
+                                    errors.append(
+                                        f"{filename}:{inner_name}: entry too large "
+                                        f"(max {MAX_IMPORT_FILE_SIZE // (1024 * 1024)} MB)"
+                                    )
                                     continue
+                                if inner_lower.endswith(".eml"):
+                                    status = _insert_raw_email(fcontent, request, source=source, folder=folder)
+                                    _imp, _rej, _err = _record_insert_result(status, f"{filename}:{inner_name}")
+                                    imported += _imp
+                                    rejected += _rej
+                                    if _err:
+                                        errors.append(_err)
+                                elif inner_lower.endswith(".mbox") or inner_lower.endswith(".mbx"):
+                                    for raw in _iter_mbox_messages(fcontent):
+                                        status = _insert_raw_email(raw, request, source=source, folder=folder)
+                                        _imp, _rej, _err = _record_insert_result(status, f"{filename}:{inner_name}")
+                                        imported += _imp
+                                        rejected += _rej
+                                        if _err:
+                                            errors.append(_err)
+                                elif inner_lower.endswith(".msg"):
+                                    # Outlook .msg is an OLE container, not RFC822
+                                    errors.append(f"{filename}:{inner_name}: .msg files are not supported")
+                                elif inner_lower.endswith(".pst"):
+                                    # PST support removed - do not attempt to parse
+                                    errors.append(f"{filename}:{inner_name}: PST files are not supported")
                                 else:
-                                    # unsupported inner file, skip
+                                    # Non-email entries inside the archive are ignored
                                     continue
                             except Exception as e:
-                                errors.append(f"{filename}:{info.filename}: {str(e)}")
+                                errors.append(f"{filename}:{inner_name}: {str(e)}")
                 except Exception as e:
                     errors.append(f"{filename}: zip extraction failed ({str(e)})")
+
+            elif lower.endswith(".msg"):
+                # Outlook .msg is an OLE container, not RFC822 - unsupported
+                errors.append(f"{filename}: .msg files are not supported")
 
             elif lower.endswith(".pst"):
                 # PST support removed - do not attempt to parse PST files
@@ -439,10 +640,7 @@ async def import_emails(request: Request, source: str = Form("import"), folder: 
         except Exception as e:
             errors.append(f"{filename}: {str(e)}")
 
-    if imported > 0:
-        flash(request, f"Imported {imported} message(s).", 'success')
-    if errors:
-        flash(request, "; ".join(errors), 'error')
+    flash(request, *_build_import_flash(imported, rejected, errors))
 
     return RedirectResponse("/emails", status_code=303)
 
@@ -451,6 +649,12 @@ async def import_emails(request: Request, source: str = Form("import"), folder: 
 def view_email(request: Request, email_id: int):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
+
+    # The list page requires view_emails; the detail view exposes full email
+    # content (body, headers, raw preview) so it must enforce the same check.
+    checker = PermissionChecker(request)
+    if not checker.has_permission("view_emails"):
+        return HTMLResponse("Access denied: Insufficient permissions to view emails", status_code=403)
 
     row = query(
         """
@@ -485,30 +689,51 @@ def view_email(request: Request, email_id: int):
     # Format email date if it's a datetime object
     row["date_formatted"] = format_email_date(row["date"], row.get("created_at"), user_id)
 
-    raw = decompress(row["raw_email"], row["compressed"])
-    # Ensure bytes type for parsing and preview
-    if isinstance(raw, memoryview):
-        raw = raw.tobytes()
-    preview = raw[:10000].decode(errors='replace') if isinstance(raw, (bytes, bytearray)) else str(raw)
-    parsed = parse_email(raw)
+    # Decompress defensively: legacy rows can carry NULL raw_email (an old
+    # compression-failure bug) or corrupt gzip data; neither may 500 the page.
+    raw = None
+    if row["raw_email"] is not None:
+        try:
+            raw = decompress(row["raw_email"], row["compressed"])
+            # Ensure bytes type for parsing and preview
+            if isinstance(raw, memoryview):
+                raw = raw.tobytes()
+        except Exception as e:
+            log("error", "Emails", f"Failed to decompress email ID {email_id}: {str(e)}", "")
 
-    # compute integrity status
-    integrity_reason = None
-    try:
-        stored_sig = row.get("signature")
-        current_sig = compute_signature(raw)
-        if stored_sig is None:
-            integrity = "no_signature"
-            integrity_reason = "No signature was stored when this email was archived"
-        elif stored_sig == current_sig:
-            integrity = "ok"
-            integrity_reason = "The current hash matches the original signature"
-        else:
-            integrity = "modified"
-            integrity_reason = "Stored hash does not match current hash"
-    except Exception as e:
-        integrity = "unknown"
-        integrity_reason = f"Could not read attachment file from storage: {str(e)}"
+    empty_body = {"text": "", "html": "", "embedded_images": {}, "attachments": []}
+    if raw is None:
+        preview = ""
+        integrity = "no_raw"
+        integrity_reason = "No raw email data available"
+        parsed = {"headers": {}, "body": empty_body}
+        current_sig = None
+    else:
+        preview = raw[:10000].decode(errors='replace') if isinstance(raw, (bytes, bytearray)) else str(raw)
+        try:
+            parsed = parse_email(raw)
+        except Exception as e:
+            log("error", "Emails", f"Failed to parse email ID {email_id}: {str(e)}", "")
+            parsed = {"headers": {}, "body": empty_body}
+
+        # compute integrity status
+        integrity_reason = None
+        try:
+            stored_sig = row.get("signature")
+            current_sig = compute_signature(raw)
+            if stored_sig is None:
+                integrity = "no_signature"
+                integrity_reason = "No signature was stored when this email was archived"
+            elif stored_sig == current_sig:
+                integrity = "ok"
+                integrity_reason = "The current hash matches the original signature"
+            else:
+                integrity = "modified"
+                integrity_reason = "Stored hash does not match current hash"
+        except Exception as e:
+            integrity = "unknown"
+            integrity_reason = f"Could not read attachment file from storage: {str(e)}"
+            current_sig = None
 
     username = request.session.get("username", "unknown")
     log("info", "Emails", f"User '{username}' viewed email ID {email_id}", "")
@@ -527,7 +752,7 @@ def view_email(request: Request, email_id: int):
             "integrity": integrity,
             "integrity_reason": integrity_reason,
             "stored_signature": row.get("signature"),
-            "current_signature": current_sig if 'current_sig' in locals() else None,
+            "current_signature": current_sig,
         },
     )
 
@@ -553,6 +778,9 @@ def download_email(request: Request, email_id: int):
 
     if not row:
         return HTMLResponse("Not found", status_code=404)
+
+    if row["raw_email"] is None:
+        return HTMLResponse("Raw email data not available for this record", status_code=404)
 
     raw = decompress(row["raw_email"], row["compressed"])
 
@@ -591,6 +819,9 @@ def download_attachment(request: Request, email_id: int, index: int):
             f"Download blocked: this email contains a virus ({virus_name}). Remove the virus flag before downloading.",
             status_code=403,
         )
+
+    if row["raw_email"] is None:
+        return HTMLResponse("Raw email data not available for this record", status_code=404)
 
     raw = decompress(row["raw_email"], row["compressed"])
     if isinstance(raw, memoryview):
@@ -637,12 +868,13 @@ def verify_email(request: Request, email_id: int):
     if not row:
         return HTMLResponse("Not found", status_code=404)
 
-    raw = decompress(row["raw_email"], row["compressed"]) if row["raw_email"] is not None else b""
     current_sig = None
-    try:
-        current_sig = compute_signature(raw)
-    except Exception:
-        current_sig = None
+    if row["raw_email"] is not None:
+        raw = decompress(row["raw_email"], row["compressed"])
+        try:
+            current_sig = compute_signature(raw)
+        except Exception:
+            current_sig = None
 
     stored_sig = row.get("signature")
 
@@ -675,7 +907,7 @@ def quarantine_single_email(request: Request, email_id: int):
             'Email Quarantined',
             f'User {username} quarantined an email',
             f'Email ID: {email_id}',
-            'email_quarantined'
+            trigger_key='email_quarantined',
         )
     except Exception as e:
         log("error", "Emails", f"Failed to create quarantine alert: {str(e)}", "")
@@ -702,6 +934,10 @@ def perform_delete(
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
+    checker = PermissionChecker(request)
+    if not checker.has_permission("delete_emails"):
+        return HTMLResponse("Access denied: Insufficient permissions to delete emails", status_code=403)
+
     if not isinstance(ids, list):
         ids = [ids]
 
@@ -721,7 +957,7 @@ def perform_delete(
             log("warning", "Emails", f"User '{username}' deleted {deleted} email(s) from IMAP and database with errors (IDs: {ids})", error_text)
             flash(
                 request,
-                f"Deleted {deleted} email(s) from database and mail server. Some errors occurred: {error_text}",
+                f"Deleted {deleted} email(s) from the database. Mail server deletion had issues: {error_text}",
                 'error'
             )
         else:
@@ -749,7 +985,11 @@ def perform_quarantine(
     """
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
-    
+
+    checker = PermissionChecker(request)
+    if not checker.has_permission("manage_quarantine"):
+        return HTMLResponse("Access denied: Insufficient permissions to quarantine emails", status_code=403)
+
     if not isinstance(ids, list):
         ids = [ids]
 
@@ -765,7 +1005,7 @@ def perform_quarantine(
             'Emails Quarantined',
             f'User {username} quarantined {quarantined} email(s)',
             f'Email IDs: {ids}',
-            'email_quarantined'
+            trigger_key='email_quarantined',
         )
     except Exception as e:
         log("error", "Emails", f"Failed to create quarantine alert: {str(e)}", "")
@@ -782,56 +1022,68 @@ def _quarantine_emails(ids: List[int], quarantined_by: str) -> int:
     """Quarantine emails by moving them to quarantined_emails table. Returns number quarantined."""
     if not ids:
         return 0
-    
+
     quarantined_count = 0
-    
+
     for email_id in ids:
         try:
-            # Get email data
+            # Get email data (carry date_parsed and scan metadata so restored
+            # emails keep their original date sorting and honest scan state)
             email = query("""
-                SELECT id, source, folder, uid, subject, sender, recipients, date, message_id, raw_email, signature, compressed, virus_name
-                FROM emails 
+                SELECT id, source, folder, uid, subject, sender, recipients, date, date_parsed,
+                       message_id, raw_email, signature, compressed, virus_name,
+                       virus_scanned, virus_detected, scan_timestamp
+                FROM emails
                 WHERE id = :id AND quarantined = FALSE
             """, {"id": email_id}).mappings().first()
-            
+
             if not email:
                 continue  # Already quarantined or doesn't exist
-            
-            # Use stored message_id
-            message_id = email.get("message_id")
-            
-            # Insert into quarantined_emails
-            quarantine_id = execute("""
-                INSERT INTO quarantined_emails
-                (original_source, original_folder, original_uid, subject, sender, recipients, date, message_id, raw_email, signature, compressed, virus_name, reason, quarantined_by)
-                VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :message_id, :raw_email, :signature, :compressed, :virus_name, :reason, :quarantined_by)
-            """, {
-                "source": email["source"],
-                "folder": email["folder"],
-                "uid": email["uid"],
-                "subject": email["subject"],
-                "sender": email["sender"],
-                "recipients": email["recipients"],
-                "date": email["date"],
-                "message_id": message_id,
-                "raw_email": email["raw_email"],
-                "signature": email.get("signature"),
-                "compressed": email["compressed"],
-                "virus_name": email.get("virus_name"),
-                "reason": "Manually Quarantined",
-                "quarantined_by": quarantined_by
-            })
-            
-            # Update emails table
-            execute("""
-                DELETE FROM emails WHERE id = :id
-            """, {"id": email_id})
-            
+
+            # Insert into quarantined_emails and remove from emails atomically so
+            # a crash mid-move cannot leave the email in both (or neither) table.
+            with transaction() as conn:
+                insert_result = conn.execute(text("""
+                    INSERT INTO quarantined_emails
+                    (original_source, original_folder, original_uid, subject, sender, recipients,
+                     date, date_parsed, message_id, raw_email, signature, compressed, virus_name,
+                     virus_scanned, virus_detected, scan_timestamp, reason, quarantined_by)
+                    VALUES (:source, :folder, :uid, :subject, :sender, :recipients,
+                     :date, :date_parsed, :message_id, :raw_email, :signature, :compressed, :virus_name,
+                     :vscanned, :vdetected, :scan_ts, :reason, :quarantined_by)
+                    ON CONFLICT DO NOTHING
+                """), {
+                    "source": email["source"],
+                    "folder": email["folder"],
+                    "uid": email["uid"],
+                    "subject": email["subject"],
+                    "sender": email["sender"],
+                    "recipients": email["recipients"],
+                    "date": email["date"],
+                    "date_parsed": email.get("date_parsed"),
+                    "message_id": email.get("message_id"),
+                    "raw_email": email["raw_email"],
+                    "signature": email.get("signature"),
+                    "compressed": email["compressed"],
+                    "virus_name": email.get("virus_name"),
+                    "vscanned": email.get("virus_scanned"),
+                    "vdetected": email.get("virus_detected"),
+                    "scan_ts": email.get("scan_timestamp"),
+                    "reason": "Manually Quarantined",
+                    "quarantined_by": quarantined_by
+                })
+                # If the same source/folder/UID is already quarantined, retain
+                # the existing quarantine record and leave this archive row
+                # untouched rather than deleting a clean re-fetched copy.
+                if insert_result.rowcount == 0:
+                    continue
+                conn.execute(text("DELETE FROM emails WHERE id = :id"), {"id": email_id})
+
             quarantined_count += 1
-            
+
         except Exception as e:
             log("error", "Emails", f"Failed to quarantine email ID {email_id}: {str(e)}", "")
-    
+
     return quarantined_count
 
 
@@ -872,6 +1124,8 @@ def _delete_emails_from_mail_server_and_db(ids: List[int]) -> tuple[int, list[st
     """
     errors: list[str] = []
     deleted = 0
+    server_deleted = 0
+    db_only_deleted = 0
 
     for mid in ids:
         email_row = query(
@@ -890,7 +1144,7 @@ def _delete_emails_from_mail_server_and_db(ids: List[int]) -> tuple[int, list[st
         account = query(
             """
             SELECT name, host, port, username, password_encrypted,
-                   use_ssl, require_starttls
+                   use_ssl, require_starttls, account_type
             FROM fetch_accounts
             WHERE name = :name
             """,
@@ -898,7 +1152,42 @@ def _delete_emails_from_mail_server_and_db(ids: List[int]) -> tuple[int, list[st
         ).mappings().first()
 
         if not account:
-            errors.append(f"No fetch account found for source '{email_row['source']}' (email {mid})")
+            # The fetch account no longer exists, so the mail server copy cannot
+            # be addressed; remove the database record rather than failing.
+            query("DELETE FROM emails WHERE id = :id", {"id": mid})
+            deleted += 1
+            db_only_deleted += 1
+            errors.append(
+                f"Email {mid}: fetch account '{email_row['source']}' no longer exists; "
+                f"deleted from database only"
+            )
+            continue
+
+        # Gmail/O365 accounts are API-based (no IMAP mailbox to delete from);
+        # fall back to removing the database record only rather than failing.
+        account_type = account.get("account_type", "imap")
+        if account_type != "imap":
+            query("DELETE FROM emails WHERE id = :id", {"id": mid})
+            deleted += 1
+            db_only_deleted += 1
+            errors.append(
+                f"Email {mid}: mail server deletion not supported for "
+                f"{account_type} accounts; deleted from database only"
+            )
+            continue
+
+        # Imported emails use negative synthetic UIDs and have no mail server
+        # copy - treat them like the account_type fallback above instead of
+        # attempting an IMAP UID STORE with a negative UID (which errors and
+        # would leave the email undeletable forever).
+        if email_row["uid"] is None or email_row["uid"] <= 0:
+            query("DELETE FROM emails WHERE id = :id", {"id": mid})
+            deleted += 1
+            db_only_deleted += 1
+            errors.append(
+                f"Email {mid}: no mail server copy (imported email); "
+                f"deleted from database only"
+            )
             continue
 
         conn = None
@@ -914,9 +1203,10 @@ def _delete_emails_from_mail_server_and_db(ids: List[int]) -> tuple[int, list[st
             password = decrypt_password(account["password_encrypted"])
             conn.login(account["username"], password)
 
-            # Select the folder and delete by UID
+            # Select the folder and delete by UID (quote the folder name so
+            # mailboxes containing spaces, e.g. "Sent Items", are accepted)
             folder = email_row["folder"]
-            conn.select(folder)
+            conn.select(_quote_imap_folder(folder))
 
             uid_str = str(email_row["uid"])
             typ, _ = conn.uid("STORE", uid_str, "+FLAGS", r"(\Deleted)")
@@ -933,6 +1223,7 @@ def _delete_emails_from_mail_server_and_db(ids: List[int]) -> tuple[int, list[st
                 {"id": mid},
             )
             deleted += 1
+            server_deleted += 1
 
         except Exception as e:
             errors.append(f"Email {mid}: {str(e)}")
@@ -944,8 +1235,8 @@ def _delete_emails_from_mail_server_and_db(ids: List[int]) -> tuple[int, list[st
                 except Exception:
                     pass
 
-    # Track deletion statistics
-    if deleted > 0:
+    # Track deletion statistics (server deletions and DB-only fallbacks separately)
+    if server_deleted > 0:
         execute(
             """
             INSERT INTO deletion_stats (deletion_date, deletion_type, count, deleted_from_mail_server)
@@ -953,7 +1244,17 @@ def _delete_emails_from_mail_server_and_db(ids: List[int]) -> tuple[int, list[st
             ON CONFLICT (deletion_date, deletion_type, deleted_from_mail_server)
             DO UPDATE SET count = deletion_stats.count + EXCLUDED.count
             """,
-            {"count": deleted},
+            {"count": server_deleted},
+        )
+    if db_only_deleted > 0:
+        execute(
+            """
+            INSERT INTO deletion_stats (deletion_date, deletion_type, count, deleted_from_mail_server)
+            VALUES (CURRENT_DATE, 'manual', :count, FALSE)
+            ON CONFLICT (deletion_date, deletion_type, deleted_from_mail_server)
+            DO UPDATE SET count = deletion_stats.count + EXCLUDED.count
+            """,
+            {"count": db_only_deleted},
         )
 
     return deleted, errors
@@ -993,50 +1294,81 @@ def export_emails(request: Request, q: str = Form(None), account: str = Form(Non
     else:
         where_sql = "WHERE quarantined = FALSE"
 
-    rows = query(f"SELECT id, raw_email, compressed FROM emails {where_sql}", params).mappings().all()
-
-    if not rows:
+    # Count first so an empty export can redirect with a friendly message
+    # instead of producing an empty archive.
+    count_row = query(f"SELECT COUNT(*) as c FROM emails {where_sql}", params).mappings().first()
+    if not count_row or not count_row["c"]:
         flash(request, "No emails found to export.", 'error')
         return RedirectResponse("/emails", status_code=303)
 
     username = request.session.get("username", "unknown")
 
+    # Fetch rows in keyset batches so a very large archive is never loaded into
+    # memory at once, and write into a spooled temp file that spills to disk
+    # beyond 64 MB instead of building the whole export in RAM.
+    EXPORT_BATCH = 500
+
+    def iter_rows():
+        last_id = 0
+        while True:
+            batch = query(
+                f"SELECT id, raw_email, compressed FROM emails {where_sql} AND id > :last_id ORDER BY id LIMIT :batch",
+                {**params, "last_id": last_id, "batch": EXPORT_BATCH},
+            ).mappings().all()
+            if not batch:
+                return
+            for r in batch:
+                yield r
+            last_id = batch[-1]["id"]
+
+    def stream_file(spool):
+        try:
+            spool.seek(0)
+            while True:
+                chunk = spool.read(64 * 1024)
+                if not chunk:
+                    break
+                yield chunk
+        finally:
+            try:
+                spool.close()
+            except Exception:
+                pass
+
+    spool = tempfile.SpooledTemporaryFile(max_size=64 * 1024 * 1024)
+
     if format == "mbox":
-        mbox_buf = io.BytesIO()
-        for r in rows:
+        for r in iter_rows():
             raw = decompress(r["raw_email"], r["compressed"]) if r["raw_email"] is not None else b""
             try:
-                parsed = parse_email(raw)
-                date_hdr = parsed.get("headers", {}).get("date", "-")
+                # Only the Date header is needed for the mbox "From " line;
+                # full parse_email would decode every attachment into memory.
+                date_hdr = message_from_bytes(raw).get("Date") or "-"
             except Exception:
                 date_hdr = "-"
 
             from_line = f"From - {date_hdr}\n".encode("utf-8", errors="replace")
-            mbox_buf.write(from_line)
-            mbox_buf.write(raw)
+            spool.write(from_line)
+            spool.write(raw)
             if not raw.endswith(b"\n"):
-                mbox_buf.write(b"\n")
-            mbox_buf.write(b"\n")
+                spool.write(b"\n")
+            spool.write(b"\n")
 
-        mbox_buf.seek(0)
-        log("info", "Export", f"User '{username}' exported {len(rows)} email(s) as mbox", "")
+        log("info", "Export", f"User '{username}' exported emails as mbox", "")
         return StreamingResponse(
-            iter([mbox_buf.getvalue()]),
+            stream_file(spool),
             media_type="application/mbox",
-            headers={"Content-Disposition": f'attachment; filename="emails-export.mbox"'},
+            headers={"Content-Disposition": 'attachment; filename="emails-export.mbox"'},
         )
 
-    bio = io.BytesIO()
-    with zipfile.ZipFile(bio, "w", compression=zipfile.ZIP_DEFLATED) as zf:
-        for r in rows:
+    with zipfile.ZipFile(spool, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        for r in iter_rows():
             raw = decompress(r["raw_email"], r["compressed"]) if r["raw_email"] is not None else b""
             zf.writestr(f"email-{r['id']}.eml", raw)
 
-    bio.seek(0)
-    log("info", "Export", f"User '{username}' exported {len(rows)} email(s)", "")
-
+    log("info", "Export", f"User '{username}' exported emails", "")
     return StreamingResponse(
-        iter([bio.getvalue()]),
+        stream_file(spool),
         media_type="application/zip",
-        headers={"Content-Disposition": f'attachment; filename="emails-export.zip"'},
+        headers={"Content-Disposition": 'attachment; filename="emails-export.zip"'},
     )

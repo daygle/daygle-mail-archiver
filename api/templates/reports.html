@@ -399,6 +399,15 @@ Chart = undefined; // Clear any existing Chart
 // Global chart instances - updated 2026-01-08
 let emailVolumeChart, accountActivityChart, errorTrendsChart, avStatsChart;
 
+// Escape user/DB-derived values before inserting into innerHTML. Email subjects
+// and senders are attacker-controlled, so rendering them raw would allow stored
+// XSS to execute when an administrator opens the Reports page.
+function escapeHtml(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, c => (
+        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
+}
+
 // Initialise chart variables on window to prevent undefined errors
 window.storageTrendsChart = null;
 window.retentionChart = null;
@@ -445,9 +454,15 @@ function clearReportMessageForInput(inputEl) {
 
 // Set default date ranges (last 30 days)
 // Initialise chart instances
+let chartInitAttempts = 0;
 function initializeCharts() {
     // Check if Chart.js is loaded
     if (typeof Chart === 'undefined') {
+        chartInitAttempts += 1;
+        if (chartInitAttempts >= 10) {
+            console.error('Chart.js failed to load after 10 attempts');
+            return;
+        }
         console.error('Chart.js library not loaded - script might be blocked or unavailable');
         // Try again in 100ms
         setTimeout(initializeCharts, 100);
@@ -583,7 +598,14 @@ function loadAllReports() {
         const today = new Date();
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(today.getDate() - 30);
-        const formatDate = (date) => date.toISOString().split('T')[0];
+        const formatDate = (date) => {
+            // Local date (not UTC): toISOString() can shift "today" to yesterday
+            // for timezones ahead of UTC, making the default end date off by one.
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        };
         
         if (!startDate) {
             startDate = formatDate(thirtyDaysAgo);
@@ -716,11 +738,14 @@ function loadAccountActivityReport() {
                 let statusClass = 'status-offline';
                 let statusText = 'Offline';
                 if (account.enabled) {
-                    const minutesSinceHeartbeat = typeof account.minutes_since_heartbeat === 'number' ? account.minutes_since_heartbeat : 99999;
-                    if (minutesSinceHeartbeat < 60) {
+                    if (typeof account.minutes_since_heartbeat !== 'number') {
+                        // Never heartbeated (e.g. a freshly configured account)
+                        statusClass = 'status-warning';
+                        statusText = 'Never synced';
+                    } else if (account.minutes_since_heartbeat < 60) {
                         statusClass = 'status-online';
                         statusText = 'Online';
-                    } else if (minutesSinceHeartbeat < 1440) {
+                    } else if (account.minutes_since_heartbeat < 1440) {
                         statusClass = 'status-warning';
                         statusText = 'Warning';
                     } else {
@@ -731,10 +756,10 @@ function loadAccountActivityReport() {
 
                 return `
                     <tr>
-                        <td>${account.name || 'Unknown'}</td>
-                        <td>${account.type ? account.type.toUpperCase() : 'UNKNOWN'}</td>
+                        <td>${escapeHtml(account.name || 'Unknown')}</td>
+                        <td>${escapeHtml((account.type || 'UNKNOWN').toUpperCase())}</td>
                         <td><span class="status-indicator ${statusClass}"></span>${statusText}</td>
-                        <td>${account.last_success || 'Never'}</td>
+                        <td>${escapeHtml(account.last_success || 'Never')}</td>
                         <td>${typeof account.emails_today === 'number' ? account.emails_today : 0}</td>
                         <td>${typeof account.minutes_since_heartbeat === 'number' ? account.minutes_since_heartbeat + 'm ago' : 'Unknown'}</td>
                     </tr>
@@ -933,11 +958,11 @@ function loadStorageUtilizationReport() {
                 data.largest_emails.forEach(email => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td><a href="/emails/${email.id}" class="link">${email.subject || 'No Subject'}</a></td>
-                        <td>${email.sender || 'Unknown'}</td>
-                        <td>${email.receiver || 'Unknown'}</td>
+                        <td><a href="/emails/${escapeHtml(email.id)}" class="link">${escapeHtml(email.subject || 'No Subject')}</a></td>
+                        <td>${escapeHtml(email.sender || 'Unknown')}</td>
+                        <td>${escapeHtml(email.receiver || 'Unknown')}</td>
                         <td>${email.size_mb !== undefined ? email.size_mb + ' MB' : '-'}</td>
-                        <td>${email.created_at || '-'}</td>
+                        <td>${escapeHtml(email.created_at || '-')}</td>
                     `;
                     tbody.appendChild(row);
                 });
@@ -1018,7 +1043,7 @@ function loadRetentionPolicyReport() {
                 data.age_distribution.forEach(range => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td>${range.range}</td>
+                        <td>${escapeHtml(range.range)}</td>
                         <td>${range.count}</td>
                     `;
                     tbody.appendChild(row);
@@ -1033,8 +1058,8 @@ function loadRetentionPolicyReport() {
                 const autoDelete = (retentionValue && retentionUnit) ? `${retentionValue} ${retentionUnit}` : 'Not set';
                 const deleteFromServer = (data.retention_settings.retention_delete_from_mail_server === true || data.retention_settings.retention_delete_from_mail_server === 'true') ? 'Yes' : 'No';
                 settingsDiv.innerHTML = `
-                    <p><strong>Auto-delete after:</strong> ${autoDelete}</p>
-                    <p><strong>Delete from mail server:</strong> ${deleteFromServer}</p>
+                    <p><strong>Auto-delete after:</strong> ${escapeHtml(autoDelete)}</p>
+                    <p><strong>Delete from mail server:</strong> ${escapeHtml(deleteFromServer)}</p>
                 `;
             }
         })
@@ -1221,9 +1246,9 @@ function loadSecurityAccessReport() {
                 data.recent_security_events.forEach(event => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td>${event.timestamp || '-'}</td>
-                        <td>${event.level || '-'}</td>
-                        <td>${event.message || '-'}</td>
+                        <td>${escapeHtml(event.timestamp || '-')}</td>
+                        <td>${escapeHtml(event.level || '-')}</td>
+                        <td>${escapeHtml(event.message || '-')}</td>
                     `;
                     tbody.appendChild(row);
                 });
@@ -1236,8 +1261,8 @@ function loadSecurityAccessReport() {
                 data.user_activity.forEach(user => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td>${user.username || '-'}</td>
-                        <td>${user.last_login || '-'}</td>
+                        <td>${escapeHtml(user.username || '-')}</td>
+                        <td>${escapeHtml(user.last_login || '-')}</td>
                         <td>${user.recent_actions || '-'}</td>
                     `;
                     tbody2.appendChild(row);
@@ -1357,13 +1382,12 @@ document.getElementById('globalAccount').addEventListener('change', () => {
     loadDataQualityReport();
 });
 
-// Load all reports on page load
-loadAllReports();
-
+// Reports load once on DOMContentLoaded (see listener above, which defers
+// loadAllReports until after the charts exist). Calling loadAllReports() here
+// would race chart initialisation, throw, and double-fetch every report.
 document.addEventListener('DOMContentLoaded', function () {
     if (window.userPermissions && window.userPermissions.includes("view_security_reports")) {
         document.getElementById("securityReportSection").style.display = "block";
-        loadSecurityAccessReport(); // Load security report for users with permission
     }
 });
 </script>

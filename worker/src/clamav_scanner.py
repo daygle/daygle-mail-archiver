@@ -52,7 +52,7 @@ def log_info(message: str, details: str = ""):
 def create_alert(alert_type: str, title: str, message: str, details: str = None, trigger_key: str = None):
     """
     Create a system alert (ClamAV-side implementation).
-    
+
     Args:
         alert_type: Type of alert ('error', 'warning', 'info', 'success') - can be overridden by trigger_key
         title: Alert title
@@ -74,7 +74,7 @@ def create_alert(alert_type: str, title: str, message: str, details: str = None,
         except Exception:
             # If we can't check the trigger, use the provided alert_type
             pass
-    
+
     try:
         execute("""
             INSERT INTO alerts (alert_type, title, message, details)
@@ -92,14 +92,14 @@ def create_alert(alert_type: str, title: str, message: str, details: str = None,
 
 class ClamAVScanner:
     """ClamAV virus scanner for email content."""
-    
+
     # Maximum email size to scan (100MB) - very large emails are skipped
     MAX_SCAN_SIZE = 100 * 1024 * 1024
-    
+
     def __init__(self, host: str = 'clamav', port: int = 3310):
         """
         Initialise ClamAV scanner.
-        
+
         Args:
             host: ClamAV daemon hostname
             port: ClamAV daemon port
@@ -111,15 +111,16 @@ class ClamAVScanner:
         self._action = 'quarantine'
         self._failure_count = 0
         self._first_failure_time = None
-        # Only alert on a *sustained* outage. Brief blips — most commonly clamd
+        # Only alert on a *sustained* outage. Brief blips - most commonly clamd
         # refusing connections for a minute or two while it reloads its signature
-        # database after a freshclam update — recover well within this window and
+        # database after a freshclam update - recover well within this window and
         # are suppressed (no unavailable/recovered alert pair). Tunable via the
         # 'clamav_failure_grace_seconds' setting.
         self._failure_grace_seconds = 300
         self._failure_alert_threshold = 2
         self._load_settings()
-    
+
+
     def _load_settings(self):
         """Load ClamAV settings from database."""
         try:
@@ -134,9 +135,9 @@ class ClamAVScanner:
                 WHERE key LIKE 'clamav_%'
                 """
             ).mappings().all()
-            
+
             settings_dict = {row['key']: row['value'] for row in settings}
-            
+
             # Load settings
             self._enabled = settings_dict.get('clamav_enabled', 'true').lower() == 'true'
             self.host = settings_dict.get('clamav_host', self.host)
@@ -188,7 +189,7 @@ class ClamAVScanner:
                 'clamav_config_error'
             )
             self._enabled = False
-    
+
     def _get_clamav_status(self) -> str:
         """Get the last known ClamAV availability status from the database."""
         try:
@@ -241,13 +242,13 @@ class ClamAVScanner:
     def _connect(self) -> Optional[pyclamd.ClamdNetworkSocket]:
         """
         Connect to ClamAV daemon.
-        
+
         Returns:
             ClamAV connection object or None if connection fails
         """
         if self._scanner:
             return self._scanner
-        
+
         try:
             scanner = pyclamd.ClamdNetworkSocket(host=self.host, port=self.port)
             # Test connection
@@ -294,32 +295,36 @@ class ClamAVScanner:
                 self._set_clamav_status('unavailable')
             # Reset cached scanner on connection failure
             self._scanner = None
-        
+
         return None
-    
+
     def is_enabled(self) -> bool:
         """Check if virus scanning is enabled."""
         return self._enabled
-    
+
     def get_action(self) -> str:
         """Get the configured action for virus detection."""
         return self._action
-    
-    def scan(self, email_bytes: bytes) -> Tuple[bool, Optional[str], datetime]:
+
+    def scan(self, email_bytes: bytes) -> Tuple[bool, Optional[str], Optional[datetime], bool]:
         """
         Scan email content for viruses.
-        
+
         Args:
             email_bytes: Raw email content as bytes
-            
+
         Returns:
-            Tuple of (virus_detected: bool, virus_name: Optional[str], scan_timestamp: datetime)
+            Tuple of (virus_detected, virus_name, scan_timestamp, scanned).
+            ``scanned`` is True ONLY when a scan actually ran against clamd.
+            It is False when scanning is disabled, the email exceeds the size
+            limit, or clamd is unreachable - callers must not record
+            ``virus_scanned = True`` in those cases, or the unscanned filter
+            and scan-coverage metrics would report emails as scanned that
+            never were.
         """
-        scan_timestamp = datetime.now(timezone.utc)
-        
         if not self._enabled:
-            return False, None, scan_timestamp
-        
+            return False, None, None, False
+
         # Check email size - skip scanning very large emails
         email_size = len(email_bytes)
         if email_size > self.MAX_SCAN_SIZE:
@@ -327,30 +332,31 @@ class ClamAVScanner:
                 f"Email too large to scan ({email_size} bytes, max {self.MAX_SCAN_SIZE})",
                 "Skipping virus scan for oversized email"
             )
-            return False, None, scan_timestamp
-        
+            return False, None, None, False
+
         scanner = self._connect()
         if not scanner:
             # If we can't connect, log warning and allow email through.
             # The alert was already fired by _connect() on the first failure.
             log_warning("ClamAV scanner not available, skipping virus scan")
-            return False, None, scan_timestamp
-        
+            return False, None, None, False
+
+        scan_timestamp = datetime.now(timezone.utc)
         try:
             # Scan the email content
             result = scanner.scan_stream(email_bytes)
-            
+
             if result is None:
                 # No virus detected
-                return False, None, scan_timestamp
-            
+                return False, None, scan_timestamp, True
+
             # Virus detected - result format: ('FOUND', 'virus_name')
             if result and result[0] == 'FOUND':
                 virus_name = result[1] if len(result) > 1 else 'Unknown'
-                return True, virus_name, scan_timestamp
-            
-            return False, None, scan_timestamp
-            
+                return True, virus_name, scan_timestamp, True
+
+            return False, None, scan_timestamp, True
+
         except Exception as e:
             log_warning("Error during virus scan", str(e))
             create_alert(
@@ -363,8 +369,4 @@ class ClamAVScanner:
             # Reset cached scanner on error to force reconnection next time
             self._scanner = None
             # On error, allow email through but log the issue
-            return False, None, scan_timestamp
-    
-    def reload_settings(self):
-        """Reload settings from database."""
-        self._load_settings()
+            return False, None, None, False

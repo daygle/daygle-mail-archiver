@@ -27,6 +27,8 @@
             </button>
         </form>
         {% endif %}
+        {% endif %}
+        {% if 'delete_emails' in perms %}
         <button type="button" class="btn btn-danger btn-sm flex-shrink-1 w-auto" onclick="showDeleteConfirmation()">
             <i class="fas fa-trash"></i>
             <span class="hide-mobile">Delete</span>
@@ -52,7 +54,7 @@
                     <iframe
                         srcdoc="{{ body.html | escape }}"
                         sandbox
-                        style="width: 100%; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--bg-primary);">
+                        style="width: 100%; min-height: 500px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--bg-primary);">
                     </iframe>
                 {% else %}
                     <pre style="background: var(--bg-secondary); padding: 16px; border-radius: var(--radius-md); overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;">{{ body.text }}</pre>

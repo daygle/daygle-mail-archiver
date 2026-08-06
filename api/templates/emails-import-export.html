@@ -3,6 +3,11 @@
 {% block page_title %}Import/Export Emails{% endblock %}
 
 {% block content %}
+{% if flash %}
+<div class="alert alert-{{ 'danger' if flash.type == 'error' else flash.type }}">{{ flash.message }}</div>
+{% endif %}
+
+{% if can_import %}
 <div class="card">
   <div class="card-header">
     <div class="card-title">
@@ -11,16 +16,13 @@
     </div>
   </div>
   <div class="card-body">
-    {% if flash %}
-    <div class="alert alert-{{ flash.type }}">{{ flash.message }}</div>
-    {% endif %}
-
     <form id="import-form" method="post" action="/emails/import-export" enctype="multipart/form-data">
       <div class="mb-3">
         <label for="files" class="form-label">Select EML or MBOX files to import (ZIP files containing EML/MBOX are supported)</label>
         <input type="file" name="files" id="files" multiple accept=".eml,.mbox,.mbx,.zip,application/zip" class="form-control">
       </div>
 
+      {% if accounts %}
       <div class="mb-3">
         <label for="source" class="form-label">Fetch Account</label>
         <select name="source" id="source" class="form-select">
@@ -29,6 +31,11 @@
           {% endfor %}
         </select>
       </div>
+      {% else %}
+      <div class="alert alert-info">
+        No fetch accounts exist yet - imported messages will be stored under the <code>import</code> source. Add a fetch account on the <a href="/fetch-accounts">Fetch Accounts</a> page to group imports under a real account.
+      </div>
+      {% endif %}
 
       <div class="mb-3">
         <label for="folder" class="form-label">Folder</label>
@@ -36,7 +43,7 @@
       </div>
     </form>
 
-    <p class="text-muted mt-3">Note: ZIP files are supported and will be scanned for EML/MBX entries. PST files are not supported.</p>
+    <p class="text-muted mt-3">Note: ZIP files are supported and will be scanned for EML/MBOX entries. PST and .msg files are not supported.</p>
   </div>
   <div class="card-footer">
     <div class="d-flex justify-content-end">
@@ -51,7 +58,9 @@
     </div>
   </div>
 </div>
+{% endif %}
 
+{% if can_export %}
 <div class="card mt-4">
   <div class="card-header">
     <div class="card-title">
@@ -59,6 +68,7 @@
       <span>Export Emails</span>
     </div>
   </div>
+  {% if accounts %}
   <div class="card-body">
     <p class="text-muted">Export all emails for a selected fetch account in ZIP (EML files) or MBOX format.</p>
 
@@ -94,8 +104,17 @@
       </button>
     </div>
   </div>
+  {% else %}
+  <div class="card-body">
+    <div class="alert alert-info">
+      No fetch accounts exist yet. Create a fetch account on the <a href="/fetch-accounts">Fetch Accounts</a> page before exporting emails.
+    </div>
+  </div>
+  {% endif %}
 </div>
+{% endif %}
 
+{% if can_import %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const importForm = document.getElementById('import-form');
@@ -103,12 +122,16 @@ document.addEventListener('DOMContentLoaded', function() {
   const filesInput = document.getElementById('files');
   const sourceSelect = document.getElementById('source');
 
+  if (!importForm || !importButton || !filesInput) return;
+
   // Disable button initially
   importButton.disabled = true;
 
   function validateForm() {
     const filesSelected = filesInput.files.length > 0;
-    const accountSelected = sourceSelect.value !== '';
+    // When there are no fetch accounts the source select is omitted and the
+    // route falls back to the default "import" source - allow submitting.
+    const accountSelected = !sourceSelect || sourceSelect.options.length === 0 || sourceSelect.value !== '';
     const validFiles = Array.from(filesInput.files).every(file => {
       const ext = file.name.toLowerCase().split('.').pop();
       return ['eml', 'mbox', 'mbx', 'zip'].includes(ext);
@@ -118,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   filesInput.addEventListener('change', validateForm);
-  sourceSelect.addEventListener('change', validateForm);
+  if (sourceSelect) sourceSelect.addEventListener('change', validateForm);
 
   // Also validate on form submit to prevent invalid submissions
   importForm.addEventListener('submit', function(e) {
@@ -129,5 +152,6 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 </script>
+{% endif %}
 
 {% endblock %}

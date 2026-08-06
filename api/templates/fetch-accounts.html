@@ -462,7 +462,10 @@
         document.getElementById('oauth_secret_new_help').style.display = isOAuth ? 'none' : '';
         if (isOAuth) {
             var provider = account.account_type;
-            var baseUrl = window.location.origin;
+            // Prefer the server-configured PUBLIC_BASE_URL so the displayed URI
+            // matches what the server sends to Google/Microsoft even behind a proxy.
+            var publicBase = {{ public_base_url | tojson }};
+            var baseUrl = publicBase || window.location.origin;
             var redirectUri = baseUrl + '/oauth/' + provider + '/callback/' + id;
             document.getElementById('oauth_account_id_value').textContent = id;
             document.getElementById('oauth_redirect_uri_value').textContent = redirectUri;

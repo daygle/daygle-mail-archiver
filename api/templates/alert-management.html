@@ -14,6 +14,7 @@
     <div class="card-body">
         <p class="section-description">Manage individual alert triggers. Each trigger represents a specific type of event that can generate alerts. You can enable/disable triggers and adjust their severity level.</p>
 
+        <div class="table-container">
         <table class="table table-striped">
             <thead>
                 <tr>
@@ -32,7 +33,7 @@
                     <td>
                         <form method="post" action="/alert-management/triggers/update-severity" style="display: inline-block;">
                             <input type="hidden" name="trigger_id" value="{{ trigger.id }}">
-                            <select name="alert_type" class="form-select form-select-sm responsive-fixed" onchange="this.form.submit()">
+                            <select name="alert_type" class="form-select form-select-sm responsive-fixed" onchange="this.form.submit()" aria-label="Change alert severity for {{ trigger.name }}">
                                 <option value="error" {% if trigger.alert_type == 'error' %}selected{% endif %}>Error</option>
                                 <option value="warning" {% if trigger.alert_type == 'warning' %}selected{% endif %}>Warning</option>
                                 <option value="info" {% if trigger.alert_type == 'info' %}selected{% endif %}>Info</option>
@@ -52,12 +53,12 @@
                             <input type="hidden" name="trigger_id" value="{{ trigger.id }}">
                             {% if trigger.enabled %}
                                 <input type="hidden" name="enabled" value="false">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Disable {{ trigger.name }}">
                                     <i class="fas fa-ban"></i> Disable
                                 </button>
                             {% else %}
                                 <input type="hidden" name="enabled" value="true">
-                                <button type="submit" class="btn btn-sm btn-outline-success">
+                                <button type="submit" class="btn btn-sm btn-outline-success" aria-label="Enable {{ trigger.name }}">
                                     <i class="fas fa-check"></i> Enable
                                 </button>
                             {% endif %}
@@ -67,6 +68,7 @@
                 {% endfor %}
             </tbody>
         </table>
+        </div>
 
         {% if not triggers %}
         <div class="text-center text-muted mt-4">
@@ -95,21 +97,21 @@
         <div class="row">
             <div class="col-md-6">
                 <h6>Alert Generation Logic</h6>
-                <p>An alert is only created and sent when:</p>
+                <p>Alerts and email notifications are handled separately:</p>
                 <ol>
-                    <li><strong>Trigger is enabled</strong> (configured above)</li>
-                    <li><strong>User has email notifications enabled</strong> (in user settings)</li>
+                    <li><strong>Trigger enabled:</strong> the event creates an in-app alert using the configured severity.</li>
+                    <li><strong>Email delivery:</strong> enabled, eligible users receive an email when their notifications are enabled and SMTP is configured.</li>
                 </ol>
                 <p class="text-muted small mt-2">
                     <i class="fas fa-info-circle me-1"></i>
-                    <strong>Note:</strong> Only users with the appropriate permissions receive email notifications.
+                    <strong>Note:</strong> Email notifications are sent only to enabled users with the <code>manage_global_settings</code> permission and a configured email address.
                 </p>
             </div>
             <div class="col-md-6">
                 <h6>Alert Hierarchy</h6>
                 <ul class="list-unstyled">
                     <li><i class="fas fa-toggle-on text-success me-2"></i><strong>Alert Triggers:</strong> Specific events with customisable severity</li>
-                    <li><i class="fas fa-user text-info me-2"></i><strong>User Settings:</strong> Email notifications master switch</li>
+                    <li><i class="fas fa-user text-info me-2"></i><strong>User Settings:</strong> Email notification delivery preference</li>
                     <li><i class="fas fa-envelope text-warning me-2"></i><strong>Email Settings:</strong> SMTP configuration for delivery</li>
                 </ul>
             </div>

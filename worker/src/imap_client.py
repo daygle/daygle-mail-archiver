@@ -67,14 +67,16 @@ class ImapConnection:
             if self.use_ssl:
                 logger.debug(f"Connecting to {self.host}:{self.port} with SSL")
                 context = ssl.create_default_context()
-                self.conn = imaplib.IMAP4_SSL(self.host, self.port, ssl_context=context)
+                # A socket timeout prevents a hung/unresponsive server from
+                # blocking the worker thread (and thus the whole poll cycle) forever.
+                self.conn = imaplib.IMAP4_SSL(self.host, self.port, ssl_context=context, timeout=30)
                 self.conn.login(self.username, self.password)
                 self._connected = True
                 return self.conn
 
             # Non-SSL connection
             logger.debug(f"Connecting to {self.host}:{self.port} without SSL")
-            self.conn = imaplib.IMAP4(self.host, self.port)
+            self.conn = imaplib.IMAP4(self.host, self.port, timeout=30)
 
             # STARTTLS upgrade
             if self.require_starttls:

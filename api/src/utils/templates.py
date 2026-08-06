@@ -83,11 +83,3 @@ def extract_emails_filter(value: str) -> str:
 
 # Register filters
 templates.env.filters['extract_emails'] = extract_emails_filter
-
-# Register time helper filter (human-friendly relative times)
-try:
-    from .time_helpers import time_ago as _time_ago
-    templates.env.filters['time_ago'] = lambda dt, user_id: _time_ago(dt, user_id)
-except Exception:
-    # If import fails, provide a no-op implementation
-    templates.env.filters['time_ago'] = lambda dt, user_id: ''

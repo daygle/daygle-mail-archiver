@@ -199,7 +199,13 @@ def create_alert_api(
         return RedirectResponse("/alerts", status_code=303)
 
     try:
-        alert_id = create_alert(alert_type, title, message, details, send_email)
+        alert_id = create_alert(
+            alert_type,
+            title,
+            message,
+            details,
+            send_email=send_email,
+        )
         username = request.session.get("username", "unknown")
         log("info", "Alerts", f"Admin '{username}' created {alert_type} alert: {title}", "")
         flash(request, "Test alert created successfully!", 'success')

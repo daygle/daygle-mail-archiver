@@ -1,3 +1,4 @@
+import sys
 import time
 import gzip
 import email
@@ -6,15 +7,24 @@ from datetime import datetime, timezone, timedelta
 from email.utils import parsedate_to_datetime
 from collections import defaultdict
 
+from sqlalchemy.exc import IntegrityError
+
 from db import query, execute
 from security import decrypt_password
 from imap_client import ImapConnection
 from gmail_client import GmailClient
 from o365_client import O365Client
 from clamav_scanner import ClamAVScanner
-from utils.email_parser import decode_header
+from utils.email_parser import decode_header, compute_signature
 
 POLL_INTERVAL_FALLBACK = 300  # seconds
+
+# PostgreSQL INTEGER column maximum is 2^31 - 1; synthetic UIDs stay below it.
+_MAX_SYNTHETIC_UID = 2_147_483_646
+
+# Retention purge drains the archive in batches so a single cycle never loads
+# the whole (potentially very large) table into memory.
+PURGE_BATCH_SIZE = 1000
 
 
 def stable_uid(email_id: str) -> int:
@@ -30,6 +40,105 @@ def stable_uid(email_id: str) -> int:
     """
     digest = hashlib.sha256(email_id.encode("utf-8")).digest()
     return int.from_bytes(digest[:8], "big") % (10**9)
+
+
+def resolve_provider_uid(source: str, folder: str, provider_id: str) -> int:
+    """Resolve a stable, collision-free synthetic UID for a provider message id.
+
+    ``stable_uid`` derives a 30-bit hash which *can* collide once an archive
+    grows past ~50k messages; a collision would make two distinct Gmail/O365
+    messages share (source, folder, uid), and the emails table's ON CONFLICT
+    upsert would silently overwrite one of them. To prevent that, every provider
+    message claims its uid in ``email_uid_aliases``. If the primary hash is
+    already taken by a different message, the next free uid is used and the
+    mapping is persisted so later runs stay stable.
+
+    Raises RuntimeError if no free uid can be found (pathological) and lets
+    transient database errors propagate so the caller retries the batch.
+    """
+    primary = stable_uid(provider_id)
+
+    # Claim the primary uid for this provider message. ON CONFLICT on the primary
+    # key makes re-claims idempotent; a UNIQUE (source, folder, uid) conflict (the
+    # primary is owned by a *different* message) raises and falls through to the scan.
+    try:
+        execute(
+            """
+            INSERT INTO email_uid_aliases (source, folder, provider_id, uid)
+            VALUES (:source, :folder, :provider_id, :uid)
+            ON CONFLICT (source, folder, provider_id) DO NOTHING
+            """,
+            {"source": source, "folder": folder, "provider_id": provider_id, "uid": primary},
+        )
+    except IntegrityError:
+        # primary uid taken by a different message; scan for a free one below
+        pass
+
+    row = query(
+        """
+        SELECT uid FROM email_uid_aliases
+        WHERE source = :source AND folder = :folder AND provider_id = :provider_id
+        """,
+        {"source": source, "folder": folder, "provider_id": provider_id},
+    ).mappings().first()
+    if row:
+        return int(row["uid"])
+
+    # The primary was taken by another message (or the claim raced with another
+    # worker). Scan forward for the next free uid and remember the mapping.
+    uid = primary
+    for _ in range(1_000_000):
+        uid = uid + 1 if uid < _MAX_SYNTHETIC_UID else 1
+        if uid == primary:
+            break
+        try:
+            execute(
+                """
+                INSERT INTO email_uid_aliases (source, folder, provider_id, uid)
+                VALUES (:source, :folder, :provider_id, :uid)
+                """,
+                {"source": source, "folder": folder, "provider_id": provider_id, "uid": uid},
+            )
+            log_error(
+                source,
+                f"UID collision resolved for provider message {provider_id}: {primary} -> {uid}",
+                level="warning",
+            )
+            return uid
+        except IntegrityError:
+            continue  # taken by another message; keep scanning
+
+    raise RuntimeError(f"Could not allocate a synthetic UID for provider message {provider_id}")
+
+
+def _quote_imap_folder(folder: str) -> str:
+    """Quote an IMAP mailbox name when it needs escaping for the protocol."""
+    if any(ch in folder for ch in (' ', '"', "\\", "\t")):
+        return '"' + folder.replace("\\", "\\\\").replace('"', r"\"") + '"'
+    return folder
+
+
+def _ensure_worker_schema():
+    """Create tables the worker needs that may be missing on pre-update databases.
+
+    db/schema.sql is the source of truth and is re-applied by update.sh, but
+    running this here keeps an upgraded-but-not-yet-migrated deployment working.
+    """
+    try:
+        execute(
+            """
+            CREATE TABLE IF NOT EXISTS email_uid_aliases (
+                source TEXT NOT NULL,
+                folder TEXT NOT NULL,
+                provider_id TEXT NOT NULL,
+                uid INTEGER NOT NULL,
+                PRIMARY KEY (source, folder, provider_id),
+                UNIQUE (source, folder, uid)
+            )
+            """
+        )
+    except Exception as e:
+        log_error("Worker", f"Failed to ensure worker schema: {e}")
 
 
 def _parse_quoted_imap_token(value: str):
@@ -103,19 +212,31 @@ def get_clamav_scanner():
     return clamav_scanner
 
 def log_error(source: str, message: str, details: str = "", level: str = "error"):
-    execute(
-        """
-        INSERT INTO logs (timestamp, level, source, message, details)
-        VALUES (:ts, :level, :source, :message, :details)
-        """,
-        {
-            "ts": datetime.now(timezone.utc),
-            "level": level,
-            "source": source,
-            "message": message[:500],
-            "details": details[:4000],
-        },
-    )
+    """Log an entry to the database.
+
+    Never raises: logging is best-effort and must not itself take the worker
+    down (it is frequently called *because* the database is unavailable). On
+    failure the message falls back to stderr so it still reaches container logs.
+    """
+    try:
+        execute(
+            """
+            INSERT INTO logs (timestamp, level, source, message, details)
+            VALUES (:ts, :level, :source, :message, :details)
+            """,
+            {
+                "ts": datetime.now(timezone.utc),
+                "level": level,
+                "source": source,
+                "message": message[:500],
+                "details": details[:4000],
+            },
+        )
+    except Exception:
+        try:
+            print(f"[{level.upper()}] {source}: {message}", file=sys.stderr)
+        except Exception:
+            pass
 
 
 def create_alert(alert_type: str, title: str, message: str, details: str = None, trigger_key: str = None):
@@ -266,11 +387,14 @@ def store_email(
     message_id_raw = msg.get("Message-ID")
     message_id = decode_header(message_id_raw) if message_id_raw is not None else None
 
-    # Compress the raw email for storage
+    # Compress the raw email for storage. If compression ever fails, store the
+    # original bytes uncompressed instead of losing the raw email entirely.
     try:
         compressed_bytes = gzip.compress(email_bytes)
+        compressed_flag = True
     except Exception:
         compressed_bytes = None
+        compressed_flag = False
 
     # Default flags
     virus_scanned = False
@@ -281,8 +405,7 @@ def store_email(
 
     scanner = get_clamav_scanner()
     if scanner.is_enabled():
-        virus_detected, virus_name, scan_timestamp = scanner.scan(email_bytes)
-        virus_scanned = True
+        virus_detected, virus_name, scan_timestamp, virus_scanned = scanner.scan(email_bytes)
 
         if virus_detected:
             action = scanner.get_action()
@@ -319,9 +442,9 @@ Action Taken: {action}"""
                 return False
 
             if action == 'quarantine' and scanner._quarantine_in_db:
-                # Store the compressed bytes (optionally encrypted) in quarantined_emails
+                # Store the (optionally encrypted) bytes in quarantined_emails
                 try:
-                    raw_to_store = compressed_bytes
+                    raw_to_store = compressed_bytes if compressed_flag else email_bytes
                     if scanner._quarantine_encrypt and scanner._quarantine_key and raw_to_store:
                         try:
                             raw_to_store = scanner._quarantine_key.encrypt(raw_to_store)
@@ -335,7 +458,6 @@ Action Taken: {action}"""
                         expires_at = None
 
                     try:
-                        from utils.email_parser import compute_signature
                         sig = compute_signature(email_bytes)
                     except Exception:
                         sig = None
@@ -343,8 +465,9 @@ Action Taken: {action}"""
                     execute(
                         """
                         INSERT INTO quarantined_emails
-                        (original_source, original_folder, original_uid, subject, sender, recipients, date, date_parsed, message_id, raw_email, signature, compressed, virus_name, reason, quarantined_at, expires_at, quarantined_by)
-                        VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :date_parsed, :message_id, :raw_email, :signature, TRUE, :virus_name, :reason, NOW(), :expires_at, :quarantined_by)
+                        (original_source, original_folder, original_uid, subject, sender, recipients, date, date_parsed, message_id, raw_email, signature, compressed, virus_name, virus_scanned, virus_detected, scan_timestamp, reason, quarantined_at, expires_at, quarantined_by)
+                        VALUES (:source, :folder, :uid, :subject, :sender, :recipients, :date, :date_parsed, :message_id, :raw_email, :signature, :compressed, :virus_name, TRUE, TRUE, :scan_timestamp, :reason, NOW(), :expires_at, :quarantined_by)
+                        ON CONFLICT DO NOTHING
                         """,
                         {
                             "source": source,
@@ -358,7 +481,9 @@ Action Taken: {action}"""
                             "message_id": message_id,
                             "raw_email": raw_to_store,
                             "signature": sig,
+                            "compressed": compressed_flag,
                             "virus_name": virus_name,
+                            "scan_timestamp": scan_timestamp,
                             "reason": 'quarantined by ClamAV',
                             "expires_at": expires_at,
                             "quarantined_by": 'clamav',
@@ -369,15 +494,15 @@ Action Taken: {action}"""
                     compressed_bytes = None
                 except Exception as e:
                     log_error(source, f"Failed to quarantine email: {e}")
-                    # If quarantine fails, fall back to rejecting the email for safety
-                    return False
+                    # Do not advance fetch state after a quarantine DB failure;
+                    # re-raise so the message is retried on the next poll instead
+                    # of being silently lost.
+                    raise
 
     # Insert into emails table (store compressed bytes unless quarantined)
     if not quarantined:
         try:
-            # compute signature of uncompressed raw email
             try:
-                from utils.email_parser import compute_signature
                 sig = compute_signature(email_bytes)
             except Exception:
                 sig = None
@@ -412,9 +537,9 @@ Action Taken: {action}"""
                     "date": date_header,
                     "date_parsed": date_parsed,
                     "message_id": message_id,
-                    "raw_email": compressed_bytes,
+                    "raw_email": compressed_bytes if compressed_flag else email_bytes,
                     "signature": sig,
-                    "compressed": bool(compressed_bytes),
+                    "compressed": compressed_flag,
                     "virus_scanned": virus_scanned,
                     "virus_detected": virus_detected,
                     "virus_name": virus_name,
@@ -424,7 +549,9 @@ Action Taken: {action}"""
             )
         except Exception as e:
             log_error(source, f"Failed to store email in database: {e}")
-            return False
+            # Re-raise so callers do NOT advance last_uid / the sync token; the
+            # email is retried on the next poll instead of being skipped forever.
+            raise
 
     return True
 
@@ -503,10 +630,7 @@ def process_imap_account(account):
                     if "\\noselect" in flag_tokens or "\\nonexistent" in flag_tokens:
                         continue
 
-                    if any(ch in folder for ch in (' ', '"', "\\", "\t")):
-                        folder_for_imap = '"' + folder.replace("\\", "\\\\").replace('"', r"\"") + '"'
-                    else:
-                        folder_for_imap = folder
+                    folder_for_imap = _quote_imap_folder(folder)
 
                     # Select folder as readonly unless we need to delete
                     try:
@@ -612,27 +736,37 @@ def process_gmail_account(account):
     # Fetch new email IDs
     email_ids = client.fetch_new_emails(last_sync_token)
 
-    # Process each email
+    # Process each email. Any failure (network, provider, or database) must keep
+    # the sync token unchanged so the failed message is retried on the next run
+    # instead of being permanently skipped by the delta.
+    had_error = False
     for email_id in email_ids:
         try:
             # Get email in raw RFC822 format
             raw_email = client.get_message_raw(email_id)
-            if raw_email:
-                # Use a stable hash of the message id as the UID equivalent
-                uid = stable_uid(email_id)
-                store_email(source, folder, uid, raw_email)
+            if not raw_email:
+                had_error = True
+                log_error(source, f"Empty raw response for Gmail email {email_id}")
+                break
 
-                # Delete from Gmail (move to trash) if configured
-                if delete_after_processing:
-                    if not client.delete_message(email_id):
-                        log_error(source, f"Failed to delete Gmail email {email_id}")
+            # Collision-safe stable uid for this provider message
+            uid = resolve_provider_uid(source, folder, email_id)
+            store_email(source, folder, uid, raw_email)
+
+            # Delete from Gmail (move to trash) if configured
+            if delete_after_processing:
+                if not client.delete_message(email_id):
+                    log_error(source, f"Failed to delete Gmail email {email_id}")
         except Exception as e:
+            had_error = True
             log_error(source, f"Failed to fetch Gmail email {email_id}: {e}")
+            break
 
-    # Update sync token for next run
-    new_sync_token = client.get_sync_token()
-    if new_sync_token:
-        set_last_sync_token(account_id, folder, new_sync_token)
+    # Update sync token for next run (only when every message was handled)
+    if not had_error:
+        new_sync_token = client.get_sync_token()
+        if new_sync_token:
+            set_last_sync_token(account_id, folder, new_sync_token)
 
 
 def process_o365_account(account):
@@ -656,27 +790,36 @@ def process_o365_account(account):
     # Fetch new email IDs
     email_ids = client.fetch_new_emails(last_delta_link)
 
-    # Process each email
+    # Process each email. Any failure must keep the delta link unchanged so the
+    # failed message is retried on the next run instead of being skipped forever.
+    had_error = False
     for email_id in email_ids:
         try:
             # Get email in MIME format
             raw_email = client.get_message_mime(email_id)
-            if raw_email:
-                # Use a stable hash of the message id as the UID equivalent
-                uid = stable_uid(email_id)
-                store_email(source, folder, uid, raw_email)
+            if not raw_email:
+                had_error = True
+                log_error(source, f"Empty MIME response for Office 365 email {email_id}")
+                break
 
-                # Delete from Office 365 if configured
-                if delete_after_processing:
-                    if not client.delete_message(email_id):
-                        log_error(source, f"Failed to delete Office 365 email {email_id}")
+            # Collision-safe stable uid for this provider message
+            uid = resolve_provider_uid(source, folder, email_id)
+            store_email(source, folder, uid, raw_email)
+
+            # Delete from Office 365 if configured
+            if delete_after_processing:
+                if not client.delete_message(email_id):
+                    log_error(source, f"Failed to delete Office 365 email {email_id}")
         except Exception as e:
+            had_error = True
             log_error(source, f"Failed to fetch O365 email {email_id}: {e}")
+            break
 
-    # Update delta link for next run
-    new_delta_link = client.get_delta_link()
-    if new_delta_link:
-        set_last_sync_token(account_id, folder, new_delta_link)
+    # Update delta link for next run (only when every message was handled)
+    if not had_error:
+        new_delta_link = client.get_delta_link()
+        if new_delta_link:
+            set_last_sync_token(account_id, folder, new_delta_link)
 
 
 def get_last_sync_token(account_id: int, folder: str) -> str:
@@ -814,13 +957,71 @@ def get_settings():
     rows = query("SELECT key, value FROM settings").mappings().all()
     return {r["key"]: r["value"] for r in rows}
 
+def _delete_from_mail_servers(records, accounts_by_name, source_key="source", folder_key="folder", uid_key="uid"):
+    """Best-effort deletion of archived messages from their mail servers.
+
+    Only IMAP accounts are supported today; Gmail/O365 deletion during retention
+    would require per-account OAuth token management and is skipped (the archived
+    copy is removed from the database regardless). Failures are logged per source.
+    """
+    records_by_source = defaultdict(list)
+    for rec in records:
+        records_by_source[rec[source_key]].append(rec)
+
+    for source, recs in records_by_source.items():
+        account = accounts_by_name.get(source)
+        if not account:
+            continue
+
+        account_type = account.get("account_type", "imap")
+        try:
+            if account_type != "imap":
+                # Gmail/O365: skipped (would need OAuth token refresh)
+                continue
+
+            password = decrypt_password(account["password_encrypted"])
+            with ImapConnection(
+                host=account["host"],
+                port=account["port"],
+                username=account["username"],
+                password=password,
+                use_ssl=account["use_ssl"],
+                require_starttls=account["require_starttls"],
+            ) as conn:
+                # Group by folder
+                recs_by_folder = defaultdict(list)
+                for rec in recs:
+                    recs_by_folder[rec[folder_key]].append(rec[uid_key])
+
+                for folder, uids in recs_by_folder.items():
+                    try:
+                        conn.select(_quote_imap_folder(folder), readonly=False)
+                        for uid in uids:
+                            if uid:  # Only try to delete if UID exists
+                                try:
+                                    conn.uid("STORE", str(uid), "+FLAGS", "(\\Deleted)")
+                                except Exception:
+                                    pass
+                        # Expunge to permanently remove
+                        conn.expunge()
+                    except Exception as e:
+                        log_error("Retention", f"Failed to delete from IMAP folder {folder}: {e}")
+        except Exception as e:
+            log_error("Retention", f"Failed to delete from mail server {source}: {e}")
+
+
 def purge_old_emails():
     settings = get_settings()
     enable_purge = settings.get("enable_purge", "false").lower() == "true"
     if not enable_purge:
         return
 
-    retention_value = int(settings.get("retention_value", 1))
+    # Malformed retention settings must not crash the whole worker loop.
+    try:
+        retention_value = int(settings.get("retention_value", 1))
+    except (TypeError, ValueError):
+        log_error("Retention", f"Invalid retention_value setting: {settings.get('retention_value')!r}")
+        return
     retention_unit = settings.get("retention_unit", "years")
     delete_from_mail_server = settings.get("retention_delete_from_mail_server", "false").lower() == "true"
 
@@ -832,33 +1033,12 @@ def purge_old_emails():
     elif retention_unit == "years":
         cutoff = now - timedelta(days=retention_value * 365)  # Approximate
     else:
-        return  # Invalid unit
+        log_error("Retention", f"Invalid retention_unit setting: {retention_unit!r}")
+        return
 
-    # Get emails to delete (with source, folder, uid for mail server deletion)
-    emails_to_delete = query(
-        """
-        SELECT id, source, folder, uid
-        FROM emails
-        WHERE created_at < :cutoff
-        """,
-        {"cutoff": cutoff},
-    ).mappings().all()
-
-    deletion_count = len(emails_to_delete)
-
-    # NOTE: Do not return early when deletion_count == 0. The quarantine-retention
-    # purge below has its own (independent) cutoff and must still run even when no
-    # emails in the main table have expired. The IMAP deletion block still needs to
-    # execute so that `accounts_by_name` is populated for the quarantine purge.
-
-    # Delete from mail servers if enabled
+    # Account lookup for mail-server deletion (also used by the quarantine purge)
+    accounts_by_name = {}
     if delete_from_mail_server:
-        # Group emails by source (fetch account)
-        emails_by_source = defaultdict(list)
-        for email_rec in emails_to_delete:
-            emails_by_source[email_rec["source"]].append(email_rec)
-        
-        # Get fetch accounts to determine how to delete
         accounts = query(
             """
             SELECT id, name, account_type, host, port, username, password_encrypted,
@@ -866,150 +1046,100 @@ def purge_old_emails():
             FROM fetch_accounts
             """
         ).mappings().all()
-        
         accounts_by_name = {acc["name"]: acc for acc in accounts}
-        
-        # Try to delete from each source
-        for source, emails in emails_by_source.items():
-            if source not in accounts_by_name:
-                continue
-                
-            account = accounts_by_name[source]
-            account_type = account.get("account_type", "imap")
-            
-            try:
-                if account_type == "imap":
-                    # Delete from IMAP server
-                    password = decrypt_password(account["password_encrypted"])
-                    with ImapConnection(
-                        host=account["host"],
-                        port=account["port"],
-                        username=account["username"],
-                        password=password,
-                        use_ssl=account["use_ssl"],
-                        require_starttls=account["require_starttls"],
-                    ) as conn:
-                        # Group by folder
-                        emails_by_folder = defaultdict(list)
-                        for email_rec in emails:
-                            emails_by_folder[email_rec["folder"]].append(email_rec["uid"])
-                        
-                        for folder, uids in emails_by_folder.items():
-                            try:
-                                conn.select(folder, readonly=False)
-                                for uid in uids:
-                                    try:
-                                        conn.uid("STORE", str(uid), "+FLAGS", "(\\Deleted)")
-                                    except Exception:
-                                        pass
-                                # Expunge to permanently remove
-                                conn.expunge()
-                            except Exception as e:
-                                log_error("Retention", f"Failed to delete from IMAP folder {folder}: {e}")
-                
-                elif account_type == "gmail":
-                    # Delete from Gmail (would need OAuth token refresh)
-                    # For now, skip - requires complex token management
-                    pass
-                    
-                elif account_type == "o365":
-                    # Delete from Office 365 (would need OAuth token refresh)
-                    # For now, skip - requires complex token management
-                    pass
-                    
-            except Exception as e:
-                log_error("Retention", f"Failed to delete from mail server {source}: {e}")
 
-    # Delete from database
-    if deletion_count > 0:
+    # Delete expired emails in batches so a very large archive is drained over a
+    # few cycles instead of loading every expired row into memory at once.
+    total_deleted = 0
+    while True:
+        batch = query(
+            """
+            SELECT id, source, folder, uid
+            FROM emails
+            WHERE created_at < :cutoff
+            ORDER BY id
+            LIMIT :batch
+            """,
+            {"cutoff": cutoff, "batch": PURGE_BATCH_SIZE},
+        ).mappings().all()
+        if not batch:
+            break
+
+        # Delete from mail servers if enabled
+        if delete_from_mail_server:
+            _delete_from_mail_servers(batch, accounts_by_name)
+
+        execute("DELETE FROM emails WHERE id = ANY(:ids)", {"ids": [r["id"] for r in batch]})
+        total_deleted += len(batch)
+
+    # Prune provider-uid mappings for messages that no longer exist, keeping the
+    # alias table bounded by the live archive.
+    if total_deleted > 0:
+        try:
+            execute(
+                """
+                DELETE FROM email_uid_aliases a
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM emails e
+                    WHERE e.source = a.source AND e.folder = a.folder AND e.uid = a.uid
+                )
+                AND NOT EXISTS (
+                    SELECT 1 FROM quarantined_emails q
+                    WHERE q.original_source = a.source
+                      AND q.original_folder = a.folder
+                      AND q.original_uid = a.uid
+                )
+                """
+            )
+        except Exception as e:
+            log_error("Retention", f"Failed to prune uid aliases: {e}")
+
+    # Track deletion statistics
+    if total_deleted > 0:
         execute(
             """
-            DELETE FROM emails
-            WHERE created_at < :cutoff
+            INSERT INTO deletion_stats (deletion_date, deletion_type, count, deleted_from_mail_server)
+            VALUES (CURRENT_DATE, 'retention', :count, :deleted_from_server)
+            ON CONFLICT (deletion_date, deletion_type, deleted_from_mail_server)
+            DO UPDATE SET count = deletion_stats.count + EXCLUDED.count
             """,
-            {"cutoff": cutoff},
+            {"count": total_deleted, "deleted_from_server": delete_from_mail_server},
         )
+        log_error("Retention", f"Purged {total_deleted} old emails (delete_from_server={delete_from_mail_server})", level="info")
 
     # Purge expired quarantined emails based on quarantine retention setting
+    # (independent cutoff: COALESCE(expires_at, quarantined_at)).
     try:
-        settings = get_settings()
-        retention_days = int(settings.get('clamav_quarantine_retention_days', '90'))
+        try:
+            retention_days = int(settings.get('clamav_quarantine_retention_days', '90'))
+        except (TypeError, ValueError):
+            retention_days = 90
         quarantine_cutoff = datetime.now(timezone.utc) - timedelta(days=retention_days)
 
-        # Get quarantined emails to delete (with source, folder, uid for mail server deletion)
         quarantined_to_delete = query(
             """
             SELECT id, original_source, original_folder, original_uid
             FROM quarantined_emails
-            WHERE quarantined_at < :cutoff
+            WHERE COALESCE(expires_at, quarantined_at) < :cutoff
             """,
             {"cutoff": quarantine_cutoff},
         ).mappings().all()
 
-        quarantined_count = len(quarantined_to_delete)
-        if quarantined_count > 0:
+        if quarantined_to_delete:
             # Delete from mail servers if retention IMAP deletion is enabled
             if delete_from_mail_server:
-                # Group quarantined emails by source (fetch account)
-                quarantined_by_source = defaultdict(list)
-                for q_email in quarantined_to_delete:
-                    quarantined_by_source[q_email["original_source"]].append(q_email)
-
-                # Try to delete from each source
-                for source, q_emails in quarantined_by_source.items():
-                    if source not in accounts_by_name:
-                        continue
-
-                    account = accounts_by_name[source]
-                    account_type = account.get("account_type", "imap")
-
-                    try:
-                        if account_type == "imap":
-                            # Delete from IMAP server
-                            password = decrypt_password(account["password_encrypted"])
-                            with ImapConnection(
-                                host=account["host"],
-                                port=account["port"],
-                                username=account["username"],
-                                password=password,
-                                use_ssl=account["use_ssl"],
-                                require_starttls=account["require_starttls"],
-                            ) as conn:
-                                # Group by folder
-                                q_emails_by_folder = defaultdict(list)
-                                for q_email in q_emails:
-                                    q_emails_by_folder[q_email["original_folder"]].append(q_email["original_uid"])
-
-                                for folder, uids in q_emails_by_folder.items():
-                                    try:
-                                        conn.select(folder, readonly=False)
-                                        for uid in uids:
-                                            if uid:  # Only try to delete if UID exists
-                                                try:
-                                                    conn.uid("STORE", str(uid), "+FLAGS", "(\\Deleted)")
-                                                except Exception:
-                                                    pass
-                                        # Expunge to permanently remove
-                                        conn.expunge()
-                                    except Exception as e:
-                                        log_error("Retention", f"Failed to delete quarantined emails from IMAP folder {folder}: {e}")
-
-                        elif account_type == "gmail":
-                            # Delete from Gmail (would need OAuth token refresh)
-                            # For now, skip - requires complex token management
-                            pass
-
-                        elif account_type == "o365":
-                            # Delete from Office 365 (would need OAuth token refresh)
-                            # For now, skip - requires complex token management
-                            pass
-
-                    except Exception as e:
-                        log_error("Retention", f"Failed to delete quarantined emails from mail server {source}: {e}")
+                _delete_from_mail_servers(
+                    quarantined_to_delete,
+                    accounts_by_name,
+                    source_key="original_source",
+                    folder_key="original_folder",
+                    uid_key="original_uid",
+                )
 
             # Delete quarantined emails from database
             deleted = query("""
-                DELETE FROM quarantined_emails WHERE quarantined_at < :cutoff RETURNING id
+                DELETE FROM quarantined_emails
+                WHERE COALESCE(expires_at, quarantined_at) < :cutoff RETURNING id
             """, {"cutoff": quarantine_cutoff}).rowcount
 
             if deleted:
@@ -1027,46 +1157,52 @@ def purge_old_emails():
     except Exception as e:
         log_error('Quarantine', f'Failed to purge quarantined emails: {e}')
 
-
-    # Track deletion statistics
-    if deletion_count > 0:
-        execute(
-            """
-            INSERT INTO deletion_stats (deletion_date, deletion_type, count, deleted_from_mail_server)
-            VALUES (CURRENT_DATE, 'retention', :count, :deleted_from_server)
-            ON CONFLICT (deletion_date, deletion_type, deleted_from_mail_server)
-            DO UPDATE SET count = deletion_stats.count + EXCLUDED.count
-            """,
-            {"count": deletion_count, "deleted_from_server": delete_from_mail_server},
-        )
-        log_error("Retention", f"Purged {deletion_count} old emails (delete_from_server={delete_from_mail_server})", level="info")
-
 def main_loop():
     # Track last processing time for each account
     last_processed = {}
-    
+
     while True:
-        accounts = get_accounts()
+        try:
+            # Idempotent and cheap (metadata lookup once the table exists). Re-run
+            # each cycle so a transient failure at startup (e.g. DB briefly down)
+            # cannot permanently break Gmail/O365 accounts until a restart.
+            _ensure_worker_schema()
+            accounts = get_accounts()
+        except Exception as e:
+            # A database outage must not kill the worker; keep polling.
+            log_error("Worker", f"Failed to load fetch accounts: {e}")
+            time.sleep(60)
+            continue
+
         if not accounts:
             time.sleep(60)  # Check again in 1 minute
             continue
 
         now = time.time()
-        
+
         for account in accounts:
             account_id = account["id"]
             poll_interval = account["poll_interval_seconds"] or POLL_INTERVAL_FALLBACK
-            
+
             # Check if this account is due for processing
             last_run = last_processed.get(account_id, 0)
             time_since_last = now - last_run
-            
+
             if time_since_last >= poll_interval:
-                process_account(account)
+                try:
+                    process_account(account)
+                except Exception as e:
+                    # Belt-and-braces: process_account handles its own errors, but
+                    # nothing here may take the whole worker down.
+                    log_error("Worker", f"Unexpected error processing account {account_id}: {e}")
                 last_processed[account_id] = now
 
-        # Purge old emails after processing all accounts (run once per cycle)
-        purge_old_emails()
+        # Purge old emails after processing all accounts (run once per cycle).
+        # Batched internally; failures are logged, never fatal.
+        try:
+            purge_old_emails()
+        except Exception as e:
+            log_error("Worker", f"Unexpected error during retention purge: {e}")
 
         # Short sleep before checking again (60 seconds allows for responsive polling)
         time.sleep(60)

@@ -292,7 +292,7 @@ def _backfill_date_parsed():
                         parsed = _parsedate(row["date"])
                         updates.append({"dp": parsed, "id": row["id"]})
                     except Exception:
-                        pass  # unparseable date — leave date_parsed as NULL
+                        pass  # unparseable date - leave date_parsed as NULL
 
                 if updates:
                     for upd in updates:
@@ -314,7 +314,7 @@ def _backfill_date_parsed():
 
                 offset += _BATCH
                 if len(rows) < _BATCH:
-                    break  # last batch — no more rows
+                    break  # last batch - no more rows
         except Exception as exc:
             logging.warning(f"date_parsed backfill: unexpected error for {table}: {exc}")
 

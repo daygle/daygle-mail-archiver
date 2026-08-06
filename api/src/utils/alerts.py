@@ -12,6 +12,7 @@ def create_alert(
     title: str,
     message: str,
     details: Optional[str] = None,
+    *,
     send_email: bool = True,
     trigger_key: Optional[str] = None
 ) -> int:
@@ -80,32 +81,6 @@ def create_alert(
     except Exception as e:
         log("error", "Alert", f"Failed to create alert '{title}': {str(e)}", "")
         raise
-
-
-def _is_alert_trigger_enabled(trigger_key: str) -> bool:
-    """
-    Check if a specific alert trigger is enabled.
-
-    Args:
-        trigger_key: The trigger key to check
-
-    Returns:
-        bool: True if the trigger is enabled
-    """
-    try:
-        result = query("SELECT enabled FROM alert_triggers WHERE trigger_key = :key", {"key": trigger_key}).mappings().first()
-        
-        if result:
-            return result["enabled"]
-        else:
-            # If trigger doesn't exist, default to enabled
-            log("warning", "Alert", f"Alert trigger '{trigger_key}' not found in database, defaulting to enabled", "")
-            return True
-    
-    except Exception as e:
-        log("error", "Alert", f"Failed to check alert trigger settings for '{trigger_key}': {str(e)}", "")
-        # Default to enabled on error
-        return True
 
 
 def get_alerts(
@@ -278,30 +253,3 @@ def _send_alert_email(alert_id: int, alert_type: str, title: str, message: str) 
 
     except Exception as e:
         log("error", "Alert", f"Error sending alert email for alert {alert_id}: {str(e)}", "")
-
-
-def cleanup_old_alerts(days: int = 90) -> int:
-    """
-    Delete old acknowledged alerts
-
-    Args:
-        days: Delete alerts older than this many days
-
-    Returns:
-        int: Number of alerts deleted
-    """
-    try:
-        result = execute("""
-            DELETE FROM alerts
-            WHERE acknowledged = TRUE AND created_at < NOW() - make_interval(days => :days)
-        """, {"days": days})
-
-        deleted_count = result.rowcount
-        if deleted_count > 0:
-            log("info", "Alert", f"Cleaned up {deleted_count} old acknowledged alerts", "")
-
-        return deleted_count
-
-    except Exception as e:
-        log("error", "Alert", f"Failed to cleanup old alerts: {str(e)}", "")
-        return 0

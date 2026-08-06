@@ -203,6 +203,12 @@
                         <input id="clamav_max_file_size" class="form-control" name="clamav_max_file_size" type="number" min="1024" value="{{ settings.clamav_max_file_size or '10485760' }}">
                         <small class="form-text text-secondary">{{ gettext('Files larger than this size will not be scanned by ClamAV') }}</small>
                     </div>
+
+                    <div class="form-group mt-3">
+                        <label for="clamav_failure_grace_seconds" class="form-label">{{ gettext('Outage Alert Grace Period (seconds)') }}</label>
+                        <input id="clamav_failure_grace_seconds" class="form-control" name="clamav_failure_grace_seconds" type="number" min="0" value="{{ settings.clamav_failure_grace_seconds or '300' }}">
+                        <small class="form-text text-secondary">{{ gettext('How long a ClamAV outage must persist before an alert is raised. Suppresses brief blips during signature-database reloads.') }}</small>
+                    </div>
                 </div>
             </div>
 
@@ -279,15 +285,19 @@
 
                     <div class="form-group mt-3">
                         <label for="smtp_password" class="form-label">{{ gettext('SMTP Password') }}</label>
-                        <input id="smtp_password" class="form-control" name="smtp_password" type="password" value="{{ settings.smtp_password or '' }}" placeholder="your-password" autocomplete="off">
+                        <input id="smtp_password" class="form-control" name="smtp_password" type="password" placeholder="your-password" autocomplete="new-password">
+                        {% if settings.smtp_password %}
+                        <small class="form-text text-secondary">{{ gettext('A password is currently stored. Leave this field blank to keep it.') }}</small>
+                        {% else %}
                         <small class="form-text text-secondary">{{ gettext('Password for SMTP authentication (use app passwords for Gmail)') }}</small>
+                        {% endif %}
                     </div>
 
                     <div class="form-check mt-3">
                         <input class="form-check-input" type="checkbox" id="smtp_use_tls" name="smtp_use_tls" {% if settings.smtp_use_tls != 'false' %}checked{% endif %}>
                         <label class="form-check-label" for="smtp_use_tls">
-                            <strong>{{ gettext('Use TLS Encryption') }}</strong>
-                            <small class="d-block text-secondary">{{ gettext('Use STARTTLS for secure connection (recommended for most servers)') }}</small>
+                            <strong>{{ gettext('Use STARTTLS') }}</strong>
+                            <small class="d-block text-secondary">{{ gettext('Use STARTTLS for secure connection (recommended, e.g. port 587). When disabled, implicit SSL is used (e.g. port 465).') }}</small>
                         </label>
                     </div>
 

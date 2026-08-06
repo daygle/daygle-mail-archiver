@@ -16,32 +16,37 @@ This project is built with explicit, maintainable configuration, modular backend
 - **Retention Policies**: Automatic purging based on configurable rules
 - **Deletion Tracking**: Dashboard analytics for manual and automated deletions
 - **Mail Server Cleanup**: Optional deletion from mail servers during retention cleanup
-- **User Management**: Multi-user system with role-based access via granular roles and permissions
+- **Role-Based Access Control**: Multi-user access management with protected built-in roles, custom roles, and granular permissions
+- **Modern Role Management**: Responsive role cards, permission grouping, role search, and category-level permission selection
+- **Permission Guardrails**: Privileged permissions cannot be granted or assigned by users who do not already hold them
 - **User Status Tracking**: Real-time online/offline status indicators and session management
 - **OAuth2 Integration**: Secure authentication for Gmail and Office 365
 - **Worker Status Monitoring**: Real-time health monitoring of fetch workers
 - **Dashboard Analytics**: Visual charts and customisable widget layouts with per-widget configuration
 - **Widget Customization**: Drag-and-drop layout, visibility toggles, and date range settings per widget
 - **Test Connection**: Test IMAP, Gmail, and Office 365 connections from the UI
-- **Database Backup & Restore**: Built-in backup functionality
+- **Database Backup & Restore**: Command-line backup and restore tooling
 - **Audit Logging**: Complete audit trail of all system actions
 - **Virus Scanning**: Integrated ClamAV for scanning incoming emails with configurable actions
 - **Advanced Reporting**: Email volume trends, account activity, user analytics, and system health reports
 - **Email Alerts**: Configurable SMTP alerts for system events, virus detections, and critical issues
-- **Alert Management**: Real-time alert dashboard with acknowledgment and email notifications
+- **Alert Management**: Configure trigger enablement and severity separately from in-app alerts and email delivery
+- **Audit Logs**: Searchable, filterable logs with level, source, date, and pagination controls
 - **User Preferences**: Per-user email notification settings, theme, timezone, and date/time formats
 
 ---
 
 ## 📖 Documentation
 
-**Complete documentation is available in the [Wiki](https://github.com/daygle/daygle-mail-archiver/wiki/)**
+**Complete documentation is available in the [Wiki](https://github.com/daygle/daygle-mail-archiver/wiki/). Maintained local operational guides are also available in [`docs/`](docs/).**
 
 ### Quick Links
 
 - **[Installation Guide](https://github.com/daygle/daygle-mail-archiver/wiki/Installation-Guide)** - Get started with installation and configuration
 - **[Fetch Accounts](https://github.com/daygle/daygle-mail-archiver/wiki/Fetch-Accounts-Setup)** - Set up IMAP, Gmail, Office 365
-- **[User Management](https://github.com/daygle/daygle-mail-archiver/wiki/User-Management)** - Manage users and roles
+- **[User Management](https://github.com/daygle/daygle-mail-archiver/wiki/User-Management)** - Manage users and role assignments
+- **[Roles & Permissions](docs/roles-and-permissions.md)** - Design custom roles and review access safely
+- **[Quarantine & Integrity](docs/quarantine-and-integrity.md)** - Understand ClamAV scanning, quarantine, restore, and verification
 - **[Dashboard](https://github.com/daygle/daygle-mail-archiver/wiki/Dashboard)** - Customise your dashboard
 - **[ClamAV Virus Scanning](https://github.com/daygle/daygle-mail-archiver/wiki/ClamAV-Virus-Scanning)** - Configure virus scanning
 - **[Advanced Reporting](https://github.com/daygle/daygle-mail-archiver/wiki/Advanced-Reporting)** - Email volume, account activity, and system health reports
@@ -49,6 +54,11 @@ This project is built with explicit, maintainable configuration, modular backend
 - **[Backup and Restore](https://github.com/daygle/daygle-mail-archiver/wiki/Backup-and-Restore)** - Backup and restore procedures
 - **[Troubleshooting](https://github.com/daygle/daygle-mail-archiver/wiki/Troubleshooting)** - Common issues and solutions
 - **[Security Notes](https://github.com/daygle/daygle-mail-archiver/wiki/Security-Notes)** - Security best practices
+
+Local guides:
+- [`docs/configuration.md`](docs/configuration.md) - Configuration, reverse proxies, backups, and updates
+- [`docs/roles-and-permissions.md`](docs/roles-and-permissions.md) - RBAC and privilege guardrails
+- [`docs/quarantine-and-integrity.md`](docs/quarantine-and-integrity.md) - ClamAV, quarantine, restore, encryption, and integrity checks
 
 ---
 
@@ -80,7 +90,9 @@ docker compose up -d --build
 # Navigate to http://localhost:8000
 ```
 
-**Important**: Change default security values in `daygle_mail_archiver.conf` before production use!
+**Important**: Change default security values in `daygle_mail_archiver.conf` before production use. The example file contains placeholder values and must not be copied unchanged into a public deployment.
+
+For a reverse-proxy deployment, set `public_base_url` to the externally reachable HTTPS origin so Gmail and Microsoft OAuth redirect URIs are generated correctly. Set `session_https_only = true` when the application is served over HTTPS, and replace the wildcard `allowed_origins` value with an explicit comma-separated origin list where appropriate.
 
 See the [Installation Guide](https://github.com/daygle/daygle-mail-archiver/wiki/Installation-Guide) for detailed instructions.
 
@@ -128,6 +140,22 @@ Reports are accessible via the **Reports** menu and support customisable date ra
 
 ---
 
+## 👥 Roles, permissions, and audit logs
+
+Access to administration and data-management features is controlled by roles and granular permissions. The **Role Management** page is available to users with `manage_roles` and provides:
+
+- Built-in protected roles and editable custom roles
+- Permission counts and assigned-user counts for each role
+- Permission grouping by area, permission search, and select-all controls when creating a role
+- Safe protection against privilege escalation: a role manager cannot grant privileged permissions they do not already hold
+- Search and filtering across role names, descriptions, and permissions
+
+Users inherit the permissions from all roles assigned to them. The application checks permissions server-side; hiding a navigation item is not used as an authorization boundary. Built-in role assignments and role edits should be reviewed carefully because they affect every user assigned to that role.
+
+The **Logs** page requires `view_logs` and provides searchable, paginated audit information. Filters support log level, source, message text, and date range. Log writes are best-effort so a logging database outage does not mask the original operation.
+
+---
+
 ## 🚨 Email Alerts & Notifications
 
 Stay informed about critical system events with the built-in alert system:
@@ -144,12 +172,28 @@ Stay informed about critical system events with the built-in alert system:
 - **Alert Acknowledgment**: Track and manage alert responses
 
 ### Alert Management
-- **Real-time Dashboard**: View all alerts with filtering and search
-- **Email Notifications**: Instant alerts for critical issues
-- **Acknowledgment System**: Mark alerts as reviewed
-- **Alert History**: Complete audit trail of system events
+- **Trigger controls**: Enable or disable individual event triggers
+- **Severity controls**: Configure `error`, `warning`, `info`, or `success` severity per trigger
+- **In-app alerts**: View and acknowledge alerts from the Alerts page
+- **Email delivery**: Separate from alert creation; eligible enabled users with the required permission, an email address, and notifications enabled can receive email alerts
+- **Trigger-aware callers**: Provider, ClamAV, quarantine, and other alert-producing workflows use the configured trigger settings
 
-Configure SMTP settings in **Global Settings** → **SMTP Email Configuration** to enable email alerts.
+Configure SMTP settings in **Global Settings** → **SMTP Email Configuration**, then enable user email notifications where required. A disabled trigger suppresses creation of the corresponding in-app alert; changing severity does not itself enable email delivery.
+
+---
+
+## 🛡️ ClamAV scanning, quarantine, and integrity
+
+Incoming messages are scanned by ClamAV when virus scanning is enabled. Configure the scanner in **Global Settings → Virus Scanning (ClamAV)**:
+
+- `quarantine`: retain detected messages in the quarantine table
+- `reject`: do not archive detected messages
+- `log_only`: record the detection without quarantine or rejection
+- Configure the maximum scan size and the ClamAV failure grace period to avoid reacting to short signature-reload outages
+
+Quarantine records preserve scan metadata, the original source/folder/UID, and the email signature where available. Quarantine records are deduplicated on `(source, folder, UID)` for non-null UIDs, so a fetch-state reset cannot create multiple records for the same provider message. Restoring a message preserves its scan metadata and does not silently overwrite an existing archive row.
+
+Archived messages use a SHA-256 signature over the raw RFC822 bytes. The Emails and Quarantine views expose integrity states such as valid, modified, missing signature, unavailable raw data, or unknown. Integrity verification detects changes; it is not encryption. Optional quarantine encryption uses a dedicated `CLAMAV_QUARANTINE_KEY`.
 
 ---
 
@@ -195,16 +239,18 @@ System updates are managed via the command line (the web-based update checker ha
 
 What the update script does:
 
--- Fetches and merges the latest code from the current git branch (attempts to preserve local changes by committing current state)
+- Fetches and merges the latest code from the current git branch (it may create local update commits while preserving the current working state)
 - Pulls updated Docker images via Docker Compose
-- Rebuilds and restarts containers (with fallback to `--no-cache` and build cache pruning on failure)
-<!-- Local diff saving removed -->
+- Rebuilds and restarts containers (with fallback to `--no-cache` and build-cache pruning on failure)
+- Applies the idempotent database schema after the containers start
+
+The update script does not automatically create a full database backup and can modify the local Git checkout. Review the script and create a backup before production updates.
 
 Important: the update script does NOT automatically create a full database backup. You should create a backup before updating if you need to preserve the database state. Use the provided backup script before running `update.sh`:
 
 ```bash
 # Create a full system backup (database + config)
-./scripts/backup_restore.sh backup
+./backup_restore.sh backup
 ```
 
 See [Updating](https://github.com/daygle/daygle-mail-archiver/wiki/Updating) in the wiki for a recommended update workflow, rollback tips, and common troubleshooting steps.
@@ -309,5 +355,24 @@ UPDATE settings SET value='true' WHERE key='clamav_quarantine_encrypt';
 ```
 
 - Rotation warning: rotating `CLAMAV_QUARANTINE_KEY` will make previously encrypted quarantined items unreadable unless you re-encrypt them with the new key or maintain the previous key for decryption during migration.
+
+---
+
+## 🧰 Configuration reference
+
+The application accepts configuration from environment variables and from the optional `daygle_mail_archiver.conf` INI file. Environment variables take precedence. Keep the API and worker values consistent for shared database and encryption settings.
+
+| Setting | Purpose |
+| --- | --- |
+| `DB_DSN` or `POSTGRES_*` | PostgreSQL connection settings |
+| `SESSION_SECRET` | Signs API session cookies; use a unique high-entropy value |
+| `IMAP_PASSWORD_KEY` | Fernet key used to encrypt stored IMAP passwords |
+| `CLAMAV_QUARANTINE_KEY` | Dedicated Fernet key for optional quarantined-message encryption |
+| `ALLOWED_ORIGINS` | Comma-separated CORS origins; use explicit origins in production |
+| `SESSION_HTTPS_ONLY` | Marks the session cookie Secure when the service is behind HTTPS |
+| `PUBLIC_BASE_URL` | External application origin used to build OAuth callback URLs behind a proxy |
+| `CLAMAV_HOST` / `CLAMAV_PORT` | API/worker connection defaults for ClamAV |
+
+Global ClamAV settings such as scan action, maximum file size, quarantine retention, and failure grace period are stored in the database and managed from the Global Settings page. Do not put secrets in source control, and treat backups as sensitive because they contain database data and encryption material.
 
 ---

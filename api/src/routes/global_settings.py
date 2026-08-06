@@ -1,11 +1,102 @@
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import RedirectResponse
+from sqlalchemy import text
+import pytz
+from typing import Optional
 
-from ..utils.db import query, execute
+from ..utils.db import query, transaction
 from ..utils.logger import log
 from ..utils.templates import templates
 from ..utils.email import test_smtp_connection
 from ..utils.permissions import require_permission, PERMISSIONS
+
+ALLOWED_THEMES = ("system", "light", "dark")
+ALLOWED_RETENTION_UNITS = ("days", "months", "years")
+ALLOWED_CLAMAV_ACTIONS = ("quarantine", "reject", "log_only")
+_KNOWN_TIMEZONES = frozenset(pytz.all_timezones)
+
+
+def validate_global_settings(values: dict, current_timezone: Optional[str] = None) -> Optional[str]:
+    """Validate submitted global-settings values.
+
+    The HTML form constrains most fields, but the server must not trust the
+    client: a destructive value such as ``retention_value=0`` would make the
+    worker purge the *entire* archive on its next retention run. Returns an
+    error message describing the first invalid value, or None when all values
+    are acceptable.
+
+    ``current_timezone`` is the previously stored timezone. Legacy deployments
+    may have a non-canonical value stored from before the UI restricted the
+    select; an unchanged (even odd) timezone is left alone so it does not block
+    saving unrelated settings. Only *new* timezone selections are validated.
+    """
+    try:
+        page_size = int(values.get("page_size", 50))
+        if not 10 <= page_size <= 500:
+            return "Items per page must be between 10 and 500."
+    except (TypeError, ValueError):
+        return "Items per page must be a number between 10 and 500."
+
+    try:
+        retention_value = int(values.get("retention_value", 1))
+        if not 1 <= retention_value <= 10000:
+            return "Retention period must be at least 1."
+    except (TypeError, ValueError):
+        return "Retention period must be a number of at least 1."
+
+    if values.get("retention_unit") not in ALLOWED_RETENTION_UNITS:
+        return "Invalid retention unit selected."
+
+    try:
+        auto_logout_minutes = int(values.get("auto_logout_minutes", 60))
+        if not 0 <= auto_logout_minutes <= 1440:
+            return "Auto logout must be between 0 and 1440 minutes (0 disables it)."
+    except (TypeError, ValueError):
+        return "Auto logout must be a number of minutes."
+
+    try:
+        clamav_port = int(values.get("clamav_port", 3310))
+        if not 1 <= clamav_port <= 65535:
+            return "ClamAV port must be between 1 and 65535."
+    except (TypeError, ValueError):
+        return "ClamAV port must be a number."
+
+    try:
+        clamav_max_file_size = int(values.get("clamav_max_file_size", 10485760))
+        if not 1024 <= clamav_max_file_size <= 1073741824:
+            return "Max file size to scan must be at least 1024 bytes."
+    except (TypeError, ValueError):
+        return "Max file size to scan must be a number of bytes."
+
+    try:
+        quarantine_days = int(values.get("clamav_quarantine_retention_days", 90))
+        if not 1 <= quarantine_days <= 36500:
+            return "Quarantine retention must be at least 1 day."
+    except (TypeError, ValueError):
+        return "Quarantine retention must be a number of days."
+
+    if values.get("clamav_action") not in ALLOWED_CLAMAV_ACTIONS:
+        return "Invalid virus action selected."
+
+    try:
+        smtp_port = int(values.get("smtp_port", 587))
+        if not 1 <= smtp_port <= 65535:
+            return "SMTP port must be between 1 and 65535."
+    except (TypeError, ValueError):
+        return "SMTP port must be a number."
+
+    try:
+        grace = int(values.get("clamav_failure_grace_seconds", 300))
+        if not 0 <= grace <= 86400:
+            return "ClamAV alert grace period must be between 0 and 86400 seconds."
+    except (TypeError, ValueError):
+        return "ClamAV alert grace period must be a number of seconds."
+
+    timezone = values.get("timezone", "UTC")
+    if timezone != current_timezone and timezone not in _KNOWN_TIMEZONES:
+        return f"Unknown timezone: {timezone}"
+
+    return None
 
 router = APIRouter()
 
@@ -62,6 +153,7 @@ def save_settings(
     clamav_quarantine_retention_days: int = Form(90),
     clamav_max_file_size: int = Form(10485760),
     clamav_quarantine_encrypt: bool = Form(False),
+    clamav_failure_grace_seconds: int = Form(300),
     smtp_enabled: bool = Form(False),
     smtp_host: str = Form(""),
     smtp_port: int = Form(587),
@@ -78,7 +170,31 @@ def save_settings(
 
     try:
         # Sanitize theme
-        default_theme = default_theme if default_theme in ("system", "light", "dark") else "system"
+        default_theme = default_theme if default_theme in ALLOWED_THEMES else "system"
+
+        # Validate every submitted value before touching the database. In
+        # particular, retention_value/clamav_quarantine_retention_days of 0 would
+        # make the worker purge the entire archive on its next run.
+        validation_values = {
+            "page_size": page_size,
+            "retention_value": retention_value,
+            "retention_unit": retention_unit,
+            "auto_logout_minutes": auto_logout_minutes,
+            "clamav_port": clamav_port,
+            "clamav_max_file_size": clamav_max_file_size,
+            "clamav_quarantine_retention_days": clamav_quarantine_retention_days,
+            "clamav_action": clamav_action,
+            "smtp_port": smtp_port,
+            "clamav_failure_grace_seconds": clamav_failure_grace_seconds,
+            "timezone": timezone,
+        }
+        validation_error = validate_global_settings(
+            validation_values,
+            current_timezone=old_settings.get("timezone", "UTC"),
+        )
+        if validation_error:
+            flash(request, validation_error, "error")
+            return RedirectResponse("/global-settings", status_code=303)
 
         # Encrypt SMTP password before storage.
         # If the submitted password field is empty the user did not change it,
@@ -113,6 +229,7 @@ def save_settings(
             ("clamav_quarantine_retention_days", str(clamav_quarantine_retention_days)),
             ("clamav_max_file_size", str(clamav_max_file_size)),
             ("clamav_quarantine_encrypt", str(clamav_quarantine_encrypt).lower()),
+            ("clamav_failure_grace_seconds", str(clamav_failure_grace_seconds)),
             ("smtp_enabled", str(smtp_enabled).lower()),
             ("smtp_host", smtp_host),
             ("smtp_port", str(smtp_port)),
@@ -132,13 +249,15 @@ def save_settings(
             flash(request, "No changes detected.", "info")
             return RedirectResponse("/global-settings", status_code=303)
 
-        # Apply updates
-        for key, value in settings_data:
-            execute("""
-                INSERT INTO settings (key, value)
-                VALUES (:key, :value)
-                ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
-            """, {"key": key, "value": value})
+        # Apply updates atomically so a mid-save failure can never leave the
+        # settings table with a partial (half-updated) configuration.
+        with transaction() as conn:
+            for key, value in settings_data:
+                conn.execute(text("""
+                    INSERT INTO settings (key, value)
+                    VALUES (:key, :value)
+                    ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
+                """), {"key": key, "value": value})
 
         # Sync session
         request.session["date_format"] = date_format

@@ -1,13 +1,19 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
 
 from ..utils.db import query
 from ..utils.templates import templates
-from ..utils.permissions import PermissionChecker, require_permission, PERMISSIONS
+from ..utils.permissions import require_permission, PERMISSIONS
 
 router = APIRouter()
 
-ALLOWED_LOG_LEVELS = ["all", "info", "warning", "error"]
+ALLOWED_LOG_LEVELS = ["all", "debug", "info", "warning", "error", "success"]
+DEFAULT_PAGE_SIZE = 50
+MIN_PAGE_SIZE = 10
+MAX_PAGE_SIZE = 500
+MAX_FILTER_LENGTH = 200
 
 
 def require_login(request: Request):
@@ -29,35 +35,58 @@ def logs(
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    # Validate log level
+    # Normalize bounded user input before using it in filters or pagination.
+    level = (level or "all").strip().lower()
     if level not in ALLOWED_LOG_LEVELS:
         level = "all"
+    search = (search or "").strip()[:MAX_FILTER_LENGTH]
+    source = (source or "").strip()[:MAX_FILTER_LENGTH]
 
-    # Get page_size from user settings, fallback to global settings
+    def _parse_date(value: str):
+        if not value:
+            return None
+        try:
+            return datetime.strptime(value, "%Y-%m-%d").date()
+        except (TypeError, ValueError):
+            return None
+
+    parsed_date_from = _parse_date(date_from)
+    parsed_date_to = _parse_date(date_to)
+    date_from = parsed_date_from.isoformat() if parsed_date_from else ""
+    date_to = parsed_date_to.isoformat() if parsed_date_to else ""
+
+    def _coerce_page_size(value):
+        try:
+            return min(max(MIN_PAGE_SIZE, int(value)), MAX_PAGE_SIZE)
+        except (TypeError, ValueError):
+            return None
+
+    # Get page_size from user settings, falling back to the global setting and
+    # finally a safe constant if either value is missing or malformed.
     user_id = request.session.get("user_id")
-    page_size = 50  # Default
-
+    page_size = None
     if user_id:
-        user_result = (
-            query("SELECT page_size FROM users WHERE id = :id", {"id": user_id})
-            .mappings()
-            .first()
-        )
-        if user_result and user_result["page_size"]:
-            page_size = user_result["page_size"]
+        try:
+            user_result = query(
+                "SELECT page_size FROM users WHERE id = :id", {"id": user_id}
+            ).mappings().first()
+            if user_result:
+                page_size = _coerce_page_size(user_result.get("page_size"))
+        except Exception:
+            page_size = None
 
-    if not user_id or not page_size:
-        global_result = (
-            query("SELECT value FROM settings WHERE key = 'page_size'")
-            .mappings()
-            .first()
-        )
-        if global_result:
-            page_size = int(global_result["value"])
+    if page_size is None:
+        try:
+            global_result = query(
+                "SELECT value FROM settings WHERE key = 'page_size'"
+            ).mappings().first()
+            if global_result:
+                page_size = _coerce_page_size(global_result.get("value"))
+        except Exception:
+            page_size = None
 
-    # Validate pagination parameters
+    page_size = page_size or DEFAULT_PAGE_SIZE
     page = max(1, page)
-    page_size = min(max(10, page_size), 500)  # Between 10 and 500
     offset = (page - 1) * page_size
 
     # Build WHERE clause with filters
@@ -76,21 +105,14 @@ def logs(
         where_conditions.append("source = :source")
         params["source"] = source
 
-    if date_from:
-        try:
-            # Parse date and add to conditions
-            where_conditions.append("timestamp >= :date_from")
-            params["date_from"] = date_from
-        except ValueError:
-            pass  # Invalid date format, skip filter
+    if parsed_date_from:
+        where_conditions.append("timestamp >= :date_from")
+        params["date_from"] = parsed_date_from
 
-    if date_to:
-        try:
-            # Parse date and add to conditions (include full day)
-            where_conditions.append("timestamp < CAST(:date_to AS DATE) + interval '1 day'")
-            params["date_to"] = date_to
-        except ValueError:
-            pass  # Invalid date format, skip filter
+    if parsed_date_to:
+        # Include the complete selected end date while keeping the value typed.
+        where_conditions.append("timestamp < CAST(:date_to AS DATE) + interval '1 day'")
+        params["date_to"] = parsed_date_to
 
     where_clause = ""
     if where_conditions:
@@ -101,13 +123,19 @@ def logs(
     total_result = query(count_query, params).mappings().first()
     total_logs = total_result["total"] if total_result else 0
     total_pages = (total_logs + page_size - 1) // page_size  # Ceiling division
+    # Avoid needlessly large OFFSET values and keep the displayed page valid.
+    if total_pages:
+        page = min(page, total_pages)
+    else:
+        page = 1
+    params["offset"] = (page - 1) * page_size
 
     # Get paginated logs
     logs_query = f"""
         SELECT id, timestamp, level, source, message, details
         FROM logs
         {where_clause}
-        ORDER BY timestamp DESC
+        ORDER BY timestamp DESC, id DESC
         LIMIT :limit OFFSET :offset
     """
 
@@ -119,7 +147,7 @@ def logs(
         r["source_label"] = r.get("source")
 
     # Get distinct sources for filter dropdown
-    sources_query = "SELECT DISTINCT source FROM logs ORDER BY source"
+    sources_query = "SELECT DISTINCT source FROM logs WHERE source IS NOT NULL AND source <> '' ORDER BY source"
     sources_values = [row["source"] for row in query(sources_query).mappings().all()]
     sources = [{"value": s, "label": s} for s in sources_values]
 

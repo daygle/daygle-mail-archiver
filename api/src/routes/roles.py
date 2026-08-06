@@ -1,12 +1,17 @@
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import RedirectResponse, JSONResponse
+from sqlalchemy import text
 from typing import List
 import re
 
-from ..utils.db import query, execute
+from ..utils.db import query, transaction
 from ..utils.logger import log
 from ..utils.templates import templates
-from ..utils.permissions import require_permission, PERMISSIONS
+from ..utils.permissions import (
+    require_permission,
+    PERMISSIONS,
+    check_privileged_grant,
+)
 
 router = APIRouter()
 
@@ -25,22 +30,41 @@ def list_roles(
     request: Request,
     _=require_permission(PERMISSIONS["manage_roles"])
 ):
-    roles = query("""
+    # Keep role metadata and permission names structured. The old comma-separated
+    # STRING_AGG value made the template parse database output and made the UI
+    # brittle if a permission label ever contained punctuation.
+    role_rows = query("""
         SELECT r.id, r.name, r.display_name, r.description, r.is_system_role,
-               COUNT(rp.permission_id) AS permission_count,
-               COALESCE(STRING_AGG(p.name, ', '), '') AS permissions
+               COUNT(DISTINCT rp.permission_id) AS permission_count,
+               COUNT(DISTINCT ur.user_id) AS user_count
         FROM roles r
         LEFT JOIN role_permissions rp ON r.id = rp.role_id
-        LEFT JOIN permissions p ON rp.permission_id = p.id
+        LEFT JOIN user_roles ur ON r.id = ur.role_id
         GROUP BY r.id
-        ORDER BY r.name
+        ORDER BY COALESCE(r.display_name, r.name)
     """).mappings().all()
 
     permissions = query("""
-        SELECT id, name, description
+        SELECT id, name, description, category
         FROM permissions
-        ORDER BY name
+        ORDER BY category, name
     """).mappings().all()
+
+    role_permission_rows = query("""
+        SELECT rp.role_id, p.name
+        FROM role_permissions rp
+        JOIN permissions p ON p.id = rp.permission_id
+        ORDER BY rp.role_id, p.category, p.name
+    """).mappings().all()
+    permission_names = {}
+    for row in role_permission_rows:
+        permission_names.setdefault(row["role_id"], []).append(row["name"])
+
+    roles = []
+    for row in role_rows:
+        role = dict(row)
+        role["permissions"] = permission_names.get(row["id"], [])
+        roles.append(role)
 
     msg = request.session.pop("flash", None)
 
@@ -82,49 +106,42 @@ def create_role(
             flash(request, f"Role '{display_name}' already exists.", "error")
             return RedirectResponse("/roles", status_code=303)
 
-        # Create role and return new id
-        created = query("""
-            INSERT INTO roles (name, display_name, description)
-            VALUES (:name, :display_name, :description)
-            RETURNING id
-        """, {
-            "name": slug,
-            "display_name": display_name,
-            "description": description.strip() or None,
-        }).mappings().first()
-
-        # Normalize role_id to an integer. If INSERT...RETURNING didn't materialize
-        # as expected, fall back to selecting the role by name.
-        role_id = None
+        # Normalize + dedupe the submitted permission ids before touching the DB
         try:
-            if created and isinstance(created, dict) and "id" in created:
-                role_id = int(created["id"])
-        except Exception:
-            role_id = None
-
-        if role_id is None:
-            # Fallback: select the role we just created by name
-            row = query("SELECT id FROM roles WHERE name = :name", {"name": slug}).mappings().first()
-            if row and "id" in row:
-                try:
-                    role_id = int(row["id"])
-                except Exception:
-                    role_id = None
-
-        if role_id is None:
-            log("error", "Roles", f"Failed to determine new role id for '{slug}' after insert")
-            flash(request, "Failed to create role (internal error).", "error")
+            perm_ids = sorted({int(p) for p in permission_ids})
+        except (TypeError, ValueError):
+            flash(request, "Invalid permission selection.", "error")
             return RedirectResponse("/roles", status_code=303)
 
-        # Assign permissions
-        for perm_id in permission_ids:
-            try:
-                execute("""
+        # A role manager cannot grant privileged permissions they do not hold
+        error = check_privileged_grant(request, perm_ids)
+        if error:
+            flash(request, error, "error")
+            return RedirectResponse("/roles", status_code=303)
+
+        # Create the role and assign permissions atomically so a mid-flight
+        # failure cannot leave a role with a partial permission set.
+        with transaction() as conn:
+            created = conn.execute(text("""
+                INSERT INTO roles (name, display_name, description)
+                VALUES (:name, :display_name, :description)
+                RETURNING id
+            """), {
+                "name": slug,
+                "display_name": display_name,
+                "description": description.strip() or None,
+            }).mappings().first()
+
+            if not created or "id" not in created:
+                raise RuntimeError("INSERT INTO roles did not return an id")
+
+            role_id = int(created["id"])
+
+            for perm_id in perm_ids:
+                conn.execute(text("""
                     INSERT INTO role_permissions (role_id, permission_id)
                     VALUES (:role_id, :permission_id)
-                """, {"role_id": role_id, "permission_id": int(perm_id)})
-            except Exception as e:
-                log("error", "Roles", f"Failed to add permission {perm_id} to role {role_id}: {str(e)}")
+                """), {"role_id": role_id, "permission_id": perm_id})
 
         flash(request, f"Role '{display_name}' created successfully.", "success")
         return RedirectResponse("/roles", status_code=303)
@@ -246,9 +263,14 @@ def update_role(
                 WHERE role_id = :role_id
             """, {"role_id": role_id}).mappings().all()
         ]
+        current_perm_set = {int(p) for p in current_perm_ids}
 
-        new_perm_set = {int(p) for p in permission_ids}
-        current_perm_set = set(current_perm_ids)
+        # Normalize + dedupe the submitted permission ids before touching the DB
+        try:
+            new_perm_set = {int(p) for p in permission_ids}
+        except (TypeError, ValueError):
+            flash(request, "Invalid permission selection.", "error")
+            return RedirectResponse(f"/roles/{role_id}/edit", status_code=303)
 
         # Detect no-op
         if (
@@ -260,26 +282,38 @@ def update_role(
             flash(request, "No changes detected.", "info")
             return RedirectResponse("/roles", status_code=303)
 
-        # Update role
-        execute("""
-            UPDATE roles
-            SET name = :name, display_name = :display_name, description = :description
-            WHERE id = :role_id
-        """, {
-            "name": slug,
-            "display_name": display_name,
-            "description": description.strip() or None,
-            "role_id": role_id,
-        })
+        # Only *additions* of privileged permissions the actor lacks are blocked;
+        # removals are always allowed (least privilege).
+        added = new_perm_set - current_perm_set
+        error = check_privileged_grant(request, added)
+        if error:
+            flash(request, error, "error")
+            return RedirectResponse(f"/roles/{role_id}/edit", status_code=303)
 
-        # Replace permissions
-        execute("DELETE FROM role_permissions WHERE role_id = :role_id", {"role_id": role_id})
+        # Update role and replace its permissions atomically so a failure cannot
+        # leave the role renamed with an empty or partial permission set.
+        with transaction() as conn:
+            conn.execute(text("""
+                UPDATE roles
+                SET name = :name, display_name = :display_name, description = :description
+                WHERE id = :role_id
+            """), {
+                "name": slug,
+                "display_name": display_name,
+                "description": description.strip() or None,
+                "role_id": role_id,
+            })
 
-        for perm_id in new_perm_set:
-            execute("""
-                INSERT INTO role_permissions (role_id, permission_id)
-                VALUES (:role_id, :permission_id)
-            """, {"role_id": role_id, "permission_id": perm_id})
+            conn.execute(
+                text("DELETE FROM role_permissions WHERE role_id = :role_id"),
+                {"role_id": role_id},
+            )
+
+            for perm_id in sorted(new_perm_set):
+                conn.execute(text("""
+                    INSERT INTO role_permissions (role_id, permission_id)
+                    VALUES (:role_id, :permission_id)
+                """), {"role_id": role_id, "permission_id": perm_id})
 
         flash(request, f"Role '{display_name}' updated successfully.", "success")
         log("info", "Roles", f"Updated role '{display_name}' with {len(new_perm_set)} permissions")
@@ -329,11 +363,18 @@ def delete_role(
             flash(request, "Cannot delete a role that is assigned to users.", "error")
             return RedirectResponse("/roles", status_code=303)
 
-        # Delete permissions
-        execute("DELETE FROM role_permissions WHERE role_id = :role_id", {"role_id": role_id})
-
-        # Delete role
-        execute("DELETE FROM roles WHERE id = :role_id", {"role_id": role_id})
+        # Delete the role and its permission links atomically (the foreign keys
+        # cascade anyway, but keeping both statements in one transaction makes
+        # the intent explicit and safe).
+        with transaction() as conn:
+            conn.execute(
+                text("DELETE FROM role_permissions WHERE role_id = :role_id"),
+                {"role_id": role_id},
+            )
+            conn.execute(
+                text("DELETE FROM roles WHERE id = :role_id"),
+                {"role_id": role_id},
+            )
 
         flash(request, f"Role '{role['name']}' deleted successfully.", "success")
         log("info", "Roles", f"Deleted role '{role['name']}'")

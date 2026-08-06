@@ -25,6 +25,8 @@
                 <a href="#dashboard-analytics" class="help-toc-link"><i class="fas fa-chart-line"></i> Dashboard</a>
                 <a href="#troubleshooting" class="help-toc-link"><i class="fas fa-wrench"></i> Troubleshooting</a>
                 <a href="#user-management" class="help-toc-link"><i class="fas fa-users"></i> User Management</a>
+                <a href="#roles-permissions" class="help-toc-link"><i class="fas fa-user-shield"></i> Roles & Permissions</a>
+                <a href="#audit-logs" class="help-toc-link"><i class="fas fa-list"></i> Audit Logs</a>
                 <a href="#security-features" class="help-toc-link"><i class="fas fa-shield-alt"></i> Security</a>
                 <a href="#quarantine" class="help-toc-link"><i class="fas fa-shield-virus"></i> Quarantine</a>
                 <a href="#reports-analytics" class="help-toc-link"><i class="fas fa-chart-bar"></i> Reports</a>
@@ -91,7 +93,7 @@
             <li class="mb-12">Create OAuth 2.0 credentials (Client ID and Client Secret)</li>
             <li class="mb-12">Go to <strong>Fetch Accounts</strong>, click <strong>"Add Fetch Account"</strong>, and select <strong>"Gmail API"</strong></li>
             <li class="mb-12">Enter your OAuth Client ID and Client Secret, then click <strong>"Create Account"</strong></li>
-            <li class="mb-12">Open the account for editing — the <strong>Redirect URI</strong> (e.g. <code>http://your-domain/oauth/gmail/callback/{account_id}</code>) is displayed in the OAuth Configuration section</li>
+            <li class="mb-12">Open the account for editing - the <strong>Redirect URI</strong> (e.g. <code>http://your-domain/oauth/gmail/callback/{account_id}</code>) is displayed in the OAuth Configuration section</li>
             <li class="mb-12">In Google Cloud Console: add the Redirect URI to <strong>Authorised redirect URIs</strong> and save</li>
             <li class="mb-0">Return to the edit form and click <strong>"Authorise"</strong> to complete the OAuth flow</li>
         </ol>
@@ -112,7 +114,7 @@
             <li class="mb-12">Add <code>Mail.Read</code> and <code>offline_access</code> permissions and create a client secret</li>
             <li class="mb-12">Go to <strong>Fetch Accounts</strong>, click <strong>"Add Fetch Account"</strong>, and select <strong>"Office 365 API"</strong></li>
             <li class="mb-12">Enter your OAuth Client ID and Client Secret, then click <strong>"Create Account"</strong></li>
-            <li class="mb-12">Open the account for editing — the <strong>Redirect URI</strong> (e.g. <code>http://your-domain/oauth/o365/callback/{account_id}</code>) is displayed in the OAuth Configuration section</li>
+            <li class="mb-12">Open the account for editing - the <strong>Redirect URI</strong> (e.g. <code>http://your-domain/oauth/o365/callback/{account_id}</code>) is displayed in the OAuth Configuration section</li>
             <li class="mb-12">In Azure AD: <strong>Authentication → Add a platform → Web</strong> → paste the Redirect URI and save</li>
             <li class="mb-0">Return to the edit form and click <strong>"Authorise"</strong> to complete the Microsoft authorisation flow</li>
         </ol>
@@ -128,7 +130,7 @@
         </div>
     </div>
     <div class="card-body">
-        <p class="mb-16"><strong>Viewing Emails:</strong> Navigate to the Emails page to see all archived emails. You can search, filter by folder, view full content, and download raw .eml files (requires <code>download_eml</code> permission).</p>
+        <p class="mb-16"><strong>Viewing Emails:</strong> Navigate to the Emails page to see all archived emails. You can search, filter by folder, view full content, and download raw .eml files (requires <code>export_emails</code> permission).</p>
         <p class="mb-16"><strong>Deleting Emails:</strong> Click the delete button next to an email for individual deletion, or use bulk delete (requires <code>delete_emails</code> permission).</p>
         <p class="mb-16"><strong>Email Verification:</strong> Each archived email has a cryptographic signature (SHA256 hash) for integrity verification. Click "Verify" when viewing an email to check if it has been modified since archiving.</p>
         <div class="alert alert-warning mb-0">
@@ -268,36 +270,46 @@
         </ol>
 
         <p class="mb-12"><strong>User Roles:</strong></p>
-        <p class="mb-16">Roles map to granular permissions. Assign roles to grant the required capabilities.</p>
+        <p class="mb-16">Roles map to granular permissions. Assign roles to grant the required capabilities. Users receive the combined permissions from all assigned roles.</p>
 
         <p class="mb-12"><strong>Online/Offline Status:</strong></p>
-        <p class="mb-16">The User Management page displays real-time online/offline status indicators next to each user. A user is considered online if their last activity was within their configured auto-logout time window (default: 30 minutes).</p>
+        <p class="mb-16">The User Management page displays real-time online/offline status indicators next to each user. A user is considered online if their last activity was within their configured auto-logout time window (default: 60 minutes).</p>
 
         <p class="mb-0"><strong>Managing Your Profile:</strong> All users can update their own profile and password.</p>
     </div>
 </div>
 
-<!-- Audit Logs -->
-<div class="card">
+<!-- Roles and Permissions -->
+<div class="card" id="roles-permissions">
     <div class="card-header">
-        <div class="card-title">
-            <i class="fas fa-list"></i>
-            <span>Audit Logs</span>
-        </div>
+        <div class="card-title"><i class="fas fa-user-shield"></i><span>Roles & Permissions</span></div>
+    </div>
+    <div class="card-body">
+        <p class="mb-16">Users with <code>manage_roles</code> can open Role Management to review the access model and create custom roles.</p>
+        <ul class="pl-24 mb-16">
+            <li class="mb-8">Built-in roles are protected and cannot be edited or deleted.</li>
+            <li class="mb-8">Custom roles show their assigned permissions and user counts in a responsive card layout.</li>
+            <li class="mb-8">Create-role permissions are grouped by area and can be searched or selected by category.</li>
+            <li class="mb-8">Privileged permissions cannot be granted by an actor who does not already hold them.</li>
+        </ul>
+        <p class="mb-0">Server-side authorization remains authoritative even when a navigation link is not visible.</p>
+    </div>
+</div>
+
+<!-- Audit Logs -->
+<div class="card" id="audit-logs">
+    <div class="card-header">
+        <div class="card-title"><i class="fas fa-list"></i><span>Audit Logs</span></div>
     </div>
     <div class="card-body">
         <p class="mb-16">Users with the <code>view_logs</code> permission can access the Logs page.</p>
-
-        <p class="mb-12"><strong>Logged Actions Include:</strong></p>
+        <p class="mb-12"><strong>Available filters:</strong></p>
         <ul class="pl-24 mb-16">
-            <li class="mb-8">Login and logout events</li>
-            <li class="mb-8">Email deletions</li>
-            <li class="mb-8">Fetch account changes</li>
-            <li class="mb-8">Settings changes</li>
-            <li class="mb-8">User management actions</li>
+            <li class="mb-8">Log level, including debug, info, warning, error, and success</li>
+            <li class="mb-8">Source or message search</li>
+            <li class="mb-8">Inclusive date ranges and paginated results</li>
         </ul>
-
-        <p class="mb-0">Use filters to locate specific events.</p>
+        <p class="mb-0">Logs are best-effort operational records; a database logging failure does not replace or mask the original application error.</p>
     </div>
 </div>
 
@@ -336,7 +348,7 @@
         </div>
     </div>
     <div class="card-body">
-        <p class="mb-16">The quarantine system isolates potentially harmful emails detected by antivirus scanning.</p>
+        <p class="mb-16">The quarantine system isolates potentially harmful emails detected by antivirus scanning or manually quarantined by an authorized user. Quarantine records preserve scan metadata and the original message signature where available.</p>
 
         <p class="mb-12"><strong>Viewing Quarantined Emails:</strong></p>
         <ul class="pl-24 mb-16">
@@ -347,9 +359,9 @@
 
         <p class="mb-12"><strong>Actions (permission‑gated):</strong></p>
         <ul class="pl-24 mb-16">
-            <li class="mb-8"><strong>Release:</strong> Move the email back to the archive (<code>quarantine_release</code>)</li>
-            <li class="mb-8"><strong>Delete:</strong> Permanently remove (<code>quarantine_delete</code>)</li>
-            <li class="mb-8"><strong>Delete from Server:</strong> Remove from IMAP/Gmail/O365 (<code>quarantine_delete_server</code>)</li>
+            <li class="mb-8"><strong>Restore:</strong> Move the email back to the archive (requires <code>restore_quarantine</code>)</li>
+            <li class="mb-8"><strong>Delete:</strong> Permanently remove the quarantine record (requires <code>delete_quarantine</code>)</li>
+            <li class="mb-8"><strong>Delete from Server:</strong> Remove from an IMAP/Gmail/O365 source when supported (requires <code>delete_quarantine</code>)</li>
         </ul>
 
         <div class="alert alert-warning mb-0">
@@ -501,10 +513,11 @@
 
         <p class="mb-12"><strong>How It Works:</strong></p>
         <ul class="pl-24 mb-16">
-            <li class="mb-8">Each email is scanned by ClamAV before being archived</li>
-            <li class="mb-8">Infected emails are automatically quarantined</li>
+            <li class="mb-8">When enabled and available, each eligible email is scanned by ClamAV before being archived</li>
+            <li class="mb-8">Detected messages follow the configured action: quarantine, reject, or log-only</li>
             <li class="mb-8">Clean emails proceed to normal archiving</li>
-            <li class="mb-8">Scan results are logged for audit purposes</li>
+            <li class="mb-8">Scan results and service transitions are logged for audit purposes</li>
+            <li class="mb-8">Short ClamAV outages can be covered by the configurable failure grace period</li>
         </ul>
 
         <p class="mb-12"><strong>Configuration:</strong></p>

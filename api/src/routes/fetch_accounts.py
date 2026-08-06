@@ -3,8 +3,9 @@ import sys
 
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import RedirectResponse
+from sqlalchemy import text
 
-from ..utils.db import query
+from ..utils.db import query, transaction
 from ..utils.crypto import encrypt_password, decrypt_password
 from ..utils.logger import log
 from ..utils.templates import templates
@@ -12,6 +13,8 @@ from ..utils.permissions import require_permission, PERMISSIONS
 from imaplib import IMAP4, IMAP4_SSL
 
 router = APIRouter()
+
+VALID_ACCOUNT_TYPES = {"imap", "gmail", "o365"}
 
 # Fields that are safe to expose to JavaScript (exclude datetime and sensitive data)
 JSON_SAFE_FIELDS = [
@@ -28,6 +31,90 @@ def require_login(request: Request):
 
 def flash(request: Request, message: str, category: str = 'info'):
     request.session["flash"] = {"message": message, "type": category}
+
+
+def _probe_oauth_api(account_id: int, account_type: str) -> tuple:
+    """Run the provider API probe for a saved gmail/o365 account.
+
+    Returns ``(ok, message)``. Raises on transport errors (caught by callers).
+    """
+    import requests
+    from ..utils.oauth_helpers import get_valid_token
+
+    access_token = get_valid_token(account_id, account_type)
+    if not access_token:
+        return False, f"✗ {account_type.upper()} authentication failed - please re-authorise"
+
+    headers = {"Authorization": f"Bearer {access_token}"}
+    if account_type == "gmail":
+        response = requests.get(
+            "https://gmail.googleapis.com/gmail/v1/users/me/profile",
+            headers=headers,
+            timeout=10,
+        )
+        if response.status_code == 200:
+            email = response.json().get("emailAddress", "unknown")
+            return True, f"Gmail API connection successful ({email})"
+        return False, f"✗ Gmail API connection failed: {response.status_code}"
+
+    if account_type == "o365":
+        response = requests.get(
+            "https://graph.microsoft.com/v1.0/me",
+            headers=headers,
+            timeout=10,
+        )
+        if response.status_code == 200:
+            user = response.json()
+            email = user.get("mail") or user.get("userPrincipalName", "unknown")
+            return True, f"Office 365 API connection successful ({email})"
+        return False, f"✗ Office 365 API connection failed: {response.status_code}"
+
+    return False, f"✗ Unknown account type: {account_type}"
+
+
+def _test_oauth_connection(request: Request, account_id, account_type: str):
+    """Test an OAuth-based (gmail/o365) account connection.
+
+    Used by the new-account form test: a saved account is required before the
+    OAuth flow can be exercised, so unsaved accounts get a helpful message.
+    """
+    if not account_id:
+        flash(
+            request,
+            f"Save the {account_type.upper()} account first, then use the OAuth Authorise "
+            f"button and test again.",
+            "error",
+        )
+        return RedirectResponse("/fetch-accounts", status_code=303)
+
+    acc = query(
+        """
+        SELECT oauth_client_id, oauth_client_secret, oauth_access_token, oauth_refresh_token
+        FROM fetch_accounts
+        WHERE id = :id
+        """,
+        {"id": account_id},
+    ).mappings().first()
+
+    if not acc:
+        flash(request, "Account not found", "error")
+        return RedirectResponse("/fetch-accounts", status_code=303)
+
+    if not acc.get("oauth_client_id") or not acc.get("oauth_client_secret"):
+        flash(
+            request,
+            f"{account_type.upper()} OAuth Client ID and Secret must be configured for this account.",
+            "error",
+        )
+        return RedirectResponse("/fetch-accounts", status_code=303)
+
+    try:
+        ok, msg = _probe_oauth_api(account_id, account_type)
+        flash(request, msg, "success" if ok else "error")
+    except Exception as e:
+        flash(request, f"✗ Connection failed: {str(e)}", "error")
+
+    return RedirectResponse("/fetch-accounts", status_code=303)
 
 
 @router.get("/fetch-accounts")
@@ -90,6 +177,9 @@ def list_accounts(request: Request, _=require_permission(PERMISSIONS["view_fetch
 
     msg = request.session.pop("flash", None)
 
+    from ..utils.config import get_config
+    public_base_url = (get_config("PUBLIC_BASE_URL") or "").rstrip("/")
+
     return templates.TemplateResponse(
         "fetch-accounts.html",
         {
@@ -100,6 +190,7 @@ def list_accounts(request: Request, _=require_permission(PERMISSIONS["view_fetch
             "total": total,
             "total_pages": total_pages,
             "flash": msg,
+            "public_base_url": public_base_url,
         },
     )
 
@@ -134,6 +225,10 @@ def create_account(
 ):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
+
+    if account_type not in VALID_ACCOUNT_TYPES:
+        flash(request, f"Invalid account type: {account_type}", "error")
+        return RedirectResponse("/fetch-accounts", status_code=303)
 
     enc = encrypt_password(password) if password else None
 
@@ -236,6 +331,10 @@ def update_account(
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
+    if account_type not in VALID_ACCOUNT_TYPES:
+        flash(request, f"Invalid account type: {account_type}", "error")
+        return RedirectResponse(f"/fetch-accounts/{id}/edit", status_code=303)
+
     if password.strip():
         enc = encrypt_password(password)
         password_sql = "password_encrypted = :password_encrypted,"
@@ -288,26 +387,47 @@ def update_account(
         }
         if oauth_client_secret.strip():
             params["oauth_client_secret"] = oauth_client_secret
-        query(
-            f"""
-            UPDATE fetch_accounts
-            SET name = :name,
-                account_type = :account_type,
-                host = :host,
-                port = :port,
-                username = :username,
-                {password_sql}
-                use_ssl = :use_ssl,
-                require_starttls = :require_starttls,
-                poll_interval_seconds = :poll_interval_seconds,
-                delete_after_processing = :delete_after_processing,
-                expunge_deleted = :expunge_deleted,
-                enabled = :enabled,
-                oauth_client_id = :oauth_client_id{oauth_secret_sql}
-            WHERE id = :id
-            """,
-            params,
-        )
+
+        old_name = current.get('name') if current else None
+
+        with transaction() as conn:
+            conn.execute(
+                text(
+                    f"""
+                    UPDATE fetch_accounts
+                    SET name = :name,
+                        account_type = :account_type,
+                        host = :host,
+                        port = :port,
+                        username = :username,
+                        {password_sql}
+                        use_ssl = :use_ssl,
+                        require_starttls = :require_starttls,
+                        poll_interval_seconds = :poll_interval_seconds,
+                        delete_after_processing = :delete_after_processing,
+                        expunge_deleted = :expunge_deleted,
+                        enabled = :enabled,
+                        oauth_client_id = :oauth_client_id{oauth_secret_sql}
+                    WHERE id = :id
+                    """
+                ),
+                params,
+            )
+
+            # Emails and quarantined emails reference the account by name; keep
+            # them pointing at the new name so history is not orphaned on rename.
+            if old_name and old_name != name:
+                conn.execute(
+                    text("UPDATE emails SET source = :new_name WHERE source = :old_name"),
+                    {"new_name": name, "old_name": old_name},
+                )
+                conn.execute(
+                    text(
+                        "UPDATE quarantined_emails SET original_source = :new_name "
+                        "WHERE original_source = :old_name"
+                    ),
+                    {"new_name": name, "old_name": old_name},
+                )
 
         username_session = request.session.get("username", "unknown")
         log("info", "Fetch Accounts", f"User '{username_session}' updated fetch account '{name}' (ID: {id})", "")
@@ -349,13 +469,14 @@ def delete_account(request: Request, id: int, _=require_permission(PERMISSIONS["
         return RedirectResponse("/fetch-accounts", status_code=303)
 
     elif mode == "delete_messages":
-        # Delete emails first
-        query(
-            "DELETE FROM emails WHERE source = :name",
-            {"name": account["name"]},
-        )
-        # Then delete account
-        query("DELETE FROM fetch_accounts WHERE id = :id", {"id": id})
+        # Delete emails, quarantined emails and the account atomically
+        with transaction() as conn:
+            conn.execute(text("DELETE FROM emails WHERE source = :name"), {"name": account["name"]})
+            conn.execute(
+                text("DELETE FROM quarantined_emails WHERE original_source = :name"),
+                {"name": account["name"]},
+            )
+            conn.execute(text("DELETE FROM fetch_accounts WHERE id = :id"), {"id": id})
 
         username = request.session.get("username", "unknown")
         log("warning", "Fetch Accounts", f"User '{username}' deleted fetch account '{account['name']}' (ID: {id}) and all related emails", "")
@@ -368,7 +489,11 @@ def delete_account(request: Request, id: int, _=require_permission(PERMISSIONS["
 
 
 @router.get("/fetch-accounts/{id}/test")
-def test_account_connection(request: Request, id: int):
+def test_account_connection(
+    request: Request,
+    id: int,
+    _=require_permission(PERMISSIONS["manage_fetch_accounts"]),
+):
     """Test connection for an existing fetch account"""
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
@@ -377,7 +502,8 @@ def test_account_connection(request: Request, id: int):
     acc = query(
         """
         SELECT id, name, account_type, host, port, username, password_encrypted, 
-               use_ssl, require_starttls, oauth_access_token, oauth_refresh_token
+               use_ssl, require_starttls, oauth_access_token, oauth_refresh_token,
+               oauth_client_id, oauth_client_secret
         FROM fetch_accounts
         WHERE id = :id
         """,
@@ -414,50 +540,18 @@ def test_account_connection(request: Request, id: int):
                     except Exception:
                         pass
             
-        elif account_type == "gmail":
-            # Test Gmail API connection
-            import requests
-            from ..utils.oauth_helpers import get_valid_token
-            
-            access_token = get_valid_token(id, "gmail")
-            if not access_token:
-                flash(request, "✗ Gmail authentication failed - please re-authorise", "error")
-            else:
-                # Test API call
-                headers = {"Authorization": f"Bearer {access_token}"}
-                response = requests.get(
-                    "https://gmail.googleapis.com/gmail/v1/users/me/profile",
-                    headers=headers,
-                    timeout=10
+        elif account_type in ("gmail", "o365"):
+            # Test OAuth API connection
+            if not acc["oauth_client_id"] or not acc["oauth_client_secret"]:
+                flash(
+                    request,
+                    f"{account_type.upper()} OAuth Client ID and Secret must be configured for this account",
+                    "error",
                 )
-                if response.status_code == 200:
-                    email = response.json().get("emailAddress", "unknown")
-                    flash(request, f"Gmail API connection successful ({email})", "success")
-                else:
-                    flash(request, f"✗ Gmail API connection failed: {response.status_code}", "error")
-                    
-        elif account_type == "o365":
-            # Test Office 365 Graph API connection
-            import requests
-            from ..utils.oauth_helpers import get_valid_token
-            
-            access_token = get_valid_token(id, "o365")
-            if not access_token:
-                flash(request, "✗ Office 365 authentication failed - please re-authorise", "error")
-            else:
-                # Test API call
-                headers = {"Authorization": f"Bearer {access_token}"}
-                response = requests.get(
-                    "https://graph.microsoft.com/v1.0/me",
-                    headers=headers,
-                    timeout=10
-                )
-                if response.status_code == 200:
-                    user = response.json()
-                    email = user.get("mail") or user.get("userPrincipalName", "unknown")
-                    flash(request, f"Office 365 API connection successful ({email})", "success")
-                else:
-                    flash(request, f"✗ Office 365 API connection failed: {response.status_code}", "error")
+                return RedirectResponse("/fetch-accounts", status_code=303)
+
+            ok, msg = _probe_oauth_api(id, account_type)
+            flash(request, msg, "success" if ok else "error")
         else:
             flash(request, f"✗ Unknown account type: {account_type}", "error")
             
@@ -470,6 +564,7 @@ def test_account_connection(request: Request, id: int):
 @router.post("/fetch-accounts/test")
 def test_connection(
     request: Request,
+    _=require_permission(PERMISSIONS["manage_fetch_accounts"]),
     name: str = Form(""),
     account_type: str = Form("imap"),
     host: str = Form(""),
@@ -487,6 +582,13 @@ def test_connection(
     # ---------------------------------------------------------
     # Load and decrypt stored password if none was provided
     # ---------------------------------------------------------
+    if account_type not in VALID_ACCOUNT_TYPES:
+        flash(request, f"Invalid account type: {account_type}", "error")
+        return RedirectResponse("/fetch-accounts", status_code=303)
+
+    if account_type != "imap":
+        return _test_oauth_connection(request, account_id, account_type)
+
     if not password and account_id:
         acc = query(
             """

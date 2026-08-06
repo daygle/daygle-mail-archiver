@@ -4,7 +4,7 @@ from typing import List
 from pydantic import BaseModel
 from sqlalchemy import text
 
-from ..utils.db import query, engine
+from ..utils.db import query, engine, transaction
 from ..utils.logger import log
 from ..utils.templates import templates
 from ..utils.timezone import convert_utc_to_user_timezone, get_user_timezone
@@ -26,6 +26,40 @@ class WidgetPreference(BaseModel):
 
 class DashboardLayout(BaseModel):
     widgets: List[WidgetPreference]
+
+
+def _normalize_dashboard_layout(layout: DashboardLayout) -> List[WidgetPreference]:
+    """Deduplicate and clamp a submitted dashboard layout.
+
+    The front-end always sends sane values, but the endpoint must not trust the
+    client: duplicate widget ids would violate the (user_id, widget_id) unique
+    constraint mid-save, and unbounded coordinates could bloat the table or
+    render a broken layout.
+    """
+    MAX_WIDGETS = 64
+    MAX_COORD = 1000
+
+    seen = set()
+    normalized = []
+    for widget in layout.widgets:
+        if not widget.widget_id or not widget.widget_id.strip():
+            continue
+        if widget.widget_id in seen:
+            continue
+        seen.add(widget.widget_id)
+        normalized.append(
+            WidgetPreference(
+                widget_id=widget.widget_id[:100],
+                x=max(0, min(MAX_COORD, widget.x)),
+                y=max(0, min(MAX_COORD, widget.y)),
+                w=max(1, min(MAX_COORD, widget.w)),
+                h=max(1, min(MAX_COORD, widget.h)),
+                visible=widget.visible,
+            )
+        )
+        if len(normalized) >= MAX_WIDGETS:
+            break
+    return normalized
 
 
 def flash(request: Request, message: str, category: str = 'info'):
@@ -144,30 +178,35 @@ async def save_dashboard_preferences(request: Request, widgets: str = Form(...))
     try:
         import json
         widgets_data = json.loads(widgets)
-        
-        # Validate with Pydantic
-        layout = DashboardLayout(widgets=widgets_data)
-        # Delete existing preferences
-        query("""
-            DELETE FROM dashboard_preferences
-            WHERE user_id = :user_id
-        """, {"user_id": user_id})
 
-        # Insert new preferences
-        for widget in layout.widgets:
-            query("""
-                INSERT INTO dashboard_preferences
-                (user_id, widget_id, x_position, y_position, width, height, is_visible)
-                VALUES (:user_id, :widget_id, :x, :y, :w, :h, :visible)
-            """, {
-                "user_id": user_id,
-                "widget_id": widget.widget_id,
-                "x": widget.x,
-                "y": widget.y,
-                "w": widget.w,
-                "h": widget.h,
-                "visible": widget.visible
-            })
+        # Validate with Pydantic (rejects malformed payloads)
+        layout = DashboardLayout(widgets=widgets_data)
+        widgets_list = _normalize_dashboard_layout(layout)
+
+        # Replace the whole layout atomically: a mid-save failure must not leave
+        # the user with a half-updated (or empty) set of preferences.
+        with transaction() as conn:
+            conn.execute(
+                text("DELETE FROM dashboard_preferences WHERE user_id = :user_id"),
+                {"user_id": user_id},
+            )
+            for widget in widgets_list:
+                conn.execute(
+                    text("""
+                        INSERT INTO dashboard_preferences
+                        (user_id, widget_id, x_position, y_position, width, height, is_visible)
+                        VALUES (:user_id, :widget_id, :x, :y, :w, :h, :visible)
+                    """),
+                    {
+                        "user_id": user_id,
+                        "widget_id": widget.widget_id,
+                        "x": widget.x,
+                        "y": widget.y,
+                        "w": widget.w,
+                        "h": widget.h,
+                        "visible": widget.visible
+                    },
+                )
 
         username = getattr(request, "session", {}).get("username", "unknown")
         log("info", "Dashboard", f"User '{username}' saved dashboard preferences", "")
@@ -266,13 +305,15 @@ def clamav_stats(request: Request):
         """).mappings().first()
         quarantined = quarantined_results["count"] if quarantined_results else 0
 
-        # Rejected: Estimated from logs (emails not stored due to virus detection)
+        # Rejected: emails refused by the worker when clamav_action='reject'.
+        # They are never stored in the emails table, so count the worker's
+        # reject log entries. The worker logs these with the ACCOUNT NAME as
+        # the log source (message: "Email rejected due to virus: ..."), so
+        # there is no reliable source filter to apply.
         rejected_results = query("""
             SELECT COUNT(*) as count 
             FROM logs 
-            WHERE source = 'Worker' 
-            AND level = 'warning'
-            AND message LIKE '%virus detected%rejected%'
+            WHERE message LIKE '%rejected due to virus%'
             AND timestamp >= NOW() - INTERVAL '30 days'
         """).mappings().first()
         rejected = rejected_results["count"] if rejected_results else 0
@@ -313,7 +354,7 @@ def get_emails_last_7d(request: Request):
         result = query("""
             SELECT COUNT(*) as count
             FROM emails
-            WHERE created_at >= CURRENT_DATE - INTERVAL '7 days'
+            WHERE created_at >= NOW() - INTERVAL '7 days'
         """).mappings().first()
 
         count = result["count"] if result else 0
@@ -334,7 +375,7 @@ def get_emails_last_30d(request: Request):
         result = query("""
             SELECT COUNT(*) as count
             FROM emails
-            WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
+            WHERE created_at >= NOW() - INTERVAL '30 days'
         """).mappings().first()
 
         count = result["count"] if result else 0
@@ -391,7 +432,7 @@ def get_system_uptime(request: Request):
             result = subprocess.run(['stat', '-c', '%Y', '/proc/1'], capture_output=True, text=True, timeout=5)
             if result.returncode == 0:
                 start_time = int(result.stdout.strip())
-                current_time = int(subprocess.run(['date', '+%s'], capture_output=True, text=True).stdout.strip())
+                current_time = int(subprocess.run(['date', '+%s'], capture_output=True, text=True, timeout=5).stdout.strip())
                 seconds = current_time - start_time
                 
                 # Format uptime

@@ -146,14 +146,25 @@ def setup_wizard_submit(
 
         user_id = new_user["id"]
 
-        # Assign administrator role based on RBAC permission (manage_users)
+        # Assign the seeded administrator role to the bootstrap admin. Fall back
+        # to the first role holding manage_users (ordered deterministically) in
+        # case the seed was customised.
         admin_role = query("""
-            SELECT r.id
-            FROM roles r
-            JOIN role_permissions rp ON rp.role_id = r.id
-            JOIN permissions p ON p.id = rp.permission_id
-            WHERE p.name = 'manage_users'
+            SELECT id
+            FROM roles
+            WHERE name = 'administrator'
         """).mappings().first()
+
+        if not admin_role:
+            admin_role = query("""
+                SELECT r.id
+                FROM roles r
+                JOIN role_permissions rp ON rp.role_id = r.id
+                JOIN permissions p ON p.id = rp.permission_id
+                WHERE p.name = 'manage_users'
+                ORDER BY r.id
+                LIMIT 1
+            """).mappings().first()
 
         if admin_role:
             execute("""
@@ -263,7 +274,7 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
     # created with a password (setup wizard and users.create_user both require and
     # validate one), so a missing hash means the account is not usable. Reject the
     # login instead of granting a session. Previously this branch logged the user
-    # in and redirected to "/set-password" — a route that does not exist — which
+    # in and redirected to "/set-password" - a route that does not exist - which
     # left such accounts either stuck in a redirect loop or holding a valid,
     # authenticated session without ever proving a password.
     if not user["password_hash"]:

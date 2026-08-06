@@ -17,51 +17,45 @@ def require_login(request: Request):
     return "user_id" in request.session
 
 def get_user_date_format(request: Request, date_only: bool = False) -> str:
-    """Get the user's preferred date format, falling back to global setting"""
-    # Get global date format
-    try:
-        global_setting = query("SELECT value FROM settings WHERE key = 'date_format'").mappings().first()
-        date_format = global_setting["value"] if global_setting else "%d/%m/%Y"
-    except Exception:
-        date_format = "%d/%m/%Y"
+    """Get the user's preferred date format, falling back to global setting.
 
-    # Override with user's date format if set
+    Runs at most two queries (global settings, then the user's overrides)
+    instead of four, because every report endpoint calls this once or twice.
+    """
+    date_format = "%d/%m/%Y"
+    time_format = "%H:%M"
+
+    # Global date/time format in a single query
+    try:
+        rows = query(
+            "SELECT key, value FROM settings WHERE key IN ('date_format', 'time_format')"
+        ).mappings().all()
+        for row in rows:
+            if row["key"] == "date_format" and row["value"]:
+                date_format = row["value"]
+            elif row["key"] == "time_format" and row["value"]:
+                time_format = row["value"]
+    except Exception:
+        pass
+
+    # Override with user's date/time format if set (single query)
     user_id = request.session.get("user_id")
     if user_id:
         try:
-            # Convert user_id to int for database queries
-            user_id_int = int(user_id)
-            user = query("SELECT date_format FROM users WHERE id = :id", {"id": user_id_int}).mappings().first()
-            if user and user["date_format"]:
-                date_format = user["date_format"]
-        except (ValueError, TypeError):
-            pass
+            user = query(
+                "SELECT date_format, time_format FROM users WHERE id = :id",
+                {"id": int(user_id)},
+            ).mappings().first()
+            if user:
+                if user["date_format"]:
+                    date_format = user["date_format"]
+                if user["time_format"]:
+                    time_format = user["time_format"]
         except Exception:
             pass
 
-    # If we only need the date part, return just date_format
     if date_only:
         return date_format
-
-    # Get time format
-    try:
-        time_setting = query("SELECT value FROM settings WHERE key = 'time_format'").mappings().first()
-        time_format = time_setting["value"] if time_setting else "%H:%M"
-    except Exception:
-        time_format = "%H:%M"
-
-    if user_id:
-        try:
-            # Convert user_id to int for database queries
-            user_id_int = int(user_id)
-            user = query("SELECT time_format FROM users WHERE id = :id", {"id": user_id_int}).mappings().first()
-            if user and user["time_format"]:
-                time_format = user["time_format"]
-        except (ValueError, TypeError):
-            pass
-        except Exception:
-            pass
-
     return f"{date_format} {time_format}"
 
 @router.get("/reports", response_class=HTMLResponse)
@@ -179,9 +173,8 @@ def email_volume_report(request: Request, start_date: str = None, end_date: str 
 @router.get("/api/reports/account-activity")
 def account_activity_report(request: Request, start_date: str = None, end_date: str = None):
     """Get account activity report data"""
-    # Temporarily disable auth for testing
-    # if not require_login(request):
-    #     return JSONResponse({"error": "Unauthorized"}, status_code=401)
+    if not require_login(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
     try:
         # Validate date parameters
@@ -218,7 +211,7 @@ def account_activity_report(request: Request, start_date: str = None, end_date: 
                 fa.last_error,
                 CASE
                     WHEN fa.last_heartbeat IS NOT NULL THEN EXTRACT(EPOCH FROM (NOW() - fa.last_heartbeat)) / 60
-                    ELSE 0
+                    ELSE NULL
                 END as minutes_since_heartbeat,
                 COUNT(e.id) as emails_synced_today
             FROM fetch_accounts fa
@@ -244,19 +237,19 @@ def account_activity_report(request: Request, start_date: str = None, end_date: 
 
                     last_success = convert_utc_to_user_timezone(dt, user_id).strftime(get_user_date_format(request))
 
-                # Safely convert minutes_since_heartbeat to float
+                # Safely convert minutes_since_heartbeat to float; NULL means the
+                # account has never heartbeated (do NOT report it as 0 = online).
                 try:
                     minutes_value = row["minutes_since_heartbeat"]
                     if minutes_value is None:
-                        minutes_float = 0.0
+                        minutes_rounded = None
                     elif isinstance(minutes_value, str):
-                        minutes_float = float(minutes_value) if minutes_value.strip() else 0.0
+                        minutes_rounded = round(float(minutes_value), 1) if minutes_value.strip() else None
                     else:
-                        minutes_float = float(minutes_value)
-                    minutes_rounded = round(minutes_float, 1)
+                        minutes_rounded = round(float(minutes_value), 1)
                 except (ValueError, TypeError) as e:
                     log("error", "Reports", f"Error converting minutes_since_heartbeat: {minutes_value}, error: {e}", "")
-                    minutes_rounded = 0.0
+                    minutes_rounded = None
 
                 # Safely convert emails_synced_today to int
                 try:
@@ -514,9 +507,8 @@ def system_health_report(request: Request, start_date: str = None, end_date: str
 @router.get("/api/reports/av-stats")
 def av_stats_report(request: Request, start_date: str = None, end_date: str = None, account: str = None):
     """Get anti-virus statistics report data"""
-    # Temporarily disable auth for testing
-    # if not require_login(request):
-    #     return JSONResponse({"error": "Unauthorized"}, status_code=401)
+    if not require_login(request):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
     try:
         # Validate date parameters
@@ -553,8 +545,7 @@ def av_stats_report(request: Request, start_date: str = None, end_date: str = No
             SELECT
                 {group_by} as period_start,
                 COUNT(CASE WHEN NOT virus_detected THEN 1 END) as clean_count,
-                COUNT(CASE WHEN virus_detected THEN 1 END) as quarantined_count,
-                0 as rejected_count
+                COUNT(CASE WHEN virus_detected THEN 1 END) as quarantined_count
             FROM emails
             WHERE created_at >= :start_date AND created_at <= :end_date
         """
@@ -566,12 +557,35 @@ def av_stats_report(request: Request, start_date: str = None, end_date: str = No
 
         av_results = query(query_str, params).mappings().all()
 
+        # Rejected emails are never stored in the emails table (the worker refuses
+        # them when clamav_action='reject'), so derive their counts from the worker's
+        # log entries instead of hard-coding zero. The worker logs these with the
+        # ACCOUNT NAME as the log source, so no source filter is applied; the
+        # account filter below matches the account name when one is requested.
+        rejected_query = """
+            SELECT DATE(timestamp) as rejected_date, COUNT(*) as c
+            FROM logs
+            WHERE message LIKE '%rejected due to virus%'
+              AND timestamp >= :start_date AND timestamp <= :end_date
+        """
+        rejected_params = {"start_date": start_dt, "end_date": end_dt}
+        if account:
+            rejected_query += " AND source = :account"
+            rejected_params["account"] = account
+        rejected_query += " GROUP BY DATE(timestamp)"
+
+        rejected_rows = query(rejected_query, rejected_params).mappings().all()
+        rejected_by_date = {}
+        for rejected_row in rejected_rows:
+            key = str(rejected_row["rejected_date"])[:10] if rejected_row["rejected_date"] else ""
+            if key:
+                rejected_by_date[key] = int(rejected_row["c"] or 0)
+
         # Get total counts for the period
         total_query = """
             SELECT
                 COUNT(CASE WHEN NOT virus_detected THEN 1 END) as total_clean,
-                COUNT(CASE WHEN virus_detected THEN 1 END) as total_quarantined,
-                0 as total_rejected
+                COUNT(CASE WHEN virus_detected THEN 1 END) as total_quarantined
             FROM emails
             WHERE created_at >= :start_date AND created_at <= :end_date
         """
@@ -588,10 +602,12 @@ def av_stats_report(request: Request, start_date: str = None, end_date: str = No
         rejected_counts = []
 
         for row in av_results:
+            day_key = ""
             if row["period_start"]:
                 # Convert string date back to datetime for timezone conversion
+                day_key = str(row["period_start"])[:10]
                 try:
-                    period_dt = datetime.strptime(str(row["period_start"]), "%Y-%m-%d").date()
+                    period_dt = datetime.strptime(day_key, "%Y-%m-%d").date()
                     # Handle timezone conversion for authenticated user
                     if user_id:
                         local_dt = convert_utc_to_user_timezone(period_dt, user_id)
@@ -599,20 +615,20 @@ def av_stats_report(request: Request, start_date: str = None, end_date: str = No
                         # Use default timezone for testing
                         from ..utils.timezone import convert_utc_to_timezone
                         local_dt = convert_utc_to_timezone(period_dt, "Australia/Melbourne")
-                    
+
                     # Format the date according to user preferences
                     labels.append(local_dt.strftime(date_format))
                 except (ValueError, TypeError):
                     # Fallback to string representation if conversion fails
-                    labels.append(str(row["period_start"]))
+                    labels.append(day_key)
             clean_counts.append(int(row["clean_count"] or 0))
             quarantined_counts.append(int(row["quarantined_count"] or 0))
-            rejected_counts.append(int(row["rejected_count"] or 0))
+            rejected_counts.append(rejected_by_date.get(day_key, 0))
 
         return {
             "clean_emails": int(total_results["total_clean"] or 0) if total_results else 0,
             "quarantined_emails": int(total_results["total_quarantined"] or 0) if total_results else 0,
-            "rejected_emails": int(total_results["total_rejected"] or 0) if total_results else 0,
+            "rejected_emails": sum(rejected_by_date.values()),
             "labels": labels,
             "clean_counts": clean_counts,
             "quarantined_counts": quarantined_counts,
@@ -1261,11 +1277,13 @@ def data_quality_report(request: Request, account: str = None):
 
         size_results = query(size_query, size_params).mappings().first()
 
-        # Duplicate detection (simplified - same subject, sender, date within 1 minute)
+        # Duplicate detection (simplified - same subject, sender, date). Counts the
+        # number of *extra* copies (dup_count - 1), so an email archived 3 times
+        # contributes 2 potential duplicates rather than a single group.
         duplicate_query = """
-            SELECT COUNT(*) as potential_duplicates
+            SELECT COALESCE(SUM(dup_count - 1), 0) as potential_duplicates
             FROM (
-                SELECT subject, sender, DATE(created_at), COUNT(*) as dup_count
+                SELECT subject, sender, DATE(created_at) as created_day, COUNT(*) as dup_count
                 FROM emails
                 WHERE subject IS NOT NULL AND sender IS NOT NULL
         """
@@ -1273,7 +1291,7 @@ def data_quality_report(request: Request, account: str = None):
         if account:
             duplicate_query += " AND source = :account"
             duplicate_params["account"] = account
-        duplicate_query += " GROUP BY subject, sender, DATE(created_at) HAVING COUNT(*) > 1 ) duplicates"
+        duplicate_query += " GROUP BY subject, sender, created_day HAVING COUNT(*) > 1 ) duplicates"
 
         duplicate_results = query(duplicate_query, duplicate_params).mappings().first()
 

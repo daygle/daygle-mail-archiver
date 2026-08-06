@@ -21,20 +21,19 @@ def get_smtp_config() -> dict:
     Returns:
         dict: SMTP configuration with keys: enabled, host, port, username, password, use_tls, from_email, from_name
     """
-    settings_keys = [
-        'smtp_enabled', 'smtp_host', 'smtp_port', 'smtp_username',
-        'smtp_password', 'smtp_use_tls', 'smtp_from_email', 'smtp_from_name'
-    ]
+    # Fetch all SMTP settings in one query (this is called on every send).
+    rows = query("SELECT key, value FROM settings WHERE key LIKE 'smtp_%'").mappings().all()
+    settings = {r["key"]: r["value"] for r in rows}
 
-    settings = {}
-    for key in settings_keys:
-        result = query("SELECT value FROM settings WHERE key = :key", {"key": key}).mappings().first()
-        settings[key] = result["value"] if result else ""
+    # Robust port parsing: a corrupt setting must not crash email sending.
+    try:
+        port = int(settings.get('smtp_port', '587'))
+    except (TypeError, ValueError):
+        port = 587
 
-    # Convert string values to appropriate types
-    raw_password = settings.get('smtp_password', '')
     # Attempt to decrypt the SMTP password (stored encrypted).
     # Fall back to the raw value to support legacy plaintext entries.
+    raw_password = settings.get('smtp_password', '')
     if raw_password:
         try:
             from .crypto import decrypt_password
@@ -46,7 +45,7 @@ def get_smtp_config() -> dict:
     return {
         'enabled': settings.get('smtp_enabled', 'false').lower() == 'true',
         'host': settings.get('smtp_host', ''),
-        'port': int(settings.get('smtp_port', '587')),
+        'port': port,
         'username': settings.get('smtp_username', ''),
         'password': raw_password,
         'use_tls': settings.get('smtp_use_tls', 'true').lower() == 'true',

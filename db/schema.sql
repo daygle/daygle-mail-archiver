@@ -112,6 +112,23 @@ CREATE TABLE IF NOT EXISTS fetch_state (
 );
 
 -- ----------------------------
+-- email_uid_aliases
+-- Maps Gmail/O365 provider message ids to their synthetic INTEGER uid. The
+-- primary hash (`stable_uid`) can collide once an archive grows large; without
+-- this table two distinct messages could share (source, folder, uid) and the
+-- emails table's ON CONFLICT upsert would silently overwrite one of them. Every
+-- provider message claims its uid here so the mapping is stable across runs.
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS email_uid_aliases (
+    source TEXT NOT NULL,
+    folder TEXT NOT NULL,
+    provider_id TEXT NOT NULL,
+    uid INTEGER NOT NULL,
+    PRIMARY KEY (source, folder, provider_id),
+    UNIQUE (source, folder, uid)
+);
+
+-- ----------------------------
 -- users
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS users (
@@ -229,6 +246,7 @@ INSERT INTO settings (key, value) VALUES ('smtp_from_name', 'Daygle Mail Archive
 INSERT INTO settings (key, value) VALUES ('clamav_quarantine_in_db', 'true') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('clamav_quarantine_retention_days', '90') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('clamav_max_file_size', '10485760') ON CONFLICT (key) DO NOTHING;
+INSERT INTO settings (key, value) VALUES ('clamav_failure_grace_seconds', '300') ON CONFLICT (key) DO NOTHING;
 INSERT INTO settings (key, value) VALUES ('clamav_quarantine_encrypt', 'false') ON CONFLICT (key) DO NOTHING;
 -- Tracks whether ClamAV was last seen as available or unavailable so alerts fire only on state transitions
 INSERT INTO settings (key, value) VALUES ('clamav_status', 'unknown') ON CONFLICT (key) DO NOTHING;
@@ -252,13 +270,48 @@ CREATE TABLE IF NOT EXISTS quarantined_emails (
     signature TEXT,
     compressed BOOLEAN NOT NULL DEFAULT TRUE,
     virus_name TEXT,
+    -- Scan metadata carried through quarantine so restored emails keep honest flags
+    virus_scanned BOOLEAN,
+    virus_detected BOOLEAN,
+    scan_timestamp TIMESTAMPTZ,
     reason TEXT,
     quarantined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     expires_at TIMESTAMPTZ,
     quarantined_by TEXT
 );
 
+-- Add scan metadata columns to quarantined_emails (migration for existing deployments)
+ALTER TABLE quarantined_emails
+    ADD COLUMN IF NOT EXISTS virus_scanned BOOLEAN,
+    ADD COLUMN IF NOT EXISTS virus_detected BOOLEAN,
+    ADD COLUMN IF NOT EXISTS scan_timestamp TIMESTAMPTZ;
+
 CREATE INDEX IF NOT EXISTS quarantined_emails_quarantined_at_idx ON quarantined_emails(quarantined_at DESC);
+
+-- A message may only have one quarantine record for its source/folder/UID.
+-- Keep the oldest record when upgrading databases that accumulated duplicates
+-- before this index existed; NULL UIDs remain exempt because they cannot identify
+-- a mail-server message reliably (and legacy manual rows may not have one).
+UPDATE emails e
+SET quarantine_id = retained.id
+FROM quarantined_emails duplicate
+JOIN quarantined_emails retained
+  ON retained.original_source = duplicate.original_source
+ AND retained.original_folder = duplicate.original_folder
+ AND retained.original_uid = duplicate.original_uid
+ AND retained.id < duplicate.id
+WHERE e.quarantine_id = duplicate.id;
+
+DELETE FROM quarantined_emails q
+USING quarantined_emails duplicate
+WHERE q.original_source = duplicate.original_source
+  AND q.original_folder = duplicate.original_folder
+  AND q.original_uid = duplicate.original_uid
+  AND q.id > duplicate.id;
+
+CREATE UNIQUE INDEX IF NOT EXISTS quarantined_emails_source_folder_uid_idx
+    ON quarantined_emails(original_source, original_folder, original_uid)
+    WHERE original_uid IS NOT NULL;
 
 -- Add optional foreign key on emails to reference quarantine record (nullable)
 ALTER TABLE emails
@@ -298,6 +351,7 @@ CREATE TABLE IF NOT EXISTS logs (
 -- Indexes for logs queries (filtering by level and ordering by timestamp)
 CREATE INDEX IF NOT EXISTS logs_timestamp_idx ON logs(timestamp DESC);
 CREATE INDEX IF NOT EXISTS logs_level_timestamp_idx ON logs(level, timestamp DESC);
+CREATE INDEX IF NOT EXISTS logs_source_timestamp_idx ON logs(source, timestamp DESC);
 
 -- ----------------------------
 -- deletion_stats
@@ -379,8 +433,29 @@ CREATE TABLE IF NOT EXISTS alert_triggers (
     description TEXT, -- Description of what this alert is for
     alert_type TEXT NOT NULL DEFAULT 'warning', -- Default severity: 'error', 'warning', 'info', 'success'
     enabled BOOLEAN NOT NULL DEFAULT TRUE, -- Whether this trigger is enabled globally
+    CHECK (alert_type IN ('error', 'warning', 'info', 'success')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Normalize invalid legacy severities before adding the constraint. The original
+-- caller-provided severity is not recoverable, so use the safest generic value.
+UPDATE alert_triggers
+SET alert_type = 'warning'
+WHERE alert_type NOT IN ('error', 'warning', 'info', 'success');
+
+-- Guard existing deployments as well as new installations against invalid severities.
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conrelid = 'alert_triggers'::regclass
+          AND conname = 'alert_triggers_alert_type_check'
+    ) THEN
+        ALTER TABLE alert_triggers
+            ADD CONSTRAINT alert_triggers_alert_type_check
+            CHECK (alert_type IN ('error', 'warning', 'info', 'success'));
+    END IF;
+END $$;
 
 -- Index for quick lookups
 CREATE INDEX IF NOT EXISTS alert_triggers_enabled_idx ON alert_triggers(enabled);

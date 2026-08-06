@@ -1,10 +1,26 @@
 import os
+from contextlib import contextmanager
 from sqlalchemy import create_engine, text
 from .config import require_config
 
 DB_DSN = require_config("DB_DSN")
 
 engine = create_engine(DB_DSN, future=True)
+
+
+@contextmanager
+def transaction():
+    """Run a block of statements atomically in a single DB transaction.
+
+    Commits on success, rolls back on any exception. Statements must be
+    executed with :func:`sqlalchemy.text` on the yielded connection, e.g.
+
+        with transaction() as conn:
+            conn.execute(text("INSERT ..."), {...})
+            conn.execute(text("DELETE ..."), {...})
+    """
+    with engine.begin() as conn:
+        yield conn
 
 class MaterializedResult:
     """A small wrapper for materialized query results.

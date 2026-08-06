@@ -24,7 +24,7 @@ class GmailClient:
         }
         if page_token:
             params["pageToken"] = page_token
-        
+
         response = requests.get(
             f"{self.base_url}/messages",
             headers=self.headers,
@@ -78,19 +78,30 @@ class GmailClient:
             return None
     
     def list_history(self, start_history_id: str) -> List[Dict]:
-        """Get message history changes since start_history_id"""
-        try:
+        """Get message history changes since start_history_id (paginated).
+
+        Raises requests.HTTPError on failure so callers can distinguish a stale
+        history id (HTTP 404) from transient errors.
+        """
+        history = []
+        page_token = None
+        while True:
+            params = {"startHistoryId": start_history_id}
+            if page_token:
+                params["pageToken"] = page_token
             response = requests.get(
                 f"{self.base_url}/history",
                 headers=self.headers,
-                params={"startHistoryId": start_history_id},
+                params=params,
                 timeout=30
             )
             response.raise_for_status()
             data = response.json()
-            return data.get("history", [])
-        except Exception:
-            return []
+            history.extend(data.get("history", []))
+            page_token = data.get("nextPageToken")
+            if not page_token:
+                break
+        return history
     
     def fetch_new_emails(self, last_sync_token: Optional[str] = None) -> List[str]:
         """
@@ -101,19 +112,31 @@ class GmailClient:
         
         if last_sync_token:
             # Use history API for incremental sync
-            history = self.list_history(last_sync_token)
-            for h in history:
-                if "messagesAdded" in h:
-                    for msg in h["messagesAdded"]:
-                        email_ids.append(msg["message"]["id"])
-        else:
-            # Full sync - get all emails
-            page_token = None
-            while True:
-                result = self.list_messages(page_token=page_token)
-                if "messages" in result:
-                    for msg in result["messages"]:
-                        email_ids.append(msg["id"])
+            stale = False
+            try:
+                history = self.list_history(last_sync_token)
+            except requests.exceptions.HTTPError as e:
+                # A stale/expired history id (404) means the incremental sync
+                # cannot continue; fall back to a full sync so mail keeps flowing.
+                if e.response is not None and e.response.status_code in (404, 410):
+                    stale = True
+                else:
+                    raise
+            if not stale:
+                for h in history:
+                    if "messagesAdded" in h:
+                        for msg in h["messagesAdded"]:
+                            email_ids.append(msg["message"]["id"])
+                return email_ids
+            # stale/expired history id -> fall through to a full sync below
+
+        # Full sync - get all emails
+        page_token = None
+        while True:
+            result = self.list_messages(page_token=page_token)
+            if "messages" in result:
+                for msg in result["messages"]:
+                    email_ids.append(msg["id"])
                 
                 page_token = result.get("nextPageToken")
                 if not page_token:

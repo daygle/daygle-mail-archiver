@@ -25,16 +25,16 @@ port = 5432
 
 # Session secret for API session cookies
 # Generate with: python3 -c "import secrets; print(secrets.token_hex(32))"
-session_secret = 8f4c2b9e3d7a4f1c9e8b2d3f7c6a1e4b5d8f0c2a7b9d3e6f1a4c7b8d9e2f3a1
+session_secret = CHANGE_ME_GENERATE_A_UNIQUE_SECRET
 
 # Fernet key for IMAP password encryption (used by both API and Worker)
 # Generate with: python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-imap_password_key = 8t2y0x8qZp8G7QfVYp4p0Q2u7v8Yx1m4l8e0q2c3s0A=
+imap_password_key = CHANGE_ME_GENERATE_A_FERNET_KEY
 
 # Optional: Fernet key for quarantined raw email encryption
 # IMPORTANT: Use a dedicated key for quarantine data - do NOT reuse imap_password_key
 # Generate with: python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-CLAMAV_QUARANTINE_KEY=b5pS7dcRdkMsAOdqqcoW5ZccJxIo3o-mBiS07kZcavI=
+clamav_quarantine_key = CHANGE_ME_GENERATE_A_DEDICATED_FERNET_KEY
 
 # Optional: CORS allowed origins (comma-separated list of scheme://host[:port]).
 # Leave unset or "*" to allow any origin (credentials are disabled in that mode).
@@ -46,3 +46,10 @@ allowed_origins = *
 # app is served over HTTPS (recommended in production). Leave false for plain-HTTP
 # or local access, otherwise the login session cookie will not be sent.
 session_https_only = false
+
+# Optional: Public base URL of the app, e.g. https://archive.example.com.
+# Required when the API runs behind a reverse proxy: Google/Microsoft OAuth
+# redirect URIs must match exactly what is registered in the OAuth app, and
+# without this the callback URI is derived from the internal request URL
+# (e.g. http://api:8000) which will not match. Leave unset when not proxied.
+# public_base_url = https://archive.example.com
