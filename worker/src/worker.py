@@ -1,6 +1,7 @@
 import time
 import gzip
 import email
+import hashlib
 from datetime import datetime, timezone, timedelta
 from email.utils import parsedate_to_datetime
 from collections import defaultdict
@@ -14,6 +15,21 @@ from clamav_scanner import ClamAVScanner
 from utils.email_parser import decode_header
 
 POLL_INTERVAL_FALLBACK = 300  # seconds
+
+
+def stable_uid(email_id: str) -> int:
+    """Derive a stable, non-negative synthetic UID from a provider message id.
+
+    Gmail/O365 identify messages by opaque string ids, but the emails table keys
+    on an INTEGER `uid`. Python's built-in hash() is salted per process
+    (PYTHONHASHSEED), so it produces different values across worker restarts,
+    causing the same message to be re-stored under a new uid instead of being
+    deduplicated by ON CONFLICT (source, folder, uid). Use SHA-256 so the mapping
+    is deterministic. The result is kept below 10**9 to fit a PostgreSQL INTEGER
+    column (max 2,147,483,647) and to preserve the previous value range.
+    """
+    digest = hashlib.sha256(email_id.encode("utf-8")).digest()
+    return int.from_bytes(digest[:8], "big") % (10**9)
 
 
 def _parse_quoted_imap_token(value: str):
@@ -602,10 +618,10 @@ def process_gmail_account(account):
             # Get email in raw RFC822 format
             raw_email = client.get_message_raw(email_id)
             if raw_email:
-                # Use email_id hash as UID equivalent
-                uid = abs(hash(email_id)) % (10**9)
+                # Use a stable hash of the message id as the UID equivalent
+                uid = stable_uid(email_id)
                 store_email(source, folder, uid, raw_email)
-                
+
                 # Delete from Gmail (move to trash) if configured
                 if delete_after_processing:
                     if not client.delete_message(email_id):
@@ -646,10 +662,10 @@ def process_o365_account(account):
             # Get email in MIME format
             raw_email = client.get_message_mime(email_id)
             if raw_email:
-                # Use email_id hash as UID equivalent
-                uid = abs(hash(email_id)) % (10**9)
+                # Use a stable hash of the message id as the UID equivalent
+                uid = stable_uid(email_id)
                 store_email(source, folder, uid, raw_email)
-                
+
                 # Delete from Office 365 if configured
                 if delete_after_processing:
                     if not client.delete_message(email_id):

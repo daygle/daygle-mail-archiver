@@ -1,5 +1,8 @@
-sqlalchemy
-psycopg2
-cryptography
-requests
-pyclamd
+# Worker service dependencies.
+# Pinned to explicit versions for reproducible, auditable builds.
+# Versions are kept in sync with api/requirements.txt for shared packages.
+sqlalchemy==2.0.51
+psycopg2==2.9.12
+cryptography==50.0.0
+requests==2.34.2
+pyclamd==0.4.0

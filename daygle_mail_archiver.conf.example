@@ -35,3 +35,9 @@ imap_password_key = 8t2y0x8qZp8G7QfVYp4p0Q2u7v8Yx1m4l8e0q2c3s0A=
 # IMPORTANT: Use a dedicated key for quarantine data - do NOT reuse imap_password_key
 # Generate with: python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 CLAMAV_QUARANTINE_KEY=b5pS7dcRdkMsAOdqqcoW5ZccJxIo3o-mBiS07kZcavI=
+
+# Optional: CORS allowed origins (comma-separated list of scheme://host[:port]).
+# Leave unset or "*" to allow any origin (credentials are disabled in that mode).
+# Set explicit origins in production to lock down cross-origin access, e.g.:
+#   allowed_origins = https://archive.example.com,https://admin.example.com
+allowed_origins = *

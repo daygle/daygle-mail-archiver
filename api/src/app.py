@@ -42,14 +42,25 @@ app = FastAPI(
 
 # ---------------------------------------------------------
 # CORS Middleware
-# NOTE: For production, configure specific allowed origins.
-# Using allow_origins=["*"] with allow_credentials=True is
-# insecure and may not work as expected in all browsers.
+# Origins are configurable via the ALLOWED_ORIGINS setting (env var or the
+# [security] allowed_origins conf key) as a comma-separated list. When it is
+# unset or "*", we fall back to the permissive default but keep
+# allow_credentials disabled, since "*" + credentials is rejected by browsers
+# and unsafe. When explicit origins are configured, credentials are enabled so
+# authenticated cross-origin requests from those trusted origins work.
 # ---------------------------------------------------------
+_allowed_origins_raw = (get_config("ALLOWED_ORIGINS", "*") or "*").strip()
+if _allowed_origins_raw in ("", "*"):
+    cors_allow_origins = ["*"]
+    cors_allow_credentials = False
+else:
+    cors_allow_origins = [o.strip() for o in _allowed_origins_raw.split(",") if o.strip()]
+    cors_allow_credentials = True
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # TODO: Configure specific origins for production
-    allow_credentials=False,
+    allow_origins=cors_allow_origins,
+    allow_credentials=cors_allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )

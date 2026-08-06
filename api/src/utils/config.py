@@ -90,13 +90,14 @@ class Config:
         if parser.has_section('security'):
             self._config['SESSION_SECRET'] = parser.get('security', 'session_secret', fallback=None)
             self._config['IMAP_PASSWORD_KEY'] = parser.get('security', 'imap_password_key', fallback=None)
+            self._config['ALLOWED_ORIGINS'] = parser.get('security', 'allowed_origins', fallback=None)
     
     def _load_from_environment(self):
         """Load configuration from environment variables (highest priority)."""
         env_vars = [
             'DB_NAME', 'DB_USER', 'DB_PASS', 'DB_DSN',
             'POSTGRES_DB', 'POSTGRES_USER', 'POSTGRES_PASSWORD',
-            'SESSION_SECRET', 'IMAP_PASSWORD_KEY'
+            'SESSION_SECRET', 'IMAP_PASSWORD_KEY', 'ALLOWED_ORIGINS'
         ]
         for var in env_vars:
             env_value = os.getenv(var)

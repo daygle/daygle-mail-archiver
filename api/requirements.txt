@@ -1,14 +1,17 @@
-fastapi
-uvicorn
-jinja2
-python-multipart
-sqlalchemy
-psycopg2
-cryptography
-itsdangerous
-bcrypt
-requests
-pytz
-python-dotenv
-pyclamd
-Babel
+# API service dependencies.
+# Pinned to explicit versions for reproducible, auditable builds.
+# To upgrade: bump a version here, rebuild, and test before committing.
+fastapi==0.141.1
+uvicorn==0.52.1
+jinja2==3.1.6
+python-multipart==0.0.32
+sqlalchemy==2.0.51
+psycopg2==2.9.12
+cryptography==50.0.0
+itsdangerous==2.2.0
+bcrypt==5.0.0
+requests==2.34.2
+pytz==2026.3.post1
+python-dotenv==1.2.2
+pyclamd==0.4.0
+Babel==2.18.0
