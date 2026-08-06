@@ -252,8 +252,12 @@ def test_reports_charts_fill_their_containers():
     storage_start = template.index("function loadStorageUtilizationReport()")
     storage_end = template.index("// Load Retention Policy Report", storage_start)
     storage_script = template[storage_start:storage_end]
+    assert '<div class="chart-container storage-chart-container" id="storageTrendsChartContainer">' in template
+    assert '<canvas id="storageTrendsChart"></canvas>' in template
     assert "text: 'Storage Usage Over Time'" in storage_script
     assert "maintainAspectRatio: false" in storage_script
+    assert ".storage-chart-container" in styles
+    assert "inline-size: 100%" in styles
     assert template.count("maintainAspectRatio: false") >= 10
     performance_start = template.index("function loadSystemPerformanceReport()")
     performance_end = template.index("// Load Security & Access Report", performance_start)

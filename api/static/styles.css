@@ -3314,6 +3314,20 @@ a:hover {
     max-width: 100%;
 }
 
+/* Keep the storage trend canvas anchored to the complete report-card width.
+   The explicit wrapper also prevents Chart.js from sizing it from its intrinsic
+   canvas width when the report is refreshed with a new dataset. */
+.storage-chart-container {
+    display: block;
+    inline-size: 100%;
+    min-inline-size: 0;
+}
+
+.storage-chart-container canvas {
+    inline-size: 100% !important;
+    max-inline-size: 100%;
+}
+
 .table-responsive {
     max-height: 400px;
     overflow-y: auto;
