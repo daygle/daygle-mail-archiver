@@ -829,8 +829,11 @@ def purge_old_emails():
     ).mappings().all()
 
     deletion_count = len(emails_to_delete)
-    if deletion_count == 0:
-        return
+
+    # NOTE: Do not return early when deletion_count == 0. The quarantine-retention
+    # purge below has its own (independent) cutoff and must still run even when no
+    # emails in the main table have expired. The IMAP deletion block still needs to
+    # execute so that `accounts_by_name` is populated for the quarantine purge.
 
     # Delete from mail servers if enabled
     if delete_from_mail_server:
@@ -902,13 +905,14 @@ def purge_old_emails():
                 log_error("Retention", f"Failed to delete from mail server {source}: {e}")
 
     # Delete from database
-    execute(
-        """
-        DELETE FROM emails
-        WHERE created_at < :cutoff
-        """,
-        {"cutoff": cutoff},
-    )
+    if deletion_count > 0:
+        execute(
+            """
+            DELETE FROM emails
+            WHERE created_at < :cutoff
+            """,
+            {"cutoff": cutoff},
+        )
 
     # Purge expired quarantined emails based on quarantine retention setting
     try:
@@ -1019,8 +1023,7 @@ def purge_old_emails():
             """,
             {"count": deletion_count, "deleted_from_server": delete_from_mail_server},
         )
-    
-    log_error("Retention", f"Purged {deletion_count} old emails (delete_from_server={delete_from_mail_server})", level="info")
+        log_error("Retention", f"Purged {deletion_count} old emails (delete_from_server={delete_from_mail_server})", level="info")
 
 def main_loop():
     # Track last processing time for each account

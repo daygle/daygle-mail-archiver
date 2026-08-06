@@ -92,12 +92,12 @@ def parse_email(raw: bytes):
                     continue
 
                 if ctype == "text/plain":
-                    text += part.get_payload(decode=True).decode(
+                    text += (part.get_payload(decode=True) or b"").decode(
                         part.get_content_charset() or "utf-8",
                         errors="replace",
                     )
                 elif ctype == "text/html":
-                    html_part = part.get_payload(decode=True).decode(
+                    html_part = (part.get_payload(decode=True) or b"").decode(
                         part.get_content_charset() or "utf-8",
                         errors="replace",
                     )
@@ -105,12 +105,12 @@ def parse_email(raw: bytes):
         else:
             ctype = m.get_content_type()
             if ctype == "text/plain":
-                text = m.get_payload(decode=True).decode(
+                text = (m.get_payload(decode=True) or b"").decode(
                     m.get_content_charset() or "utf-8",
                     errors="replace",
                 )
             elif ctype == "text/html":
-                html = m.get_payload(decode=True).decode(
+                html = (m.get_payload(decode=True) or b"").decode(
                     m.get_content_charset() or "utf-8",
                     errors="replace",
                 )
