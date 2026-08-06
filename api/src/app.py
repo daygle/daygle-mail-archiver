@@ -67,13 +67,19 @@ app.add_middleware(
 
 # ---------------------------------------------------------
 # Session Middleware
+# https_only marks the session cookie as Secure (only sent over HTTPS). Enable it
+# in production behind TLS via SESSION_HTTPS_ONLY=true (env var or [security]
+# session_https_only). Defaults to false so plain-HTTP/local deployments keep
+# working unchanged.
 # ---------------------------------------------------------
+_session_https_only = (get_config("SESSION_HTTPS_ONLY", "false") or "false").strip().lower() in ("1", "true", "yes", "on")
+
 app.add_middleware(
     SessionMiddleware,
     secret_key=SESSION_SECRET,
     max_age=86400,  # 24 hours
     same_site="lax",
-    https_only=False
+    https_only=_session_https_only,
 )
 
 # ---------------------------------------------------------

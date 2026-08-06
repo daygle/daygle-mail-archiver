@@ -41,3 +41,8 @@ CLAMAV_QUARANTINE_KEY=b5pS7dcRdkMsAOdqqcoW5ZccJxIo3o-mBiS07kZcavI=
 # Set explicit origins in production to lock down cross-origin access, e.g.:
 #   allowed_origins = https://archive.example.com,https://admin.example.com
 allowed_origins = *
+
+# Mark the session cookie as Secure (only sent over HTTPS). Set to true when the
+# app is served over HTTPS (recommended in production). Leave false for plain-HTTP
+# or local access, otherwise the login session cookie will not be sent.
+session_https_only = false
