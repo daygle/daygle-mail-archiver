@@ -111,17 +111,27 @@ class ClamAVScanner:
         self._action = 'quarantine'
         self._failure_count = 0
         self._first_failure_time = None
-        self._failure_grace_seconds = 120
-        self._failure_alert_threshold = 3
+        # Only alert on a *sustained* outage. Brief blips — most commonly clamd
+        # refusing connections for a minute or two while it reloads its signature
+        # database after a freshclam update — recover well within this window and
+        # are suppressed (no unavailable/recovered alert pair). Tunable via the
+        # 'clamav_failure_grace_seconds' setting.
+        self._failure_grace_seconds = 300
+        self._failure_alert_threshold = 2
         self._load_settings()
     
     def _load_settings(self):
         """Load ClamAV settings from database."""
         try:
+            # Fetch every clamav_* setting. Previously this only selected four keys,
+            # so clamav_quarantine_in_db, clamav_quarantine_retention_days,
+            # clamav_max_file_size and clamav_quarantine_encrypt were read from the
+            # dict but never present, silently falling back to defaults (e.g.
+            # quarantine encryption could never be enabled from settings).
             settings = query(
                 """
-                SELECT key, value FROM settings 
-                WHERE key IN ('clamav_enabled', 'clamav_host', 'clamav_port', 'clamav_action')
+                SELECT key, value FROM settings
+                WHERE key LIKE 'clamav_%'
                 """
             ).mappings().all()
             
@@ -140,6 +150,14 @@ class ClamAVScanner:
             try:
                 # Allow overriding max scan size from settings (bytes)
                 self.MAX_SCAN_SIZE = int(settings_dict.get('clamav_max_file_size', self.MAX_SCAN_SIZE))
+            except Exception:
+                pass
+            try:
+                # How long a ClamAV outage must persist before alerting. Keeps brief
+                # signature-reload blips from generating unavailable/recovered noise.
+                self._failure_grace_seconds = int(
+                    settings_dict.get('clamav_failure_grace_seconds', self._failure_grace_seconds)
+                )
             except Exception:
                 pass
             # Optional application-level encryption for quarantined raw emails
@@ -194,7 +212,14 @@ class ClamAVScanner:
             log_warning("Could not persist ClamAV status to database", str(e))
 
     def _record_connection_failure(self) -> bool:
-        """Track repeated ClamAV connection failures and return whether an alert should be sent."""
+        """Track repeated ClamAV connection failures and return whether an alert should be sent.
+
+        An alert is only warranted once the outage has *persisted* for the grace
+        period (and produced more than a single failure). This deliberately avoids
+        alerting on short-lived blips such as clamd reloading its signature
+        database after a freshclam update, which would otherwise produce a noisy
+        "unavailable" then "recovered" pair every time definitions update.
+        """
         now = datetime.now(timezone.utc)
         if self._first_failure_time is None:
             self._first_failure_time = now
@@ -202,13 +227,11 @@ class ClamAVScanner:
         else:
             self._failure_count += 1
 
-        if self._failure_count >= self._failure_alert_threshold:
-            return True
-
-        if (now - self._first_failure_time).total_seconds() >= self._failure_grace_seconds:
-            return True
-
-        return False
+        elapsed = (now - self._first_failure_time).total_seconds()
+        return (
+            elapsed >= self._failure_grace_seconds
+            and self._failure_count >= self._failure_alert_threshold
+        )
 
     def _reset_connection_failure(self):
         """Reset the transient connection failure tracking."""
