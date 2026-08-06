@@ -15,6 +15,7 @@ Run with:  python -m pytest tests/ -v
 import gzip
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -114,6 +115,18 @@ def test_api_scanner_scanned_false_when_unavailable(monkeypatch):
     assert scanned is False  # must NOT be marked as virus_scanned
 
 
+def test_api_scanner_rejects_false_clamav_ping(monkeypatch):
+    scanner = _api_scanner(monkeypatch, [])
+
+    class FalsePing:
+        def ping(self):
+            return False
+
+    monkeypatch.setattr(api_scanner_mod.pyclamd, "ClamdNetworkSocket", lambda **kwargs: FalsePing())
+    assert scanner._connect() is None
+    assert scanner._scanner is None
+
+
 def test_api_scanner_scanned_false_when_disabled(monkeypatch):
     scanner = _api_scanner(monkeypatch, [{"key": "clamav_enabled", "value": "false"}])
     detected, _name, ts, scanned = scanner.scan(b"hello")
@@ -144,6 +157,18 @@ def test_api_scanner_scanned_true_on_virus_found(monkeypatch):
     assert ts is not None and scanned is True
 
 
+def test_api_scanner_accepts_pyclamd_dict_detection(monkeypatch):
+    scanner = _api_scanner(monkeypatch, [])
+    monkeypatch.setattr(
+        ApiScanner,
+        "_connect",
+        lambda self: _FakeClamd({"stream": ("FOUND", "Eicar-Test-Signature")}),
+    )
+    detected, name, ts, scanned = scanner.scan(b"eicar")
+    assert detected is True and name == "Eicar-Test-Signature"
+    assert ts is not None and scanned is True
+
+
 # ---------------------------------------------------------------------------
 # Worker scanner: same 4-tuple semantics
 # ---------------------------------------------------------------------------
@@ -156,6 +181,17 @@ def test_worker_scanner_scanned_false_when_disabled(monkeypatch):
     scanner = WorkerScanner()
     detected, _name, ts, scanned = scanner.scan(b"hello")
     assert detected is False and ts is None and scanned is False
+
+
+def test_worker_scanner_requires_scan_when_settings_are_unavailable(monkeypatch):
+    def failing_query(sql, params=None):
+        raise RuntimeError("database unavailable")
+
+    monkeypatch.setattr("clamav_scanner.query", failing_query)
+    monkeypatch.setattr("clamav_scanner.execute", lambda *args, **kwargs: None)
+    scanner = WorkerScanner()
+    assert scanner.is_enabled() is False
+    assert scanner.requires_scan() is True
 
 
 def test_worker_scanner_scanned_false_when_unavailable(monkeypatch):
@@ -175,6 +211,37 @@ def test_worker_scanner_scanned_true_on_real_scan(monkeypatch):
     monkeypatch.setattr(WorkerScanner, "_connect", lambda self: _FakeClamd(None))
     detected, _name, ts, scanned = scanner.scan(b"hello")
     assert detected is False and ts is not None and scanned is True
+
+
+def test_worker_scanner_reloads_settings_after_startup(monkeypatch):
+    settings = [{"key": "clamav_enabled", "value": "true"}]
+    monkeypatch.setattr("clamav_scanner.query", lambda sql, params=None: FakeResult(settings))
+    scanner = WorkerScanner()
+    settings[:] = [{"key": "clamav_enabled", "value": "false"}]
+    scanner._last_settings_load = 0
+    scanner.refresh_settings()
+    assert scanner.is_enabled() is False
+
+
+def test_worker_scanner_rejects_unknown_scan_response(monkeypatch):
+    monkeypatch.setattr("clamav_scanner.query", lambda sql, params=None: FakeResult([]))
+    scanner = WorkerScanner()
+    monkeypatch.setattr(WorkerScanner, "_connect", lambda self: _FakeClamd({"stream": "unexpected"}))
+    detected, _name, ts, scanned = scanner.scan(b"hello")
+    assert detected is False and ts is None and scanned is False
+
+
+def test_worker_scanner_accepts_pyclamd_dict_detection(monkeypatch):
+    monkeypatch.setattr("clamav_scanner.query", lambda sql, params=None: FakeResult([]))
+    scanner = WorkerScanner()
+    monkeypatch.setattr(
+        WorkerScanner,
+        "_connect",
+        lambda self: _FakeClamd({"stream": ("FOUND", "Eicar-Test-Signature")}),
+    )
+    detected, name, ts, scanned = scanner.scan(b"eicar")
+    assert detected is True and name == "Eicar-Test-Signature"
+    assert ts is not None and scanned is True
 
 
 # ---------------------------------------------------------------------------
@@ -197,6 +264,212 @@ def test_perform_quarantine_requires_manage_quarantine(monkeypatch):
     _grant(monkeypatch, ["view_emails", "delete_emails"])
     response = emails_mod.perform_quarantine(_req(), ids=[1])
     assert response.status_code == 403
+
+
+def test_scan_emails_requires_scan_permission(monkeypatch):
+    _grant(monkeypatch, ["view_emails"])
+    response = emails_mod.scan_emails(_req(), ids=[1])
+    assert response.status_code == 403
+
+
+def test_scan_emails_route_reports_summary(monkeypatch):
+    _grant(monkeypatch, ["scan_emails"])
+    monkeypatch.setattr(
+        emails_mod,
+        "_scan_email_ids",
+        lambda ids, username: {"scanned": 2, "clean": 1, "infected": 1, "skipped": 0, "errors": []},
+    )
+    request = _req()
+    response = emails_mod.scan_emails(request, ids=[1, 2])
+    assert response.status_code == 303
+    assert response.headers["location"] == "/emails"
+    assert "Scanned 2 email(s)." in request.session["flash"]["message"]
+    assert request.session["flash"]["type"] == "warning"
+
+
+def test_scan_emails_route_reports_disabled_scanner(monkeypatch):
+    _grant(monkeypatch, ["scan_emails"])
+    monkeypatch.setattr(
+        emails_mod,
+        "_scan_email_ids",
+        lambda ids, username: {"scanned": 0, "clean": 0, "infected": 0, "skipped": 0, "errors": ["ClamAV scanning is disabled in Global Settings."]},
+    )
+    request = _req()
+    response = emails_mod.scan_emails(request, ids=[1])
+    assert response.status_code == 303
+    assert request.session["flash"]["type"] == "error"
+    assert "disabled" in request.session["flash"]["message"]
+
+
+def test_emails_template_exposes_manual_scan_controls():
+    template = (API_DIR / "templates" / "emails.html").read_text(encoding="utf-8")
+    detail_template = (API_DIR / "templates" / "email-view.html").read_text(encoding="utf-8")
+    assert "form.action = '/emails/scan'" in template
+    assert "Scan Selected" in template
+    assert "Scan with ClamAV" in detail_template
+    assert "infected messages for review" in detail_template
+
+
+def test_manual_scan_persists_clean_result(monkeypatch):
+    scan_time = datetime(2026, 8, 6, 16, 0, tzinfo=timezone.utc)
+    executed = []
+
+    class Scanner:
+        def requires_scan(self):
+            return True
+
+        def scan(self, raw):
+            assert raw == b"raw email"
+            return False, None, scan_time, True
+
+    monkeypatch.setattr(emails_mod, "_get_import_scanner", lambda: Scanner())
+    monkeypatch.setattr(
+        emails_mod,
+        "query",
+        lambda sql, params=None: FakeResult([{
+            "id": 7, "raw_email": gzip.compress(b"raw email"),
+            "compressed": True, "signature": None, "quarantined": False,
+        }]),
+    )
+    monkeypatch.setattr(
+        emails_mod,
+        "execute",
+        lambda sql, params=None: executed.append((sql, params)) or SimpleNamespace(rowcount=1),
+    )
+
+    result = emails_mod._scan_email_ids([7], "tester")
+    assert result == {"scanned": 1, "clean": 1, "infected": 0, "skipped": 0, "errors": []}
+    params = executed[0][1]
+    assert params["virus_scanned"] is True
+    assert params["virus_detected"] is False
+    assert params["virus_name"] is None
+    assert params["scan_timestamp"] == scan_time
+
+
+def test_manual_scan_persists_infected_result_and_alerts(monkeypatch):
+    scan_time = datetime(2026, 8, 6, 16, 1, tzinfo=timezone.utc)
+    executed = []
+    alerts = []
+
+    class Scanner:
+        def requires_scan(self):
+            return True
+
+        def scan(self, raw):
+            return True, "Eicar-Test-Signature", scan_time, True
+
+    monkeypatch.setattr(emails_mod, "_get_import_scanner", lambda: Scanner())
+    monkeypatch.setattr(
+        emails_mod,
+        "query",
+        lambda sql, params=None: FakeResult([{
+            "id": 8, "raw_email": gzip.compress(b"infected email"),
+            "compressed": True, "signature": None, "quarantined": False,
+        }]),
+    )
+    monkeypatch.setattr(
+        emails_mod,
+        "execute",
+        lambda sql, params=None: executed.append((sql, params)) or SimpleNamespace(rowcount=1),
+    )
+    monkeypatch.setattr(emails_mod, "create_alert", lambda *args, **kwargs: alerts.append((args, kwargs)))
+
+    result = emails_mod._scan_email_ids([8], "tester")
+    assert result["infected"] == 1
+    assert result["clean"] == 0
+    assert executed[0][1]["virus_detected"] is True
+    assert executed[0][1]["virus_name"] == "Eicar-Test-Signature"
+    assert alerts and alerts[0][1]["trigger_key"] == "virus_detected"
+
+
+def test_manual_scan_does_not_overwrite_changed_email(monkeypatch):
+    scan_time = datetime(2026, 8, 6, 16, 2, tzinfo=timezone.utc)
+    executed = []
+
+    class Scanner:
+        def requires_scan(self):
+            return True
+
+        def scan(self, raw):
+            return False, None, scan_time, True
+
+    monkeypatch.setattr(emails_mod, "_get_import_scanner", lambda: Scanner())
+    monkeypatch.setattr(
+        emails_mod,
+        "query",
+        lambda sql, params=None: FakeResult([{
+            "id": 10, "raw_email": b"original", "compressed": False,
+            "signature": "old-signature", "quarantined": False,
+        }]),
+    )
+
+    def fake_execute(sql, params=None):
+        executed.append((sql, params))
+        return SimpleNamespace(rowcount=0)
+
+    monkeypatch.setattr(emails_mod, "execute", fake_execute)
+    result = emails_mod._scan_email_ids([10], "tester")
+    assert result["scanned"] == 0
+    assert result["skipped"] == 1
+    assert "changed" in result["errors"][0]
+    assert "raw_email IS NOT DISTINCT FROM :original_raw" in executed[0][0]
+    assert "compressed IS NOT DISTINCT FROM :original_compressed" in executed[0][0]
+
+
+def test_manual_scan_reports_database_update_failure(monkeypatch):
+    class Scanner:
+        def requires_scan(self):
+            return True
+
+        def scan(self, raw):
+            return False, None, datetime.now(timezone.utc), True
+
+    monkeypatch.setattr(emails_mod, "_get_import_scanner", lambda: Scanner())
+    monkeypatch.setattr(
+        emails_mod,
+        "query",
+        lambda sql, params=None: FakeResult([{
+            "id": 11, "raw_email": b"raw email", "compressed": False,
+            "signature": None, "quarantined": False,
+        }]),
+    )
+    monkeypatch.setattr(emails_mod, "execute", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("db down")))
+
+    result = emails_mod._scan_email_ids([11], "tester")
+    assert result["scanned"] == 0
+    assert result["skipped"] == 1
+    assert "could not be saved" in result["errors"][0]
+
+
+def test_manual_scan_reports_unavailable_without_update(monkeypatch):
+    executed = []
+
+    class Scanner:
+        def requires_scan(self):
+            return True
+
+        def scan(self, raw):
+            return False, None, None, False
+
+    monkeypatch.setattr(emails_mod, "_get_import_scanner", lambda: Scanner())
+    monkeypatch.setattr(
+        emails_mod,
+        "query",
+        lambda sql, params=None: FakeResult([{
+            "id": 9, "raw_email": b"raw email", "compressed": False, "signature": None, "quarantined": False,
+        }]),
+    )
+    monkeypatch.setattr(
+        emails_mod,
+        "execute",
+        lambda sql, params=None: executed.append((sql, params)) or SimpleNamespace(rowcount=1),
+    )
+
+    result = emails_mod._scan_email_ids([9], "tester")
+    assert result["scanned"] == 0
+    assert result["skipped"] == 1
+    assert result["errors"]
+    assert executed == []
 
 
 # ---------------------------------------------------------------------------
@@ -228,7 +501,7 @@ def test_list_emails_no_signature_rows_short_circuit(monkeypatch):
             "id": 1, "source": "acct", "folder": "INBOX", "uid": 1,
             "subject": "legacy", "sender": "a@b.c", "recipients": "x@y.z",
             "date": None, "created_at": None, "virus_scanned": True,
-            "virus_detected": False, "virus_name": None,
+            "virus_detected": False, "virus_name": None, "scan_timestamp": None,
             "signature": None, "raw_email": None, "compressed": None,
         },
         {  # signature present -> integrity ok
@@ -236,17 +509,32 @@ def test_list_emails_no_signature_rows_short_circuit(monkeypatch):
             "subject": "current", "sender": "a@b.c", "recipients": "x@y.z",
             "date": None, "created_at": None, "virus_scanned": True,
             "virus_detected": False, "virus_name": None,
+            "scan_timestamp": datetime(2026, 8, 6, 15, 30, tzinfo=timezone.utc),
             "signature": sig, "raw_email": gzip.compress(b"raw bytes"), "compressed": True,
         },
     ]
     monkeypatch.setattr(emails_mod, "query", _list_emails_fake_query(rows))
+    monkeypatch.setattr(
+        emails_mod,
+        "format_datetime",
+        lambda value, _user_id: value.strftime("%Y-%m-%d %H:%M"),
+    )
 
     response = emails_mod.list_emails(_req(), page=1)
     html = response.body.decode("utf-8", errors="replace") if isinstance(response.body, bytes) else str(response.body)
 
     assert "No Sig" in html       # legacy row: no signature
     assert "Valid" in html        # current row: hash matches
+    assert "Scanned - clean" in html
+    assert "2026-08-06 15:30" in html
     assert "Invalid" not in html
+
+
+def test_emails_template_guards_scroll_button_lookup():
+    template = (API_DIR / "templates" / "emails.html").read_text(encoding="utf-8")
+    assert "if (!btn) return;" in template
+    assert "ClamAV scan completed: no virus detected" in template
+    assert "scanning is disabled" in template
 
 
 # ---------------------------------------------------------------------------

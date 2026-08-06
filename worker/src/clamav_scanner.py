@@ -1,10 +1,23 @@
 """
 ClamAV scanner module for virus scanning of emails.
 """
+import time
+
 import pyclamd
 from typing import Optional, Tuple
 from datetime import datetime, timezone
 from db import query, execute
+
+
+def _scan_result_details(result):
+    """Return the status/name pair from pyclamd's scan_stream response."""
+    if isinstance(result, dict):
+        result = next(iter(result.values()), None)
+    if isinstance(result, (tuple, list)):
+        status = result[0] if result else None
+        name = result[1] if len(result) > 1 else None
+        return status, name
+    return None, None
 
 
 def log_warning(message: str, details: str = ""):
@@ -108,6 +121,7 @@ class ClamAVScanner:
         self.port = port
         self._scanner = None
         self._enabled = True
+        self._settings_error = False
         self._action = 'quarantine'
         self._failure_count = 0
         self._first_failure_time = None
@@ -118,11 +132,16 @@ class ClamAVScanner:
         # 'clamav_failure_grace_seconds' setting.
         self._failure_grace_seconds = 300
         self._failure_alert_threshold = 2
+        self._settings_refresh_interval = 30.0
+        self._last_settings_load = 0.0
         self._load_settings()
+        self._last_settings_load = time.monotonic()
 
 
     def _load_settings(self):
         """Load ClamAV settings from database."""
+        previous_endpoint = (self.host, self.port)
+        was_settings_error = self._settings_error
         try:
             # Fetch every clamav_* setting. Previously this only selected four keys,
             # so clamav_quarantine_in_db, clamav_quarantine_retention_days,
@@ -138,11 +157,15 @@ class ClamAVScanner:
 
             settings_dict = {row['key']: row['value'] for row in settings}
 
-            # Load settings
-            self._enabled = settings_dict.get('clamav_enabled', 'true').lower() == 'true'
+            # Load settings. A successful reload clears a previous transient
+            # database/settings error so the worker can recover without restart.
+            self._enabled = str(settings_dict.get('clamav_enabled', 'true')).lower() == 'true'
             self.host = settings_dict.get('clamav_host', self.host)
             self.port = int(settings_dict.get('clamav_port', self.port))
             self._action = settings_dict.get('clamav_action', 'quarantine')
+            self._settings_error = False
+            if (self.host, self.port) != previous_endpoint:
+                self._scanner = None
             self._quarantine_in_db = settings_dict.get('clamav_quarantine_in_db', 'true').lower() == 'true'
             try:
                 self._quarantine_retention_days = int(settings_dict.get('clamav_quarantine_retention_days', '90'))
@@ -179,16 +202,32 @@ class ClamAVScanner:
                     log_warning('Failed to initialise quarantine encryption', str(e))
                     self._quarantine_encrypt = False
         except Exception as e:
-            # If we can't load settings, use defaults and disable scanning
+            # A settings/database failure must not silently turn scanning off.
+            # Keep the scanner in a not-ready state so callers fail closed and
+            # retry the provider message after configuration is available.
             log_warning("Could not load ClamAV settings from database", str(e))
-            create_alert(
-                'error',
-                'ClamAV Configuration Error',
-                'Failed to load virus scanning settings from database',
-                f'Error: {str(e)}. Virus scanning has been disabled.',
-                'clamav_config_error'
-            )
+            self._settings_error = True
+            if not was_settings_error:
+                create_alert(
+                    'error',
+                    'ClamAV Configuration Error',
+                    'Failed to load virus scanning settings from database',
+                    f'Error: {str(e)}. Incoming emails will wait for a completed scan.',
+                    'clamav_config_error'
+                )
             self._enabled = False
+
+    def refresh_settings(self, force: bool = False):
+        """Refresh settings periodically so UI changes apply without a restart."""
+        now = time.monotonic()
+        if force or now - self._last_settings_load >= self._settings_refresh_interval:
+            self._load_settings()
+            self._last_settings_load = now
+
+    def requires_scan(self) -> bool:
+        """Whether an email must be scanned before it may be archived."""
+        self.refresh_settings()
+        return self._enabled or self._settings_error
 
     def _get_clamav_status(self) -> str:
         """Get the last known ClamAV availability status from the database."""
@@ -300,6 +339,7 @@ class ClamAVScanner:
 
     def is_enabled(self) -> bool:
         """Check if virus scanning is enabled."""
+        self.refresh_settings()
         return self._enabled
 
     def get_action(self) -> str:
@@ -322,6 +362,7 @@ class ClamAVScanner:
             and scan-coverage metrics would report emails as scanned that
             never were.
         """
+        self.refresh_settings()
         if not self._enabled:
             return False, None, None, False
 
@@ -350,12 +391,19 @@ class ClamAVScanner:
                 # No virus detected
                 return False, None, scan_timestamp, True
 
-            # Virus detected - result format: ('FOUND', 'virus_name')
-            if result and result[0] == 'FOUND':
-                virus_name = result[1] if len(result) > 1 else 'Unknown'
-                return True, virus_name, scan_timestamp, True
+            # pyclamd returns {"stream": ("FOUND", "virus_name")} for a
+            # detection; older versions/tests may return the tuple directly.
+            status, virus_name = _scan_result_details(result)
+            normalized_status = status.strip().upper() if isinstance(status, str) else None
+            if normalized_status == 'FOUND':
+                return True, virus_name or 'Unknown', scan_timestamp, True
+            if normalized_status in {'OK', 'CLEAN'}:
+                return False, None, scan_timestamp, True
 
-            return False, None, scan_timestamp, True
+            # Never call an unrecognised clamd response a clean scan. This keeps
+            # the ingestion path fail-closed if pyclamd/clamd changes its reply.
+            log_warning("ClamAV returned an invalid scan response", repr(result))
+            return False, None, None, False
 
         except Exception as e:
             log_warning("Error during virus scan", str(e))

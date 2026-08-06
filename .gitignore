@@ -27,6 +27,9 @@ ENV/
 .DS_Store
 Thumbs.db
 
+# Freebuff Desktop local state (SQLite database and WAL/SHM sidecars)
+.freebuff/
+
 # Database
 *.db
 *.sqlite

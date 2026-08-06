@@ -404,8 +404,13 @@ def store_email(
     quarantined = False
 
     scanner = get_clamav_scanner()
-    if scanner.is_enabled():
+    if scanner.requires_scan():
         virus_detected, virus_name, scan_timestamp, virus_scanned = scanner.scan(email_bytes)
+        if not virus_scanned:
+            # Do not silently archive an email when ClamAV is enabled but the
+            # scan could not complete. Raising preserves the provider cursor so
+            # the message is retried after ClamAV recovers.
+            raise RuntimeError("ClamAV scan did not complete; email was not archived")
 
         if virus_detected:
             action = scanner.get_action()
@@ -521,10 +526,40 @@ Action Taken: {action}"""
                     raw_email = EXCLUDED.raw_email,
                     signature = COALESCE(EXCLUDED.signature, emails.signature),
                     compressed = EXCLUDED.compressed,
-                    virus_scanned = EXCLUDED.virus_scanned,
-                    virus_detected = EXCLUDED.virus_detected,
-                    virus_name = EXCLUDED.virus_name,
-                    scan_timestamp = EXCLUDED.scan_timestamp,
+                    -- Never erase a completed scan if a retry/re-fetch has no
+                    -- fresh result (for example while scanning is disabled).
+                    virus_scanned = CASE
+                        WHEN EXCLUDED.virus_scanned THEN TRUE
+                        WHEN emails.signature IS NOT NULL
+                             AND EXCLUDED.signature IS NOT NULL
+                             AND emails.signature = EXCLUDED.signature
+                            THEN emails.virus_scanned
+                        ELSE FALSE
+                    END,
+                    virus_detected = CASE
+                        WHEN EXCLUDED.virus_scanned THEN EXCLUDED.virus_detected
+                        WHEN emails.signature IS NOT NULL
+                             AND EXCLUDED.signature IS NOT NULL
+                             AND emails.signature = EXCLUDED.signature
+                            THEN emails.virus_detected
+                        ELSE FALSE
+                    END,
+                    virus_name = CASE
+                        WHEN EXCLUDED.virus_scanned THEN EXCLUDED.virus_name
+                        WHEN emails.signature IS NOT NULL
+                             AND EXCLUDED.signature IS NOT NULL
+                             AND emails.signature = EXCLUDED.signature
+                            THEN emails.virus_name
+                        ELSE NULL
+                    END,
+                    scan_timestamp = CASE
+                        WHEN EXCLUDED.virus_scanned THEN EXCLUDED.scan_timestamp
+                        WHEN emails.signature IS NOT NULL
+                             AND EXCLUDED.signature IS NOT NULL
+                             AND emails.signature = EXCLUDED.signature
+                            THEN emails.scan_timestamp
+                        ELSE NULL
+                    END,
                     quarantined = EXCLUDED.quarantined
                 """,
                 {

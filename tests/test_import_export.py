@@ -188,6 +188,9 @@ class _FakeScanner:
         self._enabled = enabled
         self._result = result
 
+    def requires_scan(self):
+        return self._enabled
+
     def is_enabled(self):
         return self._enabled
 
@@ -233,6 +236,13 @@ def test_insert_raw_email_ok_on_clean_scan(monkeypatch):
     scanner = _FakeScanner(enabled=True, result=(False, None, datetime.now(timezone.utc), True))
     monkeypatch.setattr(emails_mod, "_get_import_scanner", lambda: scanner)
     assert emails_mod._insert_raw_email(RAW_EMAIL, _req()) == "ok"
+
+
+def test_insert_raw_email_errors_when_enabled_scan_unavailable(monkeypatch):
+    _fake_db(monkeypatch)
+    scanner = _FakeScanner(enabled=True, result=(False, None, None, False))
+    monkeypatch.setattr(emails_mod, "_get_import_scanner", lambda: scanner)
+    assert emails_mod._insert_raw_email(RAW_EMAIL, _req()) == "error"
 
 
 def test_insert_raw_email_rejected_on_virus(monkeypatch):

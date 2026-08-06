@@ -248,4 +248,5 @@ PERMISSIONS: Dict[str, str] = {
     "manage_global_settings": "manage_global_settings",
     "manage_own_profile": "manage_own_profile",
     "import_emails": "import_emails",
+    "scan_emails": "scan_emails",
 }

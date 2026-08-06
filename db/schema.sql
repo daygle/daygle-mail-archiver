@@ -506,6 +506,7 @@ INSERT INTO permissions (name, description, category) VALUES
     ('delete_emails', 'Delete emails from archive', 'emails'),
     ('export_emails', 'Export emails to external formats', 'emails'),
     ('import_emails', 'Import emails from EML/MBOX', 'emails'),
+    ('scan_emails', 'Run ClamAV scans on archived emails', 'emails'),
     
     -- Quarantine Management
     ('view_quarantine', 'View quarantined emails', 'emails'),
@@ -579,7 +580,7 @@ INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r, permissions p
 WHERE r.name = 'email_manager' AND p.name IN (
-    'view_dashboard', 'view_emails', 'delete_emails', 'export_emails', 'import_emails',
+    'view_dashboard', 'view_emails', 'delete_emails', 'export_emails', 'import_emails', 'scan_emails',
     'view_quarantine', 'manage_quarantine', 'restore_quarantine', 'delete_quarantine', 'view_reports', 'export_reports',
     'view_fetch_accounts', 'manage_fetch_accounts', 'view_worker_status', 'view_alerts', 'manage_own_profile'
 )

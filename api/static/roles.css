@@ -24,7 +24,7 @@
 .roles-search input::placeholder { color: var(--text-tertiary); }
 .roles-system-filter { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: .85rem; white-space: nowrap; cursor: pointer; }
 .roles-system-filter input { accent-color: var(--accent-primary); width: 16px; height: 16px; }
-.role-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); gap: 18px; }
+.role-grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
 .role-card { display: flex; flex-direction: column; min-width: 0; min-height: 330px; padding: 20px; border: 1px solid var(--border-color); border-radius: var(--radius-lg); background: var(--bg-primary); box-shadow: var(--shadow-sm); transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base); }
 .role-card:hover { transform: translateY(-2px); border-color: var(--border-hover); box-shadow: var(--shadow-md); }
 .role-card[hidden] { display: none; }

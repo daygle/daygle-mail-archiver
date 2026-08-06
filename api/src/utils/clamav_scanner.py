@@ -10,6 +10,17 @@ from .db import query
 from .logger import log
 
 
+def _scan_result_details(result):
+    """Return the status/name pair from pyclamd's scan_stream response."""
+    if isinstance(result, dict):
+        result = next(iter(result.values()), None)
+    if isinstance(result, (tuple, list)):
+        status = result[0] if result else None
+        name = result[1] if len(result) > 1 else None
+        return status, name
+    return None, None
+
+
 class ClamAVScanner:
     """Simplified ClamAV virus scanner for email import."""
 
@@ -28,6 +39,8 @@ class ClamAVScanner:
         self.port = port
         self._scanner = None
         self._enabled = True
+        self._settings_error = False
+        self._action = "quarantine"
         self._load_settings()
 
     def _load_settings(self):
@@ -36,13 +49,14 @@ class ClamAVScanner:
             settings = query(
                 """
                 SELECT key, value FROM settings
-                WHERE key IN ('clamav_enabled', 'clamav_host', 'clamav_port', 'clamav_max_file_size')
+                WHERE key IN ('clamav_enabled', 'clamav_host', 'clamav_port', 'clamav_action', 'clamav_max_file_size')
                 """
             ).mappings().all()
 
             settings_dict = {s['key']: s['value'] for s in settings}
 
             self._enabled = settings_dict.get('clamav_enabled', 'true').lower() == 'true'
+            self._action = settings_dict.get('clamav_action', 'quarantine')
             self.host = settings_dict.get('clamav_host', os.getenv('CLAMAV_HOST', 'clamav'))
             self.port = int(settings_dict.get('clamav_port', os.getenv('CLAMAV_PORT', '3310')))
             try:
@@ -53,8 +67,12 @@ class ClamAVScanner:
 
         except Exception as e:
             log("warning", "ClamAV", f"Failed to load ClamAV settings: {e}", "")
+            # Keep a distinct not-ready state so callers do not silently store
+            # an email without a scan when settings cannot be read.
+            self._settings_error = True
             # Use environment variables or defaults if settings can't be loaded
             self._enabled = os.getenv('CLAMAV_ENABLED', 'true').lower() == 'true'
+            self._action = os.getenv('CLAMAV_ACTION', 'quarantine')
             self.host = os.getenv('CLAMAV_HOST', 'clamav')
             self.port = int(os.getenv('CLAMAV_PORT', '3310'))
 
@@ -62,16 +80,28 @@ class ClamAVScanner:
         """Check if virus scanning is enabled."""
         return self._enabled
 
+    def get_action(self) -> str:
+        """Return the configured action for a detected virus."""
+        return self._action
+
+    def requires_scan(self) -> bool:
+        """Whether an email must be scanned before it may be archived."""
+        return self._enabled or self._settings_error
+
     def _connect(self):
         """Connect to ClamAV daemon."""
         if self._scanner:
             return self._scanner
 
         try:
-            self._scanner = pyclamd.ClamdNetworkSocket(host=self.host, port=self.port)
-            # Test connection
-            self._scanner.ping()
-            return self._scanner
+            scanner = pyclamd.ClamdNetworkSocket(host=self.host, port=self.port)
+            # Test connection. pyclamd may return False instead of raising when
+            # clamd is reachable at the socket level but not ready to scan.
+            if not scanner.ping():
+                self._scanner = None
+                return None
+            self._scanner = scanner
+            return scanner
         except Exception as e:
             log("warning", "ClamAV", f"Failed to connect to ClamAV daemon: {e}", "")
             self._scanner = None
@@ -117,10 +147,11 @@ class ClamAVScanner:
                 # No virus detected
                 return False, None, scan_timestamp, True
 
-            # Virus detected - result format: ('FOUND', 'virus_name')
-            if result and result[0] == 'FOUND':
-                virus_name = result[1] if len(result) > 1 else 'Unknown'
-                return True, virus_name, scan_timestamp, True
+            # pyclamd returns {"stream": ("FOUND", "virus_name")} for a
+            # detection; older versions/tests may return the tuple directly.
+            status, virus_name = _scan_result_details(result)
+            if status == 'FOUND':
+                return True, virus_name or 'Unknown', scan_timestamp, True
 
             return False, None, scan_timestamp, True
 

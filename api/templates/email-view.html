@@ -18,6 +18,17 @@
             <span class="hide-mobile">Download EML</span>
         </a>
         {% endif %}
+        {% if 'scan_emails' in perms %}
+        {% if not email.quarantined %}
+        <form method="post" action="/emails/scan" style="display:inline;">
+            <input type="hidden" name="ids" value="{{ email.id }}">
+            <button type="submit" class="btn btn-info btn-sm flex-shrink-1 w-auto" title="Run ClamAV scan; infected results are flagged for review">
+                <i class="fas fa-microscope"></i>
+                <span class="hide-mobile">Scan with ClamAV</span>
+            </button>
+        </form>
+        {% endif %}
+        {% endif %}
         {% if 'manage_quarantine' in perms %}
         {% if not email.quarantined %}
         <form method="post" action="/emails/{{ email.id }}/quarantine" style="display:inline;">
@@ -187,7 +198,7 @@
                                         </span>
                                         {% endif %}
                                     {% else %}
-                                    <span class="badge badge-secondary mt-1">
+                                    <span class="badge badge-secondary mt-1" title="ClamAV scan not completed or scanning is disabled">
                                         <i class="fas fa-question"></i> Not scanned
                                     </span>
                                     {% endif %}
@@ -232,29 +243,32 @@
                                 </div>
                             </div>
                         </div>
-                        {% if email.virus_scanned %}
                         <div class="col-12">
                             <div class="email-detail-item">
-                                <label class="email-detail-label">Virus Scan</label>
+                                <label class="email-detail-label">ClamAV Scan</label>
+                                <small class="d-block text-secondary mb-2">Manual scans flag infected messages for review; use Quarantine to move them.</small>
                                 <div class="email-detail-value">
                                     {% if email.virus_detected %}
                                     <span class="badge badge-danger">
                                         <i class="fas fa-exclamation-triangle"></i> INFECTED: {{ email.virus_name }}
                                     </span>
-                                    {% else %}
+                                    {% elif email.virus_scanned %}
                                     <span class="badge badge-success">
-                                        <i class="fas fa-check"></i> Clean
+                                        <i class="fas fa-check"></i> Scanned - Clean
+                                    </span>
+                                    {% else %}
+                                    <span class="badge badge-secondary" title="ClamAV scan not completed or scanning is disabled">
+                                        <i class="fas fa-question"></i> Not scanned
                                     </span>
                                     {% endif %}
                                     {% if email.scan_timestamp %}
                                     <br><small class="text-secondary">
-                                        Scanned: {{ email.scan_timestamp_formatted or 'N/A' }}
+                                        Scan completed: {{ email.scan_timestamp_formatted or 'N/A' }}
                                     </small>
                                     {% endif %}
                                 </div>
                             </div>
                         </div>
-                        {% endif %}
                     </div>
                 </div>
             </div>

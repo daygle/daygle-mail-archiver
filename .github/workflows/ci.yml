@@ -23,16 +23,25 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install ruff
-        run: python -m pip install --upgrade pip ruff==0.16.1
+      - name: Install development dependencies
+        run: python -m pip install --upgrade pip && python -m pip install -r requirements-dev.txt
 
       - name: Byte-compile all sources
         run: python -m compileall -q api/src worker/src
+
+      - name: Verify vendored frontend assets
+        run: pytest -q tests/test_vendor_assets.py
 
       - name: Ruff (error-level checks only)
         # Restrict to checks that catch real defects (syntax errors, undefined
         # names, invalid comparisons) rather than style, so the gate is stable.
         run: ruff check --select E9,F63,F7,F82 api/src worker/src
+
+      - name: Audit API Python dependencies
+        run: pip-audit -r api/requirements.txt
+
+      - name: Audit worker Python dependencies
+        run: pip-audit -r worker/requirements.txt
 
   docker-build:
     name: Docker build (${{ matrix.service }})

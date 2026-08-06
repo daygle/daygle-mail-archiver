@@ -462,8 +462,20 @@
         submitQuarantineAction('delete', id);
     };
 
-    // Scroll-to-top button
+})();
+</script>
+
+<!-- Scroll to top button -->
+<button id="scroll-to-top-btn" class="scroll-to-top" aria-label="Scroll to top" title="Back to top">
+    <i class="fas fa-arrow-up"></i>
+</button>
+
+<script>
+// Bind after the button exists in the DOM.
+(function () {
     const scrollBtn = document.getElementById('scroll-to-top-btn');
+    if (!scrollBtn) return;
+
     window.addEventListener('scroll', function () {
         scrollBtn.classList.toggle('visible', window.scrollY > 300);
     });
@@ -472,10 +484,5 @@
     });
 })();
 </script>
-
-<!-- Scroll to top button -->
-<button id="scroll-to-top-btn" class="scroll-to-top" aria-label="Scroll to top" title="Back to top">
-    <i class="fas fa-arrow-up"></i>
-</button>
 
 {% endblock %}

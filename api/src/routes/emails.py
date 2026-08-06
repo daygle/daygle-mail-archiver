@@ -38,6 +38,139 @@ def _get_import_scanner() -> ClamAVScanner:
     return _import_scanner
 
 
+def _scanner_requires_scan(scanner) -> bool:
+    """Return whether the scanner is configured to perform a scan.
+
+    The fallback keeps this helper compatible with small test doubles and older
+    scanner implementations while the production scanner exposes requires_scan.
+    """
+    requires_scan = getattr(scanner, "requires_scan", None)
+    return requires_scan() if callable(requires_scan) else scanner.is_enabled()
+
+
+def _scan_email_ids(ids: List[int], username: str) -> dict:
+    """Scan archived emails and persist the result for each eligible row.
+
+    Scanning is deliberately separate from quarantine: a manual scan updates
+    the email's ClamAV metadata, while the user can review the result and use
+    the existing quarantine action if a threat is found. It never silently
+    deletes or moves an existing archived email, even when a virus is found.
+    """
+    result = {"scanned": 0, "clean": 0, "infected": 0, "skipped": 0, "errors": []}
+    if not ids:
+        return result
+
+    try:
+        scanner = _get_import_scanner()
+        if not _scanner_requires_scan(scanner):
+            result["errors"].append("ClamAV scanning is disabled in Global Settings.")
+            return result
+    except Exception as exc:
+        result["errors"].append(f"ClamAV scanner is unavailable: {exc}")
+        return result
+
+    for email_id in ids:
+        try:
+            row = query(
+                """
+                SELECT id, raw_email, compressed, signature, quarantined
+                FROM emails
+                WHERE id = :id
+                """,
+                {"id": email_id},
+            ).mappings().first()
+        except Exception as exc:
+            result["skipped"] += 1
+            result["errors"].append(f"Email {email_id} could not be loaded: {exc}")
+            continue
+        if not row:
+            result["skipped"] += 1
+            result["errors"].append(f"Email {email_id} was not found.")
+            continue
+        if row.get("quarantined"):
+            result["skipped"] += 1
+            result["errors"].append(f"Email {email_id} is already quarantined.")
+            continue
+        if row.get("raw_email") is None:
+            result["skipped"] += 1
+            result["errors"].append(f"Email {email_id} has no raw email data to scan.")
+            continue
+
+        try:
+            raw = decompress(row["raw_email"], row.get("compressed", False))
+            original_signature = row.get("signature")
+            original_raw = row["raw_email"]
+            original_compressed = row.get("compressed", False)
+            detected, virus_name, scan_timestamp, scanned = scanner.scan(raw)
+        except Exception as exc:
+            result["skipped"] += 1
+            result["errors"].append(f"Email {email_id} could not be scanned: {exc}")
+            continue
+
+        if not scanned or scan_timestamp is None:
+            result["skipped"] += 1
+            result["errors"].append(f"Email {email_id}: ClamAV did not complete the scan.")
+            continue
+
+        try:
+            updated = execute(
+                """
+                UPDATE emails
+                SET virus_scanned = :virus_scanned,
+                    virus_detected = :virus_detected,
+                    virus_name = :virus_name,
+                    scan_timestamp = :scan_timestamp
+                WHERE id = :id
+                  AND quarantined = FALSE
+                  AND signature IS NOT DISTINCT FROM :original_signature
+                  AND raw_email IS NOT DISTINCT FROM :original_raw
+                  AND compressed IS NOT DISTINCT FROM :original_compressed
+                """,
+                {
+                    "id": email_id,
+                    "original_signature": original_signature,
+                    "original_raw": original_raw,
+                    "original_compressed": original_compressed,
+                    "virus_scanned": True,
+                    "virus_detected": bool(detected),
+                    "virus_name": virus_name if detected else None,
+                    "scan_timestamp": scan_timestamp,
+                },
+            )
+        except Exception as exc:
+            result["skipped"] += 1
+            result["errors"].append(f"Email {email_id} scan result could not be saved: {exc}")
+            continue
+        if getattr(updated, "rowcount", 1) == 0:
+            result["skipped"] += 1
+            result["errors"].append(f"Email {email_id} changed before its scan result could be saved.")
+            continue
+
+        result["scanned"] += 1
+        if detected:
+            result["infected"] += 1
+            log(
+                "warning",
+                "ClamAV",
+                f"User '{username}' manually scanned infected email {email_id}: {virus_name or 'Unknown'}",
+                f"Email ID: {email_id}, virus: {virus_name or 'Unknown'}",
+            )
+            try:
+                create_alert(
+                    "error",
+                    "Virus Detected During Manual Scan",
+                    f"ClamAV detected {virus_name or 'an unknown threat'} in email {email_id}.",
+                    f"User: {username}\nEmail ID: {email_id}\nVirus: {virus_name or 'Unknown'}",
+                    trigger_key="virus_detected",
+                )
+            except Exception as exc:
+                log("error", "ClamAV", f"Failed to create manual scan alert: {exc}", "")
+        else:
+            result["clean"] += 1
+
+    return result
+
+
 def require_login(request: Request):
     return "user_id" in request.session
 
@@ -288,7 +421,7 @@ def list_emails(
     rows = query(
         f"""
         SELECT id, source, folder, uid, subject, sender, recipients, date, created_at,
-               virus_scanned, virus_detected, virus_name, signature,
+               virus_scanned, virus_detected, virus_name, scan_timestamp, signature,
                -- Only transfer raw bytes for rows that have a signature to check;
                -- signature-less rows short-circuit to 'no_signature' without them.
                CASE WHEN signature IS NOT NULL THEN raw_email ELSE NULL END AS raw_email,
@@ -347,8 +480,12 @@ def list_emails(
             integrity = "unknown"
             integrity_reason = f"Could not read attachment file from storage: {str(e)}"
 
-        # Format email date according to user preferences
+        # Format email and scan timestamps according to user preferences.
         rr["date_formatted"] = format_email_date(rr["date"], rr.get("created_at"), user_id)
+        rr["scan_timestamp_formatted"] = (
+            format_datetime(rr["scan_timestamp"], user_id)
+            if rr.get("scan_timestamp") else None
+        )
 
         # remove large raw fields before sending to template
         rr.pop("raw_email", None)
@@ -442,8 +579,16 @@ def _insert_raw_email(raw: bytes, request: Request, source: str = "import", fold
         scan_timestamp = None
 
         scanner = _get_import_scanner()
-        if scanner.is_enabled():
+        if scanner.requires_scan():
             virus_detected, virus_name, scan_timestamp, virus_scanned = scanner.scan(raw)
+            if not virus_scanned:
+                log(
+                    "error",
+                    "Import",
+                    "ClamAV scan did not complete; imported email was not stored",
+                    f"Source: {source}, Folder: {folder}",
+                )
+                return "error"
 
             if virus_detected:
                 username = request.session.get("username", "unknown")
@@ -883,6 +1028,42 @@ def verify_email(request: Request, email_id: int):
     # Return JSON result
     from fastapi.responses import JSONResponse
     return JSONResponse({"id": email_id, "match": match, "stored_signature": stored_sig, "current_signature": current_sig})
+
+
+@router.post("/emails/scan")
+def scan_emails(
+    request: Request,
+    ids: List[int] = Form(...),
+):
+    """Manually scan one or more archived emails with ClamAV."""
+    if not require_login(request):
+        return RedirectResponse("/login", status_code=303)
+
+    checker = PermissionChecker(request)
+    if not checker.has_permission("scan_emails"):
+        return HTMLResponse("Access denied: Insufficient permissions to scan emails", status_code=403)
+
+    if not isinstance(ids, list):
+        ids = [ids]
+    username = request.session.get("username", "unknown")
+    scan_result = _scan_email_ids(ids, username)
+
+    parts = [f"Scanned {scan_result['scanned']} email(s)."]
+    if scan_result["clean"]:
+        parts.append(f"{scan_result['clean']} clean.")
+    if scan_result["infected"]:
+        parts.append(f"{scan_result['infected']} infected - review and quarantine as needed.")
+    if scan_result["skipped"]:
+        parts.append(f"{scan_result['skipped']} skipped.")
+    if scan_result["errors"]:
+        parts.append("Issues: " + " ".join(scan_result["errors"][:5]))
+
+    category = "error" if scan_result["errors"] and not scan_result["scanned"] else (
+        "warning" if scan_result["infected"] or scan_result["errors"] else "success"
+    )
+    flash(request, " ".join(parts), category)
+    log("info", "ClamAV", f"User '{username}' manually scanned {len(ids)} email(s)", "")
+    return RedirectResponse("/emails", status_code=303)
 
 
 @router.post("/emails/{email_id}/quarantine")

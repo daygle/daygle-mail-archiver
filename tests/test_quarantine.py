@@ -320,6 +320,14 @@ def _boom(name):
     return fn
 
 
+def test_quarantine_template_binds_scroll_button_after_rendering():
+    template = (API_DIR / "templates" / "quarantine.html").read_text(encoding="utf-8")
+    button_pos = template.index('id="scroll-to-top-btn"')
+    script_pos = template.index("scrollBtn.addEventListener")
+    assert button_pos < script_pos
+    assert "if (!scrollBtn) return;" in template
+
+
 def test_list_quarantine_short_circuits_no_signature_rows(monkeypatch):
     captured = []
     rows = [{

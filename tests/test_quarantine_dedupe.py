@@ -43,6 +43,9 @@ class _VirusScanner:
     def is_enabled(self):
         return True
 
+    def requires_scan(self):
+        return True
+
     def scan(self, _raw):
         return True, "Eicar-Test", datetime.now(timezone.utc), True
 
@@ -75,6 +78,86 @@ def test_worker_duplicate_quarantine_is_idempotent(monkeypatch):
     assert state["quarantine_attempts"] == 2
     assert len(state["quarantine_keys"]) == 1
     assert state["email_inserts"] == 0
+
+
+def test_worker_does_not_archive_when_clamav_scan_does_not_complete(monkeypatch):
+    """Enabled ClamAV failures must preserve the fetch cursor for retry."""
+    state = {"email_inserts": 0}
+
+    def fake_execute(sql, params=None):
+        if "INSERT INTO emails" in sql:
+            state["email_inserts"] += 1
+        return SimpleNamespace(rowcount=1)
+
+    class UnscannedScanner(_VirusScanner):
+        def scan(self, _raw):
+            return False, None, None, False
+
+    monkeypatch.setattr(worker, "execute", fake_execute)
+    monkeypatch.setattr(worker, "get_clamav_scanner", lambda: UnscannedScanner())
+
+    with pytest.raises(RuntimeError, match="ClamAV scan did not complete"):
+        worker.store_email("account", "INBOX", 42, RAW_EMAIL)
+    assert state["email_inserts"] == 0
+
+
+def test_worker_persists_completed_clean_scan_metadata(monkeypatch):
+    """A clean fetched email records both scan completion and its timestamp."""
+    state = {"email_insert": None}
+    scan_time = datetime(2030, 1, 1, 12, 0, tzinfo=timezone.utc)
+
+    class CleanScanner(_VirusScanner):
+        def scan(self, _raw):
+            return False, None, scan_time, True
+
+    def fake_execute(sql, params=None):
+        if "INSERT INTO emails" in sql:
+            state["email_insert"] = params
+        return SimpleNamespace(rowcount=1)
+
+    monkeypatch.setattr(worker, "execute", fake_execute)
+    monkeypatch.setattr(worker, "get_clamav_scanner", lambda: CleanScanner())
+
+    assert worker.store_email("account", "INBOX", 42, RAW_EMAIL) is True
+    assert state["email_insert"]["virus_scanned"] is True
+    assert state["email_insert"]["virus_detected"] is False
+    assert state["email_insert"]["scan_timestamp"] == scan_time
+
+
+def test_worker_preserves_completed_scan_metadata_on_unscanned_upsert():
+    worker_source = (ROOT / "worker" / "src" / "worker.py").read_text(encoding="utf-8")
+    start = worker_source.index("ON CONFLICT (source, folder, uid) DO UPDATE SET")
+    end = worker_source.index("quarantined = EXCLUDED.quarantined", start)
+    statement = worker_source[start:end]
+    assert "WHEN EXCLUDED.virus_scanned THEN TRUE" in statement
+    assert "emails.signature = EXCLUDED.signature" in statement
+    assert "ELSE FALSE" in statement
+    assert "ELSE NULL" in statement
+
+
+def test_worker_archives_with_explicit_unscanned_metadata_when_disabled(monkeypatch):
+    """An intentional global disable remains allowed and is visible as unscanned."""
+    state = {"email_insert": None}
+
+    class DisabledScanner(_VirusScanner):
+        def requires_scan(self):
+            return False
+
+        def is_enabled(self):
+            return False
+
+    def fake_execute(sql, params=None):
+        if "INSERT INTO emails" in sql:
+            state["email_insert"] = params
+        return SimpleNamespace(rowcount=1)
+
+    monkeypatch.setattr(worker, "execute", fake_execute)
+    monkeypatch.setattr(worker, "get_clamav_scanner", lambda: DisabledScanner())
+
+    assert worker.store_email("account", "INBOX", 42, RAW_EMAIL) is True
+    assert state["email_insert"]["virus_scanned"] is False
+    assert state["email_insert"]["virus_detected"] is False
+    assert state["email_insert"]["scan_timestamp"] is None
 
 
 def test_worker_quarantine_database_failure_is_retried(monkeypatch):

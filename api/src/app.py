@@ -199,13 +199,6 @@ else:
 
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
-fa_webfonts_dir = static_dir / "vendor" / "fontawesome" / "webfonts"
-if fa_webfonts_dir.exists():
-    app.mount(
-        "/static/vendor/webfonts",
-        StaticFiles(directory=str(fa_webfonts_dir)),
-        name="fa_webfonts",
-    )
 
 # ---------------------------------------------------------
 # Routers

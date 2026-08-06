@@ -185,6 +185,21 @@ def test_assign_rejects_unknown_role_ids():
 # ---------------------------------------------------------------------------
 
 
+def test_roles_page_uses_single_column_role_layout():
+    css = (API_DIR / "static" / "roles.css").read_text(encoding="utf-8")
+    assert ".role-grid" in css
+    assert "grid-template-columns: 1fr" in css
+    assert "repeat(auto-fill" not in css
+
+
+def test_schema_seeds_manual_scan_permission_for_email_manager():
+    schema = (API_DIR.parent / "db" / "schema.sql").read_text(encoding="utf-8")
+    assert "('scan_emails', 'Run ClamAV scans on archived emails', 'emails')" in schema
+    email_manager_start = schema.index("WHERE r.name = 'email_manager'")
+    email_manager_end = schema.index("-- Auditor permissions", email_manager_start)
+    assert "'scan_emails'" in schema[email_manager_start:email_manager_end]
+
+
 def test_grant_fails_closed_on_db_error(monkeypatch):
     def boom(sql, params=None):
         raise RuntimeError("db down")

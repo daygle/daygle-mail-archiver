@@ -6,7 +6,7 @@
 {% set perms = request.session.permissions or [] %}
 {# Checkbox column + bulk actions are available if the user can do EITHER
    bulk operation (quarantine needs manage_quarantine, delete needs delete_emails) #}
-{% set show_bulk = 'delete_emails' in perms or 'manage_quarantine' in perms %}
+{% set show_bulk = 'delete_emails' in perms or 'manage_quarantine' in perms or 'scan_emails' in perms %}
 
 {% if filter %}
 {% set filter_labels = {
@@ -97,6 +97,12 @@
                 <span class="hide-mobile">Search & Filter</span>
             </button>
 
+            {% if 'scan_emails' in perms %}
+            <button type="button" class="btn btn-info btn-sm" id="scan-selected-btn" disabled onclick="submitManualScan()" title="Run ClamAV scan; infected results are flagged for review">
+                <i class="fas fa-microscope"></i>
+                <span class="hide-mobile">Scan Selected</span>
+            </button>
+            {% endif %}
             {% if 'manage_quarantine' in perms %}
             <button type="button" class="btn btn-warning btn-sm" id="quarantine-selected-btn" disabled onclick="showQuarantineModal()">
                 <i class="fas fa-shield-virus"></i>
@@ -142,7 +148,7 @@
                             <th>{{ sort_link("subject", "Subject") }}</th>
                             <th>Integrity</th>
                             <th class="col-center">
-                                <i class="fas fa-shield-virus" title="Virus Scan"></i>
+                                <i class="fas fa-shield-virus" title="ClamAV Scan Status"></i>
                             </th>
                         </tr>
                     </thead>
@@ -184,17 +190,23 @@
                             </td>
                             <td style="text-align: center;">
                                 {% if email.virus_detected %}
-                                <span class="badge badge-danger" title="Virus detected: {{ email.virus_name }}">
+                                <span class="badge badge-danger" title="ClamAV detected: {{ email.virus_name }}">
                                     <i class="fas fa-exclamation-triangle"></i>
+                                    <span>Virus detected</span>
                                 </span>
                                 {% elif email.virus_scanned %}
-                                <span class="badge badge-success" title="Clean">
+                                <span class="badge badge-success" title="ClamAV scan completed: no virus detected">
                                     <i class="fas fa-check"></i>
+                                    <span>Scanned - clean</span>
                                 </span>
                                 {% else %}
-                                <span class="badge badge-secondary" title="Not scanned">
+                                <span class="badge badge-secondary" title="ClamAV scan not completed or scanning is disabled">
                                     <i class="fas fa-minus"></i>
+                                    <span>Not scanned</span>
                                 </span>
+                                {% endif %}
+                                {% if email.virus_scanned and email.scan_timestamp_formatted %}
+                                <small class="d-block text-secondary mt-1">{{ email.scan_timestamp_formatted }}</small>
                                 {% endif %}
                             </td>
                         </tr>
@@ -366,6 +378,7 @@
   (function () {
     const selectAll = document.getElementById('select-all');
     const checkboxes = document.querySelectorAll('.email-checkbox');
+    const scanBtn = document.getElementById('scan-selected-btn');
     const quarantineBtn = document.getElementById('quarantine-selected-btn');
     const deleteBtn = document.getElementById('delete-selected-btn');
     const bulkForm = document.getElementById('emails-bulk-form');
@@ -375,6 +388,7 @@
       const checkedBoxes = Array.from(checkboxes).filter(cb => cb.checked);
       const anyChecked = checkedBoxes.length > 0;
 
+      if (scanBtn) scanBtn.disabled = !anyChecked;
       if (quarantineBtn) quarantineBtn.disabled = !anyChecked;
       if (deleteBtn) deleteBtn.disabled = !anyChecked;
 
@@ -465,6 +479,23 @@
       window.scrollTo(0, 0);
     };
 
+    window.submitManualScan = function() {
+      const checkedBoxes = Array.from(checkboxes).filter(cb => cb.checked);
+      if (!checkedBoxes.length) return;
+      const form = document.createElement('form');
+      form.method = 'post';
+      form.action = '/emails/scan';
+      checkedBoxes.forEach(cb => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'ids';
+        input.value = cb.value;
+        form.appendChild(input);
+      });
+      document.body.appendChild(form);
+      form.submit();
+    };
+
     window.performDelete = function(mode) {
       const modeInput = document.createElement('input');
       modeInput.type = 'hidden';
@@ -475,9 +506,20 @@
     };
   })();
 
-  // Scroll-to-top button
+</script>
+
+<!-- Scroll to top button -->
+
+<button id="scroll-to-top-btn" class="scroll-to-top" aria-label="Scroll to top" title="Back to top">
+    <i class="fas fa-arrow-up"></i>
+</button>
+
+<script>
+  // Bind after the button exists in the DOM.
   (function () {
     const btn = document.getElementById('scroll-to-top-btn');
+    if (!btn) return;
+
     window.addEventListener('scroll', function () {
       btn.classList.toggle('visible', window.scrollY > 300);
     });
@@ -486,9 +528,4 @@
     });
   })();
 </script>
-
-<!-- Scroll to top button -->
-<button id="scroll-to-top-btn" class="scroll-to-top" aria-label="Scroll to top" title="Back to top">
-    <i class="fas fa-arrow-up"></i>
-</button>
 {% endblock %}
