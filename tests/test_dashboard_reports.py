@@ -238,3 +238,26 @@ def test_normalize_dashboard_layout_limits_widget_count():
     layout = dashboard_mod.DashboardLayout(widgets=widgets)
     normalized = dashboard_mod._normalize_dashboard_layout(layout)
     assert len(normalized) == 64
+
+
+def test_reports_charts_fill_their_containers():
+    """All dynamically-created report charts must use the full card width."""
+    template = (API_DIR / "templates" / "reports.html").read_text(encoding="utf-8")
+    styles = (API_DIR / "static" / "styles.css").read_text(encoding="utf-8")
+
+    # The performance charts are created after the initial chart setup, so they
+    # need the same explicit sizing policy as the charts initialized on load.
+    assert "text: 'Processing Performance Over Time'" in template
+    assert "text: 'Worker Activity Distribution'" in template
+    storage_start = template.index("function loadStorageUtilizationReport()")
+    storage_end = template.index("// Load Retention Policy Report", storage_start)
+    storage_script = template[storage_start:storage_end]
+    assert "text: 'Storage Usage Over Time'" in storage_script
+    assert "maintainAspectRatio: false" in storage_script
+    assert template.count("maintainAspectRatio: false") >= 10
+    performance_start = template.index("function loadSystemPerformanceReport()")
+    performance_end = template.index("// Load Security & Access Report", performance_start)
+    performance_script = template[performance_start:performance_end]
+    assert performance_script.count("maintainAspectRatio: false") == 2
+    assert ".chart-container > canvas" in styles
+    assert "width: 100% !important" in styles

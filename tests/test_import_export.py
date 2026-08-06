@@ -287,7 +287,7 @@ def test_transfer_page_allowed_with_export_only(monkeypatch):
     # Export card body text is unique to the export card; the import card's
     # submit button must not be rendered without import_emails.
     assert "Export all emails for a selected fetch account" in html
-    assert "Upload and Import" not in html
+    assert '<button type="submit" form="import-form"' not in html
 
 
 def test_transfer_page_allowed_with_import_only(monkeypatch):
@@ -296,7 +296,8 @@ def test_transfer_page_allowed_with_import_only(monkeypatch):
     response = emails_mod.emails_transfer_page(_req())
     assert response.status_code == 200
     html = response.body.decode("utf-8", errors="replace") if isinstance(response.body, bytes) else str(response.body)
-    assert "Upload and Import" in html
+    assert '<button type="submit" form="import-form"' in html
+    assert "<span>Upload/Import</span>" in html
     assert "Export all emails for a selected fetch account" not in html
 
 
@@ -306,7 +307,8 @@ def test_transfer_page_shows_both_cards_with_both_permissions(monkeypatch):
     response = emails_mod.emails_transfer_page(_req())
     assert response.status_code == 200
     html = response.body.decode("utf-8", errors="replace") if isinstance(response.body, bytes) else str(response.body)
-    assert "Upload and Import" in html
+    assert '<button type="submit" form="import-form"' in html
+    assert "<span>Upload/Import</span>" in html
     assert "Export all emails for a selected fetch account" in html
     assert "acct1" in html and "acct2" in html
 
