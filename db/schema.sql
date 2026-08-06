@@ -288,34 +288,44 @@ ALTER TABLE quarantined_emails
 
 CREATE INDEX IF NOT EXISTS quarantined_emails_quarantined_at_idx ON quarantined_emails(quarantined_at DESC);
 
+-- Add the nullable link before duplicate cleanup references it. This ordering is
+-- required on fresh installs as well as upgrades from older schemas.
+ALTER TABLE emails
+    ADD COLUMN IF NOT EXISTS quarantine_id INTEGER REFERENCES quarantined_emails(id) ON DELETE SET NULL;
+
 -- A message may only have one quarantine record for its source/folder/UID.
 -- Keep the oldest record when upgrading databases that accumulated duplicates
 -- before this index existed; NULL UIDs remain exempt because they cannot identify
 -- a mail-server message reliably (and legacy manual rows may not have one).
 UPDATE emails e
-SET quarantine_id = retained.id
+SET quarantine_id = retained.retained_id
 FROM quarantined_emails duplicate
-JOIN quarantined_emails retained
+JOIN (
+    SELECT original_source, original_folder, original_uid, MIN(id) AS retained_id
+    FROM quarantined_emails
+    WHERE original_uid IS NOT NULL
+    GROUP BY original_source, original_folder, original_uid
+) retained
   ON retained.original_source = duplicate.original_source
  AND retained.original_folder = duplicate.original_folder
  AND retained.original_uid = duplicate.original_uid
- AND retained.id < duplicate.id
 WHERE e.quarantine_id = duplicate.id;
 
 DELETE FROM quarantined_emails q
-USING quarantined_emails duplicate
+USING (
+    SELECT original_source, original_folder, original_uid, MIN(id) AS retained_id
+    FROM quarantined_emails
+    WHERE original_uid IS NOT NULL
+    GROUP BY original_source, original_folder, original_uid
+) duplicate
 WHERE q.original_source = duplicate.original_source
   AND q.original_folder = duplicate.original_folder
   AND q.original_uid = duplicate.original_uid
-  AND q.id > duplicate.id;
+  AND q.id > duplicate.retained_id;
 
 CREATE UNIQUE INDEX IF NOT EXISTS quarantined_emails_source_folder_uid_idx
     ON quarantined_emails(original_source, original_folder, original_uid)
     WHERE original_uid IS NOT NULL;
-
--- Add optional foreign key on emails to reference quarantine record (nullable)
-ALTER TABLE emails
-    ADD COLUMN IF NOT EXISTS quarantine_id INTEGER REFERENCES quarantined_emails(id) ON DELETE SET NULL;
 
 -- Add date_parsed column for chronological sorting of emails by their RFC822 date header
 -- (migration for existing deployments; new installations already have this in CREATE TABLE above)

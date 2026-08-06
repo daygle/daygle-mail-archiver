@@ -155,12 +155,13 @@ def test_schema_enforces_one_non_null_quarantine_identity_and_cleans_legacy_dupl
     schema = (ROOT / "db" / "schema.sql").read_text(encoding="utf-8")
 
     assert "UPDATE emails e" in schema
-    assert "SET quarantine_id = retained.id" in schema
+    assert "SET quarantine_id = retained.retained_id" in schema
+    assert "MIN(id) AS retained_id" in schema
     assert "DELETE FROM quarantined_emails q" in schema
     assert "q.original_source = duplicate.original_source" in schema
     assert "q.original_folder = duplicate.original_folder" in schema
     assert "q.original_uid = duplicate.original_uid" in schema
-    assert "q.id > duplicate.id" in schema
+    assert "q.id > duplicate.retained_id" in schema
     assert (
         "CREATE UNIQUE INDEX IF NOT EXISTS quarantined_emails_source_folder_uid_idx"
         in schema
