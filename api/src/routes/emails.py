@@ -91,6 +91,7 @@ def list_emails(
             page_size = int(global_result["value"])
 
     page_size = min(max(10, page_size), 500)  # Ensure between 10-500
+    page = max(1, page)  # Guard against page <= 0 producing a negative OFFSET
     offset = (page - 1) * page_size
 
     where = []

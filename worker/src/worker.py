@@ -1,6 +1,7 @@
 import time
 import gzip
 import email
+import hashlib
 from datetime import datetime, timezone, timedelta
 from email.utils import parsedate_to_datetime
 from collections import defaultdict
@@ -14,6 +15,21 @@ from clamav_scanner import ClamAVScanner
 from utils.email_parser import decode_header
 
 POLL_INTERVAL_FALLBACK = 300  # seconds
+
+
+def stable_uid(email_id: str) -> int:
+    """Derive a stable, non-negative synthetic UID from a provider message id.
+
+    Gmail/O365 identify messages by opaque string ids, but the emails table keys
+    on an INTEGER `uid`. Python's built-in hash() is salted per process
+    (PYTHONHASHSEED), so it produces different values across worker restarts,
+    causing the same message to be re-stored under a new uid instead of being
+    deduplicated by ON CONFLICT (source, folder, uid). Use SHA-256 so the mapping
+    is deterministic. The result is kept below 10**9 to fit a PostgreSQL INTEGER
+    column (max 2,147,483,647) and to preserve the previous value range.
+    """
+    digest = hashlib.sha256(email_id.encode("utf-8")).digest()
+    return int.from_bytes(digest[:8], "big") % (10**9)
 
 
 def _parse_quoted_imap_token(value: str):
@@ -602,10 +618,10 @@ def process_gmail_account(account):
             # Get email in raw RFC822 format
             raw_email = client.get_message_raw(email_id)
             if raw_email:
-                # Use email_id hash as UID equivalent
-                uid = abs(hash(email_id)) % (10**9)
+                # Use a stable hash of the message id as the UID equivalent
+                uid = stable_uid(email_id)
                 store_email(source, folder, uid, raw_email)
-                
+
                 # Delete from Gmail (move to trash) if configured
                 if delete_after_processing:
                     if not client.delete_message(email_id):
@@ -646,10 +662,10 @@ def process_o365_account(account):
             # Get email in MIME format
             raw_email = client.get_message_mime(email_id)
             if raw_email:
-                # Use email_id hash as UID equivalent
-                uid = abs(hash(email_id)) % (10**9)
+                # Use a stable hash of the message id as the UID equivalent
+                uid = stable_uid(email_id)
                 store_email(source, folder, uid, raw_email)
-                
+
                 # Delete from Office 365 if configured
                 if delete_after_processing:
                     if not client.delete_message(email_id):
@@ -829,8 +845,11 @@ def purge_old_emails():
     ).mappings().all()
 
     deletion_count = len(emails_to_delete)
-    if deletion_count == 0:
-        return
+
+    # NOTE: Do not return early when deletion_count == 0. The quarantine-retention
+    # purge below has its own (independent) cutoff and must still run even when no
+    # emails in the main table have expired. The IMAP deletion block still needs to
+    # execute so that `accounts_by_name` is populated for the quarantine purge.
 
     # Delete from mail servers if enabled
     if delete_from_mail_server:
@@ -902,13 +921,14 @@ def purge_old_emails():
                 log_error("Retention", f"Failed to delete from mail server {source}: {e}")
 
     # Delete from database
-    execute(
-        """
-        DELETE FROM emails
-        WHERE created_at < :cutoff
-        """,
-        {"cutoff": cutoff},
-    )
+    if deletion_count > 0:
+        execute(
+            """
+            DELETE FROM emails
+            WHERE created_at < :cutoff
+            """,
+            {"cutoff": cutoff},
+        )
 
     # Purge expired quarantined emails based on quarantine retention setting
     try:
@@ -1019,8 +1039,7 @@ def purge_old_emails():
             """,
             {"count": deletion_count, "deleted_from_server": delete_from_mail_server},
         )
-    
-    log_error("Retention", f"Purged {deletion_count} old emails (delete_from_server={delete_from_mail_server})", level="info")
+        log_error("Retention", f"Purged {deletion_count} old emails (delete_from_server={delete_from_mail_server})", level="info")
 
 def main_loop():
     # Track last processing time for each account

@@ -57,6 +57,7 @@ htmlcov/
 .tox/
 .cache/
 .mypy_cache/
+.ruff_cache/
 
 # Build / packaging
 build/

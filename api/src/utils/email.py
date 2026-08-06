@@ -158,17 +158,27 @@ def send_alert_email(
 
     success_count = 0
 
+    # Pre-compute values that need escaping/transformation outside the f-string
+    # expression parts (backslashes in f-string expressions require Python 3.12+).
+    heading_color = (
+        '#dc3545' if alert_type == 'error'
+        else '#ffc107' if alert_type == 'warning'
+        else '#17a2b8'
+    )
+    escaped_type = html.escape(alert_type.upper())
+    escaped_message = html.escape(message).replace('\n', '<br>')
+
     for email in recipients:
         # Create HTML body for alerts
         html_body = f"""
         <html>
         <body>
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: {'#dc3545' if alert_type == 'error' else '#ffc107' if alert_type == 'warning' else '#17a2b8'}">
-                    {html.escape(alert_type.upper())} Alert
+                <h2 style="color: {heading_color}">
+                    {escaped_type} Alert
                 </h2>
                 <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;">
-                    {html.escape(message).replace('\n', '<br>')}
+                    {escaped_message}
                 </div>
                 <hr>
                 <p style="color: #6c757d; font-size: 12px;">

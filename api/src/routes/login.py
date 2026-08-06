@@ -13,6 +13,11 @@ from ..utils.email import send_email
 
 router = APIRouter()
 
+# Precomputed bcrypt hash used to equalize response time when a username does not
+# exist, mitigating username enumeration via timing side-channels. The value is
+# irrelevant; it only needs to be a valid bcrypt hash to run a real comparison.
+_DUMMY_BCRYPT_HASH = bcrypt.hashpw(b"timing-equalizer", bcrypt.gensalt()).decode("utf-8")
+
 
 def get_client_ip(request: Request) -> str:
     # Check X-Forwarded-For first (may contain multiple IPs)
@@ -227,6 +232,12 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
         return templates.TemplateResponse("login.html", {"request": request, "error": "System error. Please try again."})
 
     if not user:
+        # Run a dummy password check so the response time is comparable whether or
+        # not the username exists, preventing username enumeration by timing.
+        try:
+            bcrypt.checkpw(password.encode("utf-8"), _DUMMY_BCRYPT_HASH.encode("utf-8"))
+        except Exception:
+            pass
         try:
             client_ip = get_client_ip(request)
             log("warning", "Auth", f"login failed for unknown user: {username}", f"IP: {client_ip}")
@@ -248,43 +259,20 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
             {"request": request, "error": "This account has been disabled"},
         )
 
-    # First login (no password set)
+    # An account with no password hash cannot be authenticated. Every account is
+    # created with a password (setup wizard and users.create_user both require and
+    # validate one), so a missing hash means the account is not usable. Reject the
+    # login instead of granting a session. Previously this branch logged the user
+    # in and redirected to "/set-password" — a route that does not exist — which
+    # left such accounts either stuck in a redirect loop or holding a valid,
+    # authenticated session without ever proving a password.
     if not user["password_hash"]:
-        client_ip = get_client_ip(request)
-        execute("""
-            UPDATE users
-            SET last_login = NOW(), last_login_ip = :ip
-            WHERE id = :id
-        """, {"id": user["id"], "ip": client_ip})
         try:
-            execute("""
-                UPDATE users
-                SET last_seen = NOW()
-                WHERE id = :id
-            """, {"id": user["id"]})
+            client_ip = get_client_ip(request)
+            log("warning", "Auth", f"login blocked - no password set for user: {username}", f"IP: {client_ip}")
         except Exception:
             pass
-        request.session["user_id"] = user["id"]
-        request.session["username"] = user["username"]
-        request.session["date_format"] = user["date_format"] or "%d/%m/%Y"
-        request.session["time_format"] = user["time_format"] or "%H:%M"
-        request.session["timezone"] = user["timezone"] or "Australia/Melbourne"
-        request.session["theme"] = user.get("theme_preference") or "system"
-        request.session["avatar_color"] = user.get("avatar_color") or "#007bff"
-        # Persist selected language into session and user record
-        request.session["language"] = language or (user.get("language") or "en")
-        try:
-            execute("""
-                UPDATE users
-                SET language = :lang
-                WHERE id = :id
-            """, {"lang": request.session["language"], "id": user["id"]})
-        except Exception:
-            # Non-fatal: login can proceed even if language persistence fails
-            pass
-        request.session["needs_password"] = True
-        request.session["permissions"] = load_user_permissions(user["id"])
-        return RedirectResponse("/set-password", status_code=303)
+        return templates.TemplateResponse("login.html", {"request": request, "error": "Invalid credentials"})
 
     # Normal login
     try:
