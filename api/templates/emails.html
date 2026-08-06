@@ -84,6 +84,73 @@
     </div>
 </div>
 
+<!-- Quarantine Confirmation Section -->
+<div id="quarantine-confirmation" class="card" style="display: none; margin-bottom: 24px;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-shield-virus" style="color: var(--warning);"></i>
+            <span>Confirm Quarantine</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-warning">
+            <i class="fas fa-info-circle"></i>
+            <span>You are about to quarantine <strong id="quarantine-count">0</strong> email<span id="quarantine-plural">s</span>.</span>
+        </div>
+
+        <p><strong>This will move the selected emails to quarantine for review.</strong></p>
+
+        <div class="text-center">
+            <form method="post" action="/emails/quarantine" id="quarantine-form" style="display: inline;">
+                <button type="submit" class="btn btn-warning">
+                    <i class="fas fa-shield-virus"></i>
+                    <span class="hide-mobile">Quarantine Selected Emails</span>
+                </button>
+            </form>
+            <button type="button" class="btn btn-secondary ms-2" onclick="hideQuarantineConfirmation()">
+                <i class="fas fa-times"></i>
+                <span class="hide-mobile">Cancel</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Section -->
+<div id="delete-confirmation" class="card" style="display: none; margin-bottom: 24px;">
+    <div class="card-header">
+        <div class="card-title">
+            <i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i>
+            <span>Confirm Deletion</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-warning">
+            <i class="fas fa-info-circle"></i>
+            <span>You are about to delete <strong id="delete-count">0</strong> email<span id="delete-plural">s</span>.</span>
+        </div>
+
+        <p><strong>Choose how you want to delete them:</strong></p>
+
+        <div style="display: grid; gap: 12px; margin-bottom: 20px;">
+            <button type="button" class="btn btn-danger w-100" onclick="performDelete('db')">
+                <i class="fas fa-database"></i>
+                <span class="hide-mobile">Delete from Database Only</span>
+            </button>
+            <button type="button" class="btn btn-warning w-100" onclick="performDelete('imap')">
+                <i class="fas fa-server"></i>
+                <span class="hide-mobile">Delete from Database and Mail Server</span>
+            </button>
+        </div>
+
+        <div class="text-center">
+            <button type="button" class="btn btn-secondary" onclick="hideDeleteConfirmation()">
+                <i class="fas fa-times"></i>
+                <span class="hide-mobile">Cancel</span>
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Emails Table Card -->
 <div class="card">
     <div class="card-header flex-between">
@@ -305,73 +372,6 @@
         </div>
     </div>
     {% endif %}
-</div>
-
-<!-- Quarantine Confirmation Section -->
-<div id="quarantine-confirmation" class="card" style="display: none; margin-top: 24px;">
-    <div class="card-header">
-        <div class="card-title">
-            <i class="fas fa-shield-virus" style="color: var(--warning);"></i>
-            <span>Confirm Quarantine</span>
-        </div>
-    </div>
-    <div class="card-body">
-        <div class="alert alert-warning">
-            <i class="fas fa-info-circle"></i>
-            <span>You are about to quarantine <strong id="quarantine-count">0</strong> email<span id="quarantine-plural">s</span>.</span>
-        </div>
-
-        <p><strong>This will move the selected emails to quarantine for review.</strong></p>
-
-        <div class="text-center">
-            <form method="post" action="/emails/quarantine" id="quarantine-form" style="display: inline;">
-                <button type="submit" class="btn btn-warning">
-                    <i class="fas fa-shield-virus"></i>
-                    <span class="hide-mobile">Quarantine Selected Emails</span>
-                </button>
-            </form>
-            <button type="button" class="btn btn-secondary ms-2" onclick="hideQuarantineConfirmation()">
-                <i class="fas fa-times"></i>
-                <span class="hide-mobile">Cancel</span>
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- Delete Confirmation Section -->
-<div id="delete-confirmation" class="card" style="display: none; margin-top: 24px;">
-    <div class="card-header">
-        <div class="card-title">
-            <i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i>
-            <span>Confirm Deletion</span>
-        </div>
-    </div>
-    <div class="card-body">
-        <div class="alert alert-warning">
-            <i class="fas fa-info-circle"></i>
-            <span>You are about to delete <strong id="delete-count">0</strong> email<span id="delete-plural">s</span>.</span>
-        </div>
-
-        <p><strong>Choose how you want to delete them:</strong></p>
-
-        <div style="display: grid; gap: 12px; margin-bottom: 20px;">
-            <button type="button" class="btn btn-danger w-100" onclick="performDelete('db')">
-                <i class="fas fa-database"></i>
-                <span class="hide-mobile">Delete from Database Only</span>
-            </button>
-            <button type="button" class="btn btn-warning w-100" onclick="performDelete('imap')">
-                <i class="fas fa-server"></i>
-                <span class="hide-mobile">Delete from Database and Mail Server</span>
-            </button>
-        </div>
-
-        <div class="text-center">
-            <button type="button" class="btn btn-secondary" onclick="hideDeleteConfirmation()">
-                <i class="fas fa-times"></i>
-                <span class="hide-mobile">Cancel</span>
-            </button>
-        </div>
-    </div>
 </div>
 
 <script>
