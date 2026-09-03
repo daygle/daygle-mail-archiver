@@ -3,427 +3,126 @@
 {% block page_title %}User Management{% endblock %}
 
 {% block content %}
-<!-- Create/Edit User Form Card (Initially Hidden) -->
-<div class="card mb-4" id="userFormCard" style="display: none;">
-    <div class="card-header flex-between">
-        <div class="card-title">
-            <i class="fas fa-user-plus" id="formIcon"></i>
-            <span id="formTitle">Create New User</span>
+{% set active_users = users|selectattr('enabled')|list|length %}
+{% set online_users = users|selectattr('online_status', 'equalto', 'online')|list|length %}
+<div class="users-page">
+    <section class="users-hero" aria-labelledby="users-heading">
+        <div class="users-hero-copy">
+            <div class="users-eyebrow"><i class="fas fa-users"></i> Team directory</div>
+            <h2 id="users-heading">User accounts</h2>
+            <p>Create accounts, assign roles and keep track of who has access. Disabled users cannot sign in until they are re-enabled.</p>
         </div>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="hideUserForm()" title="Cancel">
-            <i class="fas fa-times"></i>
-        </button>
+        <button type="button" class="btn btn-primary users-create-button" data-bs-toggle="modal" data-bs-target="#userModal" data-create-user><i class="fas fa-user-plus"></i><span>Create user</span></button>
+    </section>
+    <section class="users-stats" aria-label="User management summary">
+        <div class="user-stat-card"><div class="user-stat-icon user-stat-icon-blue"><i class="fas fa-users"></i></div><div><span class="user-stat-label">Total users</span><strong>{{ users|length }}</strong></div></div>
+        <div class="user-stat-card"><div class="user-stat-icon user-stat-icon-purple"><i class="fas fa-user-check"></i></div><div><span class="user-stat-label">Active users</span><strong>{{ active_users }}</strong></div></div>
+        <div class="user-stat-card"><div class="user-stat-icon user-stat-icon-green"><i class="fas fa-wifi"></i></div><div><span class="user-stat-label">Online now</span><strong>{{ online_users }}</strong></div></div>
+    </section>
+    <section class="users-toolbar" aria-label="User filters">
+        <div class="users-toolbar-title"><div class="card-title"><i class="fas fa-user-group"></i><span>All users</span></div><span class="users-result-count" id="userResultCount">{{ users|length }} user{% if users|length != 1 %}s{% endif %}</span></div>
+        <div class="users-toolbar-actions"><label class="users-search" for="userSearch"><i class="fas fa-search" aria-hidden="true"></i><input id="userSearch" type="search" placeholder="Search name, email or role" autocomplete="off"></label><label class="users-disabled-filter"><input id="showDisabledUsers" type="checkbox" checked><span>Show disabled users</span></label></div>
+    </section>
+    {% if users %}
+    <div class="user-grid" id="userGrid">
+        {% for user in users %}
+        {% set full_name = ((user.first_name or '') ~ ' ' ~ (user.last_name or '')).strip() %}
+        {% set display_name = full_name if full_name else user.username %}
+        <article class="user-card {% if not user.enabled %}user-card-disabled{% endif %}" data-user-kind="{% if user.enabled %}active{% else %}disabled{% endif %}" data-user-search="{{ user.username }} {{ full_name }} {{ user.email or '' }} {{ user.roles or '' }}">
+            <div class="user-card-header">
+                <div class="user-card-identity">
+                    <div class="user-avatar {% if not user.enabled %}user-avatar-disabled{% endif %}">{{ display_name[0]|upper }}</div>
+                    <div class="user-card-title-wrap"><h3>{{ display_name }}</h3><code>@{{ user.username }}</code></div>
+                </div>
+                <div class="user-card-badges">
+                    {% if user.enabled %}
+                    <span class="user-status-badge user-status-active"><i class="fas fa-check"></i> Active</span>
+                    {% else %}
+                    <span class="user-status-badge user-status-disabled"><i class="fas fa-ban"></i> Disabled</span>
+                    {% endif %}
+                    <span class="user-online-badge {% if user.online_status == 'online' %}is-online{% else %}is-offline{% endif %}"><i class="fas fa-circle"></i> {{ 'Online' if user.online_status == 'online' else 'Offline' }}</span>
+                </div>
+            </div>
+            <p class="user-card-description">{% if user.email %}<i class="fas fa-envelope"></i> {{ user.email }}{% else %}<span class="user-muted">No email address on file.</span>{% endif %}</p>
+            <div class="user-card-meta"><span><i class="fas fa-calendar-plus"></i> Created {{ (user.created_at | format_user_datetime(request.session.user_id)) if user.created_at else '-' }}</span><span><i class="fas fa-clock"></i> {{ ('Last login ' ~ (user.last_login | format_user_datetime(request.session.user_id))) if user.last_login else 'Never logged in' }}</span></div>
+            <div class="user-roles-section"><div class="user-roles-heading"><span>Roles assigned</span><span>{{ user.roles.split(', ')|length if user.roles else 0 }}</span></div>{% if user.roles %}<div class="user-roles-list">{% for role in user.roles.split(', ') %}<span class="role-pill"><i class="fas fa-check" aria-hidden="true"></i>{{ role }}</span>{% endfor %}</div>{% else %}<div class="user-no-roles"><i class="fas fa-minus-circle"></i> No roles assigned</div>{% endif %}</div>
+            <div class="user-card-footer">
+                <button type="button" class="btn btn-secondary btn-sm" title="Edit user" onclick="editUser('{{ user.id }}')"><i class="fas fa-pen"></i><span>Edit</span></button>
+                <form method="post" action="/users/{{ user.id }}/toggle"><button type="submit" class="btn {% if user.enabled %}btn-warning{% else %}btn-success{% endif %} btn-sm" {% if user.id == request.session.user_id %}disabled title="You cannot disable your own account"{% else %}title="{{ 'Disable user' if user.enabled else 'Enable user' }}"{% endif %}><i class="fas {% if user.enabled %}fa-ban{% else %}fa-check{% endif %}"></i></button></form>
+                <button type="button" class="btn btn-danger btn-sm" data-user-id="{{ user.id }}" data-user-name="{{ display_name }}" onclick="deleteUser(this.dataset.userId, this.dataset.userName)" {% if user.id == request.session.user_id %}disabled title="You cannot delete your own account"{% endif %}><i class="fas fa-trash"></i><span>Delete</span></button>
+            </div>
+        </article>
+        {% endfor %}
     </div>
-    <div class="card-body">
-        <form method="post" id="userForm" action="/users/create">
-            <input type="hidden" id="user_id" name="user_id">
-            
-            <div class="two-col-grid">
-                <div class="form-group">
-                    <label for="username">Username <span style="color: var(--danger);">*</span></label>
-                    <input id="username" class="form-control" name="username" autocomplete="username" required>
-                </div>
-                <div class="form-group">
-                    <label for="password">Password <span id="passwordLabel"><span style="color: var(--danger);">*</span></span></label>
-                    <input id="password" class="form-control" name="password" type="password" autocomplete="new-password" required>
-                </div>
-            </div>
-            
-            <div class="two-col-grid">
-                <div class="form-group">
-                    <label for="first_name">First Name</label>
-                    <input id="first_name" class="form-control" name="first_name" autocomplete="given-name">
-                </div>
-                <div class="form-group">
-                    <label for="last_name">Last Name</label>
-                    <input id="last_name" class="form-control" name="last_name" autocomplete="family-name">
-                </div>
-            </div>
-            
-            <div class="two-col-grid">
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input id="email" class="form-control" name="email" type="email" autocomplete="email">
-                </div>
-                <div class="form-group">
-                    <label for="email_notifications">Email Notifications</label>
-                    <select id="email_notifications" class="form-control" name="email_notifications">
-                        <option value="true" selected>Enabled</option>
-                        <option value="false">Disabled</option>
-                    </select>
-                    <small class="form-text">Receive email alerts and notifications</small>
-                </div>
-            </div>
-            
-            <div class="two-col-grid">
-            <div class="form-group col-span-2">
-                <label>Roles <span style="color: var(--danger);">*</span></label>
-                <div class="roles-grid">
-                    {% for role in roles %}
-                    <div class="role-item">
-                        <label class="role-checkbox">
-                            <input type="checkbox" name="role_ids" value="{{ role.id }}">
-                            <span class="checkmark"></span>
-                            <div class="role-details">
-                                <strong>{{ role.display_name or (role.name | replace('_', ' ') | replace('-', ' ') | title) }}</strong>
-                                {% if role.description %}
-                                <br><small>{{ role.description }}</small>
-                                {% endif %}
-                            </div>
-                        </label>
-                    </div>
-                    {% endfor %}
-                </div>
-                <small class="form-text">Select one or more roles for this user</small>
-            </div>
-
-            </div>
-            
-            <div class="alert alert-info" id="userInfoAlert" style="display: none;">
-                <strong>Account Information:</strong><br>
-                <small>
-                    <strong>Last Login:</strong> <span id="last_login">-</span><br>
-                    <strong>Last Login IP:</strong> <span id="last_login_ip">-</span><br>
-                    <strong>Last Seen:</strong> <span id="last_seen">-</span><br>
-                    <strong>Online Status:</strong> <span id="online_status">-</span><br>
-                    <strong>Created:</strong> <span id="created_at">-</span>
-                </small>
-            </div>
-            
-            <div class="form-actions">
-                <button type="button" class="btn btn-secondary" onclick="hideUserForm()">
-                    <i class="fas fa-times"></i>
-                    <span>Cancel</span>
-                </button>
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save" id="submitIcon"></i>
-                    <span id="submitText">Create User</span>
-                </button>
-            </div>
-        </form>
-    </div>
+    <div class="user-filter-empty" id="userFilterEmpty" hidden><i class="fas fa-search"></i><h3>No matching users</h3><p>Try a different name, email or role.</p></div>
+    {% else %}
+    <div class="user-empty-state"><div class="user-empty-icon"><i class="fas fa-users"></i></div><h3>No users yet</h3><p>Create the first user account to get started.</p><button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#userModal" data-create-user><i class="fas fa-user-plus"></i> Create first user</button></div>
+    {% endif %}
+    <div class="users-tip"><i class="fas fa-circle-info"></i><span><strong>Tip:</strong> Every user needs at least one role to sign in. Manage the available roles from the Role Management page.</span></div>
 </div>
 
-<!-- Users Table Card -->
-<div class="card" id="usersListCard">
-    <div class="card-header flex-between">
-        <div class="card-title">
-            <i class="fas fa-users"></i>
-            <span>User Accounts</span>
-        </div>
-        <button type="button" class="btn btn-primary" onclick="showCreateUserForm()">
-            <i class="fas fa-user-plus"></i>
-            <span>Create New User</span>
-        </button>
-    </div>
-    <div class="card-body" style="padding: 0;">
-            <div class="table-container">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Username</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th class="hide-mobile">Roles</th>
-                            <th>Status</th>
-                            <th class="hide-mobile">Online</th>
-                            <th class="hide-mobile">Created</th>
-                            <th class="hide-mobile">Last Login</th>
-                            <th class="hide-mobile">Last Login IP</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for user in users %}
-                        <tr>
-                            <td><strong>{{ user.username }}</strong></td>
-                            <td>{{ (user.first_name or '') ~ ' ' ~ (user.last_name or '') if user.first_name or user.last_name else '-' }}</td>
-                            <td>{{ user.email or '-' }}</td>
-                            <td class="hide-mobile">
-                                {% if user.roles %}
-                                    {% for role in user.roles.split(', ') %}
-                                        <span class="badge badge-secondary">{{ role }}</span>
-                                    {% endfor %}
-                                {% else %}
-                                    <em class="text-muted">No roles assigned</em>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if user.enabled %}
-                                    <span class="badge badge-success"><i class="fas fa-check"></i> Enabled</span>
-                                {% else %}
-                                    <span class="badge badge-danger"><i class="fas fa-times"></i> Disabled</span>
-                                {% endif %}
-                            </td>
-                            <td class="hide-mobile">
-                                {% if user.online_status == 'online' %}
-                                    <span class="badge badge-success"><i class="fas fa-circle"></i> Online</span>
-                                {% else %}
-                                    <span class="badge badge-secondary"><i class="fas fa-circle"></i> Offline</span>
-                                {% endif %}
-                            </td>
-                            <td class="hide-mobile"><small>{{ user.created_at | format_user_datetime(request.session.user_id) }}</small></td>
-                            <td class="hide-mobile">
-                                {% if user.last_login %}
-                                    <small>{{ user.last_login | format_user_datetime(request.session.user_id) }}</small>
-                                {% else %}
-                                    <span style="color: var(--text-secondary);">Never</span>
-                                {% endif %}
-                            </td>
-                            <td class="hide-mobile">
-                                {% if user.last_login_ip %}
-                                    <small>{{ user.last_login_ip }}</small>
-                                {% else %}
-                                    <span style="color: var(--text-secondary);">-</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div class="flex-gap-8">
-                                    <button type="button" class="btn btn-secondary btn-sm" title="Edit" onclick="editUser({{ user.id }})">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <form method="post" action="/users/{{ user.id }}/toggle" style="display: inline;">
-                                        <button type="submit" class="btn {% if user.enabled %}btn-warning{% else %}btn-success{% endif %} btn-sm" title="{{ 'Disable' if user.enabled else 'Enable' }}" {% if user.id == request.session.user_id %}disabled{% endif %}>
-                                            <i class="fas {% if user.enabled %}fa-ban{% else %}fa-check{% endif %}"></i>
-                                        </button>
-                                    </form>
-                                    <form method="post" action="/users/{{ user.id }}/delete" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this user?');">
-                                        <button type="submit" class="btn btn-danger btn-sm" title="Delete" {% if user.id == request.session.user_id %}disabled{% endif %}>
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                        {% if users|length == 0 %}
-                        <tr>
-                            <td colspan="10" class="text-center empty-state">
-                                <div>
-                                    <i class="fas fa-users empty-icon"></i>
-                                    <p>No users found.</p>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endif %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-<script>
-function showCreateUserForm() {
-    const formCard = document.getElementById('userFormCard');
-    const usersListCard = document.getElementById('usersListCard');
-    const form = document.getElementById('userForm');
-    
-    // Reset form
-    form.reset();
-    form.action = '/users/create';
-    document.getElementById('user_id').value = '';
-    document.getElementById('password').required = true;
-    document.getElementById('userInfoAlert').style.display = 'none';
-    
-    // Reset account info fields
-    document.getElementById('last_login').textContent = '-';
-    document.getElementById('last_login_ip').textContent = '-';
-    document.getElementById('last_seen').textContent = '-';
-    document.getElementById('online_status').textContent = '-';
-    document.getElementById('created_at').textContent = '-';
-    
-    // Update UI text
-    document.getElementById('formTitle').textContent = 'Create New User';
-    document.getElementById('formIcon').className = 'fas fa-user-plus';
-    document.getElementById('submitIcon').className = 'fas fa-user-plus';
-    document.getElementById('submitText').textContent = 'Create User';
-    document.getElementById('passwordLabel').innerHTML = '<span style="color: var(--danger);">*</span>';
-    
-    // Hide users table and show form
-    usersListCard.style.display = 'none';
-    formCard.style.display = 'block';
-    
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function hideUserForm() {
-    const formCard = document.getElementById('userFormCard');
-    const usersListCard = document.getElementById('usersListCard');
-    
-    // Hide form and show users table
-    formCard.style.display = 'none';
-    usersListCard.style.display = 'block';
-}
-
-async function editUser(userId) {
-    try {
-        const response = await fetch(`/api/users/${userId}`);
-        if (!response.ok) {
-            let body;
-            try {
-                body = await response.json();
-            } catch (e) {
-                body = await response.text();
-            }
-            const msg = (body && body.error) ? body.error : (typeof body === 'string' ? body : response.statusText);
-            alert('Error loading user: ' + msg);
-            return;
-        }
-
-        const user = await response.json();
-        if (user.error) {
-            alert('Error loading user: ' + user.error);
-            return;
-        }
-
-        const formCard = document.getElementById('userFormCard');
-        const usersListCard = document.getElementById('usersListCard');
-        const form = document.getElementById('userForm');
-
-        const setIfExists = (id, value) => {
-            const el = document.getElementById(id);
-            if (el) el.value = value;
-        };
-
-        setIfExists('user_id', user.id);
-        setIfExists('username', user.username);
-        setIfExists('first_name', user.first_name || '');
-        setIfExists('last_name', user.last_name || '');
-        setIfExists('email', user.email || '');
-        setIfExists('email_notifications', user.email_notifications ? 'true' : 'false');
-
-        // Password field
-        const pwEl = document.getElementById('password');
-        if (pwEl) {
-            pwEl.value = '';
-            pwEl.required = false;
-        }
-
-        // Populate role checkboxes
-        const roleIds = user.role_ids || [];
-        const roleCheckboxes = document.querySelectorAll('input[name="role_ids"]');
-        roleCheckboxes.forEach(cb => {
-            cb.checked = roleIds.includes(parseInt(cb.value));
-        });
-
-        // Read-only info
-        document.getElementById('last_login').textContent = user.last_login || 'Never';
-        document.getElementById('last_login_ip').textContent = user.last_login_ip || '-';
-        document.getElementById('last_seen').textContent = user.last_seen || 'Never';
-        document.getElementById('online_status').textContent = user.online_status === 'online' ? 'Online' : 'Offline';
-        document.getElementById('created_at').textContent = user.created_at || '-';
-        document.getElementById('userInfoAlert').style.display = 'block';
-
-        // UI updates
-        document.getElementById('formTitle').textContent = 'Edit User';
-        document.getElementById('formIcon').className = 'fas fa-user-edit';
-        document.getElementById('submitIcon').className = 'fas fa-save';
-        document.getElementById('submitText').textContent = 'Save Changes';
-        document.getElementById('passwordLabel').innerHTML =
-            '<small style="color: var(--text-secondary);">(leave blank to keep current)</small>';
-
-        form.action = `/users/${userId}/update`;
-
-        usersListCard.style.display = 'none';
-        formCard.style.display = 'block';
-
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-
-    } catch (error) {
-        console.error('Error loading user:', error);
-        alert('Failed to load user details');
-    }
-}
-
-// Reveal users UI only after styles have loaded to reduce FOUC
-function revealUsers(){
-    try{
-        var els = document.querySelectorAll('#userFormCard, #usersListCard');
-        for(var i=0;i<els.length;i++) els[i].classList.add('visible');
-    }catch(e){/* ignore */}
-}
-if (document.readyState === 'complete') { setTimeout(revealUsers, 50); }
-window.addEventListener('load', function(){ setTimeout(revealUsers, 50); });
-
-</script>
-
-{% block extra_css %}
-<style>
-.roles-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 0.75rem;
-    max-height: 300px;
-    overflow-y: auto;
-    border: 1px solid var(--border);
-    border-radius: 0.375rem;
-    padding: 1rem;
-    background-color: var(--bg-secondary);
-}
-
-.role-item {
-    margin: 0;
-}
-
-.role-checkbox {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
-    cursor: pointer;
-    padding: 0.5rem;
-    border-radius: 0.25rem;
-    transition: background-color 0.2s;
-}
-
-.role-checkbox:hover {
-    background-color: var(--bg-hover);
-}
-
-.role-checkbox input[type="checkbox"] {
-    margin-top: 0.125rem;
-    flex-shrink: 0;
-}
-
-.checkmark {
-    width: 1.2rem;
-    height: 1.2rem;
-    border: 2px solid var(--border);
-    border-radius: 0.25rem;
-    background-color: var(--bg);
-    position: relative;
-    flex-shrink: 0;
-}
-
-.role-checkbox input[type="checkbox"]:checked + .checkmark {
-    background-color: var(--primary);
-    border-color: var(--primary);
-}
-
-.role-checkbox input[type="checkbox"]:checked + .checkmark::after {
-    content: '✓';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: white;
-    font-size: 0.8rem;
-    font-weight: bold;
-}
-
-.role-details {
-    flex: 1;
-    line-height: 1.4;
-}
-
-.role-details strong {
-    color: var(--text);
-}
-
-.role-details small {
-    color: var(--text-secondary);
-}
-</style>
+<div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content user-modal-content"><div class="modal-header"><div><div class="users-eyebrow"><i class="fas fa-user-pen"></i> Account editor</div><h2 class="modal-title" id="userModalTitle">Create a user</h2></div><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><form method="post" id="userForm" action="/users/create"><div class="modal-body"><div class="user-form-intro"><i class="fas fa-lightbulb"></i><span>Assign at least one role so the user can sign in. You can change roles and details at any time.</span></div><div class="user-form-fields"><div class="form-group"><label class="form-label" for="username">Username <span class="required-mark">*</span></label><input id="username" class="form-control" name="username" autocomplete="username" required minlength="3" maxlength="100" placeholder="e.g. jdoe"></div><div class="form-group"><label class="form-label" for="password">Password <span class="required-mark" id="passwordRequiredMark">*</span></label><input id="password" class="form-control" name="password" type="password" autocomplete="new-password" required><small class="form-text" id="passwordHint">Minimum 8 characters with upper case, lower case and a number.</small></div><div class="form-group"><label class="form-label" for="first_name">First name</label><input id="first_name" class="form-control" name="first_name" autocomplete="given-name"></div><div class="form-group"><label class="form-label" for="last_name">Last name</label><input id="last_name" class="form-control" name="last_name" autocomplete="family-name"></div><div class="form-group"><label class="form-label" for="email">Email</label><input id="email" class="form-control" name="email" type="email" autocomplete="email" placeholder="name@company.com"></div><div class="form-group"><label class="form-label" for="email_notifications">Email notifications</label><select id="email_notifications" class="form-control" name="email_notifications"><option value="true" selected>Enabled</option><option value="false">Disabled</option></select><small class="form-text">Receive email alerts and notifications</small></div><div class="form-group"><label class="form-label" for="enabled">Account status</label><select id="enabled" class="form-control" name="enabled"><option value="true" selected>Enabled</option><option value="false">Disabled</option></select><small class="form-text">Disabled users cannot sign in</small></div></div><div class="user-role-picker-header"><div><label class="form-label mb-0">Roles</label><small class="form-text">Select one or more roles for this user.</small></div><label class="users-search user-role-search" for="rolePickerSearch"><i class="fas fa-search" aria-hidden="true"></i><input id="rolePickerSearch" type="search" placeholder="Find role" autocomplete="off"></label></div><div class="user-role-options" id="userRoleOptions">{% for role in roles %}<label class="user-role-option" data-role-search="{{ (role.display_name or role.name) }} {{ role.description or '' }}"><input type="checkbox" name="role_ids" value="{{ role.id }}"><span class="user-role-check"><i class="fas fa-check"></i></span><span class="user-role-copy"><strong>{{ role.display_name or (role.name | replace('_', ' ') | replace('-', ' ') | title) }}</strong><small>{{ role.description or 'No description available' }}</small></span></label>{% endfor %}</div><div class="user-info-panel" id="userInfoPanel" hidden><h3><i class="fas fa-clock-rotate-left"></i> Recent activity</h3><div class="user-info-grid"><div><span class="user-info-label">Last login</span><strong id="info_last_login">-</strong></div><div><span class="user-info-label">Last login IP</span><strong id="info_last_login_ip">-</strong></div><div><span class="user-info-label">Last seen</span><strong id="info_last_seen">-</strong></div><div><span class="user-info-label">Online status</span><strong id="info_online_status">-</strong></div><div><span class="user-info-label">Created</span><strong id="info_created_at">-</strong></div></div></div></div><div class="modal-footer"><span class="user-role-count" id="userRoleCount">0 roles selected</span><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary"><i class="fas fa-save" id="userSubmitIcon"></i> <span id="userSubmitText">Create user</span></button></div></form></div></div></div>
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h2 class="modal-title" id="deleteUserModalLabel"><i class="fas fa-trash text-danger"></i> Delete user</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body"><p>Are you sure you want to delete <strong id="deleteUserName"></strong>?</p><div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i><span>This cannot be undone. The user will lose access immediately.</span></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-danger" id="confirmDeleteUserBtn"><i class="fas fa-trash"></i> Delete user</button></div></div></div></div>
 {% endblock %}
 
-{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="/static/users.css">{% endblock %}
+
+{% block extra_js %}<script>(function () {
+    const userSearch = document.getElementById('userSearch'), showDisabled = document.getElementById('showDisabledUsers'), userCards = Array.from(document.querySelectorAll('.user-card')), filterEmpty = document.getElementById('userFilterEmpty'), resultCount = document.getElementById('userResultCount'), userModalEl = document.getElementById('userModal'), userForm = document.getElementById('userForm'), roleSearch = document.getElementById('rolePickerSearch'), roleCount = document.getElementById('userRoleCount');
+    function filterUsers() { const term = (userSearch?.value || '').trim().toLowerCase(); let visible = 0; userCards.forEach(card => { const shown = (!term || (card.dataset.userSearch || '').toLowerCase().includes(term)) && (showDisabled?.checked !== false || card.dataset.userKind !== 'disabled'); card.hidden = !shown; if (shown) visible++; }); if (filterEmpty) filterEmpty.hidden = visible !== 0; if (resultCount) resultCount.textContent = `${visible} user${visible === 1 ? '' : 's'}`; }
+    function filterRoles() { const term = (roleSearch?.value || '').trim().toLowerCase(); document.querySelectorAll('.user-role-option').forEach(option => { option.hidden = !!term && !(option.dataset.roleSearch || '').toLowerCase().includes(term); }); }
+    function updateRoleCount() { const count = userForm ? userForm.querySelectorAll('input[name="role_ids"]:checked').length : 0; if (roleCount) roleCount.textContent = `${count} role${count === 1 ? '' : 's'} selected`; }
+    function setIfExists(id, value) { const el = document.getElementById(id); if (el) el.value = value; }
+    function setMode(options) { document.getElementById('userModalTitle').textContent = options.title; const iconEl = document.getElementById('userSubmitIcon'); if (iconEl) iconEl.className = 'fas ' + options.icon; document.getElementById('userSubmitText').textContent = options.submitText; const pw = document.getElementById('password'); if (pw) pw.required = options.passwordRequired; const mark = document.getElementById('passwordRequiredMark'); if (mark) mark.hidden = !options.passwordRequired; const hint = document.getElementById('passwordHint'); if (hint) hint.textContent = options.passwordHint; }
+    window.prepareCreateUser = function () {
+        userForm.reset(); userForm.action = '/users/create';
+        document.getElementById('userInfoPanel').hidden = true;
+        setMode({ title: 'Create a user', icon: 'fa-user-plus', submitText: 'Create user', passwordRequired: true, passwordHint: 'Minimum 8 characters with upper case, lower case and a number.' });
+        filterRoles(); updateRoleCount();
+    };
+    async function readError(response) { try { const body = await response.json(); return (body && body.error) ? body.error : (typeof body === 'string' ? body : response.statusText); } catch (e) { return response.statusText; } }
+    window.editUser = async function (userId) {
+        try {
+            const response = await fetch(`/api/users/${userId}`);
+            if (!response.ok) throw new Error(await readError(response));
+            const user = await response.json();
+            if (user.error) throw new Error(user.error);
+            userForm.reset();
+            userForm.action = `/users/${userId}/update`;
+            setIfExists('user_id', user.id);
+            setIfExists('username', user.username);
+            setIfExists('first_name', user.first_name || '');
+            setIfExists('last_name', user.last_name || '');
+            setIfExists('email', user.email || '');
+            setIfExists('email_notifications', user.email_notifications ? 'true' : 'false');
+            setIfExists('enabled', user.enabled ? 'true' : 'false');
+            const pw = document.getElementById('password'); if (pw) pw.value = '';
+            const roleIds = user.role_ids || [];
+            userForm.querySelectorAll('input[name="role_ids"]').forEach(cb => { cb.checked = roleIds.includes(parseInt(cb.value, 10)); });
+            setIfExists('info_last_login', user.last_login || 'Never');
+            setIfExists('info_last_login_ip', user.last_login_ip || '-');
+            setIfExists('info_last_seen', user.last_seen || 'Never');
+            setIfExists('info_online_status', user.online_status === 'online' ? 'Online' : 'Offline');
+            setIfExists('info_created_at', user.created_at || '-');
+            document.getElementById('userInfoPanel').hidden = false;
+            setMode({ title: 'Edit user', icon: 'fa-save', submitText: 'Save changes', passwordRequired: false, passwordHint: 'Leave blank to keep the current password.' });
+            filterRoles(); updateRoleCount();
+            bootstrap.Modal.getOrCreateInstance(userModalEl).show();
+        } catch (error) {
+            console.error('Error loading user:', error);
+            showToast('Failed to load user: ' + error.message, 'error');
+        }
+    };
+    window.deleteUser = function (userId, userName) {
+        document.getElementById('deleteUserName').textContent = userName;
+        document.getElementById('confirmDeleteUserBtn').onclick = function () { const form = document.createElement('form'); form.method = 'POST'; form.action = `/users/${userId}/delete`; document.body.appendChild(form); form.submit(); };
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('deleteUserModal')).show();
+    };
+    userSearch?.addEventListener('input', filterUsers);
+    showDisabled?.addEventListener('change', filterUsers);
+    roleSearch?.addEventListener('input', filterRoles);
+    userForm?.addEventListener('change', e => { if (e.target.name === 'role_ids') updateRoleCount(); });
+    document.querySelectorAll('[data-create-user]').forEach(button => button.addEventListener('click', prepareCreateUser));
+    userModalEl?.addEventListener('hidden.bs.modal', prepareCreateUser);
+    filterUsers(); updateRoleCount();
+})();</script>{% endblock %}

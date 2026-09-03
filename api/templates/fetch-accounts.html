@@ -3,571 +3,191 @@
 {% block page_title %}Fetch Accounts{% endblock %}
 
 {% block content %}
-
-<!-- Form Section (Initially Hidden) -->
-<div id="form-section" style="display: none;">
-    <form method="post" id="account-form">
-        <input type="hidden" name="account_id" id="form-account-id" value="">
-        
-        <!-- Account Details Card -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <div class="card-title">
-                    <i class="fas fa-server"></i>
-                    <span id="form-title">New Fetch Account</span>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="form-group">
-                    <label for="name" class="form-label">Account Name <span class="text-danger">*</span></label>
-                    <input id="name" class="form-control" name="name" placeholder="My Email Account" required>
-                    <small class="form-text">A friendly name to identify this account</small>
-                </div>
-
-                <div class="form-group mt-3">
-                    <label for="account_type" class="form-label">Account Type <span class="text-danger">*</span></label>
-                    <select id="account_type" class="form-select" name="account_type" required onchange="toggleAccountFields()">
-                        <option value="imap" selected>IMAP</option>
-                        <option value="gmail">Gmail API</option>
-                        <option value="o365">Office 365 API</option>
-                    </select>
-                    <small class="form-text">Select the type of email service to fetch from</small>
-                </div>
-            </div>
+{% set imap_count = accounts|selectattr('account_type', 'equalto', 'imap')|list|length %}
+{% set oauth_count = accounts|selectattr('account_type', 'in', ['gmail', 'o365'])|list|length %}
+{% set online_count = accounts|selectattr('last_heartbeat')|list|length %}
+<div class="acct-page">
+    <section class="acct-hero" aria-labelledby="acct-heading">
+        <div class="acct-hero-copy">
+            <div class="acct-eyebrow"><i class="fas fa-server"></i> Mail sources</div>
+            <h2 id="acct-heading">Fetch accounts</h2>
+            <p>Connect IMAP, Gmail and Office 365 mailboxes so the worker can archive their messages. Test connections after authorising OAuth accounts.</p>
         </div>
-
-        <!-- IMAP Configuration Card -->
-        <div id="imap_fields" class="card mb-4" style="display: none;">
-            <div class="card-header">
-                <div class="card-title">
-                    <i class="fas fa-envelope"></i>
-                    <span>IMAP Configuration</span>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="two-col-grid">
-                    <div class="form-group">
-                        <label for="host" class="form-label">Host <span class="text-danger">*</span></label>
-                        <input id="host" class="form-control" name="host" placeholder="imap.example.com">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="port" class="form-label">Port <span class="text-danger">*</span></label>
-                        <input id="port" class="form-control" name="port" type="number" value="993" placeholder="993">
-                    </div>
-                </div>
-
-                <div class="form-group mt-3">
-                    <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
-                    <input id="username" class="form-control" name="username" placeholder="user@example.com" autocomplete="off">
-                </div>
-
-                <div class="form-group mt-3">
-                    <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
-                    <input id="password" class="form-control" name="password" type="password" placeholder="Enter password" autocomplete="off">
-                    <small class="form-text" id="password-help" style="display: none;">Leave blank to keep the existing password</small>
-                </div>
-
-                <div style="margin-top: 16px;">
-                    <div style="margin-bottom: 12px;">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="use_ssl" name="use_ssl">
-                            <div>
-                                <strong>Use SSL/TLS</strong>
-                                <small style="display: block; color: var(--text-secondary);">Recommended for secure connections (port 993)</small>
-                            </div>
-                        </label>
-                    </div>
-
-                    <div>
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="require_starttls" name="require_starttls">
-                            <div>
-                                <strong>Require STARTTLS</strong>
-                                <small style="display: block; color: var(--text-secondary);">For plain connections that upgrade to TLS (port 143)</small>
-                            </div>
-                        </label>
-                    </div>
-                </div>
-            </div>
+        <button type="button" class="btn btn-primary acct-create-button" data-bs-toggle="modal" data-bs-target="#accountModal" data-create-account><i class="fas fa-plus"></i><span>Add account</span></button>
+    </section>
+    <section class="acct-stats" aria-label="Fetch account summary">
+        <div class="acct-stat-card"><div class="acct-stat-icon acct-stat-icon-blue"><i class="fas fa-server"></i></div><div><span class="acct-stat-label">Total accounts</span><strong>{{ accounts|length }}</strong></div></div>
+        <div class="acct-stat-card"><div class="acct-stat-icon acct-stat-icon-purple"><i class="fas fa-envelope"></i></div><div><span class="acct-stat-label">IMAP</span><strong>{{ imap_count }}</strong></div></div>
+        <div class="acct-stat-card"><div class="acct-stat-icon acct-stat-icon-green"><i class="fab fa-google"></i></div><div><span class="acct-stat-label">OAuth (Gmail &amp; O365)</span><strong>{{ oauth_count }}</strong></div></div>
+        <div class="acct-stat-card"><div class="acct-stat-icon acct-stat-icon-orange"><i class="fas fa-heartbeat"></i></div><div><span class="acct-stat-label">Worker heartbeat seen</span><strong>{{ online_count }}</strong></div></div>
+    </section>
+    <section class="acct-toolbar" aria-label="Account filters">
+        <div class="acct-toolbar-title"><div class="card-title"><i class="fas fa-layer-group"></i><span>All accounts</span></div><span class="acct-result-count" id="acctResultCount">{{ accounts|length }} account{% if accounts|length != 1 %}s{% endif %}</span></div>
+        <div class="acct-toolbar-actions">
+            <label class="acct-search" for="acctSearch"><i class="fas fa-search" aria-hidden="true"></i><input id="acctSearch" type="search" placeholder="Search name, host or user" autocomplete="off"></label>
+            <label class="acct-filter"><input id="showDisabledAccounts" type="checkbox" checked><span>Show disabled</span></label>
         </div>
-
-        <!-- OAuth Configuration Card -->
-        <div id="oauth_fields" class="card mb-4" style="display: none;">
-            <div class="card-header">
-                <div class="card-title">
-                    <i class="fas fa-key"></i>
-                    <span>OAuth Configuration</span>
+    </section>
+    {% if accounts %}
+    <div class="acct-grid" id="acctGrid">
+        {% for acc in accounts %}
+        <article class="acct-card {% if not acc.enabled %}acct-card-disabled{% endif %}" data-acct-enabled="{{ 'true' if acc.enabled else 'false' }}" data-acct-search="{{ acc.name }} {{ acc.host or '' }} {{ acc.username or '' }} {{ acc.account_type }}">
+            <div class="acct-card-header">
+                <div class="acct-card-identity">
+                    <div class="acct-avatar {% if not acc.enabled %}acct-avatar-disabled{% endif %}"><i class="{% if acc.account_type == 'imap' %}fas fa-envelope{% elif acc.account_type == 'gmail' %}fab fa-google{% elif acc.account_type == 'o365' %}fab fa-microsoft{% else %}fas fa-server{% endif %}"></i></div>
+                    <div class="acct-card-title-wrap"><h3>{{ acc.name }}</h3><code>{% if acc.account_type == 'imap' %}{{ acc.host or 'no host' }}{% if acc.port %}:{{ acc.port }}{% endif %}{% else %}{{ acc.account_type|upper }} API{% endif %}</code></div>
+                </div>
+                <div class="acct-card-badges">
+                    {% if acc.account_type == 'imap' %}<span class="acct-type-badge acct-type-imap"><i class="fas fa-envelope"></i> IMAP</span>
+                    {% elif acc.account_type == 'gmail' %}<span class="acct-type-badge acct-type-gmail"><i class="fab fa-google"></i> Gmail</span>
+                    {% elif acc.account_type == 'o365' %}<span class="acct-type-badge acct-type-o365"><i class="fab fa-microsoft"></i> O365</span>
+                    {% else %}<span class="acct-type-badge acct-type-other">{{ acc.account_type }}</span>{% endif %}
+                    {% if acc.enabled %}<span class="acct-status-badge acct-status-on"><i class="fas fa-check"></i> Enabled</span>{% else %}<span class="acct-status-badge acct-status-off"><i class="fas fa-ban"></i> Disabled</span>{% endif %}
                 </div>
             </div>
-            <div class="card-body">
-                <div id="oauth_setup_instructions" class="alert alert-info mb-4">
-                    <i class="fas fa-info-circle"></i>
-                    <strong>OAuth Setup Required</strong>
-                    <div id="oauth_instructions_create">
-                        <p class="mt-2 mb-2">To use Gmail or Office 365 API, you need to:</p>
-                        <ol class="mb-0" style="padding-left: 20px;">
-                            <li>Create an OAuth app in the Google Cloud Console or Azure portal</li>
-                            <li>Enter your Client ID and Client Secret below and save the account</li>
-                            <li>After saving, open the account for editing to find your Redirect URI and Account ID</li>
-                            <li>Register the Redirect URI in your OAuth app, then click <strong>Authorise</strong></li>
-                        </ol>
-                    </div>
-                    <div id="oauth_instructions_edit" style="display: none;">
-                        <p class="mt-2 mb-2">Steps to complete OAuth authorisation:</p>
-                        <ol class="mb-0" style="padding-left: 20px;">
-                            <li>Register the <strong>Redirect URI</strong> shown below in your OAuth app</li>
-                            <li id="oauth_o365_extra" style="display: none;">In Azure AD: <em>App registrations → Your app → Authentication → Add a platform → Web → paste the URI</em></li>
-                            <li id="oauth_gmail_extra" style="display: none;">In Google Cloud Console: <em>APIs & Services → Credentials → OAuth client → Authorised redirect URIs → add the URI</em></li>
-                            <li>Enter your Client ID and Client Secret (if not already saved) and click <strong>Update Account</strong></li>
-                            <li>Click <strong>Authorise</strong> to grant access</li>
-                        </ol>
-                    </div>
-                </div>
-
-                <!-- Redirect URI + Account ID (edit mode only) -->
-                <div id="oauth_redirect_uri_section" style="display: none; margin-bottom: 16px;">
-                    <div class="alert" style="background: var(--bg-secondary, #f8f9fa); border: 1px solid var(--border-color, #dee2e6);">
-                        <div style="margin-bottom: 8px;">
-                            <i class="fas fa-hashtag"></i>
-                            <strong>Account ID:</strong> <span id="oauth_account_id_value" class="badge badge-secondary"></span>
-                        </div>
-                        <div>
-                            <i class="fas fa-link"></i>
-                            <strong>Redirect URI</strong> <small class="text-secondary">(register this in your OAuth app)</small><br>
-                            <code id="oauth_redirect_uri_value" style="word-break: break-all; font-size: 0.9em;"></code>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="oauth_client_id" class="form-label">OAuth Client ID <span class="text-danger">*</span></label>
-                    <input id="oauth_client_id" class="form-control" name="oauth_client_id" placeholder="Enter your OAuth Client ID">
-                    <small class="form-text">From your Google/Microsoft OAuth app</small>
-                </div>
-
-                <div class="form-group mt-3">
-                    <label for="oauth_client_secret" class="form-label">OAuth Client Secret <span class="text-danger">*</span></label>
-                    <input id="oauth_client_secret" class="form-control" name="oauth_client_secret" type="password" placeholder="Enter your OAuth Client Secret" autocomplete="off">
-                    <small class="form-text" id="oauth_secret_help" style="display: none;">Leave blank to keep the existing secret</small>
-                    <small class="form-text" id="oauth_secret_new_help">Keep this secret secure</small>
-                </div>
-
-                <!-- Authorise button (edit mode only) -->
-                <div id="oauth_authorise_section" style="display: none; margin-top: 16px;">
-                    <a id="oauth_authorise_btn" href="#" class="btn btn-success w-100">
-                        <i class="fas fa-key"></i>
-                        <span>Authorise</span>
-                    </a>
-                    <small class="form-text text-center" style="display: block; margin-top: 8px;">Save any credential changes before authorising</small>
-                </div>
+            <p class="acct-card-description"><i class="fas fa-user"></i> {{ acc.username or 'No username configured' }}</p>
+            <div class="acct-card-meta"><span><i class="fas fa-inbox"></i> {{ acc.email_count }} archived email{% if acc.email_count != 1 %}s{% endif %}</span><span><i class="fas fa-clock"></i> Polls every {{ acc.poll_interval_seconds }}s</span></div>
+            <div class="acct-health-section"><div class="acct-health-heading"><span>Worker health</span><span>{% if acc.last_heartbeat %}last beat {{ acc.last_heartbeat.strftime(request.session.get('date_format', '%d/%m/%Y %H:%M')) }}{% else %}no heartbeat yet{% endif %}</span></div>{% if acc.last_success %}<div class="acct-health-line"><i class="fas fa-circle-check"></i><span>Last success {{ acc.last_success.strftime(request.session.get('date_format', '%d/%m/%Y %H:%M')) }}</span></div>{% else %}<div class="acct-health-line is-warn"><i class="fas fa-circle-exclamation"></i><span>Never completed a successful fetch</span></div>{% endif %}{% if acc.last_error %}<div class="acct-health-line is-error"><i class="fas fa-triangle-exclamation"></i><span class="acct-health-error" title="{{ acc.last_error }}">{{ acc.last_error }}</span></div>{% endif %}</div>
+            <div class="acct-card-footer">
+                <button type="button" class="btn btn-secondary btn-sm" title="Edit account" onclick='editAccount({{ acc.json_safe | tojson }})'><i class="fas fa-pen"></i><span>Edit</span></button>
+                <a href="/fetch-accounts/{{ acc.id }}/test" class="btn btn-secondary btn-sm" title="Test connection"><i class="fas fa-plug"></i><span>Test</span></a>
+                <button type="button" class="btn btn-danger btn-sm" data-acct-id="{{ acc.id }}" data-acct-name="{{ acc.name }}" data-acct-emails="{{ acc.email_count }}" onclick="deleteAccount(this.dataset.acctId, this.dataset.acctName, this.dataset.acctEmails)"><i class="fas fa-trash"></i><span>Delete</span></button>
             </div>
-        </div>
-
-        <!-- Fetch Settings Card -->
-        <div class="card" style="margin-bottom: 24px;">
-            <div class="card-header">
-                <div class="card-title">
-                    <i class="fas fa-cog"></i>
-                    <span>Fetch Settings</span>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="form-group">
-                    <label for="poll_interval_seconds" class="form-label">Poll Interval (seconds)</label>
-                    <input id="poll_interval_seconds" class="form-control responsive-input" name="poll_interval_seconds" type="number" value="300" min="60" placeholder="300">
-                    <small class="form-text">How often to check for new emails (minimum 60 seconds)</small>
-                </div>
-
-                <div style="margin-top: 24px;">
-                    <div style="margin-bottom: 16px;">
-                        <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer;">
-                            <input type="checkbox" id="delete_after_processing" name="delete_after_processing">
-                            <div>
-                                <strong>Delete Email After Processing</strong>
-                                <small style="display: block; color: var(--text-secondary);">
-                                    Gmail: moves to Trash | Office 365: moves to Deleted Items | IMAP: marks as deleted (recoverable)
-                                </small>
-                            </div>
-                        </label>
-                    </div>
-
-                    <div id="expunge_deleted_group" style="display: none; margin-bottom: 16px;">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="expunge_deleted" name="expunge_deleted">
-                            <div>
-                                <strong>Permanently Expunge Deleted (IMAP only)</strong>
-                                <small style="display: block; color: var(--danger);">⚠️ Warning: Permanently removes deleted emails from server - cannot be recovered</small>
-                            </div>
-                        </label>
-                    </div>
-                </div>
-            </div>
-            <div class="card-footer form-actions">
-                <button type="button" class="btn btn-secondary" onclick="cancelForm()">
-                    <i class="fas fa-times"></i>
-                    <span>Cancel</span>
-                </button>
-                <button type="submit" class="btn btn-primary" id="submit-btn">
-                    <i class="fas fa-save"></i>
-                    <span>Create Account</span>
-                </button>
-            </div>
-        </div>
-    </form>
+        </article>
+        {% endfor %}
+    </div>
+    <div class="acct-filter-empty" id="acctFilterEmpty" hidden><i class="fas fa-search"></i><h3>No matching accounts</h3><p>Try a different name, host or type.</p></div>
+    {% else %}
+    <div class="acct-empty-state"><div class="acct-empty-icon"><i class="fas fa-server"></i></div><h3>No fetch accounts yet</h3><p>Add your first mailbox to start archiving email.</p><button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#accountModal" data-create-account><i class="fas fa-plus"></i> Add first account</button></div>
+    {% endif %}
+    {% if page > 1 or page < total_pages %}
+    <nav class="acct-pagination" aria-label="Account pages">
+        {% if page > 1 %}<a href="/fetch-accounts?page={{ page - 1 }}" class="btn btn-secondary"><i class="fas fa-chevron-left"></i><span>Previous</span></a>{% endif %}
+        <span class="acct-page-info">Page {{ page }} of {{ total_pages }}</span>
+        {% if page < total_pages %}<a href="/fetch-accounts?page={{ page + 1 }}" class="btn btn-secondary"><span>Next</span><i class="fas fa-chevron-right"></i></a>{% endif %}
+    </nav>
+    {% endif %}
+    <div class="acct-tip"><i class="fas fa-circle-info"></i><span><strong>Tip:</strong> OAuth accounts must be authorised after saving. Open the account, register the redirect URI with Google or Microsoft, then click Authorise.</span></div>
 </div>
 
-<!-- Table Section -->
-<div id="table-section">
-    <div class="card">
-        <div class="card-header flex-between">
-            <div class="card-title">
-                <i class="fas fa-server"></i>
-                <span>Fetch Accounts</span>
-            </div>
-            <button class="btn btn-primary" onclick="showCreateForm()">
-                <i class="fas fa-plus"></i>
-                <span>Add Fetch Account</span>
-            </button>
-        </div>
-        <div class="card-body" style="padding: 0;">
-            <div class="table-container">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Type</th>
-                            <th>Host/Service</th>
-                            <th>User</th>
-                            <th class="hide-mobile">Poll Interval</th>
-                            <th>Enabled</th>
-                            <th class="hide-mobile">Last Success</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for acc in accounts %}
-                        <tr>
-                            <td><strong>{{ acc.name }}</strong></td>
-                            <td>
-                                {% if acc.account_type == 'imap' %}
-                                    <span class="badge badge-primary"><i class="fas fa-envelope"></i> IMAP</span>
-                                {% elif acc.account_type == 'gmail' %}
-                                    <span class="badge badge-danger"><i class="fab fa-google"></i> Gmail</span>
-                                {% elif acc.account_type == 'o365' %}
-                                    <span class="badge badge-info"><i class="fab fa-microsoft"></i> O365</span>
-                                {% else %}
-                                    <span class="badge badge-secondary">{{ acc.account_type }}</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {{ acc.host or '-' }}
-                                {% if acc.port and acc.account_type == 'imap' %}
-                                    :{{ acc.port }}
-                                    {% if acc.use_ssl %}<i class="fas fa-lock text-success" title="SSL Enabled"></i>{% endif %}
-                                {% endif %}
-                            </td>
-                            <td>{{ acc.username or '-' }}</td>
-                            <td class="hide-mobile">{{ acc.poll_interval_seconds }}s</td>
-                            <td>
-                                {% if acc.enabled %}
-                                    <span class="badge badge-success"><i class="fas fa-check"></i> Enabled</span>
-                                {% else %}
-                                    <span class="badge badge-danger"><i class="fas fa-times"></i> Disabled</span>
-                                {% endif %}
-                            </td>
-                            <td class="hide-mobile">
-                                {% if acc.last_success %}
-                                    <small>{{ acc.last_success.strftime(request.session.get('date_format', '%d/%m/%Y %H:%M')) }}</small>
-                                {% else %}
-                                    <span class="text-secondary">Never</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div class="flex gap-2">
-                                    <button class="btn btn-secondary btn-sm" title="Edit" onclick='showEditForm({{ acc.id | tojson }}, {{ acc.json_safe | tojson }})'>
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <a href="/fetch-accounts/{{ acc.id }}/test" class="btn btn-info btn-sm" title="Test Connection">
-                                        <i class="fas fa-plug"></i>
-                                    </a>
-                                    <button class="btn btn-danger btn-sm" title="Delete" onclick='showDeleteConfirmation({{ acc.id | tojson }}, {{ acc.name | tojson }}, {{ acc.email_count }})'>
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                        {% if accounts|length == 0 %}
-                        <tr>
-                            <td colspan="8" class="text-center" style="padding: 48px 0;">
-                                <div>
-                                    <i class="fas fa-server empty-icon"></i>
-                                    <p>No fetch accounts configured.</p>
-                                    <button class="btn btn-primary mt-3" onclick="showCreateForm()">
-                                        <i class="fas fa-plus"></i>
-                                        <span>Add Fetch Account</span>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endif %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <!-- Pagination -->
-        {% if page > 1 or page < total_pages %}
-        <div class="card-footer">
-            <div class="flex items-center justify-between">
-                <div>
-                    {% if page > 1 %}
-                    <a href="/fetch-accounts?page={{ page - 1 }}" class="btn btn-secondary">
-                        <i class="fas fa-chevron-left"></i>
-                        <span>Previous</span>
-                    </a>
-                    {% endif %}
-                </div>
-                
-                <span class="text-secondary">Page {{ page }} of {{ total_pages }}</span>
-                
-                <div>
-                    {% if page < total_pages %}
-                    <a href="/fetch-accounts?page={{ page + 1 }}" class="btn btn-secondary">
-                        <span>Next</span>
-                        <i class="fas fa-chevron-right"></i>
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        {% endif %}
-    </div>
+<div class="modal fade" id="accountModal" tabindex="-1" aria-labelledby="accountModalTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content acct-modal-content"><div class="modal-header"><div><div class="acct-eyebrow"><i class="fas fa-server"></i> <span id="accountModalEyebrow">New mail source</span></div><h2 class="modal-title" id="accountModalTitle">Add a fetch account</h2></div><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><form method="post" id="accountForm" action="/fetch-accounts/new"><input type="hidden" name="account_id" id="form-account-id" value=""><div class="modal-body"><div class="acct-form-intro"><i class="fas fa-lightbulb"></i><span>Choose the account type first - the fields below adapt to IMAP or OAuth providers.</span></div><div class="acct-form-fields">
+    <div class="form-group"><label class="form-label" for="name">Account name <span class="required-mark">*</span></label><input id="name" class="form-control" name="name" required maxlength="100" placeholder="e.g. Support inbox"><small class="form-text">A friendly name to identify this account</small></div>
+    <div class="form-group"><label class="form-label" for="account_type">Account type <span class="required-mark">*</span></label><select id="account_type" class="form-control" name="account_type" required><option value="imap" selected>IMAP</option><option value="gmail">Gmail API</option><option value="o365">Office 365 API</option></select><small class="form-text">Select the type of email service to fetch from</small></div>
+    <div class="form-group"><label class="form-label" for="enabled">Account status</label><select id="enabled" class="form-control" name="enabled"><option value="true" selected>Enabled</option><option value="false">Disabled</option></select><small class="form-text">Disabled accounts are not polled by the worker</small></div>
+    <div class="form-group"><label class="form-label" for="poll_interval_seconds">Poll interval (seconds)</label><input id="poll_interval_seconds" class="form-control" name="poll_interval_seconds" type="number" value="300" min="60" placeholder="300"><small class="form-text">How often to check for new emails (minimum 60 seconds)</small></div>
 </div>
-
-<!-- Delete Confirmation Section (Initially Hidden) -->
-<div id="delete-confirmation" class="card" style="display: none;">
-    <div class="card-header">
-        <div class="card-title">
-            <i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i>
-            <span>Delete Fetch Account</span>
-        </div>
+<div id="imap_fields"><h3 class="acct-section-heading"><i class="fas fa-envelope"></i> IMAP configuration</h3><div class="acct-form-fields">
+    <div class="form-group"><label class="form-label" for="host">Host <span class="required-mark">*</span></label><input id="host" class="form-control" name="host" placeholder="imap.example.com"></div>
+    <div class="form-group"><label class="form-label" for="port">Port <span class="required-mark">*</span></label><input id="port" class="form-control" name="port" type="number" value="993" placeholder="993"></div>
+    <div class="form-group"><label class="form-label" for="username">Username <span class="required-mark">*</span></label><input id="username" class="form-control" name="username" placeholder="user@example.com" autocomplete="off"></div>
+    <div class="form-group"><label class="form-label" for="password">Password <span class="required-mark" id="passwordRequiredMark">*</span></label><input id="password" class="form-control" name="password" type="password" placeholder="Enter password" autocomplete="off"><small class="form-text" id="password-help" hidden>Leave blank to keep the existing password</small></div>
+</div><div class="acct-checkbox-group">
+    <label class="checkbox-label"><input type="checkbox" id="use_ssl" name="use_ssl"><div><strong>Use SSL/TLS</strong><small>Recommended for secure connections (port 993)</small></div></label>
+    <label class="checkbox-label"><input type="checkbox" id="require_starttls" name="require_starttls"><div><strong>Require STARTTLS</strong><small>For plain connections that upgrade to TLS (port 143)</small></div></label>
+</div></div>
+<div id="oauth_fields" hidden><h3 class="acct-section-heading"><i class="fas fa-key"></i> OAuth configuration</h3><div class="acct-setup-instructions"><i class="fas fa-circle-info"></i><div><strong>OAuth setup required.</strong> Create an OAuth app in Google Cloud Console or the Azure portal, save the Client ID and Secret here, then register the Redirect URI shown after saving and click Authorise.</div></div>
+    <div id="oauth_redirect_uri_section" hidden class="acct-oauth-uri-panel">
+        <div><i class="fas fa-hashtag"></i> <strong>Account ID:</strong> <span id="oauth_account_id_value" class="acct-oauth-id"></span></div>
+        <div><i class="fas fa-link"></i> <strong>Redirect URI</strong> <small>(register this in your OAuth app)</small><br><code id="oauth_redirect_uri_value"></code></div>
     </div>
-    <div class="card-body">
-        <div class="alert alert-danger">
-            <i class="fas fa-exclamation-circle"></i>
-            <div style="margin-top: 8px;">
-                <strong>Warning:</strong> You are about to delete the fetch account:
-                <div style="margin-top: 8px; font-size: 1.125rem;"><strong id="delete-account-name"></strong></div>
-            </div>
-        </div>
-
-        <div class="alert alert-info" style="margin-top: 16px;" id="delete-email-count-alert">
-            <i class="fas fa-info-circle"></i>
-            <span>Loading email count...</span>
-        </div>
-
-        <p style="margin-top: 20px; margin-bottom: 20px;"><strong>What would you like to do?</strong></p>
-
-        <form method="post" id="delete-form">
-            <div style="display: grid; gap: 12px; margin-bottom: 20px;">
-                <button type="submit" name="mode" value="retain" class="btn btn-warning w-100">
-                    <i class="fas fa-folder-minus"></i>
-                    <span id="delete-retain-text">Delete Account Only (retain emails)</span>
-                </button>
-
-                <button type="submit" name="mode" value="delete_messages" class="btn btn-danger w-100">
-                    <i class="fas fa-trash"></i>
-                    <span id="delete-all-text">Delete Account + All Emails</span>
-                </button>
-            </div>
-
-            <div class="text-center">
-                <button type="button" class="btn btn-secondary" onclick="hideDeleteConfirmation()">
-                    <i class="fas fa-times"></i>
-                    <span>Cancel</span>
-                </button>
-            </div>
-        </form>
+    <div class="acct-form-fields">
+        <div class="form-group"><label class="form-label" for="oauth_client_id">OAuth Client ID <span class="required-mark">*</span></label><input id="oauth_client_id" class="form-control" name="oauth_client_id" placeholder="Enter your OAuth Client ID"><small class="form-text">From your Google/Microsoft OAuth app</small></div>
+        <div class="form-group"><label class="form-label" for="oauth_client_secret">OAuth Client Secret <span class="required-mark">*</span></label><input id="oauth_client_secret" class="form-control" name="oauth_client_secret" type="password" placeholder="Enter your OAuth Client Secret" autocomplete="off"><small class="form-text" id="oauth_secret_help" hidden>Leave blank to keep the existing secret</small></div>
     </div>
+    <div id="oauth_authorise_section" hidden><a id="oauth_authorise_btn" href="#" class="btn btn-success"><i class="fas fa-key"></i><span>Authorise</span></a><small class="form-text">Save any credential changes before authorising</small></div>
 </div>
+<div class="acct-checkbox-group acct-fetch-settings"><h3 class="acct-section-heading"><i class="fas fa-cog"></i> Fetch behaviour</h3>
+    <label class="checkbox-label"><input type="checkbox" id="delete_after_processing" name="delete_after_processing"><div><strong>Delete email after processing</strong><small>Gmail: moves to Trash | Office 365: moves to Deleted Items | IMAP: marks as deleted (recoverable)</small></div></label>
+    <label class="checkbox-label" id="expunge_deleted_group" hidden><input type="checkbox" id="expunge_deleted" name="expunge_deleted"><div><strong>Permanently expunge deleted (IMAP only)</strong><small class="text-danger">⚠️ Warning: Permanently removes deleted emails from server - cannot be recovered</small></div></label>
+</div>
+</div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary"><i class="fas fa-save" id="acctSubmitIcon"></i> <span id="acctSubmitText">Create account</span></button></div></form></div></div></div>
 
-<script>
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h2 class="modal-title" id="deleteAccountModalLabel"><i class="fas fa-trash text-danger"></i> Delete fetch account</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body"><p>You are about to delete the fetch account <strong id="delete-account-name"></strong>.</p><div class="acct-setup-instructions" id="delete-email-count-alert"><i class="fas fa-circle-info"></i><span>Loading email count...</span></div><p class="mt-3"><strong>What would you like to do?</strong></p><form method="post" id="delete-form"><div class="acct-delete-actions"><button type="submit" name="mode" value="retain" class="btn btn-warning"><i class="fas fa-folder-minus"></i><span id="delete-retain-text">Delete account only (retain emails)</span></button><button type="submit" name="mode" value="delete_messages" class="btn btn-danger"><i class="fas fa-trash"></i><span id="delete-all-text">Delete account + all emails</span></button></div><div class="text-center mt-2"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times"></i><span>Cancel</span></button></div></form></div></div></div></div>
+{% endblock %}
+
+{% block extra_css %}<link rel="stylesheet" href="/static/fetch-accounts.css">{% endblock %}
+
+{% block extra_js %}<script>(function () {
     let editMode = false;
-    let editAccountId = null;
-    let deleteAccountId = null;
-
-    function showCreateForm() {
+    const acctSearch = document.getElementById('acctSearch'), showDisabled = document.getElementById('showDisabledAccounts'), acctCards = Array.from(document.querySelectorAll('.acct-card')), filterEmpty = document.getElementById('acctFilterEmpty'), resultCount = document.getElementById('acctResultCount'), accountModalEl = document.getElementById('accountModal'), accountForm = document.getElementById('accountForm');
+    function filterAccounts() { const term = (acctSearch?.value || '').trim().toLowerCase(); let visible = 0; acctCards.forEach(card => { const termOk = !term || (card.dataset.acctSearch || '').toLowerCase().includes(term); const enabledOk = showDisabled?.checked !== false || card.dataset.acctEnabled !== 'false'; const shown = termOk && enabledOk; card.hidden = !shown; if (shown) visible++; }); if (filterEmpty) filterEmpty.hidden = visible !== 0; if (resultCount) resultCount.textContent = `${visible} account${visible === 1 ? '' : 's'}`; }
+    function setIfExists(id, value) { const el = document.getElementById(id); if (el) el.value = value; }
+    function setMode(options) { document.getElementById('accountModalTitle').textContent = options.title; document.getElementById('accountModalEyebrow').textContent = options.eyebrow; const iconEl = document.getElementById('acctSubmitIcon'); if (iconEl) iconEl.className = 'fas ' + options.icon; document.getElementById('acctSubmitText').textContent = options.submitText; }
+    function prepareCreate() {
         editMode = false;
-        editAccountId = null;
-        
-        // Reset form
-        document.getElementById('account-form').reset();
-        document.getElementById('form-account-id').value = '';
-        document.getElementById('form-title').textContent = 'New Fetch Account';
-        document.getElementById('submit-btn').innerHTML = '<i class="fas fa-save"></i><span>Create Account</span>';
-        document.getElementById('account-form').action = '/fetch-accounts/new';
-        document.getElementById('password-help').style.display = 'none';
-        
-        // Hide OAuth edit-mode sections
-        document.getElementById('oauth_redirect_uri_section').style.display = 'none';
-        document.getElementById('oauth_authorise_section').style.display = 'none';
-        document.getElementById('oauth_instructions_create').style.display = 'block';
-        document.getElementById('oauth_instructions_edit').style.display = 'none';
-        document.getElementById('oauth_secret_help').style.display = 'none';
-        document.getElementById('oauth_secret_new_help').style.display = '';
-        
-        // Show form, hide table
-        document.getElementById('form-section').style.display = 'block';
-        document.getElementById('table-section').style.display = 'none';
-        
-        // Scroll to top
-        window.scrollTo(0, 0);
-        
-        // Initialise field visibility
+        accountForm.reset(); accountForm.action = '/fetch-accounts/new';
+        setIfExists('form-account-id', '');
+        document.getElementById('password-help').hidden = true;
+        document.getElementById('oauth_redirect_uri_section').hidden = true;
+        document.getElementById('oauth_authorise_section').hidden = true;
+        document.getElementById('oauth_secret_help').hidden = true;
+        setMode({ title: 'Add a fetch account', eyebrow: 'New mail source', icon: 'fa-plus', submitText: 'Create account' });
         toggleAccountFields();
     }
-
-    function showEditForm(id, account) {
+    window.editAccount = function (account) {
         editMode = true;
-        editAccountId = id;
-        
-        // Populate form
-        document.getElementById('form-account-id').value = account.id;
-        document.getElementById('form-title').textContent = 'Edit Fetch Account';
-        document.getElementById('submit-btn').innerHTML = '<i class="fas fa-save"></i><span>Update Account</span>';
-        document.getElementById('account-form').action = '/fetch-accounts/' + id + '/edit';
-        document.getElementById('password-help').style.display = 'block';
-        
-        document.getElementById('name').value = account.name || '';
-        document.getElementById('account_type').value = account.account_type || 'imap';
-        document.getElementById('host').value = account.host || '';
-        document.getElementById('port').value = account.port || 993;
-        document.getElementById('username').value = account.username || '';
-        document.getElementById('password').value = '';
+        accountForm.reset();
+        accountForm.action = '/fetch-accounts/' + account.id + '/edit';
+        setIfExists('form-account-id', account.id);
+        setIfExists('name', account.name || '');
+        setIfExists('account_type', account.account_type || 'imap');
+        setIfExists('host', account.host || '');
+        setIfExists('port', account.port || 993);
+        setIfExists('username', account.username || '');
+        setIfExists('password', '');
         document.getElementById('use_ssl').checked = account.use_ssl || false;
         document.getElementById('require_starttls').checked = account.require_starttls || false;
-        document.getElementById('poll_interval_seconds').value = account.poll_interval_seconds || 300;
+        setIfExists('poll_interval_seconds', account.poll_interval_seconds || 300);
         document.getElementById('delete_after_processing').checked = account.delete_after_processing || false;
         document.getElementById('expunge_deleted').checked = account.expunge_deleted || false;
-        document.getElementById('oauth_client_id').value = account.oauth_client_id || '';
-        document.getElementById('oauth_client_secret').value = ''; // Don't expose secret
-        
-        // Show OAuth edit-mode sections for OAuth account types
-        var isOAuth = (account.account_type === 'gmail' || account.account_type === 'o365');
-        document.getElementById('oauth_instructions_create').style.display = 'none';
-        document.getElementById('oauth_instructions_edit').style.display = isOAuth ? 'block' : 'none';
-        document.getElementById('oauth_secret_help').style.display = isOAuth ? 'block' : 'none';
-        document.getElementById('oauth_secret_new_help').style.display = isOAuth ? 'none' : '';
+        setIfExists('enabled', account.enabled ? 'true' : 'false');
+        setIfExists('oauth_client_id', account.oauth_client_id || '');
+        setIfExists('oauth_client_secret', '');
+        const isOAuth = account.account_type === 'gmail' || account.account_type === 'o365';
+        document.getElementById('password-help').hidden = isOAuth;
+        document.getElementById('oauth_secret_help').hidden = !isOAuth;
         if (isOAuth) {
-            var provider = account.account_type;
-            // Prefer the server-configured PUBLIC_BASE_URL so the displayed URI
-            // matches what the server sends to Google/Microsoft even behind a proxy.
-            var publicBase = {{ public_base_url | tojson }};
-            var baseUrl = publicBase || window.location.origin;
-            var redirectUri = baseUrl + '/oauth/' + provider + '/callback/' + id;
-            document.getElementById('oauth_account_id_value').textContent = id;
-            document.getElementById('oauth_redirect_uri_value').textContent = redirectUri;
-            document.getElementById('oauth_authorise_btn').href = '/oauth/' + provider + '/start/' + id;
-            document.getElementById('oauth_redirect_uri_section').style.display = 'block';
-            document.getElementById('oauth_authorise_section').style.display = 'block';
-            // Show provider-specific instructions
-            document.getElementById('oauth_o365_extra').style.display = (provider === 'o365') ? 'list-item' : 'none';
-            document.getElementById('oauth_gmail_extra').style.display = (provider === 'gmail') ? 'list-item' : 'none';
+            const publicBase = {{ public_base_url | tojson }};
+            const baseUrl = publicBase || window.location.origin;
+            document.getElementById('oauth_account_id_value').textContent = account.id;
+            document.getElementById('oauth_redirect_uri_value').textContent = baseUrl + '/oauth/' + account.account_type + '/callback/' + account.id;
+            document.getElementById('oauth_authorise_btn').href = '/oauth/' + account.account_type + '/start/' + account.id;
+            document.getElementById('oauth_redirect_uri_section').hidden = false;
+            document.getElementById('oauth_authorise_section').hidden = false;
         } else {
-            document.getElementById('oauth_redirect_uri_section').style.display = 'none';
-            document.getElementById('oauth_authorise_section').style.display = 'none';
+            document.getElementById('oauth_redirect_uri_section').hidden = true;
+            document.getElementById('oauth_authorise_section').hidden = true;
         }
-        
-        // Show form, hide table
-        document.getElementById('form-section').style.display = 'block';
-        document.getElementById('table-section').style.display = 'none';
-        
-        // Scroll to top
-        window.scrollTo(0, 0);
-        
-        // Initialise field visibility
+        setMode({ title: 'Edit fetch account', eyebrow: 'Edit mail source', icon: 'fa-save', submitText: 'Update account' });
         toggleAccountFields();
-    }
-
-    function cancelForm() {
-        // Show table, hide form
-        document.getElementById('form-section').style.display = 'none';
-        document.getElementById('table-section').style.display = 'block';
-        
-        // Scroll to top
-        window.scrollTo(0, 0);
-    }
-
-    function showDeleteConfirmation(accountId, accountName, emailCount) {
-        deleteAccountId = accountId;
-        
-        // Update the form action
-        document.getElementById('delete-form').action = '/fetch-accounts/' + accountId + '/delete';
-        
-        // Update the account name
+        bootstrap.Modal.getOrCreateInstance(accountModalEl).show();
+    };
+    window.deleteAccount = function (accountId, accountName, emailCount) {
         document.getElementById('delete-account-name').textContent = accountName;
-        
-        // Update email count information
+        document.getElementById('delete-form').action = '/fetch-accounts/' + accountId + '/delete';
         const plural = emailCount !== 1 ? 's' : '';
-        
-        document.getElementById('delete-email-count-alert').innerHTML = 
-            '<i class="fas fa-info-circle"></i><span>This account has <strong>' + 
-            emailCount + '</strong> email' + plural + ' associated with it.</span>';
-        
-        document.getElementById('delete-retain-text').textContent = 
-            'Delete Account Only (retain ' + emailCount + ' email' + plural + ')';
-        
-        document.getElementById('delete-all-text').textContent = 
-            'Delete Account + All ' + emailCount + ' Email' + plural;
-        
-        // Hide form and table sections, show delete confirmation
-        document.getElementById('form-section').style.display = 'none';
-        document.getElementById('table-section').style.display = 'none';
-        document.getElementById('delete-confirmation').style.display = 'block';
-        
-        // Scroll to top
-        window.scrollTo(0, 0);
-    }
-
-    function hideDeleteConfirmation() {
-        // Show table section, hide delete confirmation
-        document.getElementById('delete-confirmation').style.display = 'none';
-        document.getElementById('table-section').style.display = 'block';
-        
-        // Scroll to top
-        window.scrollTo(0, 0);
-    }
-
+        document.getElementById('delete-email-count-alert').innerHTML = '<i class="fas fa-circle-info"></i><span>This account has <strong>' + emailCount + '</strong> email' + plural + ' associated with it.</span>';
+        document.getElementById('delete-retain-text').textContent = 'Delete account only (retain ' + emailCount + ' email' + plural + ')';
+        document.getElementById('delete-all-text').textContent = 'Delete account + all ' + emailCount + ' email' + plural;
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('deleteAccountModal')).show();
+    };
     function toggleAccountFields() {
         const accountType = document.getElementById('account_type').value;
-        const imapFields = document.getElementById('imap_fields');
-        const oauthFields = document.getElementById('oauth_fields');
-        const expungeGroup = document.getElementById('expunge_deleted_group');
-
-        if (accountType === 'imap') {
-            imapFields.style.display = 'block';
-            oauthFields.style.display = 'none';
-            expungeGroup.style.display = 'block';
-        } else {
-            imapFields.style.display = 'none';
-            oauthFields.style.display = 'block';
-            expungeGroup.style.display = 'none';
-            // In create mode, always hide edit-only sections
-            if (!editMode) {
-                document.getElementById('oauth_redirect_uri_section').style.display = 'none';
-                document.getElementById('oauth_authorise_section').style.display = 'none';
-                document.getElementById('oauth_o365_extra').style.display = 'none';
-                document.getElementById('oauth_gmail_extra').style.display = 'none';
-            }
-        }
+        const isOAuth = accountType === 'gmail' || accountType === 'o365';
+        document.getElementById('imap_fields').hidden = isOAuth;
+        document.getElementById('oauth_fields').hidden = !isOAuth;
+        document.getElementById('expunge_deleted_group').hidden = !isOAuth;
+        // Never mark a hidden control required: browsers refuse to submit the
+        // form when a required input is not focusable (OAuth mode hides IMAP).
+        const pwRequired = !isOAuth && !editMode;
+        document.getElementById('password').required = pwRequired;
+        document.getElementById('passwordRequiredMark').hidden = !pwRequired;
     }
-
-    // Initialise on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        toggleAccountFields();
-    });
-</script>
-
-{% endblock %}
+    document.getElementById('account_type').addEventListener('change', toggleAccountFields);
+    acctSearch?.addEventListener('input', filterAccounts);
+    showDisabled?.addEventListener('change', filterAccounts);
+    document.querySelectorAll('[data-create-account]').forEach(button => button.addEventListener('click', prepareCreate));
+    accountModalEl?.addEventListener('hidden.bs.modal', prepareCreate);
+    toggleAccountFields();
+    filterAccounts();
+})();</script>{% endblock %}

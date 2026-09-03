@@ -2051,10 +2051,6 @@ textarea.form-control {
     }
 }
 
-/* Users page reveal (moved from inline template to central stylesheet) */
-#userFormCard, #usersListCard { visibility: hidden; }
-#userFormCard.visible, #usersListCard.visible { visibility: visible; animation: fadeIn 0.15s ease-out; }
-
 @keyframes slideIn {
     from {
         transform: translateX(-20px);
