@@ -5,6 +5,11 @@ on:
     branches: [main]
   pull_request:
 
+# Least privilege: the workflow only checks out code and runs static checks,
+# so no job needs write access to any token scope.
+permissions:
+  contents: read
+
 jobs:
   static-checks:
     name: Static checks (py${{ matrix.python-version }})

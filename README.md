@@ -265,8 +265,8 @@ Fetch accounts using the Gmail API or Office 365 Graph API require an OAuth2 app
 
 1. Sign in to the [Azure portal](https://portal.azure.com/) and open **Azure Active Directory** → **App registrations** → **New registration**.
 2. Give the app a name, select the supported account types, and leave the Redirect URI blank for now.
-3. After creating the app, note the **Application (client) ID** – this is your **OAuth Client ID**.
-4. Go to **Certificates & secrets** → **New client secret**, create a secret, and copy the **Value** – this is your **OAuth Client Secret**.
+3. After creating the app, note the **Application (client) ID** - this is your **OAuth Client ID**.
+4. Go to **Certificates & secrets** → **New client secret**, create a secret, and copy the **Value** - this is your **OAuth Client Secret**.
 5. Go to **API permissions** → **Add a permission** → **Microsoft Graph** → **Delegated permissions** → add `Mail.Read` and `offline_access`.  Click **Grant admin consent** if required.
 6. In Daygle Mail Archiver: go to **Fetch Accounts**, create a new **Office 365 API** account, enter the Client ID and Secret, and save.
 7. Open the account for editing.  The **Redirect URI** (e.g. `http://your-host:8000/oauth/o365/callback/<id>`) is shown in the OAuth Configuration section.
@@ -324,7 +324,7 @@ This project is licensed under the MIT License. See the LICENSE file for details
 
 The system provides real-time security alerts for virus detections, authentication failures, and system anomalies. Configure SMTP settings to receive immediate email notifications of security events.
 
-See [Security Notes](https://github.com/daygle/daygle-mail-archiver/wiki/Security-Notes) for complete security guidelines.
+See [SECURITY.md](SECURITY.md) for the security policy, vulnerability reporting process, and supported versions, and [Security Notes](https://github.com/daygle/daygle-mail-archiver/wiki/Security-Notes) for complete security guidelines.
 
 ---
 

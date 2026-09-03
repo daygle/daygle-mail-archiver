@@ -792,7 +792,7 @@ def restore_quarantine(request: Request, qid: int):
         # Quarantine record is intentionally left in place on failure
         log('error', 'Quarantine', error)
         request.session['flash'] = error
-        return RedirectResponse(f'/quarantine/{qid}', status_code=303)
+        return RedirectResponse('/quarantine', status_code=303)
 
     username = request.session.get("username", "unknown")
     log('info', 'Quarantine', f"User '{username}' restored quarantined email {qid}")

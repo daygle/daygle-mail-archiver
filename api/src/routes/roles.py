@@ -242,7 +242,7 @@ def update_role(
 
         if len(display_name) < 2:
             flash(request, "Role name must be at least 2 characters long.", "error")
-            return RedirectResponse(f"/roles/{role_id}/edit", status_code=303)
+            return RedirectResponse("/roles", status_code=303)
 
         # Check uniqueness (excluding current role)
         existing = query("""
@@ -252,7 +252,7 @@ def update_role(
 
         if existing:
             flash(request, f"Role '{display_name}' already exists.", "error")
-            return RedirectResponse(f"/roles/{role_id}/edit", status_code=303)
+            return RedirectResponse("/roles", status_code=303)
 
         # Current permissions
         current_perm_ids = [
@@ -270,7 +270,7 @@ def update_role(
             new_perm_set = {int(p) for p in permission_ids}
         except (TypeError, ValueError):
             flash(request, "Invalid permission selection.", "error")
-            return RedirectResponse(f"/roles/{role_id}/edit", status_code=303)
+            return RedirectResponse("/roles", status_code=303)
 
         # Detect no-op
         if (
@@ -288,7 +288,7 @@ def update_role(
         error = check_privileged_grant(request, added)
         if error:
             flash(request, error, "error")
-            return RedirectResponse(f"/roles/{role_id}/edit", status_code=303)
+            return RedirectResponse("/roles", status_code=303)
 
         # Update role and replace its permissions atomically so a failure cannot
         # leave the role renamed with an empty or partial permission set.
@@ -322,7 +322,7 @@ def update_role(
     except Exception as e:
         log("error", "Roles", f"Failed to update role {role_id}: {str(e)}")
         flash(request, "Failed to update role.", "error")
-        return RedirectResponse(f"/roles/{role_id}/edit", status_code=303)
+        return RedirectResponse("/roles", status_code=303)
 
 
 # ---------------------------------------------------------

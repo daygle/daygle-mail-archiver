@@ -294,14 +294,14 @@ def update_user(
     # Must have at least one role
     if not role_ids:
         flash(request, "At least one role must be assigned.", "error")
-        return RedirectResponse(f"/users/{user_id}/edit", status_code=303)
+        return RedirectResponse("/users", status_code=303)
 
     # Normalize + dedupe role ids before touching the DB
     try:
         new_role_ids = sorted({int(r) for r in role_ids})
     except (TypeError, ValueError):
         flash(request, "Invalid role selection.", "error")
-        return RedirectResponse(f"/users/{user_id}/edit", status_code=303)
+        return RedirectResponse("/users", status_code=303)
 
     try:
         # Fetch current user values
@@ -355,7 +355,7 @@ def update_user(
             error = check_privileged_role_assignment(request, new_role_ids)
             if error:
                 flash(request, error, "error")
-                return RedirectResponse(f"/users/{user_id}/edit", status_code=303)
+                return RedirectResponse("/users", status_code=303)
 
         # Password policy is validated up front so the failure surfaces as a
         # specific message instead of a generic transaction rollback.

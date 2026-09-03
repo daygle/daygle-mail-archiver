@@ -276,27 +276,10 @@ def create_account(
             flash(request, f"Account name '{name}' already exists. Please choose a different name.", "error")
         else:
             flash(request, f"Failed to create account: {str(e)}", "error")
-        
-        # Return to form with data
-        account = {
-            "name": name,
-            "account_type": account_type,
-            "host": host,
-            "port": port,
-            "username": username,
-            "use_ssl": use_ssl,
-            "require_starttls": require_starttls,
-            "poll_interval_seconds": poll_interval_seconds,
-            "delete_after_processing": delete_after_processing,
-            "expunge_deleted": expunge_deleted,
-            "enabled": enabled,
-        }
-        
-        msg = request.session.pop("flash", None)
-        return templates.TemplateResponse(
-            "fetch-accounts.html",
-            {"request": request, "account": account, "flash": msg}
-        )
+
+        # Redirect to the list page; the flash message carries the error. The
+        # previous re-render omitted the accounts context the template requires.
+        return RedirectResponse("/fetch-accounts", status_code=303)
 
 
 @router.get("/fetch-accounts/{id}/edit")
@@ -333,7 +316,7 @@ def update_account(
 
     if account_type not in VALID_ACCOUNT_TYPES:
         flash(request, f"Invalid account type: {account_type}", "error")
-        return RedirectResponse(f"/fetch-accounts/{id}/edit", status_code=303)
+        return RedirectResponse("/fetch-accounts", status_code=303)
 
     if password.strip():
         enc = encrypt_password(password)
@@ -443,7 +426,7 @@ def update_account(
             flash(request, f"Failed to update account: {str(e)}", "error")
         
         # Redirect back to edit form
-        return RedirectResponse(f"/fetch-accounts/{id}/edit", status_code=303)
+        return RedirectResponse("/fetch-accounts", status_code=303)
 
 
 @router.post("/fetch-accounts/{id}/delete")
@@ -666,24 +649,7 @@ def test_connection(
             except Exception:
                 pass
 
-    account = {
-        "id": account_id,
-        "name": name,
-        "account_type": account_type,
-        "host": host,
-        "port": port,
-        "username": username,
-        "use_ssl": use_ssl,
-        "require_starttls": require_starttls,
-        "poll_interval_seconds": poll_interval_seconds,
-        "delete_after_processing": delete_after_processing,
-        "expunge_deleted": expunge_deleted,
-        "enabled": enabled,
-    }
-
-    msg = request.session.pop("flash", None)
-
-    return templates.TemplateResponse(
-        "fetch-accounts.html",
-        {"request": request, "account": account, "flash": msg},
-    )
+    # The result is flashed; return to the list page like every other branch
+    # of this route. The previous re-render omitted the accounts context the
+    # template requires and would have crashed.
+    return RedirectResponse("/fetch-accounts", status_code=303)

@@ -66,7 +66,7 @@ def gmail_oauth_start(request: Request, account_id: int):
     
     if not account or not account["oauth_client_id"] or not account["oauth_client_secret"]:
         request.session["flash"] = "OAuth Client ID and Secret must be configured for this account"
-        return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)
+        return RedirectResponse("/fetch-accounts", status_code=303)
     
     username = request.session.get("username", "unknown")
     log("info", "OAuth", f"User '{username}' initiated Gmail OAuth for account {account_id}", "")
@@ -99,15 +99,15 @@ def gmail_oauth_callback(request: Request, account_id: int, code: str = None, er
     if not _verify_oauth_state(request, "gmail", account_id, state):
         log("warning", "OAuth", f"OAuth state mismatch for Gmail account {account_id}")
         request.session["flash"] = "OAuth authorisation failed: state verification failed. Please try again."
-        return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)
+        return RedirectResponse("/fetch-accounts", status_code=303)
 
     if error:
         request.session["flash"] = f"OAuth error: {error}"
-        return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)
+        return RedirectResponse("/fetch-accounts", status_code=303)
     
     if not code:
         request.session["flash"] = "No authorisation code received"
-        return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)
+        return RedirectResponse("/fetch-accounts", status_code=303)
     
     # Get account details
     account = query(
@@ -169,20 +169,20 @@ def gmail_oauth_callback(request: Request, account_id: int, code: str = None, er
         log("info", "OAuth", f"User '{username}' successfully completed Gmail OAuth for account {account_id}", "")
         
         request.session["flash"] = "Gmail OAuth authorisation successful!"
-        return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)
+        return RedirectResponse("/fetch-accounts", status_code=303)
         
     except requests.exceptions.Timeout:
         log("error", "OAuth", f"Gmail OAuth timeout for account {account_id}", "")
         request.session["flash"] = "OAuth request timed out. Please try again."
-        return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)
+        return RedirectResponse("/fetch-accounts", status_code=303)
     except requests.exceptions.RequestException as e:
         log("error", "OAuth", f"Gmail OAuth request failed for account {account_id}: {str(e)}", "")
         request.session["flash"] = "OAuth request failed. Please check your credentials and try again."
-        return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)
+        return RedirectResponse("/fetch-accounts", status_code=303)
     except Exception as e:
         log("error", "OAuth", f"Gmail OAuth error for account {account_id}: {str(e)}", "")
         request.session["flash"] = "OAuth authorisation failed. Please try again."
-        return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)
+        return RedirectResponse("/fetch-accounts", status_code=303)
 
 
 @router.get("/oauth/o365/start/{account_id}")
@@ -199,7 +199,7 @@ def o365_oauth_start(request: Request, account_id: int):
     
     if not account or not account["oauth_client_id"] or not account["oauth_client_secret"]:
         request.session["flash"] = "OAuth Client ID and Secret must be configured for this account"
-        return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)
+        return RedirectResponse("/fetch-accounts", status_code=303)
     
     username = request.session.get("username", "unknown")
     log("info", "OAuth", f"User '{username}' initiated Office 365 OAuth for account {account_id}", "")
@@ -231,15 +231,15 @@ def o365_oauth_callback(request: Request, account_id: int, code: str = None, err
     if not _verify_oauth_state(request, "o365", account_id, state):
         log("warning", "OAuth", f"OAuth state mismatch for Office 365 account {account_id}")
         request.session["flash"] = "OAuth authorisation failed: state verification failed. Please try again."
-        return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)
+        return RedirectResponse("/fetch-accounts", status_code=303)
 
     if error:
         request.session["flash"] = f"OAuth error: {error}"
-        return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)
+        return RedirectResponse("/fetch-accounts", status_code=303)
     
     if not code:
         request.session["flash"] = "No authorisation code received"
-        return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)
+        return RedirectResponse("/fetch-accounts", status_code=303)
     
     # Get account details
     account = query(
@@ -302,17 +302,17 @@ def o365_oauth_callback(request: Request, account_id: int, code: str = None, err
         log("info", "OAuth", f"User '{username}' successfully completed Office 365 OAuth for account {account_id}", "")
         
         request.session["flash"] = "Office 365 OAuth authorisation successful!"
-        return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)
+        return RedirectResponse("/fetch-accounts", status_code=303)
         
     except requests.exceptions.Timeout:
         log("error", "OAuth", f"Office 365 OAuth timeout for account {account_id}", "")
         request.session["flash"] = "OAuth request timed out. Please try again."
-        return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)
+        return RedirectResponse("/fetch-accounts", status_code=303)
     except requests.exceptions.RequestException as e:
         log("error", "OAuth", f"Office 365 OAuth request failed for account {account_id}: {str(e)}", "")
         request.session["flash"] = "OAuth request failed. Please check your credentials and try again."
-        return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)
+        return RedirectResponse("/fetch-accounts", status_code=303)
     except Exception as e:
         log("error", "OAuth", f"Office 365 OAuth error for account {account_id}: {str(e)}", "")
         request.session["flash"] = "OAuth authorisation failed. Please try again."
-        return RedirectResponse(f"/fetch-accounts/{account_id}/edit", status_code=303)
+        return RedirectResponse("/fetch-accounts", status_code=303)
