@@ -69,6 +69,21 @@ def alerts_page(
     unacknowledged_count = get_unacknowledged_count()
     request.session["unacknowledged_alerts"] = unacknowledged_count
 
+    # Archive-wide stats for the stat cards. Defensive: a stats failure must
+    # never take the page down with it.
+    stats = {"total": 0, "error": 0, "warning": 0, "info": 0, "success": 0}
+    try:
+        stats_rows = query(
+            "SELECT alert_type, COUNT(*) AS c FROM alerts GROUP BY alert_type"
+        ).mappings().all()
+        for r in stats_rows:
+            alert_type_key = r.get("alert_type")
+            if alert_type_key in stats:
+                stats[alert_type_key] = r.get("c", 0) or 0
+        stats["total"] = sum(stats.values())
+    except Exception:
+        pass
+
     flash_msg = request.session.pop("flash", None)
 
     # Get user's date/time format
@@ -89,11 +104,13 @@ def alerts_page(
             "alerts": alerts,
             "flash": flash_msg,
             "page": page,
+            "total_alerts": total_alerts,
             "total_pages": total_pages,
             "alert_type": alert_type,
             "show_acknowledged": show_acknowledged,
             "unacknowledged_count": unacknowledged_count,
-            "date_format": date_format
+            "date_format": date_format,
+            "stats": stats
         }
     )
 

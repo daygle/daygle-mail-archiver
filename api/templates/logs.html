@@ -3,26 +3,43 @@
 {% block page_title %}System Logs{% endblock %}
 
 {% block content %}
-<!-- Filters Card (Initially Hidden) -->
-<div id="filterCard" class="card mb-4" style="display: none;">
-    <div class="card-header flex-between">
-        <div class="card-title">
-            <i class="fas fa-filter"></i>
-            <span>Search & Filter</span>
+{% set level_icons = {'error': 'fa-circle-exclamation', 'warning': 'fa-triangle-exclamation', 'info': 'fa-circle-info', 'success': 'fa-circle-check', 'debug': 'fa-bug'} %}
+{% set base_url = "/logs?level=" ~ (current_level|urlencode) ~ "&search=" ~ (current_search|urlencode) ~ "&source=" ~ (current_source|urlencode) ~ "&date_from=" ~ (current_date_from|urlencode) ~ "&date_to=" ~ (current_date_to|urlencode) %}
+
+<div class="log-page">
+    <section class="log-hero" aria-labelledby="log-heading">
+        <div class="log-hero-copy">
+            <div class="log-eyebrow"><i class="fas fa-list"></i> Operations</div>
+            <h2 id="log-heading">System logs</h2>
+            <p>Track fetch activity, worker health and system events. Filter by source, level or date range to find what you need.</p>
         </div>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="toggleFilters()" title="Close" aria-label="Close filters">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-    <div class="card-body">
-        <form method="get" id="filterForm">
+        <a href="/logs" class="btn btn-primary log-create-button"><i class="fas fa-rotate"></i><span>Refresh</span></a>
+    </section>
+    <section class="log-stats" aria-label="Log summary">
+        <div class="log-stat-card"><div class="log-stat-icon log-stat-icon-blue"><i class="fas fa-file-lines"></i></div><div><span class="log-stat-label">Total entries</span><strong>{{ stats.total }}</strong></div></div>
+        <div class="log-stat-card"><div class="log-stat-icon log-stat-icon-red"><i class="fas fa-circle-exclamation"></i></div><div><span class="log-stat-label">Errors</span><strong>{{ stats.error }}</strong></div></div>
+        <div class="log-stat-card"><div class="log-stat-icon log-stat-icon-orange"><i class="fas fa-triangle-exclamation"></i></div><div><span class="log-stat-label">Warnings</span><strong>{{ stats.warning }}</strong></div></div>
+        <div class="log-stat-card"><div class="log-stat-icon log-stat-icon-green"><i class="fas fa-circle-check"></i></div><div><span class="log-stat-label">Success</span><strong>{{ stats.success }}</strong></div></div>
+    </section>
+    <section class="log-toolbar" aria-label="Log filters">
+        <div class="log-toolbar-title"><div class="card-title"><i class="fas fa-file-lines"></i><span>System logs</span></div><span class="log-result-count" id="logResultCount">{{ total_logs }} {{ 'entry' if total_logs == 1 else 'entries' }}</span></div>
+        <div class="log-toolbar-actions">
+            <label class="log-search" for="logSearch"><i class="fas fa-search" aria-hidden="true"></i><input id="logSearch" type="search" placeholder="Search this page" autocomplete="off"></label>
+            <button type="button" class="btn btn-secondary btn-sm" id="logFilterToggle" onclick="toggleFilters()">
+                <i class="fas fa-sliders"></i>
+                <span class="hide-mobile">Filters</span>
+            </button>
+        </div>
+    </section>
+    <section class="log-filters" id="filterCard" hidden>
+        <form method="get" id="filterForm" action="/logs">
             <div class="grid grid-cols-4 gap-3">
                 <div>
-                    <input type="text" id="search" name="search" class="form-control" 
-                           placeholder="Search message or source..." 
-                           value="{{ current_search }}">
+                    <label class="form-label">Search</label>
+                    <input type="text" id="search" name="search" class="form-control" placeholder="Search message or source..." value="{{ current_search }}">
                 </div>
                 <div>
+                    <label class="form-label">Source</label>
                     <select id="source" name="source" class="form-select">
                         <option value="">All Sources</option>
                         {% for s in sources %}
@@ -31,6 +48,7 @@
                     </select>
                 </div>
                 <div>
+                    <label class="form-label">Level</label>
                     <select id="level" name="level" class="form-select">
                         <option value="all" {% if current_level == 'all' %}selected{% endif %}>All Levels</option>
                         <option value="debug" {% if current_level == 'debug' %}selected{% endif %}>Debug Only</option>
@@ -40,142 +58,185 @@
                         <option value="success" {% if current_level == 'success' %}selected{% endif %}>Success Only</option>
                     </select>
                 </div>
-                <div class="flex gap-2">
-                            <button type="submit" class="btn btn-primary flex-1">
-                                <i class="fas fa-search"></i>
-                                <span class="hide-mobile">Search</span>
-                            </button>
-                            <a href="/logs" class="btn btn-secondary">
-                                <i class="fas fa-times"></i>
-                                <span class="hide-mobile">Clear</span>
-                            </a>
+                <div>
+                    <label class="form-label">&nbsp;</label>
+                    <div class="flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-1">
+                            <i class="fas fa-search"></i>
+                            <span class="hide-mobile">Search</span>
+                        </button>
+                        <a href="/logs" class="btn btn-secondary">
+                            <i class="fas fa-times"></i>
+                            <span class="hide-mobile">Clear</span>
+                        </a>
+                    </div>
                 </div>
             </div>
             <div class="grid grid-cols-2 gap-3 mt-3">
                 <div>
-                    <input type="date" id="date_from" name="date_from" class="form-control" 
-                           placeholder="Date From"
-                           value="{{ current_date_from }}">
+                    <label class="form-label">Date From</label>
+                    <input type="date" id="date_from" name="date_from" class="form-control" placeholder="Date From" value="{{ current_date_from }}">
                 </div>
                 <div>
-                    <input type="date" id="date_to" name="date_to" class="form-control" 
-                           placeholder="Date To"
-                           value="{{ current_date_to }}">
+                    <label class="form-label">Date To</label>
+                    <input type="date" id="date_to" name="date_to" class="form-control" placeholder="Date To" value="{{ current_date_to }}">
                 </div>
             </div>
         </form>
-    </div>
-</div>
+    </section>
 
-<!-- System Logs Card -->
-<div class="card">
-    <div class="card-header flex-between">
-        <div class="card-title">
-            <i class="fas fa-file-alt"></i>
-            <span>System Logs</span>
-        </div>
-        <button id="toggleFilterBtn" type="button" class="btn btn-secondary btn-sm" onclick="toggleFilters()" aria-controls="filterCard" aria-expanded="false">
-            <i class="fas fa-filter"></i>
-            <span class="hide-mobile">Search & Filter</span>
-        </button>
+    {% if logs %}
+    <div class="log-grid" id="logGrid">
+        {% for e in logs %}
+        <article class="log-card" data-log-search="{{ e.message }} {{ e.source or '' }} {{ e.level }}">
+            <div class="log-card-top">
+                <div class="log-avatar log-avatar-{{ e.level }}"><i class="fas {{ level_icons.get(e.level, 'fa-circle-info') }}" aria-hidden="true"></i></div>
+                <div class="log-card-main">
+                    <h3 class="log-message" title="{{ e.message }}">{{ e.message }}</h3>
+                    <div class="log-source" title="{{ e.source or '' }}"><i class="fas fa-cube"></i> {{ e.source_label or 'N/A' }}</div>
+                </div>
+                <div class="log-card-badges">
+                    <span class="log-badge log-badge-{{ e.level }}">{{ e.level }}</span>
+                </div>
+            </div>
+            <div class="log-card-meta">
+                <span><i class="fas fa-clock"></i> {{ e.timestamp | format_user_datetime(request.session.user_id) }}</span>
+                {% if e.source %}<span><i class="fas fa-cube"></i> {{ e.source }}</span>{% endif %}
+            </div>
+            {% if e.details %}
+            <details class="log-details">
+                <summary>Show details</summary>
+                <pre>{{ e.details }}</pre>
+            </details>
+            {% endif %}
+        </article>
+        {% endfor %}
     </div>
-    
-    <div class="card-body" style="padding: 0;">
+    <div class="log-filter-empty" id="logFilterEmpty" hidden><i class="fas fa-search"></i><h3>No matching entries</h3><p>Try a different search term or clear the filters.</p></div>
+    {% else %}
+    <div class="log-empty-state"><div class="log-empty-icon"><i class="fas fa-file-lines"></i></div><h3>No log entries found</h3><p>{% if has_active_filters %}Nothing matches your current filters. Try widening the search or date range.{% else %}The system has not written any log entries yet.{% endif %}</p></div>
+    {% endif %}
 
-        <div class="table-container">
-            <table class="table">
-            <thead>
-                <tr>
-                    <th>Time</th>
-                    <th>Level</th>
-                    <th class="hide-mobile">Source</th>
-                    <th>Message</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for e in logs %}
-                <tr>
-                    <td><small>{{ e.timestamp | format_user_datetime(request.session.user_id) }}</small></td>
-                    <td>
-                        {% if e.level == 'error' %}
-                            <span class="badge badge-danger"><i class="fas fa-times-circle"></i> {{ e.level }}</span>
-                        {% elif e.level == 'warning' %}
-                            <span class="badge badge-warning"><i class="fas fa-exclamation-triangle"></i> {{ e.level }}</span>
-                        {% elif e.level == 'info' %}
-                            <span class="badge badge-info"><i class="fas fa-info-circle"></i> {{ e.level }}</span>
-                        {% else %}
-                            <span class="badge badge-secondary">{{ e.level }}</span>
-                        {% endif %}
-                    </td>
-                    <td class="hide-mobile"><span class="badge badge-secondary">{{ e.source_label }}</span></td>
-                    <td>{{ e.message }}</td>
-                </tr>
-                {% endfor %}
-                {% if logs|length == 0 %}
-                <tr>
-                    <td colspan="4" class="text-center empty-state">
-                        <div>
-                            <i class="fas fa-search empty-icon"></i>
-                            <p>No log entries found{% if current_search or current_source or current_date_from or current_date_to %} matching your filters{% endif %}.</p>
-                        </div>
-                    </td>
-                </tr>
-                {% endif %}
-            </tbody>
-        </table>
+    {% if total_pages > 1 %}
+    <div class="log-pagination">
+        <div class="pagination-bar">
+            {% if page > 1 %}
+            <a href="{{ base_url }}&page={{ page - 1 }}" class="page-link" title="Previous">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% else %}
+            <span class="page-link disabled"><i class="fas fa-chevron-left"></i></span>
+            {% endif %}
+
+            {% if page > 3 %}
+            <a href="{{ base_url }}&page=1" class="page-link">1</a>
+            {% if page > 4 %}
+            <span class="page-link ellipsis">&hellip;</span>
+            {% endif %}
+            {% endif %}
+
+            {% for p in range([1, page - 2] | max, [total_pages + 1, page + 3] | min) %}
+            {% if p == page %}
+            <span class="page-link active">{{ p }}</span>
+            {% else %}
+            <a href="{{ base_url }}&page={{ p }}" class="page-link">{{ p }}</a>
+            {% endif %}
+            {% endfor %}
+
+            {% if page < total_pages - 2 %}
+            {% if page < total_pages - 3 %}
+            <span class="page-link ellipsis">&hellip;</span>
+            {% endif %}
+            <a href="{{ base_url }}&page={{ total_pages }}" class="page-link">{{ total_pages }}</a>
+            {% endif %}
+
+            {% if page < total_pages %}
+            <a href="{{ base_url }}&page={{ page + 1 }}" class="page-link" title="Next">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            {% else %}
+            <span class="page-link disabled"><i class="fas fa-chevron-right"></i></span>
+            {% endif %}
+
+            <form method="get" action="/logs" class="page-jump">
+                <input type="hidden" name="level" value="{{ current_level }}">
+                <input type="hidden" name="search" value="{{ current_search }}">
+                <input type="hidden" name="source" value="{{ current_source }}">
+                <input type="hidden" name="date_from" value="{{ current_date_from }}">
+                <input type="hidden" name="date_to" value="{{ current_date_to }}">
+                <span>Go to</span>
+                <input type="number" name="page" min="1" max="{{ total_pages }}" value="{{ page }}" aria-label="Jump to page">
+                <button type="submit" class="btn btn-secondary btn-sm">Go</button>
+            </form>
         </div>
-    </div>
-    
-    <!-- Pagination -->
-    {% if page > 1 or page < total_pages %}
-    <div class="card-footer">
-        <div class="flex items-center justify-between">
-            <div>
-                {% if page > 1 %}
-                <a href="/logs?level={{ current_level|urlencode }}&search={{ current_search|urlencode }}&source={{ current_source|urlencode }}&date_from={{ current_date_from|urlencode }}&date_to={{ current_date_to|urlencode }}&page={{ page - 1 }}" class="btn btn-secondary" aria-label="Previous logs page">
-                    <i class="fas fa-chevron-left"></i>
-                    <span>Previous</span>
-                </a>
-                {% endif %}
-            </div>
-            
-            <span class="text-secondary">Page {{ page }} of {{ total_pages }}</span>
-            
-            <div>
-                {% if page < total_pages %}
-                <a href="/logs?level={{ current_level|urlencode }}&search={{ current_search|urlencode }}&source={{ current_source|urlencode }}&date_from={{ current_date_from|urlencode }}&date_to={{ current_date_to|urlencode }}&page={{ page + 1 }}" class="btn btn-secondary" aria-label="Next logs page">
-                    <span>Next</span>
-                    <i class="fas fa-chevron-right"></i>
-                </a>
-                {% endif %}
-            </div>
+
+        <div class="pagination-info">
+            Showing {{ ((page - 1) * page_size + 1) }}-{{ [page * page_size, total_logs] | min }} of {{ total_logs }} log {{ 'entry' if total_logs == 1 else 'entries' }}
         </div>
     </div>
     {% endif %}
+
+    <div class="log-tip"><i class="fas fa-circle-info"></i><span><strong>Tip:</strong> Use the source and level filters to focus on a specific component, and the date range to bound the search.</span></div>
 </div>
+{% endblock %}
+
+{% block extra_css %}<link rel="stylesheet" href="/static/logs.css">{% endblock %}
+
+{% block extra_js %}<script>
+(function () {
+    const logSearch = document.getElementById('logSearch');
+    const logCards = Array.from(document.querySelectorAll('.log-card'));
+    const filterEmpty = document.getElementById('logFilterEmpty');
+    const resultCount = document.getElementById('logResultCount');
+    const filterCard = document.getElementById('filterCard');
+    const filterToggle = document.getElementById('logFilterToggle');
+
+    function filterLogs() {
+        const term = (logSearch?.value || '').trim().toLowerCase();
+        let visible = 0;
+        logCards.forEach(card => {
+            const shown = !term || (card.dataset.logSearch || '').toLowerCase().includes(term);
+            card.hidden = !shown;
+            if (shown) visible++;
+        });
+        if (filterEmpty) filterEmpty.hidden = visible !== 0;
+        if (resultCount) resultCount.textContent = visible + ' ' + (visible === 1 ? 'entry' : 'entries');
+    }
+
+    logSearch?.addEventListener('input', filterLogs);
+
+    window.toggleFilters = function () {
+        if (!filterCard || !filterToggle) return;
+        const open = filterCard.hidden;
+        filterCard.hidden = !open;
+        filterToggle.innerHTML = open
+            ? '<i class="fas fa-times"></i><span class="hide-mobile">Hide Filters</span>'
+            : '<i class="fas fa-sliders"></i><span class="hide-mobile">Filters</span>';
+    };
+
+    const hasFilters = {{ 'true' if current_search or current_source or (current_level and current_level != 'all') or current_date_from or current_date_to else 'false' }};
+    if (hasFilters && filterCard && filterCard.hidden) toggleFilters();
+
+    filterLogs();
+})();
+</script>
+
+<!-- Scroll to top button -->
+<button id="scroll-to-top-btn" class="scroll-to-top" aria-label="Scroll to top" title="Back to top">
+    <i class="fas fa-arrow-up"></i>
+</button>
 
 <script>
-    function toggleFilters() {
-        const filterCard = document.getElementById('filterCard');
-        const toggleBtn = document.getElementById('toggleFilterBtn');
-        
-        if (filterCard.style.display === 'none') {
-            filterCard.style.display = 'block';
-            toggleBtn.setAttribute('aria-expanded', 'true');
-            toggleBtn.innerHTML = '<i class="fas fa-times"></i><span class="hide-mobile">Hide Filters</span>';
-        } else {
-            filterCard.style.display = 'none';
-            toggleBtn.setAttribute('aria-expanded', 'false');
-            toggleBtn.innerHTML = '<i class="fas fa-filter"></i><span class="hide-mobile">Search & Filter</span>';
-        }
-    }
-    
-    // Show filter card if any filters are active
-    document.addEventListener('DOMContentLoaded', function() {
-        const hasFilters = {{ 'true' if current_search or current_source or (current_level and current_level != 'all') or current_date_from or current_date_to else 'false' }};
-        if (hasFilters) {
-            toggleFilters();
-        }
+(function () {
+    const scrollBtn = document.getElementById('scroll-to-top-btn');
+    if (!scrollBtn) return;
+
+    window.addEventListener('scroll', function () {
+        scrollBtn.classList.toggle('visible', window.scrollY > 300);
     });
+    scrollBtn.addEventListener('click', function () {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+})();
 </script>
 {% endblock %}

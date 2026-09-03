@@ -4,23 +4,55 @@
 
 {% block content %}
 {% set perms = request.session.permissions or [] %}
+{% set can_manage = 'manage_alerts' in perms %}
+{% set type_icons = {'error': 'fa-circle-xmark', 'warning': 'fa-triangle-exclamation', 'info': 'fa-circle-info', 'success': 'fa-circle-check'} %}
+{% set base_url = "/alerts?" ~ ("alert_type=" ~ (alert_type|urlencode) ~ "&" if alert_type else "") ~ ("show_acknowledged=1&" if show_acknowledged else "") %}
 
-<!-- Filters Card (Initially Hidden) -->
-<div id="filterCard" class="card mb-4" style="display: none;">
-    <div class="card-header flex-between">
-        <div class="card-title">
-            <i class="fas fa-filter"></i>
-            <span>Filter Alerts</span>
+<div class="alt-page">
+    <section class="alt-hero" aria-labelledby="alt-heading">
+        <div class="alt-hero-copy">
+            <div class="alt-eyebrow"><i class="fas fa-bell"></i> Operations</div>
+            <h2 id="alt-heading">System alerts</h2>
+            <p>Events that need your attention, from fetch errors to successful operations. Acknowledge alerts once you have reviewed them.</p>
         </div>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="toggleFilters()" title="Close">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-    <div class="card-body">
+        {% if can_manage %}
+        <div class="alt-hero-actions">
+            {% if unacknowledged_count > 0 %}
+            <button type="button" class="btn btn-success" onclick="acknowledgeAll()">
+                <i class="fas fa-check-double"></i><span>Acknowledge All</span>
+            </button>
+            {% endif %}
+            <button type="button" class="btn btn-primary" onclick="createTestAlert()">
+                <i class="fas fa-plus"></i><span>Create Test Alert</span>
+            </button>
+        </div>
+        {% endif %}
+    </section>
+    <section class="alt-stats" aria-label="Alert summary">
+        <div class="alt-stat-card"><div class="alt-stat-icon alt-stat-icon-blue"><i class="fas fa-bell"></i></div><div><span class="alt-stat-label">Total alerts</span><strong>{{ stats.total }}</strong></div></div>
+        <div class="alt-stat-card"><div class="alt-stat-icon alt-stat-icon-orange"><i class="fas fa-bell-slash"></i></div><div><span class="alt-stat-label">Unacknowledged</span><strong>{{ unacknowledged_count }}</strong></div></div>
+        <div class="alt-stat-card"><div class="alt-stat-icon alt-stat-icon-red"><i class="fas fa-circle-xmark"></i></div><div><span class="alt-stat-label">Errors</span><strong>{{ stats.error }}</strong></div></div>
+        <div class="alt-stat-card"><div class="alt-stat-icon alt-stat-icon-amber"><i class="fas fa-triangle-exclamation"></i></div><div><span class="alt-stat-label">Warnings</span><strong>{{ stats.warning }}</strong></div></div>
+    </section>
+    <section class="alt-toolbar" aria-label="Alert filters">
+        <div class="alt-toolbar-title"><div class="card-title"><i class="fas fa-layer-group"></i><span>System alerts</span></div><span class="alt-result-count" id="altResultCount">{{ total_alerts }} alert{% if total_alerts != 1 %}s{% endif %}</span></div>
+        <div class="alt-toolbar-actions">
+            <label class="alt-search" for="altSearch"><i class="fas fa-search" aria-hidden="true"></i><input id="altSearch" type="search" placeholder="Search this page" autocomplete="off"></label>
+            <button type="button" class="btn btn-secondary btn-sm" id="altFilterToggle" onclick="toggleFilters()">
+                <i class="fas fa-sliders"></i>
+                <span class="hide-mobile">Filters</span>
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="refreshAlerts()">
+                <i class="fas fa-rotate"></i>
+                <span class="hide-mobile">Refresh</span>
+            </button>
+        </div>
+    </section>
+    <section class="alt-filters" id="filterCard" hidden>
         <form method="get" action="/alerts">
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <label for="alert_type" class="form-label">Alert Type</label>
+            <div class="grid grid-cols-4 gap-3">
+                <div>
+                    <label class="form-label">Alert Type</label>
                     <select id="alert_type" name="alert_type" class="form-select">
                         <option value="">All Types</option>
                         <option value="error" {% if alert_type == 'error' %}selected{% endif %}>Errors</option>
@@ -29,21 +61,16 @@
                         <option value="success" {% if alert_type == 'success' %}selected{% endif %}>Success</option>
                     </select>
                 </div>
-
-                <div class="col-md-3">
+                <div>
                     <label class="form-label">&nbsp;</label>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="show_acknowledged" name="show_acknowledged"
-                               {% if show_acknowledged %}checked{% endif %}>
-                        <label class="form-check-label" for="show_acknowledged">
-                            Show Acknowledged Alerts
-                        </label>
+                    <div class="form-check" style="margin-top: 8px;">
+                        <input class="form-check-input" type="checkbox" id="show_acknowledged" name="show_acknowledged" {% if show_acknowledged %}checked{% endif %}>
+                        <label class="form-check-label" for="show_acknowledged">Show Acknowledged Alerts</label>
                     </div>
                 </div>
-
-                <div class="col-md-3">
+                <div>
                     <label class="form-label">&nbsp;</label>
-                    <div class="d-flex gap-2">
+                    <div class="flex gap-2" style="margin-top: 2px;">
                         <button type="submit" class="btn btn-primary flex-fill">
                             <i class="fas fa-filter"></i>
                             <span class="hide-mobile">Apply Filters</span>
@@ -54,248 +81,265 @@
                         </a>
                     </div>
                 </div>
-
-                <div class="col-md-3">
-                    <div class="text-end">
-                        <div class="h5 mb-0">{{ unacknowledged_count }}</div>
-                        <small class="text-secondary">Unacknowledged</small>
-                    </div>
-                </div>
             </div>
         </form>
-    </div>
-</div>
+    </section>
 
-<!-- Alerts List Card -->
-<div class="card">
-    <div class="card-header flex-between">
-        <div class="card-title">
-            <i class="fas fa-bell"></i>
-            <span>System Alerts</span>
-        </div>
-
-        <div class="d-flex gap-2">
-            <button id="toggleFilterBtn" class="btn btn-secondary btn-sm" onclick="toggleFilters()">
-                <i class="fas fa-filter"></i>
-                <span class="hide-mobile">Filter Alerts</span>
-            </button>
-
-            <button class="btn btn-secondary btn-sm" onclick="refreshAlerts()">
-                <i class="fas fa-sync-alt"></i>
-                <span class="hide-mobile">Refresh</span>
-            </button>
-
-            {% if 'manage_alerts' in perms %}
-            <button class="btn btn-primary btn-sm" onclick="createTestAlert()">
-                <i class="fas fa-plus"></i>
-                <span class="hide-mobile">Create Test Alert</span>
-            </button>
-            {% if unacknowledged_count > 0 %}
-            <button class="btn btn-success btn-sm" onclick="acknowledgeAll()">
-                <i class="fas fa-check-double"></i>
-                <span class="hide-mobile">Acknowledge All</span>
-            </button>
-            {% endif %}
-            {% endif %}
-        </div>
-    </div>
-
-    <div class="card-body">
+    {% if alerts %}
+    <div class="alt-grid" id="altGrid">
         {% for alert in alerts %}
-        <div class="card alert-item {{ alert.alert_type }} {% if alert.acknowledged %}acknowledged{% endif %}">
-            <div class="card-body">
-
-                <div class="alert-header">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="alert-badge {{ alert.alert_type }}">{{ alert.alert_type }}</span>
-                        <h5 class="alert-title mb-0">{{ alert.title }}</h5>
-
-                        {% if alert.acknowledged %}
-                        <i class="fas fa-check-circle text-success" title="Acknowledged"></i>
-                        {% endif %}
-
-                        {% if alert.email_sent %}
-                        <i class="fas fa-envelope text-primary" title="Email sent"></i>
-                        {% endif %}
-                    </div>
-
-                    <div class="alert-actions">
-                        {% if not alert.acknowledged %}
-                        <button class="btn btn-sm btn-outline-primary" onclick="acknowledgeAlert({{ alert.id }})">
-                            <i class="fas fa-check"></i>
-                            <span class="hide-mobile">Acknowledge</span>
-                        </button>
-                        {% endif %}
-                    </div>
+        <article class="alt-card {% if alert.acknowledged %}alt-acknowledged{% endif %}" data-alt-search="{{ alert.title }} {{ alert.message }} {{ alert.alert_type }}">
+            <div class="alt-card-top">
+                <div class="alt-avatar alt-avatar-{{ alert.alert_type }}"><i class="fas {{ type_icons.get(alert.alert_type, 'fa-circle-info') }}" aria-hidden="true"></i></div>
+                <div class="alt-card-main">
+                    <h3 title="{{ alert.title }}">{{ alert.title }}</h3>
+                    <p>{{ alert.message }}</p>
                 </div>
-
-                <p class="mb-2">{{ alert.message }}</p>
-
-                {% if alert.details %}
-                <details>
-                    <summary class="text-secondary" style="cursor: pointer;">Show Details</summary>
-                    <pre class="mt-2 p-2 bg-light rounded small">{{ alert.details }}</pre>
-                </details>
+                <div class="alt-card-badges">
+                    <span class="alt-badge alt-badge-{{ alert.alert_type }}">{{ alert.alert_type }}</span>
+                    {% if alert.acknowledged %}
+                    <span class="alt-badge alt-badge-ack"><i class="fas fa-check-circle"></i> Acknowledged</span>
+                    {% endif %}
+                    {% if alert.email_sent %}
+                    <span class="alt-badge alt-badge-mail" title="Email sent"><i class="fas fa-envelope"></i> Email sent</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% if alert.details %}
+            <details class="alt-details">
+                <summary>Show Details</summary>
+                <pre>{{ alert.details }}</pre>
+            </details>
+            {% endif %}
+            <div class="alt-card-footer">
+                <div class="alt-card-meta">
+                    <span><i class="fas fa-clock"></i> {{ alert.created_at.strftime(date_format) }}</span>
+                    {% if alert.acknowledged and alert.acknowledged_at %}
+                    <span><i class="fas fa-check-circle"></i> Acknowledged {{ alert.acknowledged_at.strftime(date_format) }}</span>
+                    {% endif %}
+                </div>
+                {% if not alert.acknowledged and can_manage %}
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="acknowledgeAlert({{ alert.id }})">
+                    <i class="fas fa-check"></i><span>Acknowledge</span>
+                </button>
                 {% endif %}
-
-                <div class="alert-meta">
-                    <small>
-                        <i class="fas fa-clock"></i>
-                        {{ alert.created_at.strftime(date_format) }}
-                        {% if alert.acknowledged and alert.acknowledged_at %}
-                        • Acknowledged {{ alert.acknowledged_at.strftime(date_format) }}
-                        {% endif %}
-                    </small>
-                </div>
-
             </div>
-        </div>
+        </article>
         {% endfor %}
-
-        {% if not alerts %}
-        <div class="card">
-            <div class="card-body text-center py-5">
-                <i class="fas fa-bell-slash fa-3x text-secondary mb-3"></i>
-                <h5 class="text-secondary">No alerts found</h5>
-                <p class="text-secondary">There are no alerts matching your current filters.</p>
-            </div>
-        </div>
-        {% endif %}
     </div>
+    <div class="alt-filter-empty" id="altFilterEmpty" hidden><i class="fas fa-search"></i><h3>No matching alerts</h3><p>Try a different search term or change the filters.</p></div>
+    {% else %}
+    <div class="alt-empty-state"><div class="alt-empty-icon"><i class="fas fa-bell-slash"></i></div><h3>No alerts found</h3><p>There are no alerts matching your current filters.</p></div>
+    {% endif %}
 
-    <!-- Pagination -->
     {% if total_pages > 1 %}
-    <div class="pagination">
+    <div class="alt-pagination">
+        <div class="pagination-bar">
+            {% if page > 1 %}
+            <a href="{{ base_url }}page={{ page - 1 }}" class="page-link" title="Previous">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% else %}
+            <span class="page-link disabled"><i class="fas fa-chevron-left"></i></span>
+            {% endif %}
 
-        {% if page > 1 %}
-        <a href="?page={{ page - 1 }}{% if alert_type %}&alert_type={{ alert_type }}{% endif %}{% if show_acknowledged %}&show_acknowledged=1{% endif %}" class="page-link">
-            <i class="fas fa-chevron-left"></i>
-        </a>
-        {% endif %}
+            {% if page > 3 %}
+            <a href="{{ base_url }}page=1" class="page-link">1</a>
+            {% if page > 4 %}
+            <span class="page-link ellipsis">&hellip;</span>
+            {% endif %}
+            {% endif %}
 
-        {% set start_page = page - 2 if (page - 2) > 1 else 1 %}
-        {% set end_page = page + 2 if (page + 2) < total_pages else total_pages %}
-        {% for page_num in range(start_page, end_page + 1) %}
-        <a href="?page={{ page_num }}{% if alert_type %}&alert_type={{ alert_type }}{% endif %}{% if show_acknowledged %}&show_acknowledged=1{% endif %}"
-           class="page-link {% if page_num == page %}active{% endif %}">{{ page_num }}</a>
-        {% endfor %}
+            {% for p in range([1, page - 2] | max, [total_pages + 1, page + 3] | min) %}
+            {% if p == page %}
+            <span class="page-link active">{{ p }}</span>
+            {% else %}
+            <a href="{{ base_url }}page={{ p }}" class="page-link">{{ p }}</a>
+            {% endif %}
+            {% endfor %}
 
-        {% if page < total_pages %}
-        <a href="?page={{ page + 1 }}{% if alert_type %}&alert_type={{ alert_type }}{% endif %}{% if show_acknowledged %}&show_acknowledged=1{% endif %}" class="page-link">
-            <i class="fas fa-chevron-right"></i>
-        </a>
-        {% endif %}
+            {% if page < total_pages - 2 %}
+            {% if page < total_pages - 3 %}
+            <span class="page-link ellipsis">&hellip;</span>
+            {% endif %}
+            <a href="{{ base_url }}page={{ total_pages }}" class="page-link">{{ total_pages }}</a>
+            {% endif %}
 
+            {% if page < total_pages %}
+            <a href="{{ base_url }}page={{ page + 1 }}" class="page-link" title="Next">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            {% else %}
+            <span class="page-link disabled"><i class="fas fa-chevron-right"></i></span>
+            {% endif %}
+
+            <form method="get" action="/alerts" class="page-jump">
+                {% if alert_type %}<input type="hidden" name="alert_type" value="{{ alert_type }}">{% endif %}
+                {% if show_acknowledged %}<input type="hidden" name="show_acknowledged" value="1">{% endif %}
+                <span>Go to</span>
+                <input type="number" name="page" min="1" max="{{ total_pages }}" value="{{ page }}" aria-label="Jump to page">
+                <button type="submit" class="btn btn-secondary btn-sm">Go</button>
+            </form>
+        </div>
+
+        <div class="pagination-info">
+            Showing {{ ((page - 1) * 50 + 1) }}-{{ [page * 50, total_alerts] | min }} of {{ total_alerts }} alerts
+        </div>
     </div>
     {% endif %}
+
+    <div class="alt-tip"><i class="fas fa-circle-info"></i><span><strong>Tip:</strong> Unacknowledged alerts keep the bell in the top bar lit. Acknowledge them once reviewed to clear the badge.</span></div>
 </div>
 
-<script>
-// Filter toggle
-window.toggleFilters = function() {
-  const filterCard = document.getElementById('filterCard');
-  const toggleBtn = document.getElementById('toggleFilterBtn');
+<div class="modal fade" id="acknowledgeAllModal" tabindex="-1" aria-labelledby="acknowledgeAllModalLabel" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h2 class="modal-title" id="acknowledgeAllModalLabel"><i class="fas fa-check-double text-success"></i> Acknowledge all alerts</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body"><p>You are about to acknowledge all <strong>{{ unacknowledged_count }}</strong> unacknowledged alert{{ 's' if unacknowledged_count != 1 else '' }}.</p><div class="alert alert-success"><i class="fas fa-info-circle"></i><span>They will no longer count towards the unacknowledged badge, but remain visible when "Show Acknowledged Alerts" is enabled.</span></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-success" onclick="performAcknowledgeAll()"><i class="fas fa-check-double"></i> Acknowledge All</button></div></div></div></div>
+{% endblock %}
 
-  if (filterCard.style.display === 'none') {
-      filterCard.style.display = 'block';
-      toggleBtn.innerHTML = '<i class="fas fa-times"></i><span class="hide-mobile">Hide Filters</span>';
-  } else {
-      filterCard.style.display = 'none';
-      toggleBtn.innerHTML = '<i class="fas fa-filter"></i><span class="hide-mobile">Filter Alerts</span>';
-  }
-};
+{% block extra_css %}<link rel="stylesheet" href="/static/alerts.css">{% endblock %}
 
-// Auto-show filters if active
-const hasFilters = {{ 'true' if alert_type or show_acknowledged else 'false' }};
-if (hasFilters) {
-  toggleFilters();
-}
+{% block extra_js %}<script>
+(function () {
+    const altSearch = document.getElementById('altSearch');
+    const altCards = Array.from(document.querySelectorAll('.alt-card'));
+    const filterEmpty = document.getElementById('altFilterEmpty');
+    const resultCount = document.getElementById('altResultCount');
+    const filterCard = document.getElementById('filterCard');
+    const filterToggle = document.getElementById('altFilterToggle');
 
-// Acknowledge all alerts
-function acknowledgeAll() {
-    if (!confirm('Acknowledge all unacknowledged alerts?')) return;
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '/api/alerts/acknowledge-all';
-    document.body.appendChild(form);
-    form.submit();
-}
+    function filterAlerts() {
+        const term = (altSearch?.value || '').trim().toLowerCase();
+        let visible = 0;
+        altCards.forEach(card => {
+            const shown = !term || (card.dataset.altSearch || '').toLowerCase().includes(term);
+            card.hidden = !shown;
+            if (shown) visible++;
+        });
+        if (filterEmpty) filterEmpty.hidden = visible !== 0;
+        if (resultCount) resultCount.textContent = visible + ' alert' + (visible === 1 ? '' : 's');
+    }
 
-// Acknowledge alert
-function acknowledgeAlert(alertId) {
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = `/api/alerts/${alertId}/acknowledge`;
-    document.body.appendChild(form);
-    form.submit();
-}
+    altSearch?.addEventListener('input', filterAlerts);
 
-// Refresh alerts
-function refreshAlerts() {
-    window.location.reload();
-}
+    window.toggleFilters = function () {
+        if (!filterCard || !filterToggle) return;
+        const open = filterCard.hidden;
+        filterCard.hidden = !open;
+        filterToggle.innerHTML = open
+            ? '<i class="fas fa-times"></i><span class="hide-mobile">Hide Filters</span>'
+            : '<i class="fas fa-sliders"></i><span class="hide-mobile">Filters</span>';
+    };
 
-// Update unacknowledged badge
-function updateUnacknowledgedBadge() {
-    fetch('/api/alerts/unacknowledged-count')
-        .then(response => response.json())
-        .then(data => {
-            const badge = document.querySelector('.nav-link[href="/alerts"] .badge');
-            if (badge) {
-                if (data.count > 0) {
-                    badge.textContent = data.count;
-                    badge.style.display = 'inline-block';
-                } else {
-                    badge.style.display = 'none';
+    const hasFilters = {{ 'true' if alert_type or show_acknowledged else 'false' }};
+    if (hasFilters && filterCard && filterCard.hidden) toggleFilters();
+
+    // Acknowledge a single alert
+    window.acknowledgeAlert = function (alertId) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/api/alerts/' + alertId + '/acknowledge';
+        document.body.appendChild(form);
+        form.submit();
+    };
+
+    // Acknowledge all - confirm via modal, then submit
+    window.acknowledgeAll = function () {
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('acknowledgeAllModal')).show();
+    };
+
+    window.performAcknowledgeAll = function () {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/api/alerts/acknowledge-all';
+        document.body.appendChild(form);
+        form.submit();
+    };
+
+    // Refresh alerts
+    window.refreshAlerts = function () {
+        window.location.reload();
+    };
+
+    // Update unacknowledged badge
+    function updateUnacknowledgedBadge() {
+        fetch('/api/alerts/unacknowledged-count')
+            .then(response => response.json())
+            .then(data => {
+                const badge = document.querySelector('.nav-link[href="/alerts"] .badge');
+                if (badge) {
+                    if (data.count > 0) {
+                        badge.textContent = data.count;
+                        badge.style.display = 'inline-block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
                 }
-            }
-        })
-        .catch(error => console.error('Error updating badge:', error));
-}
+            })
+            .catch(error => console.error('Error updating badge:', error));
+    }
 
-setInterval(updateUnacknowledgedBadge, 30000);
+    setInterval(updateUnacknowledgedBadge, 30000);
 
-// Create test alert
-function createTestAlert() {
-    const alertTypes = ['error', 'warning', 'info', 'success'];
-    const randomType = alertTypes[Math.floor(Math.random() * alertTypes.length)];
+    // Create test alert
+    window.createTestAlert = function () {
+        const alertTypes = ['error', 'warning', 'info', 'success'];
+        const randomType = alertTypes[Math.floor(Math.random() * alertTypes.length)];
 
-    const testTitles = {
-        'error': 'Test Error Alert',
-        'warning': 'Test Warning Alert',
-        'info': 'Test Info Alert',
-        'success': 'Test Success Alert'
+        const testTitles = {
+            'error': 'Test Error Alert',
+            'warning': 'Test Warning Alert',
+            'info': 'Test Info Alert',
+            'success': 'Test Success Alert'
+        };
+
+        const testMessages = {
+            'error': 'This is a test error alert to demonstrate the alerting system.',
+            'warning': 'This is a test warning alert to demonstrate the alerting system.',
+            'info': 'This is a test info alert to demonstrate the alerting system.',
+            'success': 'This is a test success alert to demonstrate the alerting system.'
+        };
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/api/alerts';
+
+        const formData = [
+            { name: 'alert_type', value: randomType },
+            { name: 'title', value: testTitles[randomType] },
+            { name: 'message', value: testMessages[randomType] },
+            { name: 'send_email', value: 'false' }
+        ];
+
+        formData.forEach(field => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = field.name;
+            input.value = field.value;
+            form.appendChild(input);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
     };
 
-    const testMessages = {
-        'error': 'This is a test error alert to demonstrate the alerting system.',
-        'warning': 'This is a test warning alert to demonstrate the alerting system.',
-        'info': 'This is a test info alert to demonstrate the alerting system.',
-        'success': 'This is a test success alert to demonstrate the alerting system.'
-    };
-
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '/api/alerts';
-
-    const formData = [
-        { name: 'alert_type', value: randomType },
-        { name: 'title', value: testTitles[randomType] },
-        { name: 'message', value: testMessages[randomType] },
-        { name: 'send_email', value: 'false' }
-    ];
-
-    formData.forEach(field => {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = field.name;
-        input.value = field.value;
-        form.appendChild(input);
-    });
-
-    document.body.appendChild(form);
-    form.submit();
-}
+    filterAlerts();
+})();
 </script>
 
+<!-- Scroll to top button -->
+<button id="scroll-to-top-btn" class="scroll-to-top" aria-label="Scroll to top" title="Back to top">
+    <i class="fas fa-arrow-up"></i>
+</button>
+
+<script>
+(function () {
+    const scrollBtn = document.getElementById('scroll-to-top-btn');
+    if (!scrollBtn) return;
+
+    window.addEventListener('scroll', function () {
+        scrollBtn.classList.toggle('visible', window.scrollY > 300);
+    });
+    scrollBtn.addEventListener('click', function () {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+})();
+</script>
 {% endblock %}

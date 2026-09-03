@@ -3,119 +3,145 @@
 {% block page_title %}Alert Management{% endblock %}
 
 {% block content %}
-<!-- Alert Triggers Card -->
-<div class="card">
-    <div class="card-header">
-        <div class="card-title">
-            <i class="fas fa-bell"></i>
-            <span>Alert Triggers</span>
-        </div>
-    </div>
-    <div class="card-body">
-        <p class="section-description">Manage individual alert triggers. Each trigger represents a specific type of event that can generate alerts. You can enable/disable triggers and adjust their severity level.</p>
+{% set enabled_count = triggers | selectattr('enabled') | list | length %}
+{% set disabled_count = triggers | length - enabled_count %}
 
-        <div class="table-container">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Trigger Name</th>
-                    <th class="hide-mobile">Description</th>
-                    <th>Severity</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for trigger in triggers %}
-                <tr>
-                    <td>{{ trigger.name }}</td>
-                    <td class="hide-mobile">{{ trigger.description or 'No description available' }}</td>
-                    <td>
-                        <form method="post" action="/alert-management/triggers/update-severity" style="display: inline-block;">
-                            <input type="hidden" name="trigger_id" value="{{ trigger.id }}">
-                            <select name="alert_type" class="form-select form-select-sm responsive-fixed" onchange="this.form.submit()" aria-label="Change alert severity for {{ trigger.name }}">
-                                <option value="error" {% if trigger.alert_type == 'error' %}selected{% endif %}>Error</option>
-                                <option value="warning" {% if trigger.alert_type == 'warning' %}selected{% endif %}>Warning</option>
-                                <option value="info" {% if trigger.alert_type == 'info' %}selected{% endif %}>Info</option>
-                                <option value="success" {% if trigger.alert_type == 'success' %}selected{% endif %}>Success</option>
-                            </select>
-                        </form>
-                    </td>
-                    <td>
-                        {% if trigger.enabled %}
-                            <span class="badge bg-success">Enabled</span>
-                        {% else %}
-                            <span class="badge bg-secondary">Disabled</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <form method="post" action="/alert-management/triggers/update" style="display: inline;">
-                            <input type="hidden" name="trigger_id" value="{{ trigger.id }}">
-                            {% if trigger.enabled %}
-                                <input type="hidden" name="enabled" value="false">
-                                <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Disable {{ trigger.name }}">
-                                    <i class="fas fa-ban"></i> Disable
-                                </button>
-                            {% else %}
-                                <input type="hidden" name="enabled" value="true">
-                                <button type="submit" class="btn btn-sm btn-outline-success" aria-label="Enable {{ trigger.name }}">
-                                    <i class="fas fa-check"></i> Enable
-                                </button>
-                            {% endif %}
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<div class="amg-page">
+    <section class="amg-hero" aria-labelledby="amg-heading">
+        <div class="amg-hero-copy">
+            <div class="amg-eyebrow"><i class="fas fa-bell"></i> System management</div>
+            <h2 id="amg-heading">Alert triggers</h2>
+            <p>Manage the events that generate in-app alerts. Each trigger can be enabled or disabled, and its severity adjusted to match how loudly it should sound.</p>
         </div>
+        <a href="/alerts" class="btn btn-primary amg-create-button"><i class="fas fa-bell"></i><span>View alerts</span></a>
+    </section>
+    <section class="amg-stats" aria-label="Trigger summary">
+        <div class="amg-stat-card"><div class="amg-stat-icon amg-stat-icon-blue"><i class="fas fa-bell"></i></div><div><span class="amg-stat-label">Total triggers</span><strong>{{ triggers | length }}</strong></div></div>
+        <div class="amg-stat-card"><div class="amg-stat-icon amg-stat-icon-green"><i class="fas fa-toggle-on"></i></div><div><span class="amg-stat-label">Enabled</span><strong>{{ enabled_count }}</strong></div></div>
+        <div class="amg-stat-card"><div class="amg-stat-icon amg-stat-icon-orange"><i class="fas fa-toggle-off"></i></div><div><span class="amg-stat-label">Disabled</span><strong>{{ disabled_count }}</strong></div></div>
+    </section>
+    <section class="amg-toolbar" aria-label="Trigger filters">
+        <div class="amg-toolbar-title"><div class="card-title"><i class="fas fa-layer-group"></i><span>Alert triggers</span></div><span class="amg-result-count" id="amgResultCount">{{ triggers | length }} trigger{% if triggers | length != 1 %}s{% endif %}</span></div>
+        <div class="amg-toolbar-actions">
+            <label class="amg-search" for="amgSearch"><i class="fas fa-search" aria-hidden="true"></i><input id="amgSearch" type="search" placeholder="Search this page" autocomplete="off"></label>
+            <label class="amg-filter" for="amgEnabledFilter"><i class="fas fa-filter" aria-hidden="true"></i><select id="amgEnabledFilter" aria-label="Filter by status">
+                <option value="all">All statuses</option>
+                <option value="enabled">Enabled only</option>
+                <option value="disabled">Disabled only</option>
+            </select></label>
+        </div>
+    </section>
 
-        {% if not triggers %}
-        <div class="text-center text-muted mt-4">
-            <i class="fas fa-info-circle fa-2x mb-3"></i>
-            <p>No alert triggers found. Default triggers will be created when the system starts.</p>
-        </div>
-        {% endif %}
+    {% if triggers %}
+    <div class="amg-grid" id="amgGrid">
+        {% for trigger in triggers %}
+        <article class="amg-card" data-amg-search="{{ trigger.name }} {{ trigger.description or '' }} {{ trigger.alert_type }}" data-amg-enabled="{{ '1' if trigger.enabled else '0' }}">
+            <div class="amg-card-top">
+                <div class="amg-avatar amg-avatar-{{ trigger.alert_type }}"><i class="fas fa-bell" aria-hidden="true"></i></div>
+                <div class="amg-card-main">
+                    <h3 title="{{ trigger.name }}">{{ trigger.name }}</h3>
+                    <p title="{{ trigger.description or 'No description available' }}">{{ trigger.description or 'No description available' }}</p>
+                </div>
+                <div class="amg-card-badges">
+                    <span class="amg-badge amg-badge-{{ trigger.alert_type }}"><i class="fas fa-gauge-high"></i> {{ trigger.alert_type }}</span>
+                    {% if trigger.enabled %}
+                    <span class="amg-badge amg-badge-enabled"><i class="fas fa-check"></i> Enabled</span>
+                    {% else %}
+                    <span class="amg-badge amg-badge-disabled"><i class="fas fa-ban"></i> Disabled</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="amg-card-footer">
+                <form method="post" action="/alert-management/triggers/update-severity" class="amg-severity-form">
+                    <input type="hidden" name="trigger_id" value="{{ trigger.id }}">
+                    <label class="amg-severity" for="severity-{{ trigger.id }}"><i class="fas fa-gauge-high" aria-hidden="true"></i><span>Severity</span>
+                    <select id="severity-{{ trigger.id }}" name="alert_type" class="form-select form-select-sm" onchange="this.form.submit()" aria-label="Change alert severity for {{ trigger.name }}">
+                        <option value="error" {% if trigger.alert_type == 'error' %}selected{% endif %}>Error</option>
+                        <option value="warning" {% if trigger.alert_type == 'warning' %}selected{% endif %}>Warning</option>
+                        <option value="info" {% if trigger.alert_type == 'info' %}selected{% endif %}>Info</option>
+                        <option value="success" {% if trigger.alert_type == 'success' %}selected{% endif %}>Success</option>
+                    </select>
+                    </label>
+                </form>
+                <form method="post" action="/alert-management/triggers/update" class="amg-toggle-form">
+                    <input type="hidden" name="trigger_id" value="{{ trigger.id }}">
+                    {% if trigger.enabled %}
+                    <input type="hidden" name="enabled" value="false">
+                    <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Disable {{ trigger.name }}">
+                        <i class="fas fa-ban"></i><span>Disable</span>
+                    </button>
+                    {% else %}
+                    <input type="hidden" name="enabled" value="true">
+                    <button type="submit" class="btn btn-sm btn-outline-success" aria-label="Enable {{ trigger.name }}">
+                        <i class="fas fa-check"></i><span>Enable</span>
+                    </button>
+                    {% endif %}
+                </form>
+            </div>
+        </article>
+        {% endfor %}
     </div>
-    <div class="card-footer">
-        <div class="alert alert-info mb-0">
-            <i class="fas fa-info-circle me-2"></i>
-            <small>Changes are saved automatically when you modify trigger settings.</small>
-        </div>
-    </div>
-</div>
+    <div class="amg-filter-empty" id="amgFilterEmpty" hidden><i class="fas fa-search"></i><h3>No matching triggers</h3><p>Try a different search term or change the status filter.</p></div>
+    {% else %}
+    <div class="amg-empty-state"><div class="amg-empty-icon"><i class="fas fa-bell-slash"></i></div><h3>No alert triggers found</h3><p>Default triggers will be created when the system starts.</p></div>
+    {% endif %}
 
-<!-- Alert Logic Explanation -->
-<div class="card mt-4">
-    <div class="card-header">
-        <div class="card-title">
-            <i class="fas fa-info-circle"></i>
-            <span>How Alerts Work</span>
-        </div>
-    </div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-6">
-                <h6>Alert Generation Logic</h6>
+    <div class="amg-tip"><i class="fas fa-circle-info"></i><span><strong>Tip:</strong> Changes are saved automatically when you modify trigger settings.</span></div>
+
+    <section class="amg-info-card" aria-label="How alerts work">
+        <div class="amg-info-header"><div class="card-title"><i class="fas fa-circle-info"></i><span>How alerts work</span></div></div>
+        <div class="amg-info-body">
+            <div class="amg-info-col">
+                <h4>Alert generation logic</h4>
                 <p>Alerts and email notifications are handled separately:</p>
                 <ol>
                     <li><strong>Trigger enabled:</strong> the event creates an in-app alert using the configured severity.</li>
                     <li><strong>Email delivery:</strong> enabled, eligible users receive an email when their notifications are enabled and SMTP is configured.</li>
                 </ol>
-                <p class="text-muted small mt-2">
-                    <i class="fas fa-info-circle me-1"></i>
-                    <strong>Note:</strong> Email notifications are sent only to enabled users with the <code>manage_global_settings</code> permission and a configured email address.
-                </p>
+                <div class="amg-info-note"><i class="fas fa-circle-info"></i><span><strong>Note:</strong> Email notifications are sent only to enabled users with the <code>manage_global_settings</code> permission and a configured email address.</span></div>
             </div>
-            <div class="col-md-6">
-                <h6>Alert Hierarchy</h6>
-                <ul class="list-unstyled">
-                    <li><i class="fas fa-toggle-on text-success me-2"></i><strong>Alert Triggers:</strong> Specific events with customisable severity</li>
-                    <li><i class="fas fa-user text-info me-2"></i><strong>User Settings:</strong> Email notification delivery preference</li>
-                    <li><i class="fas fa-envelope text-warning me-2"></i><strong>Email Settings:</strong> SMTP configuration for delivery</li>
+            <div class="amg-info-col">
+                <h4>Alert hierarchy</h4>
+                <ul class="amg-hierarchy">
+                    <li><i class="fas fa-toggle-on amg-hier-toggle"></i><div><strong>Alert Triggers</strong><span>Specific events with customisable severity</span></div></li>
+                    <li><i class="fas fa-user amg-hier-user"></i><div><strong>User Settings</strong><span>Email notification delivery preference</span></div></li>
+                    <li><i class="fas fa-envelope amg-hier-mail"></i><div><strong>Email Settings</strong><span>SMTP configuration for delivery</span></div></li>
                 </ul>
             </div>
         </div>
-    </div>
+    </section>
 </div>
+{% endblock %}
+
+{% block extra_css %}<link rel="stylesheet" href="/static/alert-management.css">{% endblock %}
+
+{% block extra_js %}<script>
+(function () {
+    const amgSearch = document.getElementById('amgSearch');
+    const amgFilter = document.getElementById('amgEnabledFilter');
+    const amgCards = Array.from(document.querySelectorAll('.amg-card'));
+    const filterEmpty = document.getElementById('amgFilterEmpty');
+    const resultCount = document.getElementById('amgResultCount');
+
+    function filterTriggers() {
+        const term = (amgSearch?.value || '').trim().toLowerCase();
+        const status = amgFilter?.value || 'all';
+        let visible = 0;
+        amgCards.forEach(card => {
+            const termOk = !term || (card.dataset.amgSearch || '').toLowerCase().includes(term);
+            const statusOk = status === 'all' || card.dataset.amgEnabled === (status === 'enabled' ? '1' : '0');
+            const shown = termOk && statusOk;
+            card.hidden = !shown;
+            if (shown) visible++;
+        });
+        if (filterEmpty) filterEmpty.hidden = visible !== 0;
+        if (resultCount) resultCount.textContent = visible + ' trigger' + (visible === 1 ? '' : 's');
+    }
+
+    amgSearch?.addEventListener('input', filterTriggers);
+    amgFilter?.addEventListener('change', filterTriggers);
+
+    filterTriggers();
+})();
+</script>
 {% endblock %}

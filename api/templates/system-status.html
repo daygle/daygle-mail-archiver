@@ -3,214 +3,157 @@
 {% block page_title %}System Status{% endblock %}
 
 {% block content %}
-<div class="card mb-4">
-    <div class="card-header">
-        <div class="card-title">
-            <i class="fas fa-heartbeat"></i>
-            <span>Fetch Account Status</span>
+{% set health_icons = {'healthy': 'fa-circle-check', 'error': 'fa-circle-exclamation', 'stale': 'fa-triangle-exclamation', 'disabled': 'fa-ban', 'pending': 'fa-clock'} %}
+{% set total_accounts = accounts | length %}
+{% set healthy_accounts = accounts | selectattr('health', 'equalto', 'healthy') | list | length %}
+{% set error_accounts = accounts | selectattr('health', 'equalto', 'error') | list | length %}
+{% set stale_accounts = accounts | selectattr('health', 'equalto', 'stale') | list | length %}
+{% set problem_accounts = error_accounts + stale_accounts %}
+{% set disabled_accounts = accounts | selectattr('health', 'equalto', 'disabled') | list | length %}
+
+<div class="sts-page">
+    <section class="sts-hero" aria-labelledby="sts-heading">
+        <div class="sts-hero-copy">
+            <div class="sts-eyebrow"><i class="fas fa-heartbeat"></i> Operations</div>
+            <h2 id="sts-heading">System status</h2>
+            <p>Health of the API, database, antivirus daemon and every configured fetch account.</p>
         </div>
-    </div>
-    {% if accounts|length == 0 %}
-    <div class="card-body">
-        <div class="alert alert-info">
-            <i class="fas fa-info-circle"></i>
-            <span>No fetch accounts configured. <a href="/fetch-accounts/new" class="link">Create one now</a>.</span>
+        {% if system_health_label %}
+        <div class="sts-hero-health">
+            <span class="sts-health-badge sts-health-{{ system_health }}"><i class="fas {{ {'healthy': 'fa-circle-check', 'warning': 'fa-triangle-exclamation', 'error': 'fa-circle-exclamation', 'no_accounts': 'fa-circle-info', 'pending': 'fa-clock'}.get(system_health, 'fa-circle-info') }}"></i> {{ system_health_label }}</span>
         </div>
+        {% endif %}
+    </section>
+    <section class="sts-stats" aria-label="Account summary">
+        <div class="sts-stat-card"><div class="sts-stat-icon sts-stat-icon-blue"><i class="fas fa-server"></i></div><div><span class="sts-stat-label">Fetch accounts</span><strong>{{ total_accounts }}</strong></div></div>
+        <div class="sts-stat-card"><div class="sts-stat-icon sts-stat-icon-green"><i class="fas fa-circle-check"></i></div><div><span class="sts-stat-label">Healthy</span><strong>{{ healthy_accounts }}</strong></div></div>
+        <div class="sts-stat-card"><div class="sts-stat-icon sts-stat-icon-red"><i class="fas fa-triangle-exclamation"></i></div><div><span class="sts-stat-label">Problems</span><strong>{{ problem_accounts }}</strong></div></div>
+        <div class="sts-stat-card"><div class="sts-stat-icon sts-stat-icon-orange"><i class="fas fa-ban"></i></div><div><span class="sts-stat-label">Disabled</span><strong>{{ disabled_accounts }}</strong></div></div>
+    </section>
+
+    <section class="sts-services" aria-label="Service status">
+        <div class="sts-service-card">
+            <div class="sts-avatar sts-avatar-blue"><i class="fas fa-server"></i></div>
+            <div class="sts-card-main">
+                <h3>API</h3>
+                <span class="sts-service-status">
+                    <span class="sts-badge sts-badge-healthy"><i class="fas fa-check-circle"></i> Operational</span>
+                    {% if api_status.uptime %}<span class="sts-service-detail"><i class="fas fa-clock"></i> Uptime {{ api_status.uptime }}</span>{% endif %}
+                    {% if api_status.version %}<span class="sts-service-detail"><i class="fas fa-tag"></i> v{{ api_status.version }}</span>{% endif %}
+                </span>
+            </div>
+        </div>
+        <div class="sts-service-card">
+            <div class="sts-avatar sts-avatar-blue"><i class="fas fa-database"></i></div>
+            <div class="sts-card-main">
+                <h3>Database</h3>
+                {% if database.connected %}
+                <span class="sts-service-status">
+                    <span class="sts-badge sts-badge-healthy"><i class="fas fa-check-circle"></i> Connected</span>
+                    {% if database.version %}<span class="sts-service-detail"><i class="fas fa-database"></i> {{ database.version }}</span>{% endif %}
+                </span>
+                {% else %}
+                <span class="sts-service-status">
+                    <span class="sts-badge sts-badge-error"><i class="fas fa-circle-exclamation"></i> Unavailable</span>
+                    <span class="sts-service-detail">Cannot reach the database. Data operations may be unavailable.</span>
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="sts-service-card">
+            <div class="sts-avatar sts-avatar-blue"><i class="fas fa-shield-alt"></i></div>
+            <div class="sts-card-main">
+                <h3>ClamAV</h3>
+                {% if not clamav.enabled %}
+                <span class="sts-service-status">
+                    <span class="sts-badge sts-badge-disabled"><i class="fas fa-ban"></i> Disabled</span>
+                    <span class="sts-service-detail">Virus scanning is disabled. <a href="/settings" class="link">Enable it in Settings</a>.</span>
+                </span>
+                {% elif clamav.connected %}
+                <span class="sts-service-status">
+                    <span class="sts-badge sts-badge-healthy"><i class="fas fa-check-circle"></i> Connected</span>
+                    {% if clamav.host %}<span class="sts-service-detail"><i class="fas fa-network-wired"></i> {{ clamav.host }}:{{ clamav.port }}</span>{% endif %}
+                    {% if clamav.version %}<span class="sts-service-detail"><i class="fas fa-tag"></i> {{ clamav.version }}</span>{% endif %}
+                </span>
+                {% else %}
+                <span class="sts-service-status">
+                    <span class="sts-badge sts-badge-error"><i class="fas fa-circle-exclamation"></i> Unavailable</span>
+                    <span class="sts-service-detail">Cannot reach ClamAV daemon at {{ clamav.host }}:{{ clamav.port }}. Virus scanning is inactive.</span>
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <section class="sts-toolbar" aria-label="Account status">
+        <div class="sts-toolbar-title"><div class="card-title"><i class="fas fa-server"></i><span>Fetch account status</span></div><span class="sts-result-count">{{ total_accounts }} account{% if total_accounts != 1 %}s{% endif %}</span></div>
+    </section>
+
+    {% if accounts %}
+    <div class="sts-grid">
+        {% for acc in accounts %}
+        <article class="sts-card">
+            <div class="sts-card-top">
+                <div class="sts-avatar sts-avatar-{{ acc.health }}"><i class="fas {{ health_icons.get(acc.health, 'fa-circle-info') }}" aria-hidden="true"></i></div>
+                <div class="sts-card-main">
+                    <h3 title="{{ acc.name }}"><a href="/fetch-accounts/{{ acc.id }}/edit">{{ acc.name }}</a></h3>
+                    <div class="sts-type">
+                        <span class="sts-badge sts-badge-type-{{ acc.account_type }}">{{ acc.account_type|upper }}</span>
+                        {% if not acc.enabled %}<span class="sts-badge sts-badge-disabled">Disabled</span>{% endif %}
+                    </div>
+                </div>
+                <span class="sts-health-badge sts-health-{{ acc.health }}"><i class="fas {{ health_icons.get(acc.health, 'fa-circle-info') }}"></i> {{ acc.health_label }}</span>
+            </div>
+            <div class="sts-card-meta">
+                <span title="{{ acc.last_heartbeat | format_user_datetime(request.session.user_id) if acc.last_heartbeat else 'Never' }}"><i class="fas fa-heartbeat"></i> Heartbeat: <strong>{{ acc.heartbeat_ago }}</strong>{% if acc.last_heartbeat %} ({{ acc.last_heartbeat | format_user_datetime(request.session.user_id) }}){% endif %}</span>
+                <span><i class="fas fa-circle-check"></i> Last success: <strong>{{ acc.success_ago }}</strong></span>
+                <span><i class="fas fa-hourglass-half"></i> Poll interval: {% if acc.poll_interval %}<strong>{{ acc.poll_interval }}s</strong>{% else %}<strong>Default (300s)</strong>{% endif %}</span>
+            </div>
+            {% if acc.last_error %}
+            <div class="sts-error"><i class="fas fa-exclamation-circle"></i> <span title="{{ acc.last_error }}">{{ acc.last_error[:100] }}{% if acc.last_error|length > 100 %}...{% endif %}</span></div>
+            {% endif %}
+        </article>
+        {% endfor %}
     </div>
     {% else %}
-    <div class="card-body" style="padding: 0;">
-        <div class="table-container">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Status</th>
-                        <th>Account Name</th>
-                        <th>Type</th>
-                        <th class="hide-mobile">Last Heartbeat</th>
-                        <th class="hide-mobile">Last Success</th>
-                        <th class="hide-mobile">Poll Interval</th>
-                        <th class="hide-mobile">Last Error</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for acc in accounts %}
-                    <tr>
-                        <td>
-                            <span class="badge 
-                                {% if acc.health == 'healthy' %}badge-success
-                                {% elif acc.health == 'error' %}badge-danger
-                                {% elif acc.health == 'stale' %}badge-warning
-                                {% elif acc.health == 'disabled' %}badge-secondary
-                                {% elif acc.health == 'pending' %}badge-info
-                                {% endif %}">
-                                <i class="fas 
-                                    {% if acc.health == 'healthy' %}fa-check-circle
-                                    {% elif acc.health == 'error' %}fa-times-circle
-                                    {% elif acc.health == 'stale' %}fa-exclamation-triangle
-                                    {% elif acc.health == 'disabled' %}fa-ban
-                                    {% elif acc.health == 'pending' %}fa-clock
-                                    {% endif %}"></i>
-                                {{ acc.health_label }}
-                            </span>
-                        </td>
-                        <td>
-                            <a href="/fetch-accounts/{{ acc.id }}/edit" class="link"><strong>{{ acc.name }}</strong></a>
-                        </td>
-                        <td>
-                            <span class="badge 
-                                {% if acc.account_type == 'imap' %}badge-primary
-                                {% elif acc.account_type == 'gmail' %}badge-danger
-                                {% elif acc.account_type == 'o365' %}badge-info
-                                {% endif %}">
-                                {{ acc.account_type|upper }}
-                            </span>
-                        </td>
-                        <td class="hide-mobile">
-                            {% if acc.last_heartbeat %}
-                                <div><strong>{{ acc.heartbeat_ago }}</strong></div>
-                                <small style="color: var(--text-secondary);">{{ acc.last_heartbeat | format_user_datetime(request.session.user_id) }}</small>
-                            {% else %}
-                                <span style="color: var(--text-secondary);">Never</span>
-                            {% endif %}
-                        </td>
-                        <td class="hide-mobile">
-                            {% if acc.last_success %}
-                                <div style="color: var(--success); font-weight: 600;">{{ acc.success_ago }}</div>
-                                <small style="color: var(--text-secondary);">{{ acc.last_success | format_user_datetime(request.session.user_id) }}</small>
-                            {% else %}
-                                <span style="color: var(--text-secondary);">Never</span>
-                            {% endif %}
-                        </td>
-                        <td class="hide-mobile">
-                            {% if acc.poll_interval %}
-                                {{ acc.poll_interval }}s
-                            {% else %}
-                                <span style="color: var(--text-secondary);">Default (300s)</span>
-                            {% endif %}
-                        </td>
-                        <td class="hide-mobile">
-                            {% if acc.last_error %}
-                                <span style="color: var(--danger);">
-                                    <i class="fas fa-exclamation-circle"></i>
-                                    {{ acc.last_error[:100] }}{% if acc.last_error|length > 100 %}...{% endif %}
-                                </span>
-                            {% else %}
-                                <span style="color: var(--text-secondary);">None</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <div class="card-footer">
-        <div class="mb-3">
-            <div class="fetch-status-legend">
-                <strong class="legend-title">Status Legend:</strong>
-                <div class="legend-grid">
-                    <div><span class="badge badge-success">Healthy</span> Fetch account is active and running successfully</div>
-                    <div><span class="badge badge-warning">Stale</span> No heartbeat in 3x the poll interval</div>
-                    <div><span class="badge badge-danger">Error</span> Last fetch attempt encountered an error</div>
-                    <div><span class="badge badge-info">Pending</span> Never been run yet</div>
-                    <div><span class="badge badge-secondary">Disabled</span> Account is disabled and not being fetched</div>
-                </div>
+    <div class="sts-empty-state"><div class="sts-empty-icon"><i class="fas fa-server"></i></div><h3>No fetch accounts configured</h3><p><a href="/fetch-accounts/new" class="link">Create one now</a> to start archiving mail.</p></div>
+    {% endif %}
+
+    <div class="sts-tip">
+        <i class="fas fa-circle-info"></i>
+        <div class="sts-tip-body">
+            <strong>Status legend:</strong>
+            <div class="sts-legend-grid">
+                <div><span class="sts-badge sts-badge-healthy">Healthy</span> Fetch account is active and running successfully</div>
+                <div><span class="sts-badge sts-badge-warn">Stale</span> No heartbeat in 3x the poll interval</div>
+                <div><span class="sts-badge sts-badge-error">Error</span> Last fetch attempt encountered an error</div>
+                <div><span class="sts-badge sts-badge-pending">Pending</span> Never been run yet</div>
+                <div><span class="sts-badge sts-badge-disabled">Disabled</span> Account is disabled and not being fetched</div>
             </div>
         </div>
     </div>
-    {% endif %}
 </div>
+{% endblock %}
 
-<div class="card mb-4">
-    <div class="card-header">
-        <div class="card-title">
-            <i class="fas fa-server"></i>
-            <span>API Status</span>
-        </div>
-    </div>
-    <div class="card-body">
-        <div class="d-flex align-items-center gap-2">
-            <span class="badge badge-success">
-                <i class="fas fa-check-circle"></i>
-                Operational
-            </span>
-            {% if api_status.uptime %}
-            <span style="color: var(--text-secondary);">Uptime: {{ api_status.uptime }}</span>
-            {% endif %}
-            {% if api_status.version %}
-            <span style="color: var(--text-secondary);">- v{{ api_status.version }}</span>
-            {% endif %}
-        </div>
-    </div>
-</div>
+{% block extra_css %}<link rel="stylesheet" href="/static/system-status.css">{% endblock %}
 
-<div class="card mb-4">
-    <div class="card-header">
-        <div class="card-title">
-            <i class="fas fa-database"></i>
-            <span>Database Status</span>
-        </div>
-    </div>
-    <div class="card-body">
-        {% if database.connected %}
-        <div class="d-flex align-items-center gap-2">
-            <span class="badge badge-success">
-                <i class="fas fa-check-circle"></i>
-                Connected
-            </span>
-            {% if database.version %}
-            <span style="color: var(--text-secondary);">{{ database.version }}</span>
-            {% endif %}
-        </div>
-        {% else %}
-        <div class="d-flex align-items-center gap-2">
-            <span class="badge badge-danger">
-                <i class="fas fa-times-circle"></i>
-                Unavailable
-            </span>
-            <span style="color: var(--text-secondary);">Cannot reach the database. Data operations may be unavailable.</span>
-        </div>
-        {% endif %}
-    </div>
-</div>
+{% block extra_js %}
+<!-- Scroll to top button -->
+<button id="scroll-to-top-btn" class="scroll-to-top" aria-label="Scroll to top" title="Back to top">
+    <i class="fas fa-arrow-up"></i>
+</button>
 
-<div class="card">
-    <div class="card-header">
-        <div class="card-title">
-            <i class="fas fa-shield-alt"></i>
-            <span>ClamAV Status</span>
-        </div>
-    </div>
-    <div class="card-body">
-        {% if not clamav.enabled %}
-        <div class="d-flex align-items-center gap-2">
-            <span class="badge badge-secondary">
-                <i class="fas fa-ban"></i>
-                Disabled
-            </span>
-            <span style="color: var(--text-secondary);">Virus scanning is disabled. Enable it in <a href="/settings" class="link">Settings</a>.</span>
-        </div>
-        {% elif clamav.connected %}
-        <div class="d-flex align-items-center gap-2">
-            <span class="badge badge-success">
-                <i class="fas fa-check-circle"></i>
-                Connected
-            </span>
-            <span style="color: var(--text-secondary);">{{ clamav.host }}:{{ clamav.port }}</span>
-            {% if clamav.version %}
-            <span style="color: var(--text-secondary);">- {{ clamav.version }}</span>
-            {% endif %}
-        </div>
-        {% else %}
-        <div class="d-flex align-items-center gap-2">
-            <span class="badge badge-danger">
-                <i class="fas fa-times-circle"></i>
-                Unavailable
-            </span>
-            <span style="color: var(--text-secondary);">Cannot reach ClamAV daemon at {{ clamav.host }}:{{ clamav.port }}. Virus scanning is inactive.</span>
-        </div>
-        {% endif %}
-    </div>
-</div>
+<script>
+(function () {
+    const scrollBtn = document.getElementById('scroll-to-top-btn');
+    if (!scrollBtn) return;
 
+    window.addEventListener('scroll', function () {
+        scrollBtn.classList.toggle('visible', window.scrollY > 300);
+    });
+    scrollBtn.addEventListener('click', function () {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+})();
+</script>
 {% endblock %}

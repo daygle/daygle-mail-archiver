@@ -156,6 +156,21 @@ def logs(
         search or source or (level != "all") or date_from or date_to
     )
 
+    # Archive-wide stats for the stat cards. Defensive: a stats failure must
+    # never take the page down with it.
+    stats = {"total": 0, "debug": 0, "info": 0, "warning": 0, "error": 0, "success": 0}
+    try:
+        stats_rows = query(
+            "SELECT level, COUNT(*) AS c FROM logs GROUP BY level"
+        ).mappings().all()
+        for r in stats_rows:
+            log_level = r.get("level") or "debug"
+            if log_level in stats:
+                stats[log_level] = r.get("c", 0) or 0
+        stats["total"] = sum(stats.values())
+    except Exception:
+        pass
+
     return templates.TemplateResponse(
         "logs.html",
         {
@@ -173,6 +188,7 @@ def logs(
             "allowed_levels": ALLOWED_LOG_LEVELS,
             "sources": sources,
             "has_active_filters": has_active_filters,
+            "stats": stats,
         },
     )
     
