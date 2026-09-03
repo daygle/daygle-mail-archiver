@@ -174,7 +174,7 @@ def format_email_date(date_value, fallback_datetime, user_id):
         try:
             return format_datetime(parsedate_to_datetime(date_value), user_id)
         except (ValueError, TypeError):
-            # Unparseable string – fall through to use the fallback timestamp
+            # Unparseable string - fall through to use the fallback timestamp
             pass
 
     # No Date header or unparseable value: use the fallback timestamp

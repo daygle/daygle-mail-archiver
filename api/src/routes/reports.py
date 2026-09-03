@@ -1186,7 +1186,7 @@ def security_access_report(request: Request, start_date: str = None, end_date: s
                 "details": event["details"],
             })
 
-        # User activity summary (role removed – no dependency on users.role)
+        # User activity summary (role removed - no dependency on users.role)
         user_activity = query("""
             SELECT
                 u.username,
@@ -1209,7 +1209,7 @@ def security_access_report(request: Request, start_date: str = None, end_date: s
 
             formatted_users.append({
                 "username": user["username"],
-                # role removed – could add RBAC-derived fields here if needed
+                # role removed - could add RBAC-derived fields here if needed
                 "last_login": last_login,
                 "recent_actions": int(user["recent_actions"] or 0),
             })
