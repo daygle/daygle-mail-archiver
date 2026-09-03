@@ -4,9 +4,9 @@
 
 {% block content %}
 {% set perms = request.session.permissions or [] %}
-{# Checkbox column + bulk actions are available if the user can do EITHER
-   bulk operation (quarantine needs manage_quarantine, delete needs delete_emails) #}
+{# Bulk actions are available if the user can do EITHER bulk operation #}
 {% set show_bulk = 'delete_emails' in perms or 'manage_quarantine' in perms or 'scan_emails' in perms %}
+{% set total_pages = ((total / page_size) | round(0, 'ceil') | int) %}
 
 {% if filter %}
 {% set filter_labels = {
@@ -16,28 +16,75 @@
     'unscanned': 'Unscanned Emails',
     'virus_detected': 'Virus Detected'
 } %}
-<div class="alert alert-info" style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+<div class="eml-filter-banner" role="note">
     <i class="fas fa-filter"></i>
     <span>Filtered by data quality report: <strong>{{ filter_labels.get(filter, filter) }}</strong></span>
-    <a href="/emails" class="btn btn-secondary btn-sm" style="margin-left: auto;">
+    <a href="/emails" class="btn btn-secondary btn-sm eml-filter-clear">
         <i class="fas fa-times"></i>
         <span>Clear Filter</span>
     </a>
 </div>
 {% endif %}
 
-<!-- Filters Card (Initially Hidden) -->
-<div id="filterCard" class="card mb-4" style="display: none;">
-    <div class="card-header flex-between">
-        <div class="card-title">
-            <i class="fas fa-filter"></i>
-            <span>Search & Filter</span>
+<div class="eml-page">
+    <section class="eml-hero" aria-labelledby="eml-heading">
+        <div class="eml-hero-copy">
+            <div class="eml-eyebrow"><i class="fas fa-inbox"></i> Email archive</div>
+            <h2 id="eml-heading">Archived emails</h2>
+            <p>Browse and search archived messages. Integrity and ClamAV scan status are shown on every message so tampering or threats are easy to spot.</p>
         </div>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="toggleFilters()" title="Close">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-    <div class="card-body">
+        {% if 'import_emails' in perms or 'export_emails' in perms %}
+        <a href="/emails/import-export" class="btn btn-primary eml-create-button"><i class="fas fa-exchange-alt"></i><span>Import / Export</span></a>
+        {% endif %}
+    </section>
+    <section class="eml-stats" aria-label="Archive summary">
+        <div class="eml-stat-card"><div class="eml-stat-icon eml-stat-icon-blue"><i class="fas fa-envelope-open-text"></i></div><div><span class="eml-stat-label">Total archived</span><strong>{{ stats.total_emails }}</strong></div></div>
+        <div class="eml-stat-card"><div class="eml-stat-icon eml-stat-icon-red"><i class="fas fa-exclamation-triangle"></i></div><div><span class="eml-stat-label">Virus detected</span><strong>{{ stats.infected_emails }}</strong></div></div>
+        <div class="eml-stat-card"><div class="eml-stat-icon eml-stat-icon-orange"><i class="fas fa-microscope"></i></div><div><span class="eml-stat-label">Unscanned</span><strong>{{ stats.unscanned_emails }}</strong></div></div>
+        <div class="eml-stat-card"><div class="eml-stat-icon eml-stat-icon-purple"><i class="fas fa-shield-virus"></i></div><div><span class="eml-stat-label">Quarantined</span><strong>{{ stats.quarantined_emails }}</strong></div></div>
+    </section>
+    <section class="eml-toolbar" aria-label="Email filters">
+        <div class="eml-toolbar-title"><div class="card-title"><i class="fas fa-layer-group"></i><span>All emails</span></div><span class="eml-result-count" id="emlResultCount">{{ total }} email{% if total != 1 %}s{% endif %}</span></div>
+        <div class="eml-toolbar-actions">
+            <label class="eml-search" for="emlSearch"><i class="fas fa-search" aria-hidden="true"></i><input id="emlSearch" type="search" placeholder="Search this page" autocomplete="off"></label>
+            <label class="eml-sort" for="emlSort"><i class="fas fa-sort" aria-hidden="true"></i><select id="emlSort" aria-label="Sort emails">
+                <option value="date|desc" {% if sort_by == 'date' and sort_order == 'desc' %}selected{% endif %}>Newest first</option>
+                <option value="date|asc" {% if sort_by == 'date' and sort_order == 'asc' %}selected{% endif %}>Oldest first</option>
+                <option value="sender|asc" {% if sort_by == 'sender' and sort_order == 'asc' %}selected{% endif %}>From A-Z</option>
+                <option value="subject|asc" {% if sort_by == 'subject' and sort_order == 'asc' %}selected{% endif %}>Subject A-Z</option>
+                <option value="source|asc" {% if sort_by == 'source' and sort_order == 'asc' %}selected{% endif %}>Account A-Z</option>
+                <option value="folder|asc" {% if sort_by == 'folder' and sort_order == 'asc' %}selected{% endif %}>Folder A-Z</option>
+            </select></label>
+            <button type="button" class="btn btn-secondary btn-sm" id="emlFilterToggle" onclick="toggleFilters()">
+                <i class="fas fa-sliders"></i>
+                <span class="hide-mobile">Filters</span>
+            </button>
+        </div>
+    </section>
+    {% if show_bulk %}
+    <section class="eml-bulk-bar" aria-label="Bulk actions">
+        <label class="eml-select-all"><input type="checkbox" id="select-all" class="form-check-input"><span>Select all</span></label>
+        <span class="eml-selected-count" id="emlSelectedCount">0 selected</span>
+        <div class="eml-bulk-actions">
+            {% if 'scan_emails' in perms %}
+            <button type="button" class="btn btn-info btn-sm" id="scan-selected-btn" disabled onclick="submitManualScan()" title="Run ClamAV scan; infected results are flagged for review">
+                <i class="fas fa-microscope"></i><span>Scan Selected</span>
+            </button>
+            {% endif %}
+            {% if 'manage_quarantine' in perms %}
+            <button type="button" class="btn btn-warning btn-sm" id="quarantine-selected-btn" disabled onclick="showQuarantineModal()">
+                <i class="fas fa-shield-virus"></i><span>Quarantine Selected</span>
+            </button>
+            {% endif %}
+            {% if 'delete_emails' in perms %}
+            <button type="button" class="btn btn-danger btn-sm" id="delete-selected-btn" disabled onclick="showDeleteModal()">
+                <i class="fas fa-trash"></i><span>Delete Selected</span>
+            </button>
+            {% endif %}
+        </div>
+    </section>
+    {% endif %}
+    <section class="eml-filters" id="filterCard" hidden>
         <form method="get" action="/emails">
             <div class="grid grid-cols-4 gap-3">
                 <div>
@@ -69,6 +116,7 @@
                     <label class="form-label">Keyword Search</label>
                     <input type="text" name="q" value="{{ q }}" placeholder="Search subject, sender, recipients" class="form-control">
                 </div>
+                {% if filter %}<input type="hidden" name="filter" value="{{ filter }}">{% endif %}
             </div>
             <div class="flex gap-2" style="margin-top: 12px;">
                 <button type="submit" class="btn btn-primary">
@@ -81,229 +129,77 @@
                 </a>
             </div>
         </form>
-    </div>
-</div>
+    </section>
 
-<!-- Quarantine Confirmation Section -->
-<div id="quarantine-confirmation" class="card" style="display: none; margin-bottom: 24px;">
-    <div class="card-header">
-        <div class="card-title">
-            <i class="fas fa-shield-virus" style="color: var(--warning);"></i>
-            <span>Confirm Quarantine</span>
-        </div>
-    </div>
-    <div class="card-body">
-        <div class="alert alert-warning">
-            <i class="fas fa-info-circle"></i>
-            <span>You are about to quarantine <strong id="quarantine-count">0</strong> email<span id="quarantine-plural">s</span>.</span>
-        </div>
-
-        <p><strong>This will move the selected emails to quarantine for review.</strong></p>
-
-        <div class="text-center">
-            <form method="post" action="/emails/quarantine" id="quarantine-form" style="display: inline;">
-                <button type="submit" class="btn btn-warning">
-                    <i class="fas fa-shield-virus"></i>
-                    <span class="hide-mobile">Quarantine Selected Emails</span>
-                </button>
-            </form>
-            <button type="button" class="btn btn-secondary ms-2" onclick="hideQuarantineConfirmation()">
-                <i class="fas fa-times"></i>
-                <span class="hide-mobile">Cancel</span>
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- Delete Confirmation Section -->
-<div id="delete-confirmation" class="card" style="display: none; margin-bottom: 24px;">
-    <div class="card-header">
-        <div class="card-title">
-            <i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i>
-            <span>Confirm Deletion</span>
-        </div>
-    </div>
-    <div class="card-body">
-        <div class="alert alert-warning">
-            <i class="fas fa-info-circle"></i>
-            <span>You are about to delete <strong id="delete-count">0</strong> email<span id="delete-plural">s</span>.</span>
-        </div>
-
-        <p><strong>Choose how you want to delete them:</strong></p>
-
-        <div style="display: grid; gap: 12px; margin-bottom: 20px;">
-            <button type="button" class="btn btn-danger w-100" onclick="performDelete('db')">
-                <i class="fas fa-database"></i>
-                <span class="hide-mobile">Delete from Database Only</span>
-            </button>
-            <button type="button" class="btn btn-warning w-100" onclick="performDelete('imap')">
-                <i class="fas fa-server"></i>
-                <span class="hide-mobile">Delete from Database and Mail Server</span>
-            </button>
-        </div>
-
-        <div class="text-center">
-            <button type="button" class="btn btn-secondary" onclick="hideDeleteConfirmation()">
-                <i class="fas fa-times"></i>
-                <span class="hide-mobile">Cancel</span>
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- Emails Table Card -->
-<div class="card">
-    <div class="card-header flex-between">
-        <div class="card-title">
-            <i class="fas fa-inbox"></i>
-            <span>Archived Emails</span>
-        </div>
-        <div class="flex gap-2">
-            <button id="toggleFilterBtn" class="btn btn-secondary btn-sm" onclick="toggleFilters()">
-                <i class="fas fa-filter"></i>
-                <span class="hide-mobile">Search & Filter</span>
-            </button>
-
-            {% if 'scan_emails' in perms %}
-            <button type="button" class="btn btn-info btn-sm" id="scan-selected-btn" disabled onclick="submitManualScan()" title="Run ClamAV scan; infected results are flagged for review">
-                <i class="fas fa-microscope"></i>
-                <span class="hide-mobile">Scan Selected</span>
-            </button>
-            {% endif %}
-            {% if 'manage_quarantine' in perms %}
-            <button type="button" class="btn btn-warning btn-sm" id="quarantine-selected-btn" disabled onclick="showQuarantineModal()">
-                <i class="fas fa-shield-virus"></i>
-                <span class="hide-mobile">Quarantine Selected</span>
-            </button>
-            {% endif %}
-            {% if 'delete_emails' in perms %}
-            <button type="button" class="btn btn-danger btn-sm" id="delete-selected-btn" disabled onclick="showDeleteModal()">
-                <i class="fas fa-trash"></i>
-                <span class="hide-mobile">Delete Selected</span>
-            </button>
-            {% endif %}
-        </div>
-    </div>
-
-    <div class="card-body" style="padding: 0;">
-        <form method="post" action="/emails/delete" id="emails-bulk-form">
-            <div class="table-container">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            {% if show_bulk %}
-                            <th class="col-small">
-                                <input type="checkbox" id="select-all" class="form-check-input">
-                            </th>
-                            {% endif %}
-                            {% macro sort_link(col, label, extra_class="") %}
-                                {% set next_order = "desc" if (sort_by == col and sort_order == "asc") else "asc" %}
-                                <a href="/emails?page=1&page_size={{ page_size }}&q={{ q }}&account={{ account }}&folder={{ folder }}&sender={{ sender }}&recipient={{ recipient }}&subject={{ subject }}&date_from={{ date_from }}&date_to={{ date_to }}{% if filter %}&filter={{ filter }}{% endif %}&sort_by={{ col }}&sort_order={{ next_order }}" class="sort-header{% if sort_by == col %} active{% endif %} {{ extra_class }}">
-                                    {{ label }}
-                                    {% if sort_by == col %}
-                                        <i class="fas fa-sort-{{ 'up' if sort_order == 'asc' else 'down' }} sort-icon"></i>
-                                    {% else %}
-                                        <i class="fas fa-sort sort-icon"></i>
-                                    {% endif %}
-                                </a>
-                            {% endmacro %}
-                            <th>{{ sort_link("date", "Date") }}</th>
-                            <th class="hide-mobile">{{ sort_link("source", "Account") }}</th>
-                            <th class="hide-mobile">{{ sort_link("folder", "Folder") }}</th>
-                            <th>{{ sort_link("sender", "From") }}</th>
-                            <th class="hide-mobile">To</th>
-                            <th>{{ sort_link("subject", "Subject") }}</th>
-                            <th>Integrity</th>
-                            <th class="col-center">
-                                <i class="fas fa-shield-virus" title="ClamAV Scan Status"></i>
-                            </th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {% for email in emails %}
-                        <tr>
-                            {% if show_bulk %}
-                            <td>
-                                <input type="checkbox" name="ids" value="{{ email.id }}" class="form-check-input email-checkbox">
-                            </td>
-                            {% endif %}
-
-                            <td>{{ email.date_formatted or email.date }}</td>
-                            <td class="hide-mobile">
-                                <span class="badge badge-primary">{{ email.source }}</span>
-                            </td>
-                            <td class="hide-mobile">
-                                <span class="badge badge-secondary">{{ email.folder }}</span>
-                            </td>
-                            <td>{{ email.sender | extract_emails }}</td>
-                            {% set recipients_str = email.recipients | extract_emails %}
-                            <td class="hide-mobile col-wrap" title="{{ recipients_str }}">{{ recipients_str }}</td>
-                            <td class="col-wrap" title="{{ email.subject or '(no subject)' }}">
-                                <a href="/emails/{{ email.id }}" class="link">
-                                    {{ email.subject or '(no subject)' }}
-                                </a>
-                            </td>
-                            <td>
-                                {% if email.integrity == 'ok' %}
-                                <span class="badge badge-success" title="{{ email.integrity_reason or 'Valid' }}">Valid</span>
-                                {% elif email.integrity == 'modified' %}
-                                <span class="badge badge-danger" title="{{ email.integrity_reason or 'Modified' }}">Invalid</span>
-                                {% elif email.integrity == 'no_signature' %}
-                                <span class="badge badge-secondary" title="{{ email.integrity_reason or 'No Signature' }}">No Sig</span>
-                                {% else %}
-                                <span class="badge badge-secondary" title="{{ email.integrity_reason or 'Unknown' }}">Unknown</span>
-                                {% endif %}
-                            </td>
-                            <td style="text-align: center;">
-                                {% if email.virus_detected %}
-                                <span class="badge badge-danger" title="ClamAV detected: {{ email.virus_name }}">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                    <span>Virus detected</span>
-                                </span>
-                                {% elif email.virus_scanned %}
-                                <span class="badge badge-success" title="ClamAV scan completed: no virus detected">
-                                    <i class="fas fa-check"></i>
-                                    <span>Scanned - clean</span>
-                                </span>
-                                {% else %}
-                                <span class="badge badge-secondary" title="ClamAV scan not completed or scanning is disabled">
-                                    <i class="fas fa-minus"></i>
-                                    <span>Not scanned</span>
-                                </span>
-                                {% endif %}
-                                {% if email.virus_scanned and email.scan_timestamp_formatted %}
-                                <small class="d-block text-secondary mt-1">{{ email.scan_timestamp_formatted }}</small>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-
-                        {% if emails|length == 0 %}
-                        <tr>
-                            <td colspan="{% if show_bulk %}9{% else %}8{% endif %}" class="text-center empty-state">
-                                <div>
-                                    <i class="fas fa-inbox empty-icon"></i>
-                                    <p>No emails found.</p>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endif %}
-                    </tbody>
-                </table>
+    {% if emails %}
+    <form method="post" action="/emails/delete" id="emails-bulk-form">
+    <div class="eml-grid" id="emlGrid">
+        {% for email in emails %}
+        {% set recipients_str = email.recipients | extract_emails %}
+        <article class="eml-card" data-eml-search="{{ email.subject or '' }} {{ email.sender or '' }} {{ email.recipients or '' }} {{ email.source }} {{ email.folder }}">
+            <div class="eml-card-top">
+                {% if show_bulk %}
+                <input type="checkbox" name="ids" value="{{ email.id }}" class="form-check-input email-checkbox" aria-label="Select email {{ email.id }}">
+                {% endif %}
+                <div class="eml-avatar {% if email.virus_detected %}eml-avatar-danger{% endif %}"><i class="fas fa-envelope" aria-hidden="true"></i></div>
+                <div class="eml-card-main">
+                    <h3 class="eml-subject" title="{{ email.subject or '(no subject)' }}"><a href="/emails/{{ email.id }}">{{ email.subject or '(no subject)' }}</a></h3>
+                    <div class="eml-sender" title="{{ email.sender }}">{{ email.sender | extract_emails or 'Unknown sender' }}</div>
+                </div>
+                <div class="eml-card-badges">
+                    {% if email.integrity == 'ok' %}
+                    <span class="eml-badge eml-badge-valid" title="{{ email.integrity_reason or 'Valid' }}">Valid</span>
+                    {% elif email.integrity == 'modified' %}
+                    <span class="eml-badge eml-badge-invalid" title="{{ email.integrity_reason or 'Modified' }}">Invalid</span>
+                    {% elif email.integrity == 'no_signature' %}
+                    <span class="eml-badge eml-badge-neutral" title="{{ email.integrity_reason or 'No Signature' }}">No Sig</span>
+                    {% else %}
+                    <span class="eml-badge eml-badge-neutral" title="{{ email.integrity_reason or 'Unknown' }}">Unknown</span>
+                    {% endif %}
+                    {% if email.virus_detected %}
+                    <span class="eml-badge eml-badge-danger" title="ClamAV detected: {{ email.virus_name }}">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Virus detected</span>
+                    </span>
+                    {% elif email.virus_scanned %}
+                    <span class="eml-badge eml-badge-valid" title="ClamAV scan completed: no virus detected">
+                        <i class="fas fa-check"></i>
+                        <span>Scanned - clean</span>
+                    </span>
+                    {% else %}
+                    <span class="eml-badge eml-badge-neutral" title="ClamAV scan not completed or scanning is disabled">
+                        <i class="fas fa-minus"></i>
+                        <span>Not scanned</span>
+                    </span>
+                    {% endif %}
+                </div>
             </div>
-        </form>
+            <div class="eml-card-meta">
+                <span title="{{ recipients_str }}"><i class="fas fa-user"></i> To: {{ recipients_str or 'N/A' }}</span>
+                <span><i class="fas fa-server"></i> {{ email.source }}</span>
+                <span><i class="fas fa-folder"></i> {{ email.folder }}</span>
+                <span><i class="fas fa-clock"></i> {{ email.date_formatted or email.date }}</span>
+            </div>
+            <div class="eml-card-footer">
+                <a href="/emails/{{ email.id }}" class="btn btn-secondary btn-sm"><i class="fas fa-eye"></i><span>View</span></a>
+                {% if email.virus_scanned and email.scan_timestamp_formatted %}
+                <span class="eml-muted">Scanned {{ email.scan_timestamp_formatted }}</span>
+                {% endif %}
+            </div>
+        </article>
+        {% endfor %}
     </div>
+    </form>
+    <div class="eml-filter-empty" id="emlFilterEmpty" hidden><i class="fas fa-search"></i><h3>No matching emails</h3><p>Try a different search term or clear the filters.</p></div>
+    {% else %}
+    <div class="eml-empty-state"><div class="eml-empty-icon"><i class="fas fa-inbox"></i></div><h3>No emails found</h3><p>There are no archived emails matching this view yet.</p></div>
+    {% endif %}
 
-    <!-- Pagination -->
-    {% set total_pages = ((total / page_size) | round(0, 'ceil') | int) %}
     {% if total_pages > 1 %}
-    <div class="card-footer">
+    <div class="eml-pagination">
         {% set base_url = "/emails?page_size=" ~ page_size ~ "&q=" ~ q ~ "&account=" ~ account ~ "&folder=" ~ folder ~ "&sender=" ~ sender ~ "&recipient=" ~ recipient ~ "&subject=" ~ subject ~ "&date_from=" ~ date_from ~ "&date_to=" ~ date_to ~ ("&filter=" ~ filter if filter else "") ~ ("&sort_by=" ~ sort_by if sort_by else "") ~ ("&sort_order=" ~ sort_order if sort_order else "") %}
 
-        <!-- Page number buttons -->
         <div class="pagination-bar">
-            <!-- Previous button -->
             {% if page > 1 %}
             <a href="{{ base_url }}&page={{ page - 1 }}" class="page-link" title="Previous">
                 <i class="fas fa-chevron-left"></i>
@@ -312,7 +208,6 @@
             <span class="page-link disabled"><i class="fas fa-chevron-left"></i></span>
             {% endif %}
 
-            <!-- First page -->
             {% if page > 3 %}
             <a href="{{ base_url }}&page=1" class="page-link">1</a>
             {% if page > 4 %}
@@ -320,7 +215,6 @@
             {% endif %}
             {% endif %}
 
-            <!-- Window of pages -->
             {% for p in range([1, page - 2] | max, [total_pages + 1, page + 3] | min) %}
             {% if p == page %}
             <span class="page-link active">{{ p }}</span>
@@ -329,7 +223,6 @@
             {% endif %}
             {% endfor %}
 
-            <!-- Last page -->
             {% if page < total_pages - 2 %}
             {% if page < total_pages - 3 %}
             <span class="page-link ellipsis">&hellip;</span>
@@ -337,7 +230,6 @@
             <a href="{{ base_url }}&page={{ total_pages }}" class="page-link">{{ total_pages }}</a>
             {% endif %}
 
-            <!-- Next button -->
             {% if page < total_pages %}
             <a href="{{ base_url }}&page={{ page + 1 }}" class="page-link" title="Next">
                 <i class="fas fa-chevron-right"></i>
@@ -346,7 +238,6 @@
             <span class="page-link disabled"><i class="fas fa-chevron-right"></i></span>
             {% endif %}
 
-            <!-- Jump to page -->
             <form method="get" action="/emails" class="page-jump" id="emails-jump-form">
                 <input type="hidden" name="page_size" value="{{ page_size }}">
                 <input type="hidden" name="q" value="{{ q }}">
@@ -366,166 +257,179 @@
             </form>
         </div>
 
-        <!-- Record count summary -->
         <div class="pagination-info">
             Showing {{ ((page - 1) * page_size + 1) }}-{{ [page * page_size, total] | min }} of {{ total }} emails
         </div>
     </div>
     {% endif %}
+
+    <div class="eml-tip"><i class="fas fa-circle-info"></i><span><strong>Tip:</strong> The search box filters the current page. Use <strong>Filters</strong> to search the whole archive by account, folder, sender, recipient, subject or date range.</span></div>
 </div>
 
-<script>
-  (function () {
+<div class="modal fade" id="quarantineModal" tabindex="-1" aria-labelledby="quarantineModalLabel" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h2 class="modal-title" id="quarantineModalLabel"><i class="fas fa-shield-virus text-warning"></i> Confirm quarantine</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body"><p>You are about to quarantine <strong id="quarantine-count">0</strong> email<span id="quarantine-plural">s</span>.</p><div class="alert alert-warning"><i class="fas fa-info-circle"></i><span>This will move the selected emails to quarantine for review. They will no longer appear in the main archive.</span></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-warning" onclick="hideQuarantineConfirmation(); document.getElementById('quarantine-form').submit();"><i class="fas fa-shield-virus"></i> Quarantine Selected Emails</button></div></div></div></div>
+<form method="post" action="/emails/quarantine" id="quarantine-form" hidden></form>
+
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h2 class="modal-title" id="deleteModalLabel"><i class="fas fa-exclamation-triangle text-danger"></i> Confirm deletion</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body"><p>You are about to delete <strong id="delete-count">0</strong> email<span id="delete-plural">s</span>.</p><div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i><span>This cannot be undone. Choose how you want to delete them:</span></div><div class="eml-delete-options"><button type="button" class="btn btn-danger" onclick="performDelete('db')"><i class="fas fa-database"></i><span>Delete from Database Only</span></button><button type="button" class="btn btn-warning" onclick="performDelete('imap')"><i class="fas fa-server"></i><span>Delete from Database and Mail Server</span></button></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button></div></div></div></div>
+{% endblock %}
+
+{% block extra_css %}<link rel="stylesheet" href="/static/emails.css">{% endblock %}
+
+{% block extra_js %}<script>
+(function () {
     const selectAll = document.getElementById('select-all');
-    const checkboxes = document.querySelectorAll('.email-checkbox');
+    const checkboxes = Array.from(document.querySelectorAll('.email-checkbox'));
     const scanBtn = document.getElementById('scan-selected-btn');
     const quarantineBtn = document.getElementById('quarantine-selected-btn');
     const deleteBtn = document.getElementById('delete-selected-btn');
     const bulkForm = document.getElementById('emails-bulk-form');
     const quarantineForm = document.getElementById('quarantine-form');
+    const selectedCount = document.getElementById('emlSelectedCount');
+    const emlSearch = document.getElementById('emlSearch');
+    const emlSort = document.getElementById('emlSort');
+    const emlCards = Array.from(document.querySelectorAll('.eml-card'));
+    const filterEmpty = document.getElementById('emlFilterEmpty');
+    const resultCount = document.getElementById('emlResultCount');
+    const filterCard = document.getElementById('filterCard');
+    const filterToggle = document.getElementById('emlFilterToggle');
 
     function updateButtons() {
-      const checkedBoxes = Array.from(checkboxes).filter(cb => cb.checked);
-      const anyChecked = checkedBoxes.length > 0;
+        const checked = checkboxes.filter(cb => cb.checked);
+        const anyChecked = checked.length > 0;
 
-      if (scanBtn) scanBtn.disabled = !anyChecked;
-      if (quarantineBtn) quarantineBtn.disabled = !anyChecked;
-      if (deleteBtn) deleteBtn.disabled = !anyChecked;
+        if (scanBtn) scanBtn.disabled = !anyChecked;
+        if (quarantineBtn) quarantineBtn.disabled = !anyChecked;
+        if (deleteBtn) deleteBtn.disabled = !anyChecked;
+        if (selectedCount) selectedCount.textContent = checked.length + ' selected';
+        if (selectAll) selectAll.checked = checkboxes.length > 0 && checked.length === checkboxes.length;
 
-      if (quarantineForm) {
-        quarantineForm.querySelectorAll('input[name="ids"]').forEach(input => input.remove());
-        checkedBoxes.forEach(cb => {
-          const input = document.createElement('input');
-          input.type = 'hidden';
-          input.name = 'ids';
-          input.value = cb.value;
-          quarantineForm.appendChild(input);
+        if (quarantineForm) {
+            quarantineForm.querySelectorAll('input[name="ids"]').forEach(input => input.remove());
+            checked.forEach(cb => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'ids';
+                input.value = cb.value;
+                quarantineForm.appendChild(input);
+            });
+        }
+    }
+
+    function filterEmails() {
+        const term = (emlSearch?.value || '').trim().toLowerCase();
+        let visible = 0;
+        emlCards.forEach(card => {
+            const shown = !term || (card.dataset.emlSearch || '').toLowerCase().includes(term);
+            card.hidden = !shown;
+            if (shown) visible++;
         });
-      }
+        if (filterEmpty) filterEmpty.hidden = visible !== 0;
+        if (resultCount) resultCount.textContent = visible + ' email' + (visible === 1 ? '' : 's');
     }
 
     if (selectAll) {
-      selectAll.addEventListener('change', function () {
-        checkboxes.forEach(cb => cb.checked = selectAll.checked);
-        updateButtons();
-      });
+        selectAll.addEventListener('change', function () {
+            checkboxes.forEach(cb => cb.checked = selectAll.checked);
+            updateButtons();
+        });
     }
 
-    checkboxes.forEach(cb => {
-      cb.addEventListener('change', updateButtons);
-    });
+    checkboxes.forEach(cb => cb.addEventListener('change', updateButtons));
+    emlSearch?.addEventListener('input', filterEmails);
+
+    if (emlSort) {
+        emlSort.addEventListener('change', function () {
+            const url = new URL(window.location.href);
+            url.searchParams.set('page', '1');
+            const [sortBy, sortOrder] = emlSort.value.split('|');
+            url.searchParams.set('sort_by', sortBy);
+            url.searchParams.set('sort_order', sortOrder);
+            window.location.href = url.toString();
+        });
+    }
+
+    window.toggleFilters = function () {
+        if (!filterCard || !filterToggle) return;
+        const open = filterCard.hidden;
+        filterCard.hidden = !open;
+        filterToggle.innerHTML = open
+            ? '<i class="fas fa-times"></i><span class="hide-mobile">Hide Filters</span>'
+            : '<i class="fas fa-sliders"></i><span class="hide-mobile">Filters</span>';
+    };
+
+    const hasFilters = {{ 'true' if q or account or folder or sender or recipient or subject or date_from or date_to or filter else 'false' }};
+    if (hasFilters && filterCard && filterCard.hidden) toggleFilters();
+
+    window.showQuarantineModal = function () {
+        const checked = checkboxes.filter(cb => cb.checked);
+        if (checked.length === 0) return;
+
+        document.getElementById('quarantine-count').textContent = checked.length;
+        document.getElementById('quarantine-plural').textContent = checked.length === 1 ? '' : 's';
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('quarantineModal')).show();
+    };
+
+    window.hideQuarantineConfirmation = function () {
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('quarantineModal')).hide();
+    };
+
+    window.showDeleteModal = function () {
+        const checked = checkboxes.filter(cb => cb.checked);
+        if (checked.length === 0) return;
+
+        document.getElementById('delete-count').textContent = checked.length;
+        document.getElementById('delete-plural').textContent = checked.length === 1 ? '' : 's';
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('deleteModal')).show();
+    };
+
+    window.hideDeleteConfirmation = function () {
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('deleteModal')).hide();
+    };
+
+    window.submitManualScan = function () {
+        const checked = checkboxes.filter(cb => cb.checked);
+        if (checked.length === 0) return;
+        const form = document.createElement('form');
+        form.method = 'post';
+        form.action = '/emails/scan';
+        checked.forEach(cb => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'ids';
+            input.value = cb.value;
+            form.appendChild(input);
+        });
+        document.body.appendChild(form);
+        form.submit();
+    };
+
+    window.performDelete = function (mode) {
+        const modeInput = document.createElement('input');
+        modeInput.type = 'hidden';
+        modeInput.name = 'mode';
+        modeInput.value = mode;
+        bulkForm.appendChild(modeInput);
+        bulkForm.submit();
+    };
 
     updateButtons();
-
-    window.toggleFilters = function() {
-      const filterCard = document.getElementById('filterCard');
-      const toggleBtn = document.getElementById('toggleFilterBtn');
-
-      if (filterCard.style.display === 'none') {
-          filterCard.style.display = 'block';
-          toggleBtn.innerHTML = '<i class="fas fa-times"></i><span class="hide-mobile">Hide Filters</span>';
-      } else {
-          filterCard.style.display = 'none';
-          toggleBtn.innerHTML = '<i class="fas fa-filter"></i><span class="hide-mobile">Search & Filter</span>';
-      }
-    };
-
-    const hasFilters = {{ 'true' if q or account or folder or sender or recipient or subject or date_from or date_to else 'false' }};
-    if (hasFilters) {
-      toggleFilters();
-    }
-
-    window.showQuarantineModal = function() {
-      const checkedBoxes = Array.from(checkboxes).filter(cb => cb.checked);
-      const count = checkedBoxes.length;
-
-      if (count === 0) return;
-
-      document.getElementById('quarantine-count').textContent = count;
-      document.getElementById('quarantine-plural').textContent = count === 1 ? '' : 's';
-
-      document.getElementById('filterCard').style.display = 'none';
-      document.querySelector('.card').style.display = 'none';
-      document.getElementById('quarantine-confirmation').style.display = 'block';
-
-      window.scrollTo(0, 0);
-    };
-
-    window.hideQuarantineConfirmation = function() {
-      document.getElementById('quarantine-confirmation').style.display = 'none';
-      document.querySelector('.card').style.display = 'block';
-      window.scrollTo(0, 0);
-    };
-
-    window.showDeleteModal = function() {
-      const checkedBoxes = Array.from(checkboxes).filter(cb => cb.checked);
-      const count = checkedBoxes.length;
-
-      if (count === 0) return;
-
-      document.getElementById('delete-count').textContent = count;
-      document.getElementById('delete-plural').textContent = count === 1 ? '' : 's';
-
-      document.getElementById('filterCard').style.display = 'none';
-      document.querySelector('.card').style.display = 'none';
-      document.getElementById('delete-confirmation').style.display = 'block';
-
-      window.scrollTo(0, 0);
-    };
-
-    window.hideDeleteConfirmation = function() {
-      document.getElementById('delete-confirmation').style.display = 'none';
-      document.querySelector('.card').style.display = 'block';
-      window.scrollTo(0, 0);
-    };
-
-    window.submitManualScan = function() {
-      const checkedBoxes = Array.from(checkboxes).filter(cb => cb.checked);
-      if (!checkedBoxes.length) return;
-      const form = document.createElement('form');
-      form.method = 'post';
-      form.action = '/emails/scan';
-      checkedBoxes.forEach(cb => {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'ids';
-        input.value = cb.value;
-        form.appendChild(input);
-      });
-      document.body.appendChild(form);
-      form.submit();
-    };
-
-    window.performDelete = function(mode) {
-      const modeInput = document.createElement('input');
-      modeInput.type = 'hidden';
-      modeInput.name = 'mode';
-      modeInput.value = mode;
-      bulkForm.appendChild(modeInput);
-      bulkForm.submit();
-    };
-  })();
-
+    filterEmails();
+})();
 </script>
-
 <!-- Scroll to top button -->
-
 <button id="scroll-to-top-btn" class="scroll-to-top" aria-label="Scroll to top" title="Back to top">
     <i class="fas fa-arrow-up"></i>
 </button>
-
 <script>
-  // Bind after the button exists in the DOM.
-  (function () {
+(function () {
     const btn = document.getElementById('scroll-to-top-btn');
     if (!btn) return;
 
     window.addEventListener('scroll', function () {
-      btn.classList.toggle('visible', window.scrollY > 300);
+        btn.classList.toggle('visible', window.scrollY > 300);
     });
     btn.addEventListener('click', function () {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     });
-  })();
+})();
 </script>
 {% endblock %}

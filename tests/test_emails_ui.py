@@ -480,6 +480,9 @@ def _list_emails_fake_query(rows):
     def handler(sql, params=None):
         if "COUNT(*) AS c" in sql or "COUNT(*) as c" in sql:
             return FakeResult([{"c": len(rows)}])
+        if "AS total_emails" in sql:
+            # Archive-wide stat cards query (see list_emails); page rows double as the archive.
+            return FakeResult([{"total_emails": len(rows), "infected_emails": 0, "unscanned_emails": 0, "quarantined_emails": 0}])
         if "FROM emails" in sql and "LIMIT" in sql:
             return FakeResult(rows)
         if "FROM settings" in sql:

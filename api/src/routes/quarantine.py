@@ -533,6 +533,26 @@ def list_quarantine(
 
     total_pages = (total + page_size - 1) // page_size if page_size else 1
 
+    # Quarantine-wide counters for the page header stat cards. One lightweight
+    # aggregate query; wrapped in a try/except so a stats failure can never
+    # take down the list page (the cards render zeros instead).
+    stats = {"total_quarantined": 0, "infected_quarantined": 0, "unscanned_quarantined": 0}
+    try:
+        stats_row = query(
+            """
+            SELECT
+                (SELECT COUNT(*) FROM quarantined_emails) AS total_quarantined,
+                (SELECT COUNT(*) FROM quarantined_emails
+                    WHERE virus_detected = TRUE OR virus_name IS NOT NULL) AS infected_quarantined,
+                (SELECT COUNT(*) FROM quarantined_emails
+                    WHERE COALESCE(virus_scanned, FALSE) = FALSE) AS unscanned_quarantined
+            """
+        ).mappings().first()
+        if stats_row:
+            stats = {key: int(stats_row.get(key) or 0) for key in stats}
+    except Exception as exc:
+        log("error", "Quarantine", f"Failed to load quarantine stats: {exc}", "")
+
     # Compute integrity for each quarantined item if possible
     processed = []
     fernet = _get_quarantine_fernet()
@@ -635,6 +655,7 @@ def list_quarantine(
             'total_pages': total_pages,
             'sort_by': sort_by or '',
             'sort_order': sort_order or '',
+            'stats': stats,
             'flash': msg
         }
     )

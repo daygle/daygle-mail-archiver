@@ -440,6 +440,26 @@ def list_emails(
         params,
     ).mappings().first()["c"]
 
+    # Archive-wide counters for the page header stat cards. One lightweight
+    # aggregate query; wrapped in a try/except so a stats failure can never
+    # take down the list page (the cards render zeros instead).
+    stats = {"total_emails": 0, "infected_emails": 0, "unscanned_emails": 0, "quarantined_emails": 0}
+    try:
+        stats_row = query(
+            """
+            SELECT
+                (SELECT COUNT(*) FROM emails WHERE quarantined = FALSE) AS total_emails,
+                (SELECT COUNT(*) FROM emails WHERE quarantined = FALSE AND virus_detected = TRUE) AS infected_emails,
+                (SELECT COUNT(*) FROM emails WHERE quarantined = FALSE
+                    AND (virus_scanned IS NULL OR virus_scanned = FALSE)) AS unscanned_emails,
+                (SELECT COUNT(*) FROM quarantined_emails) AS quarantined_emails
+            """
+        ).mappings().first()
+        if stats_row:
+            stats = {key: int(stats_row.get(key) or 0) for key in stats}
+    except Exception as exc:
+        log("error", "Emails", f"Failed to load archive stats: {exc}", "")
+
     msg = request.session.pop("flash", None)
 
     # Compute integrity per-row (may be expensive because it needs raw bytes)
@@ -513,6 +533,7 @@ def list_emails(
             "filter": filter or "",
             "sort_by": sort_by or "",
             "sort_order": sort_order or "",
+            "stats": stats,
             "flash": msg,
         },
     )
