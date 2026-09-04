@@ -1,41 +1,39 @@
-import os
-from sqlalchemy import create_engine, text
+"""Database helpers for the worker process.
+
+The canonical implementation lives in the repository-root ``shared`` package
+(``shared/db.py``); this module resolves the DSN with the worker's own config
+loader and exposes the familiar ``query`` / ``execute`` / ``engine`` names so
+existing import sites keep working unchanged.
+"""
+import sys
+from pathlib import Path
+
 from config import require_config
 
-DB_DSN = require_config("DB_DSN")
-
-engine = create_engine(DB_DSN, future=True)
-
-class MaterializedResult:
-    def __init__(self, rows, rowcount=None):
-        self._rows = rows
-        self.rowcount = rowcount
-
-    def mappings(self):
-        return self
-
-    def all(self):
-        return self._rows
-
-    def first(self):
-        return self._rows[0] if self._rows else None
-
-    def __iter__(self):
-        return iter(self._rows)
+# Make the repository-root ``shared`` package importable whether this module is
+# running from the local checkout (worker/src/) or from a container mount
+# (worker/src is copied to /app, with /app/shared mounted alongside it).
+def _find_shared_root() -> Path:
+    current = Path(__file__).resolve().parent
+    while True:
+        if (current / "shared").is_dir():
+            return current
+        if current.parent == current:
+            raise ImportError("Cannot locate the shared/ package from " + str(__file__))
+        current = current.parent
 
 
-def query(sql: str, params=None):
-    with engine.begin() as conn:
-        result = conn.execute(text(sql), params or {})
-        rowcount = result.rowcount
-        if getattr(result, "returns_rows", False):
-            rows = result.mappings().all()
-        else:
-            rows = []
+_shared_root = _find_shared_root()
+if str(_shared_root) not in sys.path:
+    sys.path.insert(0, str(_shared_root))
 
-    return MaterializedResult(rows, rowcount=rowcount)
+from shared.db import Database, MaterializedResult  # noqa: E402
 
+_db = Database(require_config("DB_DSN"))
 
-def execute(sql: str, params=None):
-    with engine.begin() as conn:
-        conn.execute(text(sql), params or {})
+engine = _db.engine
+query = _db.query
+execute = _db.execute
+transaction = _db.transaction
+
+__all__ = ["engine", "query", "execute", "transaction", "MaterializedResult", "Database"]

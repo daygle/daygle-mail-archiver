@@ -1,6 +1,6 @@
 # Daygle Mail Archiver
 
-Daygle Mail Archiver is a deterministic email ingestion and archiving system designed for long‑term retention, auditability, and operational reliability. It ingests emails from multiple sources (IMAP, Gmail API, Office 365 Graph API), stores messages in a structured database, and exposes a clean UI for browsing, retention policy management, and administrative control.
+Daygle Mail Archiver is a deterministic email ingestion and archiving system designed for long-term retention, auditability, and operational reliability. It ingests emails from multiple sources (IMAP, Gmail API, Office 365 Graph API), stores messages in a structured database, and exposes a clean UI for browsing, retention policy management, and administrative control.
 
 This project is built with explicit, maintainable configuration, modular backend logic, and a modernised UI - ensuring predictable behaviour across all environments.
 
@@ -227,7 +227,7 @@ System updates are managed via the command line (the web-based update checker ha
 # Update system without prompts (short form: -f)
 ./update.sh --force
 
-# Update but don’t start containers automatically (useful for inspection)
+# Update but don't start containers automatically (useful for inspection)
 ./update.sh --skip-start
 
 # Apply database schema updates only (containers must already be running)

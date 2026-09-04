@@ -239,7 +239,7 @@ def test_smtp_connection(recipient_email: str, user_id: int = None) -> tuple[boo
         current_time = datetime.now(timezone.utc)
         formatted_time = format_datetime(current_time, user_id) if user_id else current_time.strftime('%Y-%m-%d %H:%M:%S UTC')
         
-        test_subject = f"Daygle Mail Archiver - SMTP Test"
+        test_subject = "Daygle Mail Archiver - SMTP Test"
         test_body = f"""This is a test email from Daygle Mail Archiver.
 
 SMTP Configuration Test Details:

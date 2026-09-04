@@ -1,68 +1,39 @@
-import os
-from contextlib import contextmanager
-from sqlalchemy import create_engine, text
+"""Database helpers for the API process.
+
+The canonical implementation lives in the repository-root ``shared`` package
+(``shared/db.py``); this module resolves the DSN with the API's own config
+loader and exposes the familiar ``query`` / ``execute`` / ``transaction`` /
+``engine`` names so existing import sites keep working unchanged.
+"""
+import sys
+from pathlib import Path
+
 from .config import require_config
 
-DB_DSN = require_config("DB_DSN")
-
-engine = create_engine(DB_DSN, future=True)
-
-
-@contextmanager
-def transaction():
-    """Run a block of statements atomically in a single DB transaction.
-
-    Commits on success, rolls back on any exception. Statements must be
-    executed with :func:`sqlalchemy.text` on the yielded connection, e.g.
-
-        with transaction() as conn:
-            conn.execute(text("INSERT ..."), {...})
-            conn.execute(text("DELETE ..."), {...})
-    """
-    with engine.begin() as conn:
-        yield conn
-
-class MaterializedResult:
-    """A small wrapper for materialized query results.
-
-    Supports `.mappings().first()`, `.mappings().all()`, iteration and exposes
-    `.rowcount` for callers that check it after DML statements.
-    """
-    def __init__(self, rows, rowcount=None):
-        self._rows = rows
-        self.rowcount = rowcount
-
-    def mappings(self):
-        return self
-
-    def all(self):
-        return self._rows
-
-    def first(self):
-        return self._rows[0] if self._rows else None
-
-    def __iter__(self):
-        return iter(self._rows)
+# Make the repository-root ``shared`` package importable whether this module is
+# running from the local checkout (api/src/utils/) or from a container mount
+# (e.g. /app/src/utils/ with /app/shared mounted alongside it).
+def _find_shared_root() -> Path:
+    current = Path(__file__).resolve().parent
+    while True:
+        if (current / "shared").is_dir():
+            return current
+        if current.parent == current:
+            raise ImportError("Cannot locate the shared/ package from " + str(__file__))
+        current = current.parent
 
 
-def query(sql: str, params=None):
-    """Execute a query and fully materialize results before closing the connection.
+_shared_root = _find_shared_root()
+if str(_shared_root) not in sys.path:
+    sys.path.insert(0, str(_shared_root))
 
-    If the statement returns rows, materialize them. Otherwise return an
-    empty materialized result but preserve `rowcount` so callers can inspect it.
-    """
-    with engine.begin() as conn:
-        result = conn.execute(text(sql), params or {})
-        rowcount = result.rowcount
-        if getattr(result, "returns_rows", False):
-            rows = result.mappings().all()
-        else:
-            rows = []
+from shared.db import Database, MaterializedResult  # noqa: E402
 
-    return MaterializedResult(rows, rowcount=rowcount)
+_db = Database(require_config("DB_DSN"))
 
+engine = _db.engine
+query = _db.query
+execute = _db.execute
+transaction = _db.transaction
 
-def execute(sql: str, params=None):
-    """Execute a SQL statement without returning results"""
-    with engine.begin() as conn:
-        return conn.execute(text(sql), params or {})
+__all__ = ["engine", "query", "execute", "transaction", "MaterializedResult", "Database"]

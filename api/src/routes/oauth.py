@@ -10,7 +10,6 @@ from ..utils.db import query, execute
 from ..utils.logger import log
 from ..utils.crypto import encrypt_password
 from ..utils.config import get_config
-from ..utils.templates import templates
 
 router = APIRouter()
 
@@ -260,7 +259,7 @@ def o365_oauth_callback(request: Request, account_id: int, code: str = None, err
         "client_secret": account["oauth_client_secret"],
         "redirect_uri": str(redirect_uri),
         "grant_type": "authorization_code",
-        "scope": "https://graph.microsoft.com/Mail.Read offline_access"
+        "scope": O365_SCOPE
     }
     
     try:

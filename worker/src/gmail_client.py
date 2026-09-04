@@ -2,7 +2,6 @@
 import requests
 import base64
 from typing import List, Dict, Optional
-from datetime import datetime, timezone
 
 
 class GmailClient:

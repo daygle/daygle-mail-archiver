@@ -1,7 +1,9 @@
 """
 ClamAV scanner module for virus scanning of emails.
 """
+import sys
 import time
+from pathlib import Path
 
 import pyclamd
 from typing import Optional, Tuple
@@ -9,15 +11,28 @@ from datetime import datetime, timezone
 from db import query, execute
 
 
-def _scan_result_details(result):
-    """Return the status/name pair from pyclamd's scan_stream response."""
-    if isinstance(result, dict):
-        result = next(iter(result.values()), None)
-    if isinstance(result, (tuple, list)):
-        status = result[0] if result else None
-        name = result[1] if len(result) > 1 else None
-        return status, name
-    return None, None
+# Locate the repository-root ``shared`` package and make it importable, whether
+# running from the local checkout (worker/src/) or a container mount (worker
+# sources are copied to /app with /app/shared mounted alongside). See db.py.
+def _find_shared_root() -> Path:
+    current = Path(__file__).resolve().parent
+    while True:
+        if (current / "shared").is_dir():
+            return current
+        if current.parent == current:
+            raise ImportError("Cannot locate the shared/ package from " + str(__file__))
+        current = current.parent
+
+
+_shared_root = _find_shared_root()
+if str(_shared_root) not in sys.path:
+    sys.path.insert(0, str(_shared_root))
+
+from shared.clamav import scan_result_details, MAX_SCAN_SIZE_DEFAULT  # noqa: E402
+from shared.alert_triggers import get_alert_trigger  # noqa: E402
+
+# Back-compat alias: keep the historical module-level name working.
+_scan_result_details = scan_result_details
 
 
 def log_warning(message: str, details: str = ""):
@@ -72,21 +87,20 @@ def create_alert(alert_type: str, title: str, message: str, details: str = None,
         message: Alert message
         details: Optional detailed information
         trigger_key: Optional trigger key to check if alert should be created and get severity from
-    """
-    # If trigger_key is provided, look up the configured alert_type and check if enabled
+    """    # If trigger_key is provided, resolve the configured alert_type and enabled
+    # flag through a short TTL cache: this runs once per scan error, and the row
+    # cannot change mid-run. Unknown keys and failed lookups fall back to the
+    # alert_type passed explicitly.
     actual_alert_type = alert_type
     if trigger_key:
-        try:
-            result = query("SELECT alert_type, enabled FROM alert_triggers WHERE trigger_key = :key", {"key": trigger_key}).mappings().first()
-            if result:
-                if not result["enabled"]:
-                    # Trigger is disabled, don't create alert
-                    return
-                # Use the configured alert_type from the database
-                actual_alert_type = result["alert_type"]
-        except Exception:
-            # If we can't check the trigger, use the provided alert_type
-            pass
+        trigger = get_alert_trigger(trigger_key, query=query)
+        if trigger is not None:
+            enabled, configured_type = trigger
+            if not enabled:
+                # Trigger is disabled, don't create alert
+                return
+            # Use the configured alert_type from the database
+            actual_alert_type = configured_type
 
     try:
         execute("""
@@ -106,8 +120,9 @@ def create_alert(alert_type: str, title: str, message: str, details: str = None,
 class ClamAVScanner:
     """ClamAV virus scanner for email content."""
 
-    # Maximum email size to scan (100MB) - very large emails are skipped
-    MAX_SCAN_SIZE = 100 * 1024 * 1024
+    # Maximum email size to scan (100MB) - very large emails are skipped.
+    # The shared default can be overridden per-instance from clamav_max_file_size.
+    MAX_SCAN_SIZE = MAX_SCAN_SIZE_DEFAULT
 
     def __init__(self, host: str = 'clamav', port: int = 3310):
         """
@@ -327,7 +342,7 @@ class ClamAVScanner:
                 create_alert(
                     'error',
                     'ClamAV Service Unavailable',
-                    f'Failed to establish connection to ClamAV daemon',
+                    'Failed to establish connection to ClamAV daemon',
                     f'Host: {self.host}:{self.port}, Error: {str(e)}. Virus scanning is disabled.',
                     'clamav_unavailable'
                 )

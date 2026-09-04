@@ -1,232 +1,63 @@
+"""Timezone/date-formatting helpers for the API process.
+
+The canonical implementation lives in the repository-root ``shared`` package
+(``shared/timezone.py``); this module simply points the shared module's default
+query hook at the API's database layer and re-exports every helper under the
+familiar name, so existing import sites keep working unchanged.
+
+Preference lookups therefore run against the API database by default; callers
+that want a different hook (or none) can pass ``query=`` explicitly, and
+processes that never import this module (e.g. the worker) simply get UTC and
+built-in formats.
 """
-Timezone conversion utilities for displaying dates in user's preferred timezone
-"""
-from datetime import datetime, timedelta
-from email.utils import parsedate_to_datetime
-import pytz
+import sys
+from pathlib import Path
+
 from .db import query
 
 
-def get_user_timezone(user_id) -> str:
-    """
-    Get the timezone preference for a specific user.
-    Falls back to global timezone setting if user hasn't set a preference.
-    
-    Args:
-        user_id: The ID of the user (can be int, string, or None)
-        
-    Returns:
-        Timezone string (e.g., 'UTC')
-    """
-    # Handle None or invalid user_id
-    if user_id is None:
-        return get_global_timezone()
-    
-    # Convert to int if it's a string
-    if isinstance(user_id, str):
-        try:
-            user_id = int(user_id)
-        except (ValueError, TypeError):
-            return get_global_timezone()
-    
-    # Try to get user's timezone preference
-    try:
-        user = query("SELECT timezone FROM users WHERE id = :id", {"id": user_id}).mappings().first()
-        if user and user["timezone"]:
-            return user["timezone"]
-    except Exception:
-        pass
-    
-    # Fall back to global timezone setting
-    return get_global_timezone()
+# Make the repository-root ``shared`` package importable whether this module is
+# running from the local checkout (api/src/utils/) or a container mount.
+def _find_shared_root() -> Path:
+    current = Path(__file__).resolve().parent
+    while True:
+        if (current / "shared").is_dir():
+            return current
+        if current.parent == current:
+            raise ImportError("Cannot locate the shared/ package from " + str(__file__))
+        current = current.parent
 
 
-def get_global_timezone() -> str:
-    """
-    Get the global timezone setting.
-    
-    Returns:
-        Timezone string (e.g., 'UTC')
-    """
-    setting = query("SELECT value FROM settings WHERE key = 'timezone'").mappings().first()
-    if setting and setting["value"]:
-        return setting["value"]
-    return "UTC"
+_shared_root = _find_shared_root()
+if str(_shared_root) not in sys.path:
+    sys.path.insert(0, str(_shared_root))
 
+from shared import timezone as _timezone  # noqa: E402
 
-def convert_utc_to_timezone(utc_datetime, target_timezone: str):
-    """
-    Convert a UTC datetime to a specific timezone.
-    
-    Args:
-        utc_datetime: A datetime object (can be timezone-aware or naive) or date object
-        target_timezone: Timezone string (e.g., 'Australia/Melbourne')
-        
-    Returns:
-        Datetime object converted to target timezone
-    """
-    if utc_datetime is None:
-        return None
-    
-    # Handle date objects by converting to datetime at midnight UTC
-    if hasattr(utc_datetime, 'tzinfo') and utc_datetime.tzinfo is None:
-        # It's a naive datetime, assume UTC
-        utc_datetime = pytz.utc.localize(utc_datetime)
-    elif not hasattr(utc_datetime, 'tzinfo'):
-        # It's a date object, convert to datetime at midnight UTC
-        utc_datetime = datetime.combine(utc_datetime, datetime.min.time())
-        utc_datetime = pytz.utc.localize(utc_datetime)
-    
-    # Convert to target timezone
-    try:
-        tz = pytz.timezone(target_timezone)
-        return utc_datetime.astimezone(tz)
-    except Exception:
-        # If invalid timezone, fall back to UTC
-        return utc_datetime
+# Bind this process's database hook: every helper that resolves preferences uses
+# this when the caller does not pass an explicit ``query=``.
+_timezone._DEFAULT_QUERY = query
 
+get_global_timezone = _timezone.get_global_timezone
+get_user_timezone = _timezone.get_user_timezone
+get_display_prefs = _timezone.get_display_prefs
+invalidate_display_prefs = _timezone.invalidate_display_prefs
+convert_utc_to_timezone = _timezone.convert_utc_to_timezone
+convert_utc_to_user_timezone = _timezone.convert_utc_to_user_timezone
+format_datetime = _timezone.format_datetime
+format_email_date = _timezone.format_email_date
+user_date_to_utc_range_start = _timezone.user_date_to_utc_range_start
+user_date_to_utc_range_end = _timezone.user_date_to_utc_range_end
 
-def convert_utc_to_user_timezone(utc_datetime, user_id):
-    """
-    Convert a UTC datetime to the user's preferred timezone.
-    
-    Args:
-        utc_datetime: A datetime object (can be timezone-aware or naive)
-        user_id: The ID of the user (can be int, string, or None)
-        
-    Returns:
-        Datetime object converted to user's timezone (or default timezone if user_id is invalid)
-    """
-    if utc_datetime is None:
-        return None
-    
-    user_tz = get_user_timezone(user_id)
-    return convert_utc_to_timezone(utc_datetime, user_tz)
-
-
-def format_datetime(utc_datetime, user_id, date_format: str = None, time_format: str = None):
-    """
-    Convert a UTC datetime to user's timezone and format it according to user's preference.
-    
-    Args:
-        utc_datetime: A datetime object (can be timezone-aware or naive)
-        user_id: The ID of the user
-        date_format: Optional date format string. If not provided, uses user's preference.
-        time_format: Optional time format string. If not provided, uses user's preference.
-        
-    Returns:
-        Formatted datetime string
-    """
-    if utc_datetime is None:
-        return ""
-    
-    # Convert to user's timezone
-    local_datetime = convert_utc_to_user_timezone(utc_datetime, user_id)
-    
-    # Get date format preference if not provided
-    if date_format is None:
-        # First get global date format
-        global_setting = query("SELECT value FROM settings WHERE key = 'date_format'").mappings().first()
-        date_format = global_setting["value"] if global_setting else "%d %b %Y"
-        
-        # Override with user's date format if set
-        user = query("SELECT date_format FROM users WHERE id = :id", {"id": user_id}).mappings().first()
-        if user and user["date_format"]:
-            date_format = user["date_format"]
-    
-    # Get time format preference if not provided
-    if time_format is None:
-        # First get global time format
-        global_setting = query("SELECT value FROM settings WHERE key = 'time_format'").mappings().first()
-        time_format = global_setting["value"] if global_setting else "%H:%M"
-        
-        # Override with user's time format if set
-        user = query("SELECT time_format FROM users WHERE id = :id", {"id": user_id}).mappings().first()
-        if user and user["time_format"]:
-            time_format = user["time_format"]
-    
-    # Combine date and time format
-    full_format = f"{date_format} {time_format}"
-    
-    # Format the datetime
-    return local_datetime.strftime(full_format)
-
-
-def format_email_date(date_value, fallback_datetime, user_id):
-    """
-    Format an email's date field, falling back to a fallback datetime when the
-    date header is missing or unparseable.
-
-    Args:
-        date_value: RFC822 date string or datetime object from the email's Date header
-                    (may be None/empty)
-        fallback_datetime: A datetime object to use when date_value is absent or
-                           unparseable (e.g. created_at)
-        user_id: The ID of the user (for timezone/format preferences)
-
-    Returns:
-        Formatted datetime string, or None if no usable date is available
-    """
-    if date_value:
-        if hasattr(date_value, 'strftime'):
-            # Already a datetime object
-            return format_datetime(date_value, user_id)
-        try:
-            return format_datetime(parsedate_to_datetime(date_value), user_id)
-        except (ValueError, TypeError):
-            # Unparseable string - fall through to use the fallback timestamp
-            pass
-
-    # No Date header or unparseable value: use the fallback timestamp
-    if fallback_datetime:
-        return format_datetime(fallback_datetime, user_id)
-
-    return None
-
-
-def user_date_to_utc_range_start(date_str: str, user_id) -> datetime:
-    """
-    Convert a date string (YYYY-MM-DD) representing a date in the user's timezone to
-    a UTC datetime for the start of that day (midnight in the user's timezone).
-
-    Args:
-        date_str: Date string in YYYY-MM-DD format
-        user_id: The ID of the user
-
-    Returns:
-        UTC-aware datetime object representing the start of the day in user's timezone
-    """
-    user_tz_str = get_user_timezone(user_id)
-    try:
-        user_tz = pytz.timezone(user_tz_str)
-    except Exception:
-        user_tz = pytz.utc
-
-    d = datetime.strptime(date_str, '%Y-%m-%d')
-    local_midnight = user_tz.localize(d)
-    return local_midnight.astimezone(pytz.utc)
-
-
-def user_date_to_utc_range_end(date_str: str, user_id) -> datetime:
-    """
-    Convert a date string (YYYY-MM-DD) representing a date in the user's timezone to
-    a UTC datetime for the exclusive end of that day (midnight at the start of the next
-    day in the user's timezone).
-
-    Args:
-        date_str: Date string in YYYY-MM-DD format
-        user_id: The ID of the user
-
-    Returns:
-        UTC-aware datetime object representing the start of the next day in user's timezone
-    """
-    user_tz_str = get_user_timezone(user_id)
-    try:
-        user_tz = pytz.timezone(user_tz_str)
-    except Exception:
-        user_tz = pytz.utc
-
-    d = datetime.strptime(date_str, '%Y-%m-%d')
-    d_next = d + timedelta(days=1)
-    local_midnight_next = user_tz.localize(d_next)
-    return local_midnight_next.astimezone(pytz.utc)
+__all__ = [
+    "get_global_timezone",
+    "get_user_timezone",
+    "get_display_prefs",
+    "invalidate_display_prefs",
+    "convert_utc_to_timezone",
+    "convert_utc_to_user_timezone",
+    "format_datetime",
+    "format_email_date",
+    "user_date_to_utc_range_start",
+    "user_date_to_utc_range_end",
+]

@@ -2,7 +2,9 @@
 Simplified ClamAV scanner for API import functionality.
 """
 import os
+import sys
 import pyclamd
+from pathlib import Path
 from typing import Optional, Tuple
 from datetime import datetime, timezone
 
@@ -10,22 +12,35 @@ from .db import query
 from .logger import log
 
 
-def _scan_result_details(result):
-    """Return the status/name pair from pyclamd's scan_stream response."""
-    if isinstance(result, dict):
-        result = next(iter(result.values()), None)
-    if isinstance(result, (tuple, list)):
-        status = result[0] if result else None
-        name = result[1] if len(result) > 1 else None
-        return status, name
-    return None, None
+# Locate the repository-root ``shared`` package and make it importable, whether
+# running from the local checkout (api/src/utils/) or a container mount (e.g.
+# /app/src/utils/ with /app/shared mounted alongside it). See utils/db.py.
+def _find_shared_root() -> Path:
+    current = Path(__file__).resolve().parent
+    while True:
+        if (current / "shared").is_dir():
+            return current
+        if current.parent == current:
+            raise ImportError("Cannot locate the shared/ package from " + str(__file__))
+        current = current.parent
+
+
+_shared_root = _find_shared_root()
+if str(_shared_root) not in sys.path:
+    sys.path.insert(0, str(_shared_root))
+
+from shared.clamav import scan_result_details, MAX_SCAN_SIZE_DEFAULT  # noqa: E402
+
+# Back-compat alias: some tests import the private name from this module.
+_scan_result_details = scan_result_details
 
 
 class ClamAVScanner:
     """Simplified ClamAV virus scanner for email import."""
 
-    # Maximum email size to scan (100MB) - very large emails are skipped
-    MAX_SCAN_SIZE = 100 * 1024 * 1024
+    # Maximum email size to scan (100MB) - very large emails are skipped.
+    # The shared default can be overridden per-instance from clamav_max_file_size.
+    MAX_SCAN_SIZE = MAX_SCAN_SIZE_DEFAULT
 
     def __init__(self, host: str = 'clamav', port: int = 3310):
         """

@@ -8,6 +8,7 @@ from email.utils import parsedate_to_datetime
 from collections import defaultdict
 
 from sqlalchemy.exc import IntegrityError
+from pathlib import Path
 
 from db import query, execute
 from security import decrypt_password
@@ -16,6 +17,25 @@ from gmail_client import GmailClient
 from o365_client import O365Client
 from clamav_scanner import ClamAVScanner
 from utils.email_parser import decode_header, compute_signature
+
+# Locate the repository-root ``shared`` package and make it importable, whether
+# running from the local checkout (worker/src/) or a container mount (worker
+# sources are copied to /app with /app/shared mounted alongside). See db.py.
+def _find_shared_root() -> Path:
+    current = Path(__file__).resolve().parent
+    while True:
+        if (current / "shared").is_dir():
+            return current
+        if current.parent == current:
+            raise ImportError("Cannot locate the shared/ package from " + str(__file__))
+        current = current.parent
+
+
+_shared_root = _find_shared_root()
+if str(_shared_root) not in sys.path:
+    sys.path.insert(0, str(_shared_root))
+
+from shared.alert_triggers import get_alert_trigger  # noqa: E402
 
 POLL_INTERVAL_FALLBACK = 300  # seconds
 
@@ -250,21 +270,21 @@ def create_alert(alert_type: str, title: str, message: str, details: str = None,
         details: Optional detailed information
         trigger_key: Optional trigger key to check if alert should be created and get severity from
     """
-    # If trigger_key is provided, look up the configured alert_type and check if enabled
+    # If trigger_key is provided, resolve the configured alert_type and enabled
+    # flag through a short TTL cache: this runs once per infected email, and the
+    # row cannot change mid-run. Unknown keys and failed lookups fall back to
+    # the alert_type passed explicitly.
     actual_alert_type = alert_type
     if trigger_key:
-        try:
-            result = query("SELECT alert_type, enabled FROM alert_triggers WHERE trigger_key = :key", {"key": trigger_key}).mappings().first()
-            if result:
-                if not result["enabled"]:
-                    # Trigger is disabled, don't create alert
-                    return
-                # Use the configured alert_type from the database
-                actual_alert_type = result["alert_type"]
-        except Exception:
-            # If we can't check the trigger, use the provided alert_type
-            pass
-    
+        trigger = get_alert_trigger(trigger_key, query=query)
+        if trigger is not None:
+            enabled, configured_type = trigger
+            if not enabled:
+                # Trigger is disabled, don't create alert
+                return
+            # Use the configured alert_type from the database
+            actual_alert_type = configured_type
+
     try:
         execute("""
             INSERT INTO alerts (alert_type, title, message, details)

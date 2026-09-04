@@ -35,6 +35,8 @@ services:
       - ./daygle_mail_archiver.conf:/app/daygle_mail_archiver.conf:ro
       # Mount .git folder for update checking (read-only)
       - ./.git:/app/.git:ro
+      # Shared package (db.py etc.) used by both the API and worker
+      - ./shared:/app/shared:ro
     depends_on:
       db:
         condition: service_healthy
@@ -60,6 +62,8 @@ services:
     volumes:
       # Mount daygle_mail_archiver.conf file if it exists
       - ./daygle_mail_archiver.conf:/app/daygle_mail_archiver.conf:ro
+      # Shared package (db.py etc.) used by both the API and worker
+      - ./shared:/app/shared:ro
     depends_on:
       db:
         condition: service_healthy

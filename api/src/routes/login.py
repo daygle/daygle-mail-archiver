@@ -3,7 +3,6 @@ from fastapi.responses import RedirectResponse
 import bcrypt
 import re
 import secrets
-from datetime import datetime, timedelta
 from typing import List
 
 from ..utils.db import query, execute
