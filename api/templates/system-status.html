@@ -24,14 +24,14 @@
         </div>
         {% endif %}
     </section>
-    <section class="sts-stats" aria-label="Account summary">
+    <section class="sts-stats" aria-label="{{ gettext('Account summary') }}">
         <div class="sts-stat-card"><div class="sts-stat-icon sts-stat-icon-blue"><i class="fas fa-server"></i></div><div><span class="sts-stat-label">Fetch accounts</span><strong>{{ total_accounts }}</strong></div></div>
         <div class="sts-stat-card"><div class="sts-stat-icon sts-stat-icon-green"><i class="fas fa-circle-check"></i></div><div><span class="sts-stat-label">Healthy</span><strong>{{ healthy_accounts }}</strong></div></div>
         <div class="sts-stat-card"><div class="sts-stat-icon sts-stat-icon-red"><i class="fas fa-triangle-exclamation"></i></div><div><span class="sts-stat-label">Problems</span><strong>{{ problem_accounts }}</strong></div></div>
         <div class="sts-stat-card"><div class="sts-stat-icon sts-stat-icon-orange"><i class="fas fa-ban"></i></div><div><span class="sts-stat-label">Disabled</span><strong>{{ disabled_accounts }}</strong></div></div>
     </section>
 
-    <section class="sts-services" aria-label="Service status">
+    <section class="sts-services" aria-label="{{ gettext('Service status') }}">
         <div class="sts-service-card">
             <div class="sts-avatar sts-avatar-blue"><i class="fas fa-server"></i></div>
             <div class="sts-card-main">
@@ -85,7 +85,7 @@
         </div>
     </section>
 
-    <section class="sts-toolbar" aria-label="Account status">
+    <section class="sts-toolbar" aria-label="{{ gettext('Account status') }}">
         <div class="sts-toolbar-title"><div class="card-title"><i class="fas fa-server"></i><span>Fetch account status</span></div><span class="sts-result-count">{{ total_accounts }} account{% if total_accounts != 1 %}s{% endif %}</span></div>
     </section>
 
@@ -105,7 +105,7 @@
                 <span class="sts-health-badge sts-health-{{ acc.health }}"><i class="fas {{ health_icons.get(acc.health, 'fa-circle-info') }}"></i> {{ acc.health_label }}</span>
             </div>
             <div class="sts-card-meta">
-                <span title="{{ acc.last_heartbeat | format_user_datetime(request.session.user_id) if acc.last_heartbeat else 'Never' }}"><i class="fas fa-heartbeat"></i> Heartbeat: <strong>{{ acc.heartbeat_ago }}</strong>{% if acc.last_heartbeat %} ({{ acc.last_heartbeat | format_user_datetime(request.session.user_id) }}){% endif %}</span>
+                <span title="{{ acc.last_heartbeat_formatted or 'Never' }}"><i class="fas fa-heartbeat"></i> Heartbeat: <strong>{{ acc.heartbeat_ago }}</strong>{% if acc.last_heartbeat_formatted %} ({{ acc.last_heartbeat_formatted }}){% endif %}</span>
                 <span><i class="fas fa-circle-check"></i> Last success: <strong>{{ acc.success_ago }}</strong></span>
                 <span><i class="fas fa-hourglass-half"></i> Poll interval: {% if acc.poll_interval %}<strong>{{ acc.poll_interval }}s</strong>{% else %}<strong>Default (300s)</strong>{% endif %}</span>
             </div>
@@ -139,7 +139,7 @@
 
 {% block extra_js %}
 <!-- Scroll to top button -->
-<button id="scroll-to-top-btn" class="scroll-to-top" aria-label="Scroll to top" title="Back to top">
+<button id="scroll-to-top-btn" class="scroll-to-top" aria-label="{{ gettext('Scroll to top') }}" title="{{ gettext('Back to top') }}">
     <i class="fas fa-arrow-up"></i>
 </button>
 

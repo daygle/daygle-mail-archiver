@@ -5,359 +5,221 @@
 {% block content %}
 {% set perms = request.session.permissions or [] %}
 
-<!-- Button bar above the email layout -->
-<div id="email-action-bar" class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-    <a href="/emails" class="btn btn-secondary btn-sm flex-shrink-1 w-auto">
-        <i class="fas fa-arrow-left"></i>
-        <span class="hide-mobile">Back</span>
-    </a>
-    <div class="d-flex gap-2 flex-wrap">
-        {% if 'export_emails' in perms %}
-        <a href="/emails/{{ email.id }}/download" class="btn btn-primary btn-sm flex-shrink-1 w-auto">
-            <i class="fas fa-download"></i>
-            <span class="hide-mobile">Download EML</span>
-        </a>
-        {% endif %}
-        {% if 'scan_emails' in perms %}
-        {% if not email.quarantined %}
-        <form method="post" action="/emails/scan" style="display:inline;">
-            <input type="hidden" name="ids" value="{{ email.id }}">
-            <button type="submit" class="btn btn-info btn-sm flex-shrink-1 w-auto" title="Run ClamAV scan; infected results are flagged for review">
-                <i class="fas fa-microscope"></i>
-                <span class="hide-mobile">Scan with ClamAV</span>
-            </button>
-        </form>
-        {% endif %}
-        {% endif %}
-        {% if 'manage_quarantine' in perms %}
-        {% if not email.quarantined %}
-        <form method="post" action="/emails/{{ email.id }}/quarantine" style="display:inline;">
-            <button type="submit" class="btn btn-warning btn-sm flex-shrink-1 w-auto">
-                <i class="fas fa-shield-virus"></i>
-                <span class="hide-mobile">Quarantine</span>
-            </button>
-        </form>
-        {% endif %}
-        {% endif %}
-        {% if 'delete_emails' in perms %}
-        <button type="button" class="btn btn-danger btn-sm flex-shrink-1 w-auto" onclick="showDeleteConfirmation()">
-            <i class="fas fa-trash"></i>
-            <span class="hide-mobile">Delete</span>
-        </button>
-        {% endif %}
-    </div>
-</div>
+<div class="emv-page">
+    <!-- Hero -->
+    <section class="emv-hero" aria-labelledby="emv-heading">
+        <div class="emv-hero-copy">
+            <div class="emv-eyebrow"><i class="fas fa-inbox"></i> Email archive</div>
+            <h2 id="emv-heading">Message details</h2>
+            <p class="emv-subject"><i class="fas fa-quote-left"></i> {{ email.subject or '(no subject)' }}</p>
+        </div>
+        <div class="emv-hero-actions">
+            <a href="/emails" class="btn btn-secondary"><i class="fas fa-arrow-left"></i><span>Back</span></a>
+            {% if 'export_emails' in perms %}
+            <a href="/emails/{{ email.id }}/download" class="btn btn-primary" title="{{ gettext('Download this message as a .eml file') }}"><i class="fas fa-download"></i><span>Download EML</span></a>
+            {% endif %}
+            {% if 'scan_emails' in perms and not email.quarantined %}
+            <form method="post" action="/emails/scan" style="display: inline;">
+                <input type="hidden" name="ids" value="{{ email.id }}">
+                <button type="submit" class="btn btn-info" title="{{ gettext('Run ClamAV scan; infected results are flagged for review') }}"><i class="fas fa-microscope"></i><span>Scan with ClamAV</span></button>
+            </form>
+            {% endif %}
+            {% if 'manage_quarantine' in perms and not email.quarantined %}
+            <form method="post" action="/emails/{{ email.id }}/quarantine" style="display: inline;">
+                <button type="submit" class="btn btn-warning"><i class="fas fa-shield-virus"></i><span>Quarantine</span></button>
+            </form>
+            {% endif %}
+            {% if 'delete_emails' in perms %}
+            <button type="button" class="btn btn-danger" onclick="showDeleteModal()"><i class="fas fa-trash"></i><span>Delete</span></button>
+            {% endif %}
+        </div>
+    </section>
 
-<!-- Two-column layout: Email Body (left 3/4) + Email Details (right 1/4) -->
-<div id="email-main-layout" class="row g-4 mb-4">
+    <!-- Two-column layout: Email Body (left) + Email Details (right) -->
+    <div class="emv-layout">
 
-    <!-- Email Body (left, 3/4) -->
-    <div class="col-lg-9">
-        <div class="card h-100">
-            <div class="card-header">
-                <div class="card-title">
-                    <i class="fas fa-file-alt"></i>
-                    <span>Email Body</span>
-                </div>
-            </div>
-            <div class="card-body card-body-flex">
+        <!-- Email Body -->
+        <section class="emv-panel" aria-label="{{ gettext('Email body') }}">
+            <header class="emv-panel-header"><i class="fas fa-file-alt"></i><span>{{ gettext('Email body') }}</span></header>
+            <div class="emv-panel-body emv-body">
                 {% if body.html %}
-                    <iframe
-                        srcdoc="{{ body.html | escape }}"
-                        sandbox
-                        style="width: 100%; min-height: 500px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--bg-primary);">
-                    </iframe>
+                    <iframe class="emv-iframe" srcdoc="{{ body.html | escape }}" sandbox title="{{ gettext('Email body') }}"></iframe>
                 {% else %}
-                    <pre style="background: var(--bg-secondary); padding: 16px; border-radius: var(--radius-md); overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;">{{ body.text }}</pre>
+                    <pre class="emv-pre">{{ body.text }}</pre>
                 {% endif %}
             </div>
-        </div>
-    </div>
+        </section>
 
-    <!-- Email Details (right, 1/4) -->
-    <div class="col-lg-3">
-        <div class="card h-100">
-            <div class="card-header">
-                <div class="card-title">
-                    <i class="fas fa-envelope-open"></i>
-                    <span>Email Details</span>
-                </div>
-            </div>
-            <div class="card-body">
+        <!-- Email Details -->
+        <aside class="emv-panel" aria-label="{{ gettext('Email details') }}">
+            <header class="emv-panel-header"><i class="fas fa-envelope-open"></i><span>Email details</span></header>
+            <div class="emv-panel-body">
                 <!-- Email Header Information -->
-                <div class="mb-4">
-                    <h5 class="mb-3 text-primary">
-                        <i class="fas fa-envelope-open-text me-2"></i>Email Information
-                    </h5>
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <div class="email-detail-item">
-                                <label class="email-detail-label">Subject</label>
-                                <div class="email-detail-value">
-                                    <strong class="text-break">{{ email.subject or "(no subject)" }}</strong>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="email-detail-item">
-                                <label class="email-detail-label">Date</label>
-                                <div class="email-detail-value">{{ email.date_formatted or email.date }}</div>
-                            </div>
-                        </div>
+                <div class="emv-section">
+                    <h6 class="emv-section-title"><i class="fas fa-envelope-open-text"></i> Email information</h6>
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Subject</label>
+                        <div class="email-detail-value"><strong class="text-break">{{ email.subject or "(no subject)" }}</strong></div>
                     </div>
-                    <div class="row g-3 mt-2">
-                        <div class="col-12">
-                            <div class="email-detail-item">
-                                <label class="email-detail-label">Message ID</label>
-                                <div class="email-detail-value">
-                                    <code class="text-break">{{ email.message_id or headers.get('message_id') or headers.get('Message-ID') or "(no message id)" }}</code>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Date</label>
+                        <div class="email-detail-value">{{ email.date_formatted or email.date }}</div>
+                    </div>
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Message ID</label>
+                        <div class="email-detail-value"><code class="text-break">{{ email.message_id or headers.get('message_id') or headers.get('Message-ID') or "(no message id)" }}</code></div>
                     </div>
                 </div>
 
                 <!-- Sender & Recipients -->
-                <div class="mb-4">
-                    <h6 class="mb-3 text-muted">
-                        <i class="fas fa-users me-2"></i>Participants
-                    </h6>
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <div class="email-detail-item">
-                                <label class="email-detail-label">From</label>
-                                <div class="email-detail-value text-break">{{ email.sender }}</div>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="email-detail-item">
-                                <label class="email-detail-label">To</label>
-                                <div class="email-detail-value text-break">{{ email.recipients }}</div>
-                            </div>
-                        </div>
+                <div class="emv-section">
+                    <h6 class="emv-section-title"><i class="fas fa-users"></i> Participants</h6>
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">From</label>
+                        <div class="email-detail-value text-break">{{ email.sender }}</div>
+                    </div>
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">To</label>
+                        <div class="email-detail-value text-break">{{ email.recipients }}</div>
                     </div>
                 </div>
 
                 <!-- Account & Fetch Account Details -->
-                <div class="mb-4">
-                    <h6 class="mb-3 text-muted">
-                        <i class="fas fa-folder-tree me-2"></i>Fetch Account Details
-                    </h6>
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <div class="email-detail-item">
-                                <label class="email-detail-label">Account</label>
-                                <div class="email-detail-value">
-                                    <span class="badge badge-primary">{{ email.source }}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="email-detail-item">
-                                <label class="email-detail-label">Folder</label>
-                                <div class="email-detail-value">
-                                    <span class="badge badge-secondary">{{ email.folder }}</span>
-                                </div>
-                            </div>
-                        </div>
+                <div class="emv-section">
+                    <h6 class="emv-section-title"><i class="fas fa-folder-tree"></i> Fetch account details</h6>
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Account</label>
+                        <div class="email-detail-value"><span class="badge badge-primary">{{ email.source }}</span></div>
+                    </div>
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Folder</label>
+                        <div class="email-detail-value"><span class="badge badge-secondary">{{ email.folder }}</span></div>
                     </div>
                 </div>
 
                 <!-- Attachments -->
                 {% if body.attachments %}
-                <div class="mb-4">
-                    <h6 class="mb-3 text-muted">
-                        <i class="fas fa-paperclip me-2"></i>Attachments ({{ body.attachments | length }})
-                    </h6>
-                    <div class="row g-2">
-                        {% for att in body.attachments %}
-                        <div class="col-12">
-                            <div class="d-flex align-items-center justify-content-between gap-2 p-2" style="background: var(--bg-secondary); border-radius: var(--radius-md);">
-                                <div class="text-truncate" style="min-width: 0;">
-                                    <i class="fas fa-file me-1 text-muted"></i>
-                                    <span class="text-break" title="{{ att.filename or 'attachment' }}">{{ att.filename or "(unnamed)" }}</span>
-                                    <br>
-                                    <small class="text-muted">{{ att.content_type }} &mdash;
-                                        {%- if att.size < 1024 %}
-                                            {{ att.size }} B
-                                        {%- elif att.size < 1048576 %}
-                                            {{ (att.size / 1024) | round(1) }} KB
-                                        {%- else %}
-                                            {{ (att.size / 1048576) | round(1) }} MB
-                                        {%- endif %}
-                                    </small>
-                                    <br>
-                                    {% if email.virus_scanned %}
-                                        {% if email.virus_detected %}
-                                        <span class="badge badge-danger mt-1" title="Virus detected: {{ email.virus_name }}">
-                                            <i class="fas fa-exclamation-triangle"></i> INFECTED: {{ email.virus_name }}
-                                        </span>
-                                        {% else %}
-                                        <span class="badge badge-success mt-1">
-                                            <i class="fas fa-check"></i> Scanned: Clean
-                                        </span>
-                                        {% endif %}
-                                    {% else %}
-                                    <span class="badge badge-secondary mt-1" title="ClamAV scan not completed or scanning is disabled">
-                                        <i class="fas fa-question"></i> Not scanned
-                                    </span>
-                                    {% endif %}
-                                </div>
-                                {% if 'export_emails' in perms %}
+                <div class="emv-section">
+                    <h6 class="emv-section-title"><i class="fas fa-paperclip"></i> Attachments ({{ body.attachments | length }})</h6>
+                    {% for att in body.attachments %}
+                    <div class="emv-attachment">
+                        <div class="emv-attachment-main">
+                            <i class="fas fa-file emv-attachment-icon"></i>
+                            <div class="emv-attachment-meta">
+                                <span class="text-break" title="{{ att.filename or 'attachment' }}">{{ att.filename or "(unnamed)" }}</span>
+                                <small class="text-muted">{{ att.content_type }} -
+                                    {%- if att.size < 1024 %}
+                                        {{ att.size }} B
+                                    {%- elif att.size < 1048576 %}
+                                        {{ (att.size / 1024) | round(1) }} KB
+                                    {%- else %}
+                                        {{ (att.size / 1048576) | round(1) }} MB
+                                    {%- endif %}
+                                </small>
+                                {% if email.virus_scanned %}
                                     {% if email.virus_detected %}
-                                    <span class="btn btn-danger btn-sm flex-shrink-0 disabled" title="Download blocked: virus detected">
-                                        <i class="fas fa-ban"></i>
-                                    </span>
+                                    <span class="badge badge-danger mt-1" title="Virus detected: {{ email.virus_name }}"><i class="fas fa-exclamation-triangle"></i> INFECTED: {{ email.virus_name }}</span>
                                     {% else %}
-                                    <a href="/emails/{{ email.id }}/attachments/{{ loop.index0 }}" class="btn btn-secondary btn-sm flex-shrink-0" title="Download attachment">
-                                        <i class="fas fa-download"></i>
-                                    </a>
+                                    <span class="badge badge-success mt-1"><i class="fas fa-check"></i> Scanned: Clean</span>
                                     {% endif %}
+                                {% else %}
+                                <span class="badge badge-secondary mt-1" title="{{ gettext('ClamAV scan not completed or scanning is disabled') }}"><i class="fas fa-question"></i> Not scanned</span>
                                 {% endif %}
                             </div>
                         </div>
-                        {% endfor %}
+                        {% if 'export_emails' in perms %}
+                            {% if email.virus_detected %}
+                            <span class="btn btn-danger btn-sm flex-shrink-0 disabled" title="{{ gettext('Download blocked: virus detected') }}"><i class="fas fa-ban"></i></span>
+                            {% else %}
+                            <a href="/emails/{{ email.id }}/attachments/{{ loop.index0 }}" class="btn btn-secondary btn-sm flex-shrink-0" title="{{ gettext('Download attachment') }}"><i class="fas fa-download"></i></a>
+                            {% endif %}
+                        {% endif %}
                     </div>
+                    {% endfor %}
                 </div>
                 {% endif %}
 
                 <!-- Security & Status -->
-                <div class="mb-4">
-                    <h6 class="mb-3 text-muted">
-                        <i class="fas fa-shield-alt me-2"></i>Security & Status
-                    </h6>
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <div class="email-detail-item">
-                                <label class="email-detail-label">Integrity</label>
-                                <div class="email-detail-value">
-                                    {% if integrity == 'ok' %}
-                                    <span class="badge bg-success" title="{{ integrity_reason or 'Valid' }}"><i class="fas fa-check"></i> Valid</span>
-                                    {% elif integrity == 'modified' %}
-                                    <span class="badge bg-danger" title="{{ integrity_reason or 'Modified' }}"><i class="fas fa-exclamation-triangle"></i> Invalid</span>
-                                    {% elif integrity == 'no_signature' %}
-                                    <span class="badge bg-secondary" title="{{ integrity_reason or 'No Signature' }}"><i class="fas fa-question"></i> No Signature</span>
-                                    {% else %}
-                                    <span class="badge bg-secondary" title="{{ integrity_reason or 'Unknown' }}"><i class="fas fa-question"></i> Unknown</span>
-                                    {% endif %}
-                                </div>
-                            </div>
+                <div class="emv-section">
+                    <h6 class="emv-section-title"><i class="fas fa-shield-alt"></i> Security &amp; status</h6>
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Integrity</label>
+                        <div class="email-detail-value">
+                            {% if integrity == 'ok' %}
+                            <span class="badge bg-success" title="{{ integrity_reason or 'Valid' }}"><i class="fas fa-check"></i> Valid</span>
+                            {% elif integrity == 'modified' %}
+                            <span class="badge bg-danger" title="{{ integrity_reason or 'Modified' }}"><i class="fas fa-exclamation-triangle"></i> Invalid</span>
+                            {% elif integrity == 'no_signature' %}
+                            <span class="badge bg-secondary" title="{{ integrity_reason or 'No Signature' }}"><i class="fas fa-question"></i> No Signature</span>
+                            {% else %}
+                            <span class="badge bg-secondary" title="{{ integrity_reason or 'Unknown' }}"><i class="fas fa-question"></i> Unknown</span>
+                            {% endif %}
                         </div>
-                        <div class="col-12">
-                            <div class="email-detail-item">
-                                <label class="email-detail-label">ClamAV Scan</label>
-                                <small class="d-block text-secondary mb-2">Manual scans flag infected messages for review; use Quarantine to move them.</small>
-                                <div class="email-detail-value">
-                                    {% if email.virus_detected %}
-                                    <span class="badge badge-danger">
-                                        <i class="fas fa-exclamation-triangle"></i> INFECTED: {{ email.virus_name }}
-                                    </span>
-                                    {% elif email.virus_scanned %}
-                                    <span class="badge badge-success">
-                                        <i class="fas fa-check"></i> Scanned - Clean
-                                    </span>
-                                    {% else %}
-                                    <span class="badge badge-secondary" title="ClamAV scan not completed or scanning is disabled">
-                                        <i class="fas fa-question"></i> Not scanned
-                                    </span>
-                                    {% endif %}
-                                    {% if email.scan_timestamp %}
-                                    <br><small class="text-secondary">
-                                        Scan completed: {{ email.scan_timestamp_formatted or 'N/A' }}
-                                    </small>
-                                    {% endif %}
-                                </div>
-                            </div>
+                    </div>
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">ClamAV Scan</label>
+                        <small class="d-block text-secondary mb-2">Manual scans flag infected messages for review; use Quarantine to move them.</small>
+                        <div class="email-detail-value">
+                            {% if email.virus_detected %}
+                            <span class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i> INFECTED: {{ email.virus_name }}</span>
+                            {% elif email.virus_scanned %}
+                            <span class="badge badge-success"><i class="fas fa-check"></i> Scanned - Clean</span>
+                            {% else %}
+                            <span class="badge badge-secondary" title="{{ gettext('ClamAV scan not completed or scanning is disabled') }}"><i class="fas fa-question"></i> Not scanned</span>
+                            {% endif %}
+                            {% if email.scan_timestamp %}
+                            <br><small class="text-secondary">Scan completed: {{ email.scan_timestamp_formatted or 'N/A' }}</small>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </aside>
     </div>
 
+    <!-- Raw Preview Card -->
+    <section class="emv-panel" aria-label="{{ gettext('Raw preview') }}">
+        <header class="emv-panel-header"><i class="fas fa-code"></i><span>Raw preview</span></header>
+        <div class="emv-panel-body">
+            {% if preview %}
+            <pre class="emv-pre emv-pre-raw">{{ preview }}</pre>
+            {% else %}
+            <p class="text-muted emv-empty-note">No preview available</p>
+            {% endif %}
+        </div>
+    </section>
 </div>
 
-<!-- Raw Preview Card (Fallback) -->
-<div id="email-raw-preview" class="card mt-4">
-    <div class="card-header">
-        <div class="card-title">
-            <i class="fas fa-code"></i>
-            <span>Raw Preview</span>
-        </div>
-    </div>
-    <div class="card-body">
-        {% if preview %}
-            <pre style="background: var(--bg-secondary); padding: 16px; border-radius: var(--radius-md); overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; max-height:400px; overflow:auto;">{{ preview }}</pre>
-        {% else %}
-            <p class="text-muted">No preview available</p>
-        {% endif %}
-    </div>
-</div>
-
-<!-- Delete Confirmation Section (Initially Hidden) -->
-<div id="delete-confirmation" class="card" style="display: none;">
-    <div class="card-header">
-        <div class="card-title">
-            <i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i>
-            <span>Confirm Deletion</span>
-        </div>
-    </div>
-    <div class="card-body">
-        <div class="alert alert-warning">
-            <i class="fas fa-info-circle"></i>
-            <span>You are about to delete <strong>1</strong> email.</span>
-        </div>
-
-        <p style="margin-top: 20px; margin-bottom: 20px;"><strong>Choose how you want to delete it:</strong></p>
-
-        <form id="delete-form" method="post" action="/emails/delete">
-            <input type="hidden" name="ids" value="{{ email.id }}">
-            
-            <div style="display: grid; gap: 12px; margin-bottom: 20px;">
-                <button type="submit" name="mode" value="db" class="btn btn-danger w-100">
-                    <i class="fas fa-database"></i>
-                    <span class="hide-mobile">Delete from Database Only</span>
-                </button>
-                <button type="submit" name="mode" value="imap" class="btn btn-warning w-100">
-                    <i class="fas fa-server"></i>
-                    <span class="hide-mobile">Delete from Database and Mail Server</span>
-                </button>
-            </div>
-
-            <div class="text-center">
-                <button type="button" class="btn btn-secondary" onclick="hideDeleteConfirmation()">
-                    <i class="fas fa-times"></i>
-                    <span class="hide-mobile">Cancel</span>
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script>
-  function showDeleteConfirmation() {
-    // Hide main layout, action bar and raw preview, show delete confirmation
-    document.getElementById('email-action-bar').style.display = 'none';
-    document.getElementById('email-main-layout').style.display = 'none';
-    document.getElementById('email-raw-preview').style.display = 'none';
-    document.getElementById('delete-confirmation').style.display = 'block';
-    
-    // Scroll to top
-    window.scrollTo(0, 0);
-  }
-
-  function hideDeleteConfirmation() {
-    // Restore main layout, action bar and raw preview, hide delete confirmation
-    document.getElementById('email-action-bar').style.display = '';
-    document.getElementById('email-main-layout').style.display = '';
-    document.getElementById('email-raw-preview').style.display = '';
-    document.getElementById('delete-confirmation').style.display = 'none';
-    
-    // Scroll to top
-    window.scrollTo(0, 0);
-  }
-
-    
-</script>
+<!-- Delete Confirmation Modal -->
+{% if 'delete_emails' in perms %}
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h2 class="modal-title" id="deleteModalLabel"><i class="fas fa-exclamation-triangle text-danger"></i> Confirm deletion</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ gettext('Close') }}"></button></div><div class="modal-body"><p>You are about to delete <strong>1</strong> email from the archive.</p><div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i><span>This cannot be undone. Choose how you want to delete it:</span></div><div class="emv-delete-options"><button type="button" class="btn btn-danger" onclick="performDelete('db')"><i class="fas fa-database"></i><span>Delete from Database Only</span></button><button type="button" class="btn btn-warning" onclick="performDelete('imap')"><i class="fas fa-server"></i><span>Delete from Database and Mail Server</span></button></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button></div></div></div></div>
+{% endif %}
 
 {% endblock %}
+
+{% block extra_css %}<link rel="stylesheet" href="/static/detail-view.css">{% endblock %}
+
+{% block extra_js %}<script>
+    function showDeleteModal() {
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('deleteModal')).show();
+    }
+
+    function performDelete(mode) {
+        const form = document.createElement('form');
+        form.method = 'post';
+        form.action = '/emails/delete';
+        form.style.display = 'none';
+        const idInput = document.createElement('input');
+        idInput.type = 'hidden';
+        idInput.name = 'ids';
+        idInput.value = '{{ email.id }}';
+        form.appendChild(idInput);
+        const modeInput = document.createElement('input');
+        modeInput.type = 'hidden';
+        modeInput.name = 'mode';
+        modeInput.value = mode;
+        form.appendChild(modeInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+</script>{% endblock %}

@@ -11,6 +11,15 @@
 </script>
 
 <div class="container-fluid">
+    <!-- Hero -->
+    <section class="rpt-hero" aria-labelledby="rpt-heading">
+        <div class="rpt-hero-copy">
+            <div class="rpt-eyebrow"><i class="fas fa-chart-line"></i> Analytics</div>
+            <h2 id="rpt-heading">Reports</h2>
+            <p>Trends, metrics, and health insights across the archive - filter by account or date range below, then refresh.</p>
+        </div>
+    </section>
+
     <!-- Report Filters Card -->
     <div class="card mb-4">
         <div class="card-header flex-between">
@@ -1394,3 +1403,5 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 {% endblock %}
+
+{% block extra_css %}<link rel="stylesheet" href="/static/reports.css">{% endblock %}

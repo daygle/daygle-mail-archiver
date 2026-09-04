@@ -3,6 +3,15 @@
 {% block page_title %}About Daygle Mail Archiver{% endblock %}
 
 {% block content %}
+<div class="doc-page">
+    <section class="doc-hero" aria-labelledby="doc-heading">
+        <div class="doc-hero-copy">
+            <div class="doc-eyebrow"><i class="fas fa-info-circle"></i> About</div>
+            <h2 id="doc-heading">About Daygle Mail Archiver</h2>
+            <p>A deterministic email archiving system for long-term retention, auditability, and operational reliability.</p>
+        </div>
+    </section>
+
 <div class="help-docs-layout">
     <aside class="help-toc-card">
         <div class="card">
@@ -25,12 +34,6 @@
 
     <main class="help-content">
         <section class="card prose">
-            <div class="card-header">
-                <h2 class="card-title">
-                    <i class="fas fa-info-circle"></i>
-                    <span>About Daygle Mail Archiver</span>
-                </h2>
-            </div>
             <div class="card-body help-body">
 
                 <section id="overview" class="help-section">
@@ -87,4 +90,7 @@
         </section>
     </main>
 </div>
+</div>
 {% endblock %}
+
+{% block extra_css %}<link rel="stylesheet" href="/static/docs.css">{% endblock %}

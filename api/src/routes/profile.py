@@ -7,8 +7,9 @@ from ..utils.db import query, execute
 from ..utils.logger import log
 from ..utils.templates import templates
 from ..utils.permissions import require_permission, PERMISSIONS
-from ..utils.i18n import get_gettext
-from ..utils.timezone import format_datetime
+from ..utils.i18n import get_gettext, request_gettext
+from ..utils.timezone import format_datetime, get_display_prefs, invalidate_display_prefs
+from ..utils.table_prefs import get_hidden_columns, save_hidden_columns, HIDEABLE_COLUMNS
 
 router = APIRouter()
 
@@ -74,11 +75,19 @@ def profile_form(
 
     msg = request.session.pop("flash", None)
 
-    # Format datetimes for display without mutating RowMapping
+    # Resolve display preferences once so the three formats below are
+    # query-free (format_datetime would otherwise re-resolve per call).
     current_user_id = int(request.session.get("user_id"))
-    last_login_fmt = format_datetime(user["last_login"], current_user_id) if user and user.get("last_login") else None
-    last_seen_fmt = format_datetime(user["last_seen"], current_user_id) if user and user.get("last_seen") else None
-    created_at_fmt = format_datetime(user["created_at"], current_user_id) if user and user.get("created_at") else None
+    _tz, _date_format, _time_format = get_display_prefs(current_user_id)
+    last_login_fmt = format_datetime(
+        user["last_login"], current_user_id, tz=_tz, date_format=_date_format, time_format=_time_format
+    ) if user and user.get("last_login") else None
+    last_seen_fmt = format_datetime(
+        user["last_seen"], current_user_id, tz=_tz, date_format=_date_format, time_format=_time_format
+    ) if user and user.get("last_seen") else None
+    created_at_fmt = format_datetime(
+        user["created_at"], current_user_id, tz=_tz, date_format=_date_format, time_format=_time_format
+    ) if user and user.get("created_at") else None
 
     user_payload = {
         "username": user.get("username") if user else None,
@@ -108,9 +117,11 @@ def change_password(
     request: Request,
     _=require_permission(PERMISSIONS["manage_own_profile"]),
     current_password: str = Form(...),
+
     new_password: str = Form(...),
     confirm_password: str = Form(...)
 ):
+    _ = request_gettext(request)
     user_id = request.session["user_id"]
     username = request.session.get("username", "unknown")
 
@@ -121,23 +132,23 @@ def change_password(
     """, {"id": user_id}).mappings().first()
 
     if not user:
-        flash(request, "User not found.", "error")
+        flash(request, _("User not found."), "error")
         return RedirectResponse("/change-password", status_code=303)
 
     # Verify current password
     try:
         if not bcrypt.checkpw(current_password.encode("utf-8"), user["password_hash"].encode("utf-8")):
             log("warning", "Security", f"User '{username}' failed password change - incorrect current password")
-            flash(request, "Current password is incorrect.", "error")
+            flash(request, _("Current password is incorrect."), "error")
             return RedirectResponse("/change-password", status_code=303)
     except Exception as e:
         log("error", "Security", f"Password verification error for '{username}': {str(e)}")
-        flash(request, "An error occurred. Please try again.", "error")
+        flash(request, _("An error occurred. Please try again."), "error")
         return RedirectResponse("/change-password", status_code=303)
 
     # Validate new password
     if new_password != confirm_password:
-        flash(request, "New passwords do not match.", "error")
+        flash(request, _("New passwords do not match."), "error")
         return RedirectResponse("/change-password", status_code=303)
 
     if (
@@ -146,7 +157,7 @@ def change_password(
         or not re.search(r"[A-Z]", new_password)
         or not re.search(r"[0-9]", new_password)
     ):
-        flash(request, "Password must include upper, lower, number and be 8+ chars.", "error")
+        flash(request, _("Password must include upper, lower, number and be 8+ chars."), "error")
         return RedirectResponse("/change-password", status_code=303)
 
     try:
@@ -158,12 +169,12 @@ def change_password(
         """, {"h": hash_pw, "id": user_id})
 
         log("warning", "Security", f"User '{username}' changed their password")
-        flash(request, "Password changed successfully.", "success")
+        flash(request, _("Password changed successfully."), "success")
         return RedirectResponse("/change-password", status_code=303)
 
     except Exception as e:
         log("error", "Security", f"Failed to update password for '{username}': {str(e)}")
-        flash(request, "Failed to update password. Please try again.", "error")
+        flash(request, _("Failed to update password. Please try again."), "error")
         return RedirectResponse("/change-password", status_code=303)
 
 
@@ -203,12 +214,13 @@ def update_info(
     last_name: str = Form(""),
     email: str = Form("")
 ):
+    _ = request_gettext(request)
     user_id = request.session["user_id"]
     username = request.session.get("username", "unknown")
 
     # Validate email
     if email and not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email):
-        flash(request, "Invalid email format.", "error")
+        flash(request, _("Invalid email format."), "error")
         return RedirectResponse("/profile", status_code=303)
 
     try:
@@ -228,7 +240,7 @@ def update_info(
             and current.get("last_name") == new_ln
             and (current.get("email") or None) == new_e
         ):
-            flash(request, "No changes detected.", "info")
+            flash(request, _("No changes detected."), "info")
             return RedirectResponse("/profile", status_code=303)
 
         execute("""
@@ -238,12 +250,12 @@ def update_info(
         """, {"fn": new_fn, "ln": new_ln, "e": new_e, "id": user_id})
 
         log("info", "Profile", f"User '{username}' updated their profile")
-        flash(request, "Profile updated successfully.", "success")
+        flash(request, _("Profile updated successfully."), "success")
         return RedirectResponse("/profile", status_code=303)
 
     except Exception as e:
         log("error", "Profile", f"Failed to update profile for '{username}': {str(e)}")
-        flash(request, "Failed to update profile. Please try again.", "error")
+        flash(request, _("Failed to update profile. Please try again."), "error")
         return RedirectResponse("/profile", status_code=303)
 
 
@@ -319,12 +331,13 @@ def update_user_settings(
     email_notifications: bool = Form(True),
     language: str = Form("en")
 ):
+    _ = request_gettext(request)
     user_id = request.session["user_id"]
     username = request.session.get("username", "unknown")
 
     # Validate page_size
     if page_size < 10 or page_size > 500:
-        flash(request, "Items per page must be between 10 and 500.", "error")
+        flash(request, _("Items per page must be between 10 and 500."), "error")
         return RedirectResponse("/user-settings", status_code=303)
 
     try:
@@ -355,7 +368,7 @@ def update_user_settings(
             changed.append(f"language={language}")
 
         if not changed:
-            flash(request, "No changes detected.", "info")
+            flash(request, _("No changes detected."), "info")
             return RedirectResponse("/user-settings", status_code=303)
 
         execute("""
@@ -385,13 +398,16 @@ def update_user_settings(
         request.session["avatar_color"] = avatar_color
         request.session["language"] = language
 
+        # Drop the cached preference answer so the new formats apply immediately.
+        invalidate_display_prefs(user_id)
+
         log("info", "Settings", f"User '{username}' updated settings ({', '.join(changed)})")
-        flash(request, "User settings updated successfully.", "success")
+        flash(request, _("User settings updated successfully."), "success")
         return RedirectResponse("/user-settings", status_code=303)
 
     except Exception as e:
         log("error", "Settings", f"Failed to update settings for '{username}': {str(e)}")
-        flash(request, "Failed to update settings. Please try again.", "error")
+        flash(request, _("Failed to update settings. Please try again."), "error")
         return RedirectResponse("/user-settings", status_code=303)
 
 
@@ -422,3 +438,37 @@ def set_user_theme(
 
     request.session["theme"] = theme
     return JSONResponse({"status": "ok"})
+
+
+# ---------------------------------------------------------
+# Per-user table column visibility (AJAX)
+# ---------------------------------------------------------
+@router.get("/api/user/table-columns")
+def get_table_columns(request: Request, page: str = ""):
+    """Get the hidden column keys for a table page (e.g. emails, quarantine)."""
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+    if page not in HIDEABLE_COLUMNS:
+        return JSONResponse({"error": "Unknown page"}, status_code=400)
+    return {"page": page, "hidden": get_hidden_columns(user_id, page)}
+
+
+@router.post("/api/user/table-columns")
+def save_table_columns(
+    request: Request,
+    payload: dict = Body(...)
+):
+    """Persist the hidden column keys for a table page."""
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    page = payload.get("page", "")
+    hidden = payload.get("hidden", [])
+    if page not in HIDEABLE_COLUMNS:
+        return JSONResponse({"error": "Unknown page"}, status_code=400)
+
+    if save_hidden_columns(user_id, page, hidden):
+        return JSONResponse({"status": "ok", "page": page, "hidden": get_hidden_columns(user_id, page)})
+    return JSONResponse({"error": "Failed to save column preferences"}, status_code=500)

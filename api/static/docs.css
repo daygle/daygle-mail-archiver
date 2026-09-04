@@ -1,0 +1,10 @@
+/* Help / About / Donate documentation pages (mirrors roles.css tokens) */
+.doc-page { display: flex; flex-direction: column; gap: 20px; }
+.doc-hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding: 28px 32px; border: 1px solid var(--border-color); border-radius: var(--radius-xl); background: linear-gradient(135deg, var(--bg-primary), var(--accent-light)); box-shadow: var(--shadow-sm); }
+.doc-hero-copy { max-width: 720px; }
+.doc-eyebrow { color: var(--accent-primary); font-size: .75rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 8px; }
+.doc-eyebrow i { margin-right: 6px; }
+.doc-hero h2 { margin: 0 0 6px; color: var(--text-primary); font-size: clamp(1.6rem, 3vw, 2.15rem); letter-spacing: -.03em; }
+.doc-hero p { margin: 0; color: var(--text-secondary); max-width: 650px; }
+@media (max-width: 800px) { .doc-hero { align-items: stretch; flex-direction: column; } }
+@media (max-width: 500px) { .doc-hero { padding: 22px 20px; } }

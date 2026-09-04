@@ -3,6 +3,15 @@
 {% block page_title %}{{ gettext('Global Settings') }}{% endblock %}
 
 {% block content %}
+<div class="gls-page">
+    <section class="gls-hero" aria-labelledby="gls-heading">
+        <div class="gls-hero-copy">
+            <div class="gls-eyebrow"><i class="fas fa-cog"></i> {{ gettext("Administration") }}</div>
+            <h2 id="gls-heading">{{ gettext("Global Settings") }}</h2>
+            <p>{{ gettext("System-wide defaults for display, retention, virus scanning, quarantine, and email alerts.") }}</p>
+        </div>
+    </section>
+
 <form method="post">
     <div class="row">
         <div class="col-12">
@@ -358,4 +367,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+</div>
 {% endblock %}
+
+{% block extra_css %}<link rel="stylesheet" href="/static/settings.css">{% endblock %}

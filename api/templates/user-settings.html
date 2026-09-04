@@ -3,6 +3,15 @@
 {% block page_title %}User Settings{% endblock %}
 
 {% block content %}
+<div class="ust-page">
+    <section class="ust-hero" aria-labelledby="ust-heading">
+        <div class="ust-hero-copy">
+            <div class="ust-eyebrow"><i class="fas fa-sliders-h"></i> Preferences</div>
+            <h2 id="ust-heading">User Settings</h2>
+            <p>Configure how dates, times, language, and theme are displayed for your account, plus your alert preferences.</p>
+        </div>
+    </section>
+
 <form method="post" action="/user-settings/update">
     <!-- Display & Formatting Card -->
     <div class="card">
@@ -167,7 +176,10 @@
         </div>
     </div>
 </form>
+</div>
 {% endblock %}
+
+{% block extra_css %}<link rel="stylesheet" href="/static/settings.css">{% endblock %}
 
 {% block extra_js %}
 <script>

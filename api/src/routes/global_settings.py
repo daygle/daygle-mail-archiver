@@ -9,6 +9,8 @@ from ..utils.logger import log
 from ..utils.templates import templates
 from ..utils.email import test_smtp_connection
 from ..utils.permissions import require_permission, PERMISSIONS
+from ..utils.i18n import request_gettext
+from ..utils.timezone import invalidate_display_prefs
 
 ALLOWED_THEMES = ("system", "light", "dark")
 ALLOWED_RETENTION_UNITS = ("days", "months", "years")
@@ -16,7 +18,7 @@ ALLOWED_CLAMAV_ACTIONS = ("quarantine", "reject", "log_only")
 _KNOWN_TIMEZONES = frozenset(pytz.all_timezones)
 
 
-def validate_global_settings(values: dict, current_timezone: Optional[str] = None) -> Optional[str]:
+def validate_global_settings(values: dict, current_timezone: Optional[str] = None, _=lambda x: x) -> Optional[str]:
     """Validate submitted global-settings values.
 
     The HTML form constrains most fields, but the server must not trust the
@@ -33,68 +35,68 @@ def validate_global_settings(values: dict, current_timezone: Optional[str] = Non
     try:
         page_size = int(values.get("page_size", 50))
         if not 10 <= page_size <= 500:
-            return "Items per page must be between 10 and 500."
+            return _("Items per page must be between 10 and 500.")
     except (TypeError, ValueError):
-        return "Items per page must be a number between 10 and 500."
+        return _("Items per page must be a number between 10 and 500.")
 
     try:
         retention_value = int(values.get("retention_value", 1))
         if not 1 <= retention_value <= 10000:
-            return "Retention period must be at least 1."
+            return _("Retention period must be at least 1.")
     except (TypeError, ValueError):
-        return "Retention period must be a number of at least 1."
+        return _("Retention period must be a number of at least 1.")
 
     if values.get("retention_unit") not in ALLOWED_RETENTION_UNITS:
-        return "Invalid retention unit selected."
+        return _("Invalid retention unit selected.")
 
     try:
         auto_logout_minutes = int(values.get("auto_logout_minutes", 60))
         if not 0 <= auto_logout_minutes <= 1440:
-            return "Auto logout must be between 0 and 1440 minutes (0 disables it)."
+            return _("Auto logout must be between 0 and 1440 minutes (0 disables it).")
     except (TypeError, ValueError):
-        return "Auto logout must be a number of minutes."
+        return _("Auto logout must be a number of minutes.")
 
     try:
         clamav_port = int(values.get("clamav_port", 3310))
         if not 1 <= clamav_port <= 65535:
-            return "ClamAV port must be between 1 and 65535."
+            return _("ClamAV port must be between 1 and 65535.")
     except (TypeError, ValueError):
-        return "ClamAV port must be a number."
+        return _("ClamAV port must be a number.")
 
     try:
         clamav_max_file_size = int(values.get("clamav_max_file_size", 10485760))
         if not 1024 <= clamav_max_file_size <= 1073741824:
-            return "Max file size to scan must be at least 1024 bytes."
+            return _("Max file size to scan must be at least 1024 bytes.")
     except (TypeError, ValueError):
-        return "Max file size to scan must be a number of bytes."
+        return _("Max file size to scan must be a number of bytes.")
 
     try:
         quarantine_days = int(values.get("clamav_quarantine_retention_days", 90))
         if not 1 <= quarantine_days <= 36500:
-            return "Quarantine retention must be at least 1 day."
+            return _("Quarantine retention must be at least 1 day.")
     except (TypeError, ValueError):
-        return "Quarantine retention must be a number of days."
+        return _("Quarantine retention must be a number of days.")
 
     if values.get("clamav_action") not in ALLOWED_CLAMAV_ACTIONS:
-        return "Invalid virus action selected."
+        return _("Invalid virus action selected.")
 
     try:
         smtp_port = int(values.get("smtp_port", 587))
         if not 1 <= smtp_port <= 65535:
-            return "SMTP port must be between 1 and 65535."
+            return _("SMTP port must be between 1 and 65535.")
     except (TypeError, ValueError):
-        return "SMTP port must be a number."
+        return _("SMTP port must be a number.")
 
     try:
         grace = int(values.get("clamav_failure_grace_seconds", 300))
         if not 0 <= grace <= 86400:
-            return "ClamAV alert grace period must be between 0 and 86400 seconds."
+            return _("ClamAV alert grace period must be between 0 and 86400 seconds.")
     except (TypeError, ValueError):
-        return "ClamAV alert grace period must be a number of seconds."
+        return _("ClamAV alert grace period must be a number of seconds.")
 
     timezone = values.get("timezone", "UTC")
     if timezone != current_timezone and timezone not in _KNOWN_TIMEZONES:
-        return f"Unknown timezone: {timezone}"
+        return _("Unknown timezone: {0}").format(timezone)
 
     return None
 
@@ -152,6 +154,7 @@ def save_settings(
     clamav_quarantine_in_db: bool = Form(True),
     clamav_quarantine_retention_days: int = Form(90),
     clamav_max_file_size: int = Form(10485760),
+
     clamav_quarantine_encrypt: bool = Form(False),
     clamav_failure_grace_seconds: int = Form(300),
     smtp_enabled: bool = Form(False),
@@ -164,6 +167,8 @@ def save_settings(
     smtp_from_name: str = Form("Daygle Mail Archiver"),
     auto_logout_minutes: int = Form(60),
 ):
+    _ = request_gettext(request)
+
     # Load old settings
     rows = query("SELECT key, value FROM settings").mappings().all()
     old_settings = {r["key"]: r["value"] for r in rows}
@@ -191,6 +196,7 @@ def save_settings(
         validation_error = validate_global_settings(
             validation_values,
             current_timezone=old_settings.get("timezone", "UTC"),
+            _=_,
         )
         if validation_error:
             flash(request, validation_error, "error")
@@ -246,7 +252,7 @@ def save_settings(
         # Detect changes
         changed_keys = [k for k, v in new_settings.items() if old_settings.get(k) != v]
         if not changed_keys:
-            flash(request, "No changes detected.", "info")
+            flash(request, _("No changes detected."), "info")
             return RedirectResponse("/global-settings", status_code=303)
 
         # Apply updates atomically so a mid-save failure can never leave the
@@ -265,12 +271,16 @@ def save_settings(
         request.session["timezone"] = timezone
         request.session["global_theme"] = default_theme
 
-        flash(request, "Settings updated successfully.", "success")
+        # Global date/time/timezone may have changed: clear every cached
+        # preference answer so the new defaults apply immediately.
+        invalidate_display_prefs()
+
+        flash(request, _("Settings updated successfully."), "success")
         return RedirectResponse("/global-settings", status_code=303)
 
     except Exception as e:
         log("error", "Settings", f"Failed to save settings: {str(e)}")
-        flash(request, f"Failed to save settings: {str(e)}", "error")
+        flash(request, _("Failed to save settings: {0}").format(str(e)), "error")
         return RedirectResponse("/global-settings", status_code=303)
 
 
@@ -282,6 +292,7 @@ def test_smtp(
     request: Request,
     _=require_permission(PERMISSIONS["manage_global_settings"])
 ):
+    _ = request_gettext(request)
     try:
         user_id = request.session.get("user_id")
         user = query("""
@@ -291,18 +302,18 @@ def test_smtp(
         """, {"id": user_id}).mappings().first()
 
         if not user or not user.get("email"):
-            flash(request, "Your account does not have an email address configured.", "error")
+            flash(request, _("Your account does not have an email address configured."), "error")
             return RedirectResponse("/global-settings", status_code=303)
 
         success, message = test_smtp_connection(user["email"], int(user_id))
 
         if success:
-            flash(request, f"SMTP test successful: {message}", "success")
+            flash(request, _("SMTP test successful: {0}").format(message), "success")
         else:
-            flash(request, f"SMTP test failed: {message}", "error")
+            flash(request, _("SMTP test failed: {0}").format(message), "error")
 
     except Exception as e:
         log("error", "Settings", f"SMTP test failed: {str(e)}")
-        flash(request, f"SMTP test failed: {str(e)}", "error")
+        flash(request, _("SMTP test failed: {0}").format(str(e)), "error")
 
     return RedirectResponse("/global-settings", status_code=303)

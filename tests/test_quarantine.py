@@ -310,6 +310,8 @@ def _list_fake_query(rows, captured):
             return FakeResult([{"total": len(rows)}])
         if "FROM quarantined_emails" in sql and "LIMIT" in sql:
             return FakeResult(rows)
+        if "FROM user_table_prefs" in sql:
+            return FakeResult([])
         raise AssertionError(f"Unexpected query: {str(sql)[:120]}")
     return handler
 
@@ -338,6 +340,8 @@ def test_list_quarantine_short_circuits_no_signature_rows(monkeypatch):
         "raw_email": None, "compressed": None,
     }]
     monkeypatch.setattr(quarantine_mod, "query", _list_fake_query(rows, captured))
+    # Column-visibility prefs run through table_prefs' own query hook.
+    monkeypatch.setattr("src.utils.table_prefs.query", lambda sql, params=None: FakeResult([]))
     # decrypt/decompress/hash must never run for signature-less rows
     monkeypatch.setattr(quarantine_mod, "_decrypt_quarantine_raw", _boom("decrypt"))
     monkeypatch.setattr(quarantine_mod, "decompress", _boom("decompress"))

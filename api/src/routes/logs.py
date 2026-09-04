@@ -5,6 +5,7 @@ from fastapi.responses import RedirectResponse
 
 from ..utils.db import query
 from ..utils.templates import templates
+from ..utils.timezone import format_datetime, get_display_prefs
 from ..utils.permissions import require_permission, PERMISSIONS
 
 router = APIRouter()
@@ -141,10 +142,19 @@ def logs(
 
     rows = query(logs_query, params).mappings().all()
 
-    # Normalize rows to dicts and expose source_label (use DB value directly)
+    # Normalize rows to dicts and expose source_label (use DB value directly).
+    # Resolve display preferences once and pre-format each entry's timestamp so
+    # a 50-entry page does not issue a timezone/format lookup per row (the
+    # template renders timestamp_formatted instead of re-formatting per row).
     rows = [dict(r) for r in rows]
+    _tz, _date_format, _time_format = get_display_prefs(user_id)
     for r in rows:
         r["source_label"] = r.get("source")
+        r["timestamp_formatted"] = (
+            format_datetime(r["timestamp"], user_id, date_format=_date_format,
+                            time_format=_time_format, tz=_tz)
+            if r.get("timestamp") else None
+        )
 
     # Get distinct sources for filter dropdown
     sources_query = "SELECT DISTINCT source FROM logs WHERE source IS NOT NULL AND source <> '' ORDER BY source"

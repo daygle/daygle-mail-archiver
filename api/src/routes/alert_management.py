@@ -5,6 +5,7 @@ from ..utils.db import query, execute
 from ..utils.logger import log
 from ..utils.templates import templates
 from ..utils.permissions import require_permission, PERMISSIONS
+from ..utils.i18n import request_gettext
 
 router = APIRouter()
 
@@ -24,6 +25,7 @@ def _safe_log(level: str, source: str, message: str, details: str = ""):
 
 @router.get("/alert-management")
 def alert_management_form(request: Request, _=require_permission(PERMISSIONS["manage_alerts"])):
+    _ = request_gettext(request)
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
@@ -45,7 +47,7 @@ def alert_management_form(request: Request, _=require_permission(PERMISSIONS["ma
         """).mappings().all()
     except Exception as e:
         _safe_log("error", "Alert Management", f"Failed to load alert triggers: {str(e)}", "")
-        flash(request, "Unable to load alert triggers. Please try again.", "error")
+        flash(request, _("Unable to load alert triggers. Please try again."), "error")
         triggers = []
 
     msg = request.session.pop("flash", None)
@@ -61,6 +63,7 @@ def alert_management_form(request: Request, _=require_permission(PERMISSIONS["ma
 
 @router.post("/alert-management/triggers/update")
 def update_trigger_status(request: Request, _=require_permission(PERMISSIONS["manage_alerts"]), trigger_id: int = Form(...), enabled: bool = Form(...)):
+    _ = request_gettext(request)
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
@@ -71,7 +74,7 @@ def update_trigger_status(request: Request, _=require_permission(PERMISSIONS["ma
             "SELECT name FROM alert_triggers WHERE id = :id", {"id": trigger_id}
         ).mappings().first()
         if not trigger:
-            flash(request, "Alert trigger not found.", "error")
+            flash(request, _("Alert trigger not found."), "error")
             return RedirectResponse("/alert-management", status_code=303)
 
         result = execute(
@@ -79,28 +82,32 @@ def update_trigger_status(request: Request, _=require_permission(PERMISSIONS["ma
             {"enabled": enabled, "id": trigger_id},
         )
         if result.rowcount == 0:
-            flash(request, "Alert trigger no longer exists.", "error")
+            flash(request, _("Alert trigger no longer exists."), "error")
             return RedirectResponse("/alert-management", status_code=303)
         trigger_name = trigger["name"]
 
         _safe_log("info", "Alert Management", f"Alert trigger '{trigger_name}' {'enabled' if enabled else 'disabled'}", "")
 
-        flash(request, f"Alert trigger '{trigger_name}' {'enabled' if enabled else 'disabled'} successfully.", 'success')
+        if enabled:
+            flash(request, _("Alert trigger '{0}' enabled successfully.").format(trigger_name), 'success')
+        else:
+            flash(request, _("Alert trigger '{0}' disabled successfully.").format(trigger_name), 'success')
         return RedirectResponse("/alert-management", status_code=303)
     except Exception as e:
         _safe_log("error", "Alert Management", f"Failed to update trigger status: {str(e)}", "")
-        flash(request, "Failed to update trigger status.", 'error')
+        flash(request, _("Failed to update trigger status."), 'error')
         return RedirectResponse("/alert-management", status_code=303)
 
 @router.post("/alert-management/triggers/update-severity")
 def update_trigger_severity(request: Request, _=require_permission(PERMISSIONS["manage_alerts"]), trigger_id: int = Form(...), alert_type: str = Form(...)):
+    _ = request_gettext(request)
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
     # Validate alert_type
     valid_types = ['error', 'warning', 'info', 'success']
     if alert_type not in valid_types:
-        flash(request, f"Invalid alert type: {alert_type}", 'error')
+        flash(request, _("Invalid alert type: {0}").format(alert_type), 'error')
         return RedirectResponse("/alert-management", status_code=303)
 
     try:
@@ -110,7 +117,7 @@ def update_trigger_severity(request: Request, _=require_permission(PERMISSIONS["
             "SELECT name FROM alert_triggers WHERE id = :id", {"id": trigger_id}
         ).mappings().first()
         if not trigger:
-            flash(request, "Alert trigger not found.", "error")
+            flash(request, _("Alert trigger not found."), "error")
             return RedirectResponse("/alert-management", status_code=303)
 
         result = execute(
@@ -118,15 +125,15 @@ def update_trigger_severity(request: Request, _=require_permission(PERMISSIONS["
             {"alert_type": alert_type, "id": trigger_id},
         )
         if result.rowcount == 0:
-            flash(request, "Alert trigger no longer exists.", "error")
+            flash(request, _("Alert trigger no longer exists."), "error")
             return RedirectResponse("/alert-management", status_code=303)
         trigger_name = trigger["name"]
 
         _safe_log("info", "Alert Management", f"Alert trigger '{trigger_name}' severity changed to {alert_type}", "")
 
-        flash(request, f"Alert trigger '{trigger_name}' severity updated to {alert_type}.", 'success')
+        flash(request, _("Alert trigger '{0}' severity updated to {1}.").format(trigger_name, alert_type), 'success')
         return RedirectResponse("/alert-management", status_code=303)
     except Exception as e:
         _safe_log("error", "Alert Management", f"Failed to update trigger severity: {str(e)}", "")
-        flash(request, "Failed to update trigger severity.", 'error')
+        flash(request, _("Failed to update trigger severity."), 'error')
         return RedirectResponse("/alert-management", status_code=303)

@@ -3,27 +3,17 @@
 {% block page_title %}Access Denied{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-body text-center">
-                    <div class="mb-4">
-                        <i class="fas fa-lock fa-4x text-danger"></i>
-                    </div>
-                    <h2 class="card-title">Access Denied</h2>
-                    <p class="card-text">
-                        You don't have permission to access this page.
-                    </p>
-                    <p class="text-muted">
-                        If you believe this is an error, please contact your administrator.
-                    </p>
-                    <a href="/dashboard" class="btn btn-primary">
-                        <i class="fas fa-home"></i> Go to Dashboard
-                    </a>
-                </div>
-            </div>
-        </div>
+<div class="den-page">
+    <div class="den-card">
+        <div class="den-icon"><i class="fas fa-lock"></i></div>
+        <div class="den-eyebrow"><i class="fas fa-exclamation-triangle"></i> 403 - Access denied</div>
+        <h2>You don't have permission to view this page</h2>
+        <p>If you believe this is an error, please contact your administrator.</p>
+        <a href="/dashboard" class="btn btn-primary">
+            <i class="fas fa-home"></i><span>Go to Dashboard</span>
+        </a>
     </div>
 </div>
 {% endblock %}
+
+{% block extra_css %}<link rel="stylesheet" href="/static/access-denied.css">{% endblock %}

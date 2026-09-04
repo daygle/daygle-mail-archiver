@@ -18,9 +18,17 @@ from ..utils.email_parser import decompress, parse_email, compute_signature, get
 from ..utils.crypto import decrypt_password
 from ..utils.logger import log
 from ..utils.templates import templates
-from ..utils.timezone import format_datetime, format_email_date, user_date_to_utc_range_start, user_date_to_utc_range_end
+from ..utils.table_prefs import get_hidden_columns
+from ..utils.timezone import (
+    format_datetime,
+    format_email_date,
+    get_display_prefs,
+    user_date_to_utc_range_start,
+    user_date_to_utc_range_end,
+)
 from ..utils.alerts import create_alert
 from ..utils.permissions import PermissionChecker, require_permission, PERMISSIONS
+from ..utils.i18n import request_gettext
 from ..utils.clamav_scanner import ClamAVScanner
 
 router = APIRouter()
@@ -253,33 +261,34 @@ def _record_insert_result(status: str, label: str) -> tuple:
     return 0, 0, f"{label}: failed to insert"
 
 
-def _build_import_flash(imported: int, rejected: int, errors: list) -> tuple:
+def _build_import_flash(imported: int, rejected: int, errors: list, _=lambda x: x) -> tuple:
     """Build the (message, category) flash describing an import result.
 
     Success and per-file issues are combined into a single message (the session
     flash is a single slot, so two flash() calls would overwrite each other),
     the error list is capped, and virus rejections are reported separately from
-    hard failures.
+    hard failures. The ``_`` argument is the request's gettext callable so the
+    static message parts are translatable.
     """
     if imported > 0 or rejected > 0 or errors:
         parts = []
         if imported > 0:
-            parts.append(f"Imported {imported} message(s).")
+            parts.append(_("Imported {0} message(s).").format(imported))
         if rejected > 0:
-            parts.append(f"{rejected} message(s) blocked (virus detected).")
+            parts.append(_("{0} message(s) blocked (virus detected).").format(rejected))
         if errors:
             shown = errors[:MAX_IMPORT_ERRORS_SHOWN]
             if len(errors) > MAX_IMPORT_ERRORS_SHOWN:
-                shown.append(f"... and {len(errors) - MAX_IMPORT_ERRORS_SHOWN} more issue(s)")
-            issues = "Issues: " + "; ".join(shown)
+                shown.append(_("... and {0} more issue(s)").format(len(errors) - MAX_IMPORT_ERRORS_SHOWN))
+            issues = _("Issues: {0}").format("; ".join(shown))
             if imported == 0 and rejected == 0:
-                issues = "No messages were imported. " + issues
+                issues = _("No messages were imported. {0}").format(issues)
             parts.append(issues)
         # Anything blocked/failed is surfaced with a non-green flash; pure
         # success is the only path to a green alert.
         category = "error" if errors else ("warning" if rejected else "success")
         return " ".join(parts), category
-    return "No messages were imported.", "info"
+    return _("No messages were imported."), "info"
 
 
 def _quote_imap_folder(folder: str) -> str:
@@ -331,6 +340,12 @@ def list_emails(
             user_id = int(user_id)
         except (ValueError, TypeError):
             user_id = None
+
+    # Resolve display preferences once so per-row formatting below is query-free.
+    _tz, _date_format, _time_format = get_display_prefs(user_id)
+
+    # Per-user column visibility (hidden columns are omitted at render time).
+    hidden_cols = get_hidden_columns(user_id, "emails")
 
     # Get page_size from user settings, fallback to global settings
     page_size = 50  # Default
@@ -501,9 +516,15 @@ def list_emails(
             integrity_reason = f"Could not read attachment file from storage: {str(e)}"
 
         # Format email and scan timestamps according to user preferences.
-        rr["date_formatted"] = format_email_date(rr["date"], rr.get("created_at"), user_id)
+        rr["date_formatted"] = format_email_date(
+            rr["date"], rr.get("created_at"), user_id,
+            date_format=_date_format, time_format=_time_format, tz=_tz,
+        )
         rr["scan_timestamp_formatted"] = (
-            format_datetime(rr["scan_timestamp"], user_id)
+            format_datetime(
+                rr["scan_timestamp"], user_id,
+                date_format=_date_format, time_format=_time_format, tz=_tz,
+            )
             if rr.get("scan_timestamp") else None
         )
 
@@ -534,6 +555,7 @@ def list_emails(
             "sort_by": sort_by or "",
             "sort_order": sort_order or "",
             "stats": stats,
+            "hidden_cols": hidden_cols,
             "flash": msg,
         },
     )
@@ -689,6 +711,7 @@ Folder: {folder}""",
 
 @router.post("/emails/import-export")
 async def import_emails(request: Request, source: str = Form("import"), folder: str = Form("INBOX"), files: List[UploadFile] = File(...)):
+    _ = request_gettext(request)
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
@@ -806,7 +829,7 @@ async def import_emails(request: Request, source: str = Form("import"), folder: 
         except Exception as e:
             errors.append(f"{filename}: {str(e)}")
 
-    flash(request, *_build_import_flash(imported, rejected, errors))
+    flash(request, *_build_import_flash(imported, rejected, errors, _))
 
     return RedirectResponse("/emails", status_code=303)
 
@@ -843,17 +866,26 @@ def view_email(request: Request, email_id: int):
         except (ValueError, TypeError):
             user_id = None
 
+    # Resolve display preferences once so formatting below is query-free.
+    _tz, _date_format, _time_format = get_display_prefs(user_id)
+
     # Format timestamps according to user preferences
     row = dict(row)  # Convert to dict to make it mutable
     
     # Format scan_timestamp
     if row["scan_timestamp"]:
-        row["scan_timestamp_formatted"] = format_datetime(row["scan_timestamp"], user_id)
+        row["scan_timestamp_formatted"] = format_datetime(
+            row["scan_timestamp"], user_id,
+            date_format=_date_format, time_format=_time_format, tz=_tz,
+        )
     else:
         row["scan_timestamp_formatted"] = None
     
     # Format email date if it's a datetime object
-    row["date_formatted"] = format_email_date(row["date"], row.get("created_at"), user_id)
+    row["date_formatted"] = format_email_date(
+        row["date"], row.get("created_at"), user_id,
+        date_format=_date_format, time_format=_time_format, tz=_tz,
+    )
 
     # Decompress defensively: legacy rows can carry NULL raw_email (an old
     # compression-failure bug) or corrupt gzip data; neither may 500 the page.
@@ -1066,18 +1098,19 @@ def scan_emails(
 
     if not isinstance(ids, list):
         ids = [ids]
+    _ = request_gettext(request)
     username = request.session.get("username", "unknown")
     scan_result = _scan_email_ids(ids, username)
 
-    parts = [f"Scanned {scan_result['scanned']} email(s)."]
+    parts = [_("Scanned {0} email(s).").format(scan_result['scanned'])]
     if scan_result["clean"]:
-        parts.append(f"{scan_result['clean']} clean.")
+        parts.append(_("{0} clean.").format(scan_result['clean']))
     if scan_result["infected"]:
-        parts.append(f"{scan_result['infected']} infected - review and quarantine as needed.")
+        parts.append(_("{0} infected - review and quarantine as needed.").format(scan_result['infected']))
     if scan_result["skipped"]:
-        parts.append(f"{scan_result['skipped']} skipped.")
+        parts.append(_("{0} skipped.").format(scan_result['skipped']))
     if scan_result["errors"]:
-        parts.append("Issues: " + " ".join(scan_result["errors"][:5]))
+        parts.append(_("Issues: {0}").format(" ".join(scan_result["errors"][:5])))
 
     category = "error" if scan_result["errors"] and not scan_result["scanned"] else (
         "warning" if scan_result["infected"] or scan_result["errors"] else "success"
@@ -1089,6 +1122,7 @@ def scan_emails(
 
 @router.post("/emails/{email_id}/quarantine")
 def quarantine_single_email(request: Request, email_id: int):
+    _ = request_gettext(request)
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
@@ -1115,9 +1149,9 @@ def quarantine_single_email(request: Request, email_id: int):
         log("error", "Emails", f"Failed to create quarantine alert: {str(e)}", "")
     
     if quarantined > 0:
-        flash(request, "Email quarantined successfully.", 'success')
+        flash(request, _("Email quarantined successfully."), 'success')
     else:
-        flash(request, "Email could not be quarantined (may already be quarantined).", 'error')
+        flash(request, _("Email could not be quarantined (may already be quarantined)."), 'error')
     
     return RedirectResponse("/emails", status_code=303)
 
@@ -1133,6 +1167,7 @@ def perform_delete(
     - Database Only
     - Database and Mail Server (IMAP/Gmail/O365)
     """
+    _ = request_gettext(request)
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
@@ -1147,7 +1182,7 @@ def perform_delete(
         deleted = _delete_emails_from_db(ids)
         username = request.session.get("username", "unknown")
         log("warning", "Emails", f"User '{username}' deleted {deleted} email(s) from database (IDs: {ids})", "")
-        flash(request, f"Deleted {deleted} email(s) from the database.", 'success')
+        flash(request, _("Deleted {0} email(s) from the database.").format(deleted), 'success')
         return RedirectResponse("/emails", status_code=303)
 
     elif mode == "imap":
@@ -1159,21 +1194,22 @@ def perform_delete(
             log("warning", "Emails", f"User '{username}' deleted {deleted} email(s) from IMAP and database with errors (IDs: {ids})", error_text)
             flash(
                 request,
-                f"Deleted {deleted} email(s) from the database. Mail server deletion had issues: {error_text}",
+                _("Deleted {0} email(s) from the database. Mail server deletion had issues: {1}")
+                .format(deleted, error_text),
                 'error'
             )
         else:
             log("warning", "Emails", f"User '{username}' deleted {deleted} email(s) from IMAP and database (IDs: {ids})", "")
             flash(
                 request,
-                f"Deleted {deleted} email(s) from database and mail server.",
+                _("Deleted {0} email(s) from database and mail server.").format(deleted),
                 'success'
             )
 
         return RedirectResponse("/emails", status_code=303)
 
     else:
-        flash(request, "Invalid delete mode selected.", 'error')
+        flash(request, _("Invalid delete mode selected."), 'error')
         return RedirectResponse("/emails", status_code=303)
 
 
@@ -1185,6 +1221,7 @@ def perform_quarantine(
     """
     Quarantine selected emails.
     """
+    _ = request_gettext(request)
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
@@ -1213,9 +1250,9 @@ def perform_quarantine(
         log("error", "Emails", f"Failed to create quarantine alert: {str(e)}", "")
     
     if quarantined > 0:
-        flash(request, f"Quarantined {quarantined} email(s).", 'success')
+        flash(request, _("Quarantined {0} email(s).").format(quarantined), 'success')
     else:
-        flash(request, "No emails were quarantined.", 'info')
+        flash(request, _("No emails were quarantined."), 'info')
     
     return RedirectResponse("/emails", status_code=303)
 
@@ -1472,6 +1509,7 @@ def _delete_emails_from_mail_server_and_db(ids: List[int]) -> tuple[int, list[st
 
 @router.post("/emails/export")
 def export_emails(request: Request, q: str = Form(None), account: str = Form(None), folder: str = Form(None), format: str = Form("zip")):
+    _ = request_gettext(request)
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
@@ -1503,7 +1541,7 @@ def export_emails(request: Request, q: str = Form(None), account: str = Form(Non
     # instead of producing an empty archive.
     count_row = query(f"SELECT COUNT(*) as c FROM emails {where_sql}", params).mappings().first()
     if not count_row or not count_row["c"]:
-        flash(request, "No emails found to export.", 'error')
+        flash(request, _("No emails found to export."), 'error')
         return RedirectResponse("/emails", status_code=303)
 
     username = request.session.get("username", "unknown")

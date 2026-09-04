@@ -8,8 +8,8 @@ Run with:  python -m pytest tests/ -v
 import os
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
-import pytest
 from cryptography.fernet import Fernet
 
 API_DIR = Path(__file__).resolve().parent.parent / "api"
@@ -103,3 +103,42 @@ def test_o365_scope_includes_readwrite():
     # messages via the Graph API.
     assert "Mail.ReadWrite" in oauth.O365_SCOPE
     assert "offline_access" in oauth.O365_SCOPE
+
+
+def test_o365_callback_exchange_requests_write_scope(monkeypatch):
+    """The callback must redeem the code with the same write scope that was
+    requested at authorization time; a narrower scope yields an access token
+    that cannot delete processed messages."""
+    captured = {}
+
+    class _Mappings:
+        def first(self):
+            return {"oauth_client_id": "client", "oauth_client_secret": "secret"}
+
+    class _Result:
+        def mappings(self):
+            return _Mappings()
+
+    monkeypatch.setattr(oauth, "query", lambda sql, params=None: _Result())
+    monkeypatch.setattr(oauth, "execute", lambda sql, params=None: None)
+    monkeypatch.setattr(oauth, "log", lambda *args, **kwargs: None)
+    monkeypatch.setattr(oauth, "encrypt_password", lambda s: f"enc:{s}")
+    monkeypatch.setattr(oauth, "_build_redirect_uri", lambda req, prov, aid: "http://api:8000/oauth/o365/callback/5")
+
+    def fake_post(url, data=None, timeout=None):
+        captured["data"] = data
+        resp = SimpleNamespace(status_code=200)
+        resp.raise_for_status = lambda: None
+        resp.json = lambda: {"access_token": "tok", "refresh_token": "rtok", "expires_in": 3600}
+        return resp
+
+    monkeypatch.setattr(oauth.requests, "post", fake_post)
+
+    req = FakeRequest(session={"user_id": 1, "username": "u", "oauth_state_o365_5": "st"})
+    resp = oauth.o365_oauth_callback(req, 5, code="CODE", state="st")
+
+    assert resp.status_code == 303
+    # The exchange must ask for the same write scope that was authorized,
+    # never the narrower read-only one.
+    assert captured["data"]["scope"] == oauth.O365_SCOPE
+    assert captured["data"]["scope"] == "https://graph.microsoft.com/Mail.ReadWrite offline_access"

@@ -5,294 +5,167 @@
 {% block content %}
 {% set perms = request.session.permissions or [] %}
 
-<!-- Button bar above the quarantine layout -->
-<div id="quarantine-action-bar" class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-    <a href="/quarantine" class="btn btn-secondary btn-sm flex-shrink-1 w-auto">
-        <i class="fas fa-arrow-left"></i>
-        <span class="hide-mobile">Back</span>
-    </a>
-    <div class="d-flex gap-2 flex-wrap">
-        {% if 'restore_quarantine' in perms %}
-        <form method="post" action="/quarantine/{{ item.id }}/restore" style="display:inline;">
-            <button type="submit" class="btn btn-success btn-sm flex-shrink-1 w-auto">
-                <i class="fas fa-undo"></i>
-                <span class="hide-mobile">Restore</span>
-            </button>
-        </form>
-        {% endif %}
-        {% if 'delete_quarantine' in perms %}
-        <button type="button" class="btn btn-danger btn-sm flex-shrink-1 w-auto" onclick="showDeleteConfirmation()">
-            <i class="fas fa-trash"></i>
-            <span class="hide-mobile">Delete</span>
-        </button>
-        {% endif %}
-    </div>
-</div>
+<div class="qnv-page">
+    <!-- Hero -->
+    <section class="qnv-hero" aria-labelledby="qnv-heading">
+        <div class="qnv-hero-copy">
+            <div class="qnv-eyebrow"><i class="fas fa-biohazard"></i> Quarantine</div>
+            <h2 id="qnv-heading">Quarantined message details</h2>
+            <p class="qnv-subject"><i class="fas fa-quote-left"></i> {{ item.subject or '(no subject)' }}</p>
+        </div>
+        <div class="qnv-hero-actions">
+            <a href="/quarantine" class="btn btn-secondary"><i class="fas fa-arrow-left"></i><span>Back</span></a>
+            {% if 'restore_quarantine' in perms %}
+            <form method="post" action="/quarantine/{{ item.id }}/restore" style="display: inline;">
+                <button type="submit" class="btn btn-success"><i class="fas fa-undo"></i><span>Restore</span></button>
+            </form>
+            {% endif %}
+            {% if 'delete_quarantine' in perms %}
+            <button type="button" class="btn btn-danger" onclick="showDeleteModal()"><i class="fas fa-trash"></i><span>Delete</span></button>
+            {% endif %}
+        </div>
+    </section>
 
-<!-- Two-column layout: Email Body (left 3/4) + Quarantine Details (right 1/4) -->
-<div id="quarantine-main-layout" class="row g-4 mb-4">
+    <!-- Two-column layout: Email Body (left) + Quarantine Details (right) -->
+    <div class="qnv-layout">
 
-    <!-- Email Body (left, 3/4) -->
-    <div class="col-lg-9">
-        <div class="card h-100">
-            <div class="card-header">
-                <div class="card-title">
-                    <i class="fas fa-file-alt"></i>
-                    <span>Email Body</span>
-                </div>
-            </div>
-            <div class="card-body card-body-flex">
+        <!-- Email Body -->
+        <section class="qnv-panel" aria-label="{{ gettext('Email body') }}">
+            <header class="qnv-panel-header"><i class="fas fa-file-alt"></i><span>{{ gettext('Email body') }}</span></header>
+            <div class="qnv-panel-body qnv-body">
                 {% if body.html %}
-                    <iframe
-                        srcdoc="{{ body.html | escape }}"
-                        sandbox
-                        style="width: 100%; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--bg-primary);">
-                    </iframe>
+                    <iframe class="qnv-iframe" srcdoc="{{ body.html | escape }}" sandbox title="{{ gettext('Email body') }}"></iframe>
                 {% elif body.text %}
-                    <pre style="background: var(--bg-secondary); padding: 16px; border-radius: var(--radius-md); overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;">{{ body.text }}</pre>
+                    <pre class="qnv-pre">{{ body.text }}</pre>
                 {% else %}
-                    <pre style="background: var(--bg-secondary); padding: 16px; border-radius: var(--radius-md); overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;">{{ preview }}</pre>
+                    <pre class="qnv-pre">{{ preview }}</pre>
                 {% endif %}
             </div>
-        </div>
-    </div>
+        </section>
 
-    <!-- Quarantine Email Details (right, 1/4) -->
-    <div class="col-lg-3">
-        <div class="card h-100">
-            <div class="card-header">
-                <div class="card-title">
-                    <i class="fas fa-biohazard"></i>
-                    <span>Quarantined Email Details</span>
-                </div>
-            </div>
-            <div class="card-body">
-
+        <!-- Quarantined Email Details -->
+        <aside class="qnv-panel" aria-label="{{ gettext('Quarantined email details') }}">
+            <header class="qnv-panel-header"><i class="fas fa-biohazard"></i><span>Quarantined details</span></header>
+            <div class="qnv-panel-body">
                 <!-- Quarantine Information -->
-                <div class="mb-4">
-                    <h5 class="mb-3 text-primary">
-                        <i class="fas fa-envelope-open-text me-2"></i>Quarantined Email Information
-                    </h5>
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <div class="email-detail-item">
-                                <label class="email-detail-label">Subject</label>
-                                <div class="email-detail-value">
-                                    <strong class="text-break">{{ item.subject or "(no subject)" }}</strong>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="email-detail-item">
-                                <label class="email-detail-label">Date</label>
-                                <div class="email-detail-value">{{ item.quarantined_at_formatted or item.quarantined_at }}</div>
-                            </div>
-                        </div>
+                <div class="qnv-section">
+                    <h6 class="qnv-section-title"><i class="fas fa-envelope-open-text"></i> Quarantined email information</h6>
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Subject</label>
+                        <div class="email-detail-value"><strong class="text-break">{{ item.subject or "(no subject)" }}</strong></div>
                     </div>
-
-                    <div class="row g-3 mt-2">
-                        <div class="col-12">
-                            <div class="email-detail-item">
-                                <label class="email-detail-label">Message ID</label>
-                                <div class="email-detail-value">
-                                    <code class="text-break">
-                                        {{ item.message_id or headers.get('message_id') or headers.get('Message-ID') or "(no message id)" }}
-                                    </code>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Date</label>
+                        <div class="email-detail-value">{{ item.quarantined_at_formatted or 'N/A' }}</div>
+                    </div>
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Message ID</label>
+                        <div class="email-detail-value"><code class="text-break">{{ item.message_id or headers.get('message_id') or headers.get('Message-ID') or "(no message id)" }}</code></div>
                     </div>
                 </div>
 
                 <!-- Sender -->
-                <div class="mb-4">
-                    <h6 class="mb-3 text-muted">
-                        <i class="fas fa-users me-2"></i>Participants
-                    </h6>
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <div class="email-detail-item">
-                                <label class="email-detail-label">From</label>
-                                <div class="email-detail-value text-break">{{ item.sender or 'unknown' }}</div>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="email-detail-item">
-                                <label class="email-detail-label">To</label>
-                                <div class="email-detail-value text-break">{{ item.recipients or 'N/A' }}</div>
-                            </div>
-                        </div>
+                <div class="qnv-section">
+                    <h6 class="qnv-section-title"><i class="fas fa-users"></i> Participants</h6>
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">From</label>
+                        <div class="email-detail-value text-break">{{ item.sender or 'unknown' }}</div>
+                    </div>
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">To</label>
+                        <div class="email-detail-value text-break">{{ item.recipients or 'N/A' }}</div>
                     </div>
                 </div>
 
                 <!-- Fetch Account Details -->
-                <div class="mb-4">
-                    <h6 class="mb-3 text-muted">
-                        <i class="fas fa-folder-tree me-2"></i>Fetch Account Details
-                    </h6>
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <div class="email-detail-item">
-                                <label class="email-detail-label">Account</label>
-                                <div class="email-detail-value">
-                                    <span class="badge badge-primary">{{ item.original_source or 'N/A' }}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="email-detail-item">
-                                <label class="email-detail-label">Folder</label>
-                                <div class="email-detail-value">
-                                    <span class="badge badge-secondary">{{ item.original_folder or 'N/A' }}</span>
-                                </div>
-                            </div>
-                        </div>
+                <div class="qnv-section">
+                    <h6 class="qnv-section-title"><i class="fas fa-folder-tree"></i> Fetch account details</h6>
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Account</label>
+                        <div class="email-detail-value"><span class="badge badge-primary">{{ item.original_source or 'N/A' }}</span></div>
+                    </div>
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Folder</label>
+                        <div class="email-detail-value"><span class="badge badge-secondary">{{ item.original_folder or 'N/A' }}</span></div>
                     </div>
                 </div>
 
                 <!-- Security Information -->
-                <div class="mb-4">
-                    <h6 class="mb-3 text-muted">
-                        <i class="fas fa-shield-alt me-2"></i>Security Information
-                    </h6>
-                    <div class="row g-3">
-
-                        <div class="col-12">
-                            <div class="email-detail-item">
-                                <label class="email-detail-label">Virus Detected</label>
-                                <div class="email-detail-value">
-                                    {% if item.virus_name %}
-                                    <span class="badge bg-danger">
-                                        <i class="fas fa-exclamation-triangle"></i> {{ item.virus_name }}
-                                    </span>
-                                    {% else %}
-                                    <span class="badge bg-secondary">No virus detected</span>
-                                    {% endif %}
-                                </div>
-                            </div>
+                <div class="qnv-section">
+                    <h6 class="qnv-section-title"><i class="fas fa-shield-alt"></i> Security information</h6>
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Virus Detected</label>
+                        <div class="email-detail-value">
+                            {% if item.virus_name %}
+                            <span class="badge bg-danger"><i class="fas fa-exclamation-triangle"></i> {{ item.virus_name }}</span>
+                            {% else %}
+                            <span class="badge bg-secondary">No virus detected</span>
+                            {% endif %}
                         </div>
-
-                        <div class="col-12">
-                            <div class="email-detail-item">
-                                <label class="email-detail-label">Reason</label>
-                                <div class="email-detail-value">{{ item.reason or 'Not specified' }}</div>
-                            </div>
+                    </div>
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Reason</label>
+                        <div class="email-detail-value">{{ item.reason or 'Not specified' }}</div>
+                    </div>
+                    <div class="email-detail-item">
+                        <label class="email-detail-label">Integrity Status</label>
+                        <div class="email-detail-value">
+                            {% if item.integrity == 'ok' %}
+                            <span class="badge bg-success" title="{{ item.integrity_reason or 'Valid' }}"><i class="fas fa-check"></i> Valid</span>
+                            {% elif item.integrity == 'modified' %}
+                            <span class="badge bg-danger" title="{{ item.integrity_reason or 'Modified' }}"><i class="fas fa-exclamation-triangle"></i> Invalid</span>
+                            {% elif item.integrity == 'no_signature' %}
+                            <span class="badge bg-secondary" title="{{ item.integrity_reason or 'No Signature' }}"><i class="fas fa-question"></i> No Signature</span>
+                            {% elif item.integrity == 'encrypted' %}
+                            <span class="badge bg-warning" title="{{ item.integrity_reason or 'Encrypted' }}"><i class="fas fa-lock"></i> Encrypted</span>
+                            {% else %}
+                            <span class="badge bg-secondary" title="{{ item.integrity_reason or 'Unknown' }}"><i class="fas fa-question"></i> Unknown</span>
+                            {% endif %}
                         </div>
-
-                        <div class="col-12">
-                            <div class="email-detail-item">
-                                <label class="email-detail-label">Integrity Status</label>
-                                <div class="email-detail-value">
-                                    {% if item.integrity == 'ok' %}
-                                    <span class="badge bg-success" title="{{ item.integrity_reason or 'Valid' }}"><i class="fas fa-check"></i> Valid</span>
-                                    {% elif item.integrity == 'modified' %}
-                                    <span class="badge bg-danger" title="{{ item.integrity_reason or 'Modified' }}"><i class="fas fa-exclamation-triangle"></i> Invalid</span>
-                                    {% elif item.integrity == 'no_signature' %}
-                                    <span class="badge bg-secondary" title="{{ item.integrity_reason or 'No Signature' }}"><i class="fas fa-question"></i> No Signature</span>
-                                    {% elif item.integrity == 'encrypted' %}
-                                    <span class="badge bg-warning" title="{{ item.integrity_reason or 'Encrypted' }}"><i class="fas fa-lock"></i> Encrypted</span>
-                                    {% else %}
-                                    <span class="badge bg-secondary" title="{{ item.integrity_reason or 'Unknown' }}"><i class="fas fa-question"></i> Unknown</span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-
                     </div>
                 </div>
-
             </div>
-
-        </div>
+        </aside>
     </div>
 
+    <!-- Raw Preview Card -->
+    <section class="qnv-panel" aria-label="{{ gettext('Raw preview') }}">
+        <header class="qnv-panel-header"><i class="fas fa-code"></i><span>Raw preview</span></header>
+        <div class="qnv-panel-body">
+            {% if preview %}
+            <pre class="qnv-pre qnv-pre-raw">{{ preview }}</pre>
+            {% else %}
+            <p class="text-muted qnv-empty-note">No preview available</p>
+            {% endif %}
+        </div>
+    </section>
 </div>
 
-<!-- Raw Preview Card -->
-<div id="quarantine-raw-preview" class="card mt-4">
-    <div class="card-header">
-        <div class="card-title">
-            <i class="fas fa-code"></i>
-            <span>Raw Preview</span>
-        </div>
-    </div>
-    <div class="card-body">
-        {% if preview %}
-            <pre style="background: var(--bg-secondary); padding: 16px; border-radius: var(--radius-md); overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; max-height:400px; overflow:auto;">{{ preview }}</pre>
-        {% else %}
-            <p class="text-muted">No preview available</p>
-        {% endif %}
-    </div>
-</div>
-
-<!-- Delete Confirmation Section -->
-<div id="delete-confirmation" class="card" style="display: none;">
-    <div class="card-header">
-        <div class="card-title">
-            <i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i>
-            <span>Confirm Deletion</span>
-        </div>
-    </div>
-    <div class="card-body">
-        <div class="alert alert-warning">
-            <i class="fas fa-info-circle"></i>
-            <span>You are about to delete this quarantined message permanently.</span>
-        </div>
-
-        <p style="margin-top: 20px; margin-bottom: 20px;"><strong>Choose how you want to delete it:</strong></p>
-
-        <div style="display: grid; gap: 12px; margin-bottom: 20px;">
-            <button type="button" class="btn btn-danger w-100" onclick="performDelete('db')">
-                <i class="fas fa-database"></i>
-                <span class="hide-mobile">Delete from Database Only</span>
-            </button>
-            <button type="button" class="btn btn-warning w-100" onclick="performDelete('imap')">
-                <i class="fas fa-server"></i>
-                <span class="hide-mobile">Delete from Database and Mail Server</span>
-            </button>
-        </div>
-
-        <div class="text-center">
-            <button type="button" class="btn btn-secondary" onclick="hideDeleteConfirmation()">
-                <i class="fas fa-times"></i>
-                <span class="hide-mobile">Cancel</span>
-            </button>
-        </div>
-    </div>
-</div>
-
-<script>
-  function showDeleteConfirmation() {
-    document.getElementById('quarantine-action-bar').style.display = 'none';
-    document.getElementById('quarantine-main-layout').style.display = 'none';
-    document.getElementById('quarantine-raw-preview').style.display = 'none';
-    document.getElementById('delete-confirmation').style.display = 'block';
-    window.scrollTo(0, 0);
-  }
-
-  function hideDeleteConfirmation() {
-    document.getElementById('quarantine-action-bar').style.display = '';
-    document.getElementById('quarantine-main-layout').style.display = '';
-    document.getElementById('quarantine-raw-preview').style.display = '';
-    document.getElementById('delete-confirmation').style.display = 'none';
-    window.scrollTo(0, 0);
-  }
-
-  function performDelete(mode) {
-    const form = document.createElement('form');
-    form.method = 'post';
-    form.action = '/quarantine/{{ item.id }}/delete';
-    form.style.display = 'none';
-
-    const modeInput = document.createElement('input');
-    modeInput.type = 'hidden';
-    modeInput.name = 'mode';
-    modeInput.value = mode;
-    form.appendChild(modeInput);
-
-    document.body.appendChild(form);
-    form.submit();
-  }
-</script>
+<!-- Delete Confirmation Modal -->
+{% if 'delete_quarantine' in perms %}
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h2 class="modal-title" id="deleteModalLabel"><i class="fas fa-exclamation-triangle text-danger"></i> Confirm deletion</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ gettext('Close') }}"></button></div><div class="modal-body"><p>You are about to delete this quarantined message permanently.</p><div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i><span>This cannot be undone. Choose how you want to delete it:</span></div><div class="qnv-delete-options"><button type="button" class="btn btn-danger" onclick="performDelete('db')"><i class="fas fa-database"></i><span>Delete from Database Only</span></button><button type="button" class="btn btn-warning" onclick="performDelete('imap')"><i class="fas fa-server"></i><span>Delete from Database and Mail Server</span></button></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button></div></div></div></div>
+{% endif %}
 
 {% endblock %}
+
+{% block extra_css %}<link rel="stylesheet" href="/static/detail-view.css">{% endblock %}
+
+{% block extra_js %}<script>
+    function showDeleteModal() {
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('deleteModal')).show();
+    }
+
+    function performDelete(mode) {
+        const form = document.createElement('form');
+        form.method = 'post';
+        form.action = '/quarantine/{{ item.id }}/delete';
+        form.style.display = 'none';
+        const modeInput = document.createElement('input');
+        modeInput.type = 'hidden';
+        modeInput.name = 'mode';
+        modeInput.value = mode;
+        form.appendChild(modeInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+</script>{% endblock %}

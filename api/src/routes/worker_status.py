@@ -9,6 +9,7 @@ from ..utils.db import query, engine
 from sqlalchemy import text as sa_text
 from ..utils.logger import log
 from ..utils.templates import templates
+from ..utils.timezone import format_datetime, get_display_prefs
 from ..utils.permissions import require_permission, PERMISSIONS
 
 router = APIRouter()
@@ -140,7 +141,12 @@ def worker_status(request: Request, _=require_permission(PERMISSIONS["view_worke
         )
 
     now = datetime.now(timezone.utc)
-    
+
+    # Resolve display preferences once so the template never queries the DB
+    # per account row, then pre-format the heartbeat timestamps.
+    current_user_id = request.session.get("user_id")
+    tz, date_format, time_format = get_display_prefs(current_user_id)
+
     # Calculate status for each account
     account_statuses = []
     for acc in accounts:
@@ -153,6 +159,10 @@ def worker_status(request: Request, _=require_permission(PERMISSIONS["view_worke
             "last_success": acc["last_success"],
             "last_error": acc["last_error"],
             "poll_interval": acc["poll_interval_seconds"],
+            "last_heartbeat_formatted": (
+                format_datetime(acc["last_heartbeat"], current_user_id, tz=tz, date_format=date_format, time_format=time_format)
+                if acc["last_heartbeat"] else None
+            ),
         }
         
         # Determine health status

@@ -25,32 +25,39 @@
 .log-search input::placeholder { color: var(--text-tertiary); }
 .log-filters { padding: 18px 20px; border: 1px solid var(--border-color); border-radius: var(--radius-lg); background: var(--bg-primary); }
 .log-filters[hidden] { display: none; }
-.log-grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
-.log-card { display: flex; flex-direction: column; min-width: 0; padding: 20px; border: 1px solid var(--border-color); border-radius: var(--radius-lg); background: var(--bg-primary); box-shadow: var(--shadow-sm); transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base); }
-.log-card:hover { transform: translateY(-2px); border-color: var(--border-hover); box-shadow: var(--shadow-md); }
-.log-card[hidden] { display: none; }
-.log-card-top { display: flex; align-items: flex-start; gap: 12px; }
-.log-avatar { display: grid; place-items: center; flex: 0 0 auto; width: 42px; height: 42px; border-radius: 12px; color: white; background: var(--accent-primary); }
-.log-avatar-error { background: var(--danger); }
-.log-avatar-warning { background: #f59e0b; }
-.log-avatar-success { background: var(--success); }
-.log-avatar-debug, .log-avatar-info { background: #64748b; }
-.log-card-main { min-width: 0; flex: 1; }
-.log-message { overflow: hidden; margin: 0 0 4px; font-size: 1.02rem; text-overflow: ellipsis; white-space: nowrap; }
-.log-source { overflow: hidden; color: var(--text-secondary); font-size: .8rem; text-overflow: ellipsis; white-space: nowrap; }
-.log-source i { margin-right: 5px; color: var(--accent-primary); }
-.log-card-badges { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex: 0 0 auto; }
-.log-badge { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; padding: 5px 8px; border-radius: 999px; font-size: .68rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; letter-spacing: .04em; }
+
+/* Log entries table */
+.log-table-card { overflow: hidden; border: 1px solid var(--border-color); border-radius: var(--radius-lg); background: var(--bg-primary); box-shadow: var(--shadow-sm); }
+.log-table { margin: 0; }
+.log-table thead th { white-space: nowrap; }
+.log-table td { vertical-align: middle; }
+.log-row[hidden] { display: none; }
+.log-level-cell { width: 1%; white-space: nowrap; }
+.log-time-cell { width: 1%; white-space: nowrap; color: var(--text-secondary); font-size: .82rem; font-variant-numeric: tabular-nums; }
+.log-time-cell i, .log-source-cell i { margin-right: 6px; color: var(--text-tertiary); }
+.log-source-cell { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary); font-size: .82rem; }
+.log-message-cell { max-width: 0; width: 100%; }
+.log-message { display: block; overflow: hidden; color: var(--text-primary); font-size: .9rem; text-overflow: ellipsis; white-space: nowrap; }
+.log-details-col { width: 44px; }
+.log-details-cell { width: 44px; text-align: center; }
+.log-badge { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; padding: 5px 9px; border-radius: 999px; font-size: .68rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; letter-spacing: .04em; }
+.log-badge i { font-size: .72rem; }
 .log-badge-error { color: var(--danger); background: rgba(239, 68, 68, .12); }
 .log-badge-warning { color: #d97706; background: rgba(245, 158, 11, .12); }
 .log-badge-success { color: var(--success); background: rgba(16, 185, 129, .12); }
-.log-badge-info, .log-badge-debug { color: var(--text-tertiary); background: var(--bg-hover); }
-.log-card-meta { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 16px; padding: 12px 0; border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light); color: var(--text-secondary); font-size: .78rem; }
-.log-card-meta span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.log-card-meta i { margin-right: 5px; color: var(--accent-primary); }
-.log-details { margin-top: 12px; }
-.log-details summary { color: var(--text-secondary); font-size: .8rem; cursor: pointer; }
-.log-details pre { margin: 10px 0 0; padding: 12px; border-radius: var(--radius-md); color: var(--text-primary); background: var(--bg-secondary); font-size: .78rem; white-space: pre-wrap; word-break: break-word; }
+.log-badge-info, .log-badge-debug { color: var(--text-secondary); background: var(--bg-hover); }
+.log-details-toggle { display: inline-grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--text-secondary); background: transparent; cursor: pointer; transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast); }
+.log-details-toggle:hover { border-color: var(--accent-primary); color: var(--accent-primary); background: var(--accent-light); }
+.log-details-toggle i { transition: transform var(--transition-fast); }
+.log-details-toggle[aria-expanded="true"] i { transform: rotate(180deg); }
+.log-no-details { color: var(--text-tertiary); }
+.log-detail-row[hidden] { display: none; }
+.log-detail-row td { padding: 0 !important; border-bottom: 1px solid var(--border-color); background: var(--bg-secondary); }
+.log-details-body { padding: 16px 20px 20px; }
+.log-details-label { display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.log-details-label i { margin-right: 6px; color: var(--accent-primary); }
+.log-details-body pre { margin: 0; padding: 12px 14px; border-radius: var(--radius-md); color: var(--text-primary); background: var(--bg-primary); font-size: .78rem; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+
 .log-filter-empty, .log-empty-state { padding: 56px 20px; border: 1px dashed var(--border-color); border-radius: var(--radius-lg); color: var(--text-secondary); text-align: center; background: var(--bg-primary); }
 .log-filter-empty[hidden] { display: none; }
 .log-filter-empty > i { color: var(--text-tertiary); font-size: 2rem; }

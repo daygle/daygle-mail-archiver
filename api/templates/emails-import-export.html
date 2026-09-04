@@ -3,155 +3,137 @@
 {% block page_title %}Import/Export Emails{% endblock %}
 
 {% block content %}
-{% if flash %}
-<div class="alert alert-{{ 'danger' if flash.type == 'error' else flash.type }}">{{ flash.message }}</div>
-{% endif %}
+<div class="iex-page">
+    <!-- Hero -->
+    <section class="iex-hero" aria-labelledby="iex-heading">
+        <div class="iex-hero-copy">
+            <div class="iex-eyebrow"><i class="fas fa-exchange-alt"></i> Email archive</div>
+            <h2 id="iex-heading">Import / export emails</h2>
+            <p>Bring messages into the archive from EML or MBOX files, or export an account's messages for backup or transfer.</p>
+        </div>
+        <div class="iex-hero-actions">
+            <a href="/emails" class="btn btn-secondary"><i class="fas fa-arrow-left"></i><span>Back to emails</span></a>
+        </div>
+    </section>
 
-{% if can_import %}
-<div class="card">
-  <div class="card-header">
-    <div class="card-title">
-      <i class="fas fa-file-import"></i>
-      <span>Import Emails</span>
-    </div>
-  </div>
-  <div class="card-body">
-    <form id="import-form" method="post" action="/emails/import-export" enctype="multipart/form-data">
-      <div class="mb-3">
-        <label for="files" class="form-label">Select EML or MBOX files to import (ZIP files containing EML/MBOX are supported)</label>
-        <input type="file" name="files" id="files" multiple accept=".eml,.mbox,.mbx,.zip,application/zip" class="form-control">
-      </div>
+    {% if flash %}
+    <div class="alert alert-{{ 'danger' if flash.type == 'error' else flash.type }}">{{ flash.message }}</div>
+    {% endif %}
 
-      {% if accounts %}
-      <div class="mb-3">
-        <label for="source" class="form-label">Fetch Account</label>
-        <select name="source" id="source" class="form-select">
-          {% for a in accounts %}
-          <option value="{{ a }}">{{ a }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      {% else %}
-      <div class="alert alert-info">
-        No fetch accounts exist yet - imported messages will be stored under the <code>import</code> source. Add a fetch account on the <a href="/fetch-accounts">Fetch Accounts</a> page to group imports under a real account.
-      </div>
-      {% endif %}
+    {% if can_import %}
+    <section class="iex-panel">
+        <header class="iex-panel-header"><i class="fas fa-file-import"></i><span>Import emails</span></header>
+        <div class="iex-panel-body">
+            <form id="import-form" method="post" action="/emails/import-export" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="files" class="form-label">Select EML or MBOX files to import (ZIP files containing EML/MBOX are supported)</label>
+                    <input type="file" name="files" id="files" multiple accept=".eml,.mbox,.mbx,.zip,application/zip" class="form-control">
+                </div>
 
-      <div class="mb-3">
-        <label for="folder" class="form-label">Folder</label>
-        <input type="text" name="folder" id="folder" value="INBOX" class="form-control">
-      </div>
-    </form>
+                {% if accounts %}
+                <div class="form-group mt-3">
+                    <label for="source" class="form-label">Fetch Account</label>
+                    <select name="source" id="source" class="form-select">
+                        {% for a in accounts %}
+                        <option value="{{ a }}">{{ a }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% else %}
+                <div class="iex-tip"><i class="fas fa-info-circle"></i><span>No fetch accounts exist yet - imported messages will be stored under the <code>import</code> source. Add a fetch account on the <a href="/fetch-accounts">Fetch Accounts</a> page to group imports under a real account.</span></div>
+                {% endif %}
 
-    <p class="text-muted mt-3">Note: ZIP files are supported and will be scanned for EML/MBOX entries. PST and .msg files are not supported.</p>
-  </div>
-  <div class="card-footer">
-    <div class="d-flex justify-content-end">
-      <a href="/emails" class="btn btn-secondary me-2">
-        <i class="fas fa-times"></i>
-        <span>Cancel</span>
-      </a>
-      <button type="submit" form="import-form" class="btn btn-primary">
-        <i class="fas fa-upload"></i>
-        <span>Upload/Import</span>
-      </button>
-    </div>
-  </div>
+                <div class="form-group mt-3">
+                    <label for="folder" class="form-label">Folder</label>
+                    <input type="text" name="folder" id="folder" value="INBOX" class="form-control">
+                </div>
+            </form>
+
+            <p class="iex-note">Note: ZIP files are supported and will be scanned for EML/MBOX entries. PST and .msg files are not supported.</p>
+        </div>
+        <footer class="iex-panel-footer">
+            <a href="/emails" class="btn btn-secondary"><i class="fas fa-times"></i><span>Cancel</span></a>
+            <button type="submit" form="import-form" class="btn btn-primary"><i class="fas fa-upload"></i><span>Upload/Import</span></button>
+        </footer>
+    </section>
+    {% endif %}
+
+    {% if can_export %}
+    <section class="iex-panel">
+        <header class="iex-panel-header"><i class="fas fa-file-export"></i><span>Export emails</span></header>
+        {% if accounts %}
+        <div class="iex-panel-body">
+            <p class="iex-note">Export all emails for a selected fetch account in ZIP (EML files) or MBOX format.</p>
+            <form id="export-form" method="post" action="/emails/export">
+                <div class="form-group">
+                    <label for="export-account" class="form-label">Fetch Account</label>
+                    <select name="account" id="export-account" class="form-select" required>
+                        {% for a in accounts %}
+                        <option value="{{ a }}">{{ a }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group mt-3">
+                    <label for="export-format" class="form-label">Format</label>
+                    <select name="format" id="export-format" class="form-select">
+                        <option value="mbox">MBOX</option>
+                        <option value="zip">ZIP (EML files)</option>
+                    </select>
+                </div>
+                <input type="hidden" name="q" value="">
+                <input type="hidden" name="folder" value="">
+            </form>
+        </div>
+        <footer class="iex-panel-footer">
+            <a href="/emails" class="btn btn-secondary"><i class="fas fa-times"></i><span>Cancel</span></a>
+            <button type="submit" form="export-form" class="btn btn-primary"><i class="fas fa-file-export"></i><span>Export</span></button>
+        </footer>
+        {% else %}
+        <div class="iex-panel-body">
+            <div class="iex-tip"><i class="fas fa-info-circle"></i><span>No fetch accounts exist yet. Create a fetch account on the <a href="/fetch-accounts">Fetch Accounts</a> page before exporting emails.</span></div>
+        </div>
+        {% endif %}
+    </section>
+    {% endif %}
 </div>
-{% endif %}
-
-{% if can_export %}
-<div class="card mt-4">
-  <div class="card-header">
-    <div class="card-title">
-      <i class="fas fa-file-export"></i>
-      <span>Export Emails</span>
-    </div>
-  </div>
-  {% if accounts %}
-  <div class="card-body">
-    <p class="text-muted">Export all emails for a selected fetch account in ZIP (EML files) or MBOX format.</p>
-
-    <form id="export-form" method="post" action="/emails/export">
-      <div class="mb-3">
-        <label for="export-account" class="form-label">Fetch Account</label>
-        <select name="account" id="export-account" class="form-select" required>
-          {% for a in accounts %}
-          <option value="{{ a }}">{{ a }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div class="mb-3">
-        <label for="export-format" class="form-label">Format</label>
-        <select name="format" id="export-format" class="form-select">
-          <option value="mbox">MBOX</option>
-          <option value="zip">ZIP (EML files)</option>
-        </select>
-      </div>
-      <input type="hidden" name="q" value="">
-      <input type="hidden" name="folder" value="">
-    </form>
-  </div>
-  <div class="card-footer">
-    <div class="d-flex justify-content-end">
-      <a href="/emails" class="btn btn-secondary me-2">
-        <i class="fas fa-times"></i>
-        <span>Cancel</span>
-      </a>
-      <button type="submit" form="export-form" class="btn btn-primary">
-        <i class="fas fa-file-export"></i>
-        <span>Export</span>
-      </button>
-    </div>
-  </div>
-  {% else %}
-  <div class="card-body">
-    <div class="alert alert-info">
-      No fetch accounts exist yet. Create a fetch account on the <a href="/fetch-accounts">Fetch Accounts</a> page before exporting emails.
-    </div>
-  </div>
-  {% endif %}
-</div>
-{% endif %}
-
-{% if can_import %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  const importForm = document.getElementById('import-form');
-  const importButton = document.querySelector('button[form="import-form"]');
-  const filesInput = document.getElementById('files');
-  const sourceSelect = document.getElementById('source');
-
-  if (!importForm || !importButton || !filesInput) return;
-
-  // Disable button initially
-  importButton.disabled = true;
-
-  function validateForm() {
-    const filesSelected = filesInput.files.length > 0;
-    // When there are no fetch accounts the source select is omitted and the
-    // route falls back to the default "import" source - allow submitting.
-    const accountSelected = !sourceSelect || sourceSelect.options.length === 0 || sourceSelect.value !== '';
-    const validFiles = Array.from(filesInput.files).every(file => {
-      const ext = file.name.toLowerCase().split('.').pop();
-      return ['eml', 'mbox', 'mbx', 'zip'].includes(ext);
-    });
-
-    importButton.disabled = !(filesSelected && accountSelected && validFiles);
-  }
-
-  filesInput.addEventListener('change', validateForm);
-  if (sourceSelect) sourceSelect.addEventListener('change', validateForm);
-
-  // Also validate on form submit to prevent invalid submissions
-  importForm.addEventListener('submit', function(e) {
-    if (importButton.disabled) {
-      e.preventDefault();
-      showToast('Please select valid files and a fetch account.', 'danger');
-    }
-  });
-});
-</script>
-{% endif %}
-
 {% endblock %}
+
+{% block extra_css %}<link rel="stylesheet" href="/static/import-export.css">{% endblock %}
+
+{% block extra_js %}<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const importForm = document.getElementById('import-form');
+    const importButton = document.querySelector('button[form="import-form"]');
+    const filesInput = document.getElementById('files');
+    const sourceSelect = document.getElementById('source');
+
+    if (!importForm || !importButton || !filesInput) return;
+
+    // Disable button initially
+    importButton.disabled = true;
+
+    function validateForm() {
+        const filesSelected = filesInput.files.length > 0;
+        // When there are no fetch accounts the source select is omitted and the
+        // route falls back to the default "import" source - allow submitting.
+        const accountSelected = !sourceSelect || sourceSelect.options.length === 0 || sourceSelect.value !== '';
+        const validFiles = Array.from(filesInput.files).every(file => {
+            const ext = file.name.toLowerCase().split('.').pop();
+            return ['eml', 'mbox', 'mbx', 'zip'].includes(ext);
+        });
+
+        importButton.disabled = !(filesSelected && accountSelected && validFiles);
+    }
+
+    filesInput.addEventListener('change', validateForm);
+    if (sourceSelect) sourceSelect.addEventListener('change', validateForm);
+
+    // Also validate on form submit to prevent invalid submissions
+    importForm.addEventListener('submit', function(e) {
+        if (importButton.disabled) {
+            e.preventDefault();
+            showToast('Please select valid files and a fetch account.', 'danger');
+        }
+    });
+});
+</script>{% endblock %}

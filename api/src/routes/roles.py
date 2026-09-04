@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, Form
-from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.responses import RedirectResponse
 from sqlalchemy import text
 from typing import List
 import re
@@ -7,6 +7,7 @@ import re
 from ..utils.db import query, transaction
 from ..utils.logger import log
 from ..utils.templates import templates
+from ..utils.i18n import request_gettext
 from ..utils.permissions import (
     require_permission,
     PERMISSIONS,
@@ -85,6 +86,7 @@ def create_role(
     description: str = Form(""),
     permission_ids: List[str] = Form([]),
 ):
+    _ = request_gettext(request)
     try:
         raw = name.strip()
 
@@ -95,7 +97,7 @@ def create_role(
         slug = re.sub(r"[\s-]+", "_", raw).lower()
 
         if len(display_name) < 2:
-            flash(request, "Role name must be at least 2 characters long.", "error")
+            flash(request, _("Role name must be at least 2 characters long."), "error")
             return RedirectResponse("/roles", status_code=303)
 
         # Check uniqueness
@@ -103,14 +105,14 @@ def create_role(
             "SELECT id FROM roles WHERE name = :name", {"name": slug}
         ).first()
         if existing:
-            flash(request, f"Role '{display_name}' already exists.", "error")
+            flash(request, _("Role '{0}' already exists.").format(display_name), "error")
             return RedirectResponse("/roles", status_code=303)
 
         # Normalize + dedupe the submitted permission ids before touching the DB
         try:
             perm_ids = sorted({int(p) for p in permission_ids})
         except (TypeError, ValueError):
-            flash(request, "Invalid permission selection.", "error")
+            flash(request, _("Invalid permission selection."), "error")
             return RedirectResponse("/roles", status_code=303)
 
         # A role manager cannot grant privileged permissions they do not hold
@@ -143,12 +145,12 @@ def create_role(
                     VALUES (:role_id, :permission_id)
                 """), {"role_id": role_id, "permission_id": perm_id})
 
-        flash(request, f"Role '{display_name}' created successfully.", "success")
+        flash(request, _("Role '{0}' created successfully.").format(display_name), "success")
         return RedirectResponse("/roles", status_code=303)
 
     except Exception as e:
         log("error", "Roles", f"Failed to create role '{name}': {str(e)}")
-        flash(request, "Failed to create role.", "error")
+        flash(request, _("Failed to create role."), "error")
         return RedirectResponse("/roles", status_code=303)
 
 
@@ -161,6 +163,8 @@ def edit_role_form(
     role_id: int,
     _=require_permission(PERMISSIONS["manage_roles"])
 ):
+    _ = request_gettext(request)
+
     role = query("""
         SELECT id, name, display_name, description, is_system_role
         FROM roles
@@ -168,12 +172,12 @@ def edit_role_form(
     """, {"role_id": role_id}).mappings().first()
 
     if not role:
-        flash(request, "Role not found.", "error")
+        flash(request, _("Role not found."), "error")
         return RedirectResponse("/roles", status_code=303)
 
     # Prevent editing system roles
     if role["is_system_role"]:
-        flash(request, "System roles cannot be edited.", "error")
+        flash(request, _("System roles cannot be edited."), "error")
         return RedirectResponse("/roles", status_code=303)
 
     # Current permissions
@@ -216,6 +220,8 @@ def update_role(
 ):
     """Update an existing role"""
 
+    _ = request_gettext(request)
+
     # Fetch role and check system-role protection
     role = query("""
         SELECT id, name, display_name, description, is_system_role
@@ -224,11 +230,11 @@ def update_role(
     """, {"role_id": role_id}).mappings().first()
 
     if not role:
-        flash(request, "Role not found.", "error")
+        flash(request, _("Role not found."), "error")
         return RedirectResponse("/roles", status_code=303)
 
     if role["is_system_role"]:
-        flash(request, "System roles cannot be modified.", "error")
+        flash(request, _("System roles cannot be modified."), "error")
         return RedirectResponse("/roles", status_code=303)
 
     try:
@@ -241,7 +247,7 @@ def update_role(
         slug = re.sub(r"[\s-]+", "_", raw).lower()
 
         if len(display_name) < 2:
-            flash(request, "Role name must be at least 2 characters long.", "error")
+            flash(request, _("Role name must be at least 2 characters long."), "error")
             return RedirectResponse("/roles", status_code=303)
 
         # Check uniqueness (excluding current role)
@@ -251,7 +257,7 @@ def update_role(
         """, {"name": slug, "role_id": role_id}).first()
 
         if existing:
-            flash(request, f"Role '{display_name}' already exists.", "error")
+            flash(request, _("Role '{0}' already exists.").format(display_name), "error")
             return RedirectResponse("/roles", status_code=303)
 
         # Current permissions
@@ -269,7 +275,7 @@ def update_role(
         try:
             new_perm_set = {int(p) for p in permission_ids}
         except (TypeError, ValueError):
-            flash(request, "Invalid permission selection.", "error")
+            flash(request, _("Invalid permission selection."), "error")
             return RedirectResponse("/roles", status_code=303)
 
         # Detect no-op
@@ -279,7 +285,7 @@ def update_role(
             and role["name"] == slug
             and new_perm_set == current_perm_set
         ):
-            flash(request, "No changes detected.", "info")
+            flash(request, _("No changes detected."), "info")
             return RedirectResponse("/roles", status_code=303)
 
         # Only *additions* of privileged permissions the actor lacks are blocked;
@@ -315,13 +321,13 @@ def update_role(
                     VALUES (:role_id, :permission_id)
                 """), {"role_id": role_id, "permission_id": perm_id})
 
-        flash(request, f"Role '{display_name}' updated successfully.", "success")
+        flash(request, _("Role '{0}' updated successfully.").format(display_name), "success")
         log("info", "Roles", f"Updated role '{display_name}' with {len(new_perm_set)} permissions")
         return RedirectResponse("/roles", status_code=303)
 
     except Exception as e:
         log("error", "Roles", f"Failed to update role {role_id}: {str(e)}")
-        flash(request, "Failed to update role.", "error")
+        flash(request, _("Failed to update role."), "error")
         return RedirectResponse("/roles", status_code=303)
 
 
@@ -336,6 +342,8 @@ def delete_role(
 ):
     """Delete a role"""
 
+    _ = request_gettext(request)
+
     # Fetch role and check system-role protection
     role = query("""
         SELECT id, name, is_system_role
@@ -344,11 +352,11 @@ def delete_role(
     """, {"role_id": role_id}).mappings().first()
 
     if not role:
-        flash(request, "Role not found.", "error")
+        flash(request, _("Role not found."), "error")
         return RedirectResponse("/roles", status_code=303)
 
     if role["is_system_role"]:
-        flash(request, "System roles cannot be deleted.", "error")
+        flash(request, _("System roles cannot be deleted."), "error")
         return RedirectResponse("/roles", status_code=303)
 
     try:
@@ -360,7 +368,7 @@ def delete_role(
         """, {"role_id": role_id}).mappings().first()
 
         if count and count["count"] > 0:
-            flash(request, "Cannot delete a role that is assigned to users.", "error")
+            flash(request, _("Cannot delete a role that is assigned to users."), "error")
             return RedirectResponse("/roles", status_code=303)
 
         # Delete the role and its permission links atomically (the foreign keys
@@ -376,11 +384,11 @@ def delete_role(
                 {"role_id": role_id},
             )
 
-        flash(request, f"Role '{role['name']}' deleted successfully.", "success")
+        flash(request, _("Role '{0}' deleted successfully.").format(role['name']), "success")
         log("info", "Roles", f"Deleted role '{role['name']}'")
         return RedirectResponse("/roles", status_code=303)
 
     except Exception as e:
         log("error", "Roles", f"Failed to delete role {role_id}: {str(e)}")
-        flash(request, "Failed to delete role.", "error")
+        flash(request, _("Failed to delete role."), "error")
         return RedirectResponse("/roles", status_code=303)

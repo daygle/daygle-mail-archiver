@@ -3,6 +3,15 @@
 {% block page_title %}Help & Documentation{% endblock %}
 
 {% block content %}
+<div class="doc-page">
+    <section class="doc-hero" aria-labelledby="doc-heading">
+        <div class="doc-hero-copy">
+            <div class="doc-eyebrow"><i class="fas fa-book"></i> Documentation</div>
+            <h2 id="doc-heading">Help &amp; documentation</h2>
+            <p>Step-by-step guides for setting up fetch accounts, managing the archive, and keeping the system healthy.</p>
+        </div>
+    </section>
+
 <div class="help-docs-layout">
 <aside class="help-toc-card">
     <div class="card">
@@ -52,7 +61,7 @@
         <p class="mb-16">Learn how to use Daygle Mail Archiver to fetch, store, and manage your emails.</p>
         <ol class="pl-24 mb-0">
             <li class="mb-12"><strong>Set up a Fetch Account:</strong> Go to Fetch Accounts and add a new email account (IMAP, Gmail, or Office 365)</li>
-            <li class="mb-12"><strong>Enable the account:</strong> Ensure the “Enabled” checkbox is selected</li>
+            <li class="mb-12"><strong>Enable the account:</strong> Ensure the "Enabled" checkbox is selected</li>
             <li class="mb-12"><strong>Start the worker:</strong> The worker will automatically fetch emails based on the poll interval</li>
             <li class="mb-0"><strong>View your emails:</strong> Navigate to the Emails page to browse and search archived emails</li>
         </ol>
@@ -151,7 +160,7 @@
         <p class="mb-12">Use the <strong>Import/Export</strong> page to import and export email archives.</p>
         <p class="mb-12"><strong>Import:</strong> Upload <code>.eml</code>, <code>.mbox</code>, <code>.mbx</code>, or ZIP files. Requires <code>import_emails</code> permission.</p>
         <p class="mb-12"><strong>Export:</strong> Export filtered or all emails as ZIP or MBOX. Requires <code>export_emails</code> permission.</p>
-        <p class="mb-0"><strong>Permissions:</strong> Import and export actions are permission‑gated.</p>
+        <p class="mb-0"><strong>Permissions:</strong> Import and export actions are permission-gated.</p>
     </div>
 </div>
 
@@ -221,9 +230,9 @@
     </div>
     <div class="card-body">
         <p class="mb-16"><strong>Connection Issues:</strong> Use the Test button on fetch accounts, verify SSL/TLS settings, and check firewall rules.</p>
-        <p class="mb-16"><strong>OAuth Issues:</strong> Ensure redirect URIs match exactly and re‑authorise the account.</p>
+        <p class="mb-16"><strong>OAuth Issues:</strong> Ensure redirect URIs match exactly and re-authorise the account.</p>
         <p class="mb-16"><strong>No Emails Being Fetched:</strong> Ensure the account is enabled and the worker is running.</p>
-        <p class="mb-16"><strong>Account Lockout:</strong> After too many failed logins, accounts temporarily lock. Use “Forgot Password” to unlock.</p>
+        <p class="mb-16"><strong>Account Lockout:</strong> After too many failed logins, accounts temporarily lock. Use "Forgot Password" to unlock.</p>
         <p class="mb-16"><strong>Permission Restrictions:</strong> If you cannot delete emails or download .eml files, you may not have the required permissions.</p>
         <p class="mb-0"><strong>Performance Issues:</strong> Reduce poll interval or enable retention cleanup.</p>
     </div>
@@ -238,10 +247,10 @@
         </div>
     </div>
     <div class="card-body">
-        <p class="mb-16">When “Delete Email After Processing” is enabled, emails are removed from the mail server after archiving:</p>
+        <p class="mb-16">When "Delete Email After Processing" is enabled, emails are removed from the mail server after archiving:</p>
         <ul class="pl-24 mb-16">
             <li class="mb-8"><strong>IMAP:</strong> Mark as deleted or permanently expunge</li>
-            <li class="mb-8"><strong>Gmail:</strong> Moves to Trash (30‑day recovery)</li>
+            <li class="mb-8"><strong>Gmail:</strong> Moves to Trash (30-day recovery)</li>
             <li class="mb-8"><strong>Office 365:</strong> Moves to Deleted Items</li>
         </ul>
         <div class="alert alert-danger mb-0">
@@ -264,7 +273,7 @@
         <p class="mb-12"><strong>Creating Users:</strong></p>
         <ol class="pl-24 mb-16">
             <li class="mb-8">Navigate to User Management</li>
-            <li class="mb-8">Click “Create New User”</li>
+            <li class="mb-8">Click "Create New User"</li>
             <li class="mb-8">Enter details and assign one or more roles</li>
             <li class="mb-8">Users can change their password after login</li>
         </ol>
@@ -334,7 +343,7 @@
         </ul>
 
         <div class="alert alert-info mb-0">
-            <i class="fas fa-info-circle"></i> <strong>Best Practice:</strong> Use app‑specific passwords for Gmail with 2FA enabled.
+            <i class="fas fa-info-circle"></i> <strong>Best Practice:</strong> Use app-specific passwords for Gmail with 2FA enabled.
         </div>
     </div>
 </div>
@@ -357,7 +366,7 @@
             <li class="mb-8">Search and filter quarantined emails</li>
         </ul>
 
-        <p class="mb-12"><strong>Actions (permission‑gated):</strong></p>
+        <p class="mb-12"><strong>Actions (permission-gated):</strong></p>
         <ul class="pl-24 mb-16">
             <li class="mb-8"><strong>Restore:</strong> Move the email back to the archive (requires <code>restore_quarantine</code>)</li>
             <li class="mb-8"><strong>Delete:</strong> Permanently remove the quarantine record (requires <code>delete_quarantine</code>)</li>
@@ -661,4 +670,7 @@
 </main>
 
 </div>
+</div>
 {% endblock %}
+
+{% block extra_css %}<link rel="stylesheet" href="/static/docs.css">{% endblock %}

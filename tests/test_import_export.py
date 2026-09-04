@@ -23,7 +23,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
 
-import pytest
 from cryptography.fernet import Fernet
 
 API_DIR = Path(__file__).resolve().parent.parent / "api"

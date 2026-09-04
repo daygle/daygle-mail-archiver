@@ -15,16 +15,16 @@
         </div>
         <a href="/alerts" class="btn btn-primary amg-create-button"><i class="fas fa-bell"></i><span>View alerts</span></a>
     </section>
-    <section class="amg-stats" aria-label="Trigger summary">
+    <section class="amg-stats" aria-label="{{ gettext('Trigger summary') }}">
         <div class="amg-stat-card"><div class="amg-stat-icon amg-stat-icon-blue"><i class="fas fa-bell"></i></div><div><span class="amg-stat-label">Total triggers</span><strong>{{ triggers | length }}</strong></div></div>
         <div class="amg-stat-card"><div class="amg-stat-icon amg-stat-icon-green"><i class="fas fa-toggle-on"></i></div><div><span class="amg-stat-label">Enabled</span><strong>{{ enabled_count }}</strong></div></div>
         <div class="amg-stat-card"><div class="amg-stat-icon amg-stat-icon-orange"><i class="fas fa-toggle-off"></i></div><div><span class="amg-stat-label">Disabled</span><strong>{{ disabled_count }}</strong></div></div>
     </section>
-    <section class="amg-toolbar" aria-label="Trigger filters">
+    <section class="amg-toolbar" aria-label="{{ gettext('Trigger filters') }}">
         <div class="amg-toolbar-title"><div class="card-title"><i class="fas fa-layer-group"></i><span>Alert triggers</span></div><span class="amg-result-count" id="amgResultCount">{{ triggers | length }} trigger{% if triggers | length != 1 %}s{% endif %}</span></div>
         <div class="amg-toolbar-actions">
-            <label class="amg-search" for="amgSearch"><i class="fas fa-search" aria-hidden="true"></i><input id="amgSearch" type="search" placeholder="Search this page" autocomplete="off"></label>
-            <label class="amg-filter" for="amgEnabledFilter"><i class="fas fa-filter" aria-hidden="true"></i><select id="amgEnabledFilter" aria-label="Filter by status">
+            <label class="amg-search" for="amgSearch"><i class="fas fa-search" aria-hidden="true"></i><input id="amgSearch" type="search" placeholder="{{ gettext('Search this page') }}" autocomplete="off"></label>
+            <label class="amg-filter" for="amgEnabledFilter"><i class="fas fa-filter" aria-hidden="true"></i><select id="amgEnabledFilter" aria-label="{{ gettext('Filter by status') }}">
                 <option value="all">All statuses</option>
                 <option value="enabled">Enabled only</option>
                 <option value="disabled">Disabled only</option>
@@ -33,53 +33,64 @@
     </section>
 
     {% if triggers %}
-    <div class="amg-grid" id="amgGrid">
-        {% for trigger in triggers %}
-        <article class="amg-card" data-amg-search="{{ trigger.name }} {{ trigger.description or '' }} {{ trigger.alert_type }}" data-amg-enabled="{{ '1' if trigger.enabled else '0' }}">
-            <div class="amg-card-top">
-                <div class="amg-avatar amg-avatar-{{ trigger.alert_type }}"><i class="fas fa-bell" aria-hidden="true"></i></div>
-                <div class="amg-card-main">
-                    <h3 title="{{ trigger.name }}">{{ trigger.name }}</h3>
-                    <p title="{{ trigger.description or 'No description available' }}">{{ trigger.description or 'No description available' }}</p>
-                </div>
-                <div class="amg-card-badges">
-                    <span class="amg-badge amg-badge-{{ trigger.alert_type }}"><i class="fas fa-gauge-high"></i> {{ trigger.alert_type }}</span>
-                    {% if trigger.enabled %}
-                    <span class="amg-badge amg-badge-enabled"><i class="fas fa-check"></i> Enabled</span>
-                    {% else %}
-                    <span class="amg-badge amg-badge-disabled"><i class="fas fa-ban"></i> Disabled</span>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="amg-card-footer">
-                <form method="post" action="/alert-management/triggers/update-severity" class="amg-severity-form">
-                    <input type="hidden" name="trigger_id" value="{{ trigger.id }}">
-                    <label class="amg-severity" for="severity-{{ trigger.id }}"><i class="fas fa-gauge-high" aria-hidden="true"></i><span>Severity</span>
-                    <select id="severity-{{ trigger.id }}" name="alert_type" class="form-select form-select-sm" onchange="this.form.submit()" aria-label="Change alert severity for {{ trigger.name }}">
-                        <option value="error" {% if trigger.alert_type == 'error' %}selected{% endif %}>Error</option>
-                        <option value="warning" {% if trigger.alert_type == 'warning' %}selected{% endif %}>Warning</option>
-                        <option value="info" {% if trigger.alert_type == 'info' %}selected{% endif %}>Info</option>
-                        <option value="success" {% if trigger.alert_type == 'success' %}selected{% endif %}>Success</option>
-                    </select>
-                    </label>
-                </form>
-                <form method="post" action="/alert-management/triggers/update" class="amg-toggle-form">
-                    <input type="hidden" name="trigger_id" value="{{ trigger.id }}">
-                    {% if trigger.enabled %}
-                    <input type="hidden" name="enabled" value="false">
-                    <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Disable {{ trigger.name }}">
-                        <i class="fas fa-ban"></i><span>Disable</span>
-                    </button>
-                    {% else %}
-                    <input type="hidden" name="enabled" value="true">
-                    <button type="submit" class="btn btn-sm btn-outline-success" aria-label="Enable {{ trigger.name }}">
-                        <i class="fas fa-check"></i><span>Enable</span>
-                    </button>
-                    {% endif %}
-                </form>
-            </div>
-        </article>
-        {% endfor %}
+    <div class="amg-table-card" aria-label="{{ gettext('Alert triggers') }}">
+        <div class="table-responsive">
+            <table class="table amg-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Trigger</th>
+                        <th scope="col" class="hide-mobile">Description</th>
+                        <th scope="col">Severity</th>
+                        <th scope="col">Status</th>
+                        <th scope="col" class="amg-actions-col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for trigger in triggers %}
+                    <tr class="amg-row" data-amg-search="{{ trigger.name }} {{ trigger.description or '' }} {{ trigger.alert_type }}" data-amg-enabled="{{ '1' if trigger.enabled else '0' }}">
+                        <td class="amg-name-cell">
+                            <div class="amg-table-identity">
+                                <div class="amg-avatar amg-avatar-sm amg-avatar-{{ trigger.alert_type }}"><i class="fas fa-bell" aria-hidden="true"></i></div>
+                                <strong title="{{ trigger.name }}">{{ trigger.name }}</strong>
+                            </div>
+                        </td>
+                        <td class="hide-mobile amg-desc-cell" title="{{ trigger.description or '' }}">{{ trigger.description or 'No description available' }}</td>
+                        <td class="amg-severity-cell">
+                            <span class="amg-badge amg-badge-{{ trigger.alert_type }}"><i class="fas fa-gauge-high"></i> {{ trigger.alert_type }}</span>
+                            <form method="post" action="/alert-management/triggers/update-severity" class="amg-severity-form">
+                                <input type="hidden" name="trigger_id" value="{{ trigger.id }}">
+                                <label class="amg-severity" for="severity-{{ trigger.id }}"><i class="fas fa-gauge-high" aria-hidden="true"></i><span class="visually-hidden">Severity</span>
+                                <select id="severity-{{ trigger.id }}" name="alert_type" class="form-select form-select-sm" onchange="this.form.submit()" aria-label="Change alert severity for {{ trigger.name }}">
+                                    <option value="error" {% if trigger.alert_type == 'error' %}selected{% endif %}>Error</option>
+                                    <option value="warning" {% if trigger.alert_type == 'warning' %}selected{% endif %}>Warning</option>
+                                    <option value="info" {% if trigger.alert_type == 'info' %}selected{% endif %}>Info</option>
+                                    <option value="success" {% if trigger.alert_type == 'success' %}selected{% endif %}>Success</option>
+                                </select>
+                                </label>
+                            </form>
+                        </td>
+                        <td class="amg-status-cell">{% if trigger.enabled %}<span class="amg-badge amg-badge-enabled"><i class="fas fa-check"></i> Enabled</span>{% else %}<span class="amg-badge amg-badge-disabled"><i class="fas fa-ban"></i> Disabled</span>{% endif %}</td>
+                        <td class="amg-actions-cell">
+                            <form method="post" action="/alert-management/triggers/update" class="amg-toggle-form">
+                                <input type="hidden" name="trigger_id" value="{{ trigger.id }}">
+                                {% if trigger.enabled %}
+                                <input type="hidden" name="enabled" value="false">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Disable {{ trigger.name }}">
+                                    <i class="fas fa-ban"></i><span>Disable</span>
+                                </button>
+                                {% else %}
+                                <input type="hidden" name="enabled" value="true">
+                                <button type="submit" class="btn btn-sm btn-outline-success" aria-label="Enable {{ trigger.name }}">
+                                    <i class="fas fa-check"></i><span>Enable</span>
+                                </button>
+                                {% endif %}
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
     <div class="amg-filter-empty" id="amgFilterEmpty" hidden><i class="fas fa-search"></i><h3>No matching triggers</h3><p>Try a different search term or change the status filter.</p></div>
     {% else %}
@@ -88,7 +99,7 @@
 
     <div class="amg-tip"><i class="fas fa-circle-info"></i><span><strong>Tip:</strong> Changes are saved automatically when you modify trigger settings.</span></div>
 
-    <section class="amg-info-card" aria-label="How alerts work">
+    <section class="amg-info-card" aria-label="{{ gettext('How alerts work') }}">
         <div class="amg-info-header"><div class="card-title"><i class="fas fa-circle-info"></i><span>How alerts work</span></div></div>
         <div class="amg-info-body">
             <div class="amg-info-col">
@@ -119,7 +130,7 @@
 (function () {
     const amgSearch = document.getElementById('amgSearch');
     const amgFilter = document.getElementById('amgEnabledFilter');
-    const amgCards = Array.from(document.querySelectorAll('.amg-card'));
+    const amgRows = Array.from(document.querySelectorAll('.amg-row'));
     const filterEmpty = document.getElementById('amgFilterEmpty');
     const resultCount = document.getElementById('amgResultCount');
 
@@ -127,11 +138,11 @@
         const term = (amgSearch?.value || '').trim().toLowerCase();
         const status = amgFilter?.value || 'all';
         let visible = 0;
-        amgCards.forEach(card => {
-            const termOk = !term || (card.dataset.amgSearch || '').toLowerCase().includes(term);
-            const statusOk = status === 'all' || card.dataset.amgEnabled === (status === 'enabled' ? '1' : '0');
+        amgRows.forEach(row => {
+            const termOk = !term || (row.dataset.amgSearch || '').toLowerCase().includes(term);
+            const statusOk = status === 'all' || row.dataset.amgEnabled === (status === 'enabled' ? '1' : '0');
             const shown = termOk && statusOk;
-            card.hidden = !shown;
+            row.hidden = !shown;
             if (shown) visible++;
         });
         if (filterEmpty) filterEmpty.hidden = visible !== 0;

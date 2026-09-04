@@ -1,0 +1,20 @@
+/* Import / Export emails (mirrors roles.css tokens) */
+.iex-page { display: flex; flex-direction: column; gap: 20px; }
+.iex-hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding: 28px 32px; border: 1px solid var(--border-color); border-radius: var(--radius-xl); background: linear-gradient(135deg, var(--bg-primary), var(--accent-light)); box-shadow: var(--shadow-sm); }
+.iex-hero-copy { max-width: 720px; }
+.iex-eyebrow { color: var(--accent-primary); font-size: .75rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 8px; }
+.iex-eyebrow i { margin-right: 6px; }
+.iex-hero h2 { margin: 0 0 6px; color: var(--text-primary); font-size: clamp(1.6rem, 3vw, 2.15rem); letter-spacing: -.03em; }
+.iex-hero p { margin: 0; color: var(--text-secondary); max-width: 650px; }
+.iex-hero-actions { display: flex; flex: 0 0 auto; gap: 10px; }
+.iex-panel { min-width: 0; border: 1px solid var(--border-color); border-radius: var(--radius-lg); background: var(--bg-primary); box-shadow: var(--shadow-sm); overflow: hidden; }
+.iex-panel-header { display: flex; align-items: center; gap: 10px; padding: 14px 20px; border-bottom: 1px solid var(--border-light); color: var(--text-primary); font-weight: 600; background: var(--bg-secondary); }
+.iex-panel-header i { color: var(--accent-primary); }
+.iex-panel-body { padding: 20px; }
+.iex-panel-footer { display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--border-light); background: var(--bg-secondary); }
+.iex-note { margin: 0 0 16px; color: var(--text-secondary); font-size: .85rem; }
+.iex-panel-body .iex-note:only-child { margin-bottom: 0; }
+.iex-tip { display: flex; align-items: flex-start; gap: 10px; padding: 13px 16px; border: 1px solid rgba(59, 130, 246, .2); border-radius: var(--radius-md); color: var(--text-secondary); background: rgba(59, 130, 246, .06); font-size: .85rem; }
+.iex-tip > i { margin-top: 3px; color: var(--accent-primary); }
+@media (max-width: 800px) { .iex-hero { align-items: stretch; flex-direction: column; } .iex-hero-actions { justify-content: flex-start; } }
+@media (max-width: 500px) { .iex-hero { padding: 22px 20px; } .iex-panel-footer { align-items: stretch; flex-direction: column-reverse; } .iex-panel-footer .btn { width: 100%; } }

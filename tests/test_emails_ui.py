@@ -19,7 +19,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
 
-import pytest
 from cryptography.fernet import Fernet
 
 API_DIR = Path(__file__).resolve().parent.parent / "api"
@@ -32,6 +31,7 @@ os.environ.setdefault("SESSION_SECRET", "test-secret")
 
 from src.routes import emails as emails_mod  # noqa: E402
 from src.utils import clamav_scanner as api_scanner_mod  # noqa: E402
+from src.utils import table_prefs as table_prefs_mod  # noqa: E402
 from src.utils.clamav_scanner import ClamAVScanner as ApiScanner  # noqa: E402
 from src.utils.email_parser import compute_signature  # noqa: E402
 from src.utils.permissions import PermissionChecker  # noqa: E402
@@ -492,6 +492,8 @@ def _list_emails_fake_query(rows):
             ])
         if "FROM users" in sql:
             return FakeResult([])
+        if "FROM user_table_prefs" in sql:
+            return FakeResult([])
         raise AssertionError(f"Unexpected query: {sql[:120]}")
     return handler
 
@@ -517,10 +519,14 @@ def test_list_emails_no_signature_rows_short_circuit(monkeypatch):
         },
     ]
     monkeypatch.setattr(emails_mod, "query", _list_emails_fake_query(rows))
+    # Column-visibility prefs run through table_prefs' own query hook.
+    monkeypatch.setattr(table_prefs_mod, "query", lambda sql, params=None: FakeResult([]))
     monkeypatch.setattr(
         emails_mod,
         "format_datetime",
-        lambda value, _user_id: value.strftime("%Y-%m-%d %H:%M"),
+        # list_emails resolves display prefs once per request and passes them
+        # through as keywords; the fake absorbs them.
+        lambda value, _user_id, **kwargs: value.strftime("%Y-%m-%d %H:%M"),
     )
 
     response = emails_mod.list_emails(_req(), page=1)
@@ -536,7 +542,7 @@ def test_list_emails_no_signature_rows_short_circuit(monkeypatch):
 def test_emails_template_guards_scroll_button_lookup():
     template = (API_DIR / "templates" / "emails.html").read_text(encoding="utf-8")
     assert "if (!btn) return;" in template
-    assert "ClamAV scan completed: no virus detected" in template
+    assert "ClamAV scan completed" in template and "no virus detected" in template
     assert "scanning is disabled" in template
 
 

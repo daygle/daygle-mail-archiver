@@ -24,20 +24,22 @@
 .amg-search input::placeholder { color: var(--text-tertiary); }
 .amg-filter { min-width: 170px; }
 .amg-filter select { width: 100%; min-width: 0; border: 0; outline: 0; color: var(--text-primary); background: transparent; font-size: .85rem; }
-.amg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 18px; }
-.amg-card { display: flex; flex-direction: column; min-width: 0; padding: 20px; border: 1px solid var(--border-color); border-radius: var(--radius-lg); background: var(--bg-primary); box-shadow: var(--shadow-sm); transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base); }
-.amg-card:hover { transform: translateY(-2px); border-color: var(--border-hover); box-shadow: var(--shadow-md); }
-.amg-card[hidden] { display: none; }
-.amg-card-top { display: flex; align-items: flex-start; gap: 12px; }
-.amg-avatar { display: grid; place-items: center; flex: 0 0 auto; width: 42px; height: 42px; border-radius: 12px; color: white; background: var(--accent-primary); }
+.amg-table-card { overflow: hidden; border: 1px solid var(--border-color); border-radius: var(--radius-lg); background: var(--bg-primary); box-shadow: var(--shadow-sm); }
+.amg-table { margin: 0; }
+.amg-table thead th { white-space: nowrap; }
+.amg-table td { vertical-align: middle; }
+.amg-row[hidden] { display: none; }
+.amg-name-cell { white-space: nowrap; }
+.amg-table-identity { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.amg-avatar { display: grid; place-items: center; flex: 0 0 auto; width: 30px; height: 30px; border-radius: 8px; color: white; background: var(--accent-primary); font-size: .8rem; }
 .amg-avatar-error { background: var(--danger); }
 .amg-avatar-warning { background: #f59e0b; }
 .amg-avatar-success { background: var(--success); }
 .amg-avatar-info { background: var(--accent-primary); }
-.amg-card-main { min-width: 0; flex: 1; }
-.amg-card-main h3 { overflow: hidden; margin: 0 0 6px; font-size: 1.02rem; text-overflow: ellipsis; white-space: nowrap; }
-.amg-card-main p { display: -webkit-box; overflow: hidden; margin: 0; color: var(--text-secondary); font-size: .82rem; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
-.amg-card-badges { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex: 0 0 auto; }
+.amg-table-identity strong { overflow: hidden; color: var(--text-primary); font-size: .9rem; text-overflow: ellipsis; white-space: nowrap; }
+.amg-desc-cell { max-width: 340px; overflow: hidden; color: var(--text-secondary); font-size: .82rem; text-overflow: ellipsis; white-space: nowrap; }
+.amg-severity-cell { white-space: nowrap; }
+.amg-severity-cell .amg-badge { margin-right: 8px; }
 .amg-badge { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; padding: 5px 8px; border-radius: 999px; font-size: .68rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: capitalize; }
 .amg-badge-error { color: var(--danger); background: rgba(239, 68, 68, .12); }
 .amg-badge-warning { color: #d97706; background: rgba(245, 158, 11, .12); }
@@ -45,12 +47,14 @@
 .amg-badge-info { color: var(--accent-primary); background: var(--accent-light); }
 .amg-badge-enabled { color: var(--success); background: rgba(16, 185, 129, .12); }
 .amg-badge-disabled { color: var(--text-tertiary); background: var(--bg-hover); }
-.amg-card-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; min-height: 38px; margin-top: auto; padding-top: 14px; }
-.amg-severity-form { display: flex; }
+.amg-status-cell { width: 1%; white-space: nowrap; }
+.amg-actions-col { width: 1%; white-space: nowrap; }
+.amg-actions-cell { white-space: nowrap; }
+.amg-severity-form { display: inline-flex; vertical-align: middle; }
 .amg-severity { display: flex; align-items: center; gap: 7px; color: var(--text-secondary); font-size: .78rem; }
 .amg-severity > i { color: var(--accent-primary); }
 .amg-severity select { min-width: 110px; }
-.amg-toggle-form { display: flex; }
+.amg-toggle-form { display: inline-flex; vertical-align: middle; }
 .amg-filter-empty, .amg-empty-state { padding: 56px 20px; border: 1px dashed var(--border-color); border-radius: var(--radius-lg); color: var(--text-secondary); text-align: center; background: var(--bg-primary); }
 .amg-filter-empty[hidden] { display: none; }
 .amg-filter-empty > i { color: var(--text-tertiary); font-size: 2rem; }
@@ -77,4 +81,4 @@
 .amg-hier-user { color: var(--accent-primary); }
 .amg-hier-mail { color: #f59e0b; }
 @media (max-width: 800px) { .amg-hero, .amg-toolbar { align-items: stretch; flex-direction: column; } .amg-create-button { width: 100%; } .amg-toolbar-actions { flex-wrap: wrap; } .amg-search { flex: 1; } .amg-info-body { grid-template-columns: 1fr; } .amg-stats { grid-template-columns: 1fr; } }
-@media (max-width: 500px) { .amg-hero { padding: 22px 20px; } .amg-toolbar-actions { align-items: stretch; flex-direction: column; } .amg-search, .amg-filter { min-width: 0; } .amg-grid { grid-template-columns: 1fr; } .amg-card-footer { align-items: stretch; flex-direction: column; } .amg-severity-form, .amg-toggle-form { width: 100%; } .amg-severity { justify-content: space-between; } .amg-toggle-form .btn { width: 100%; } }
+@media (max-width: 500px) { .amg-hero { padding: 22px 20px; } .amg-toolbar-actions { align-items: stretch; flex-direction: column; } .amg-search, .amg-filter { min-width: 0; } .amg-table { min-width: 640px; } .amg-severity-cell .amg-badge { display: none; } }

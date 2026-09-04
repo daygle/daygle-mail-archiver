@@ -3,65 +3,68 @@
 {% block page_title %}Edit Role - {{ role.display_name or (role.name | replace('_', ' ') | replace('-', ' ') | title) }}{% endblock %}
 
 {% block content %}
-<div class="card">
-    <div class="card-header flex-between">
-        <div class="card-title">
-            <i class="fas fa-user-shield"></i>
-            <span>Edit Role: {{ role.display_name or (role.name | replace('_', ' ') | replace('-', ' ') | title) }}</span>
+<div class="rle-page">
+    <!-- Hero -->
+    <section class="rle-hero" aria-labelledby="rle-heading">
+        <div class="rle-hero-copy">
+            <div class="rle-eyebrow"><i class="fas fa-user-shield"></i> Role management</div>
+            <h2 id="rle-heading">Edit role: {{ role.display_name or (role.name | replace('_', ' ') | replace('-', ' ') | title) }}</h2>
+            <p>Update the name, description, or permission set for this role. Changes apply to every user assigned it.</p>
         </div>
-        <button type="button" class="btn btn-secondary btn-sm" title="Close" onclick="location.href='/roles'">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-    <div class="card-body">
-        <form method="post" action="/roles/{{ role.id }}/update">
-            <div class="form-group">
-                <label for="name">Role Name <span style="color: var(--danger);">*</span></label>
-                <input id="name" class="form-control" name="name" value="{{ role.display_name or (role.name | replace('_', ' ') | replace('-', ' ') | title) }}" required>
-                <small class="form-text">A unique name for this role</small>
-            </div>
+        <div class="rle-hero-actions">
+            <a href="/roles" class="btn btn-secondary"><i class="fas fa-times"></i><span>Cancel</span></a>
+        </div>
+    </section>
 
-            <div class="form-group">
-                <label for="description">Description</label>
-                <textarea id="description" class="form-control" name="description" rows="3">{{ role.description or '' }}</textarea>
-                <small class="form-text">Optional description of what this role is for</small>
-            </div>
-
-            <div class="form-group">
-                <label>Permissions</label>
-                <div class="permissions-grid">
-                    {% for permission in permissions %}
-                    <div class="permission-item">
-                        <label class="permission-checkbox">
-                            <input type="checkbox" name="permission_ids" value="{{ permission.id }}"
-                                   {% if permission.id in current_perm_ids %}checked{% endif %}>
-                            <span class="checkmark"></span>
-                            <div class="permission-details">
-                                <strong>{{ permission.name | replace('_', ' ') | replace('-', ' ') | title }}</strong>
-                                {% if permission.description %}
-                                <br><small>{{ permission.description }}</small>
-                                {% endif %}
-                            </div>
-                        </label>
-                    </div>
-                    {% endfor %}
+    <form method="post" action="/roles/{{ role.id }}/update">
+        <section class="rle-panel">
+            <header class="rle-panel-header"><i class="fas fa-pen"></i><span>Role details</span></header>
+            <div class="rle-panel-body">
+                <div class="form-group">
+                    <label for="name" class="form-label">Role Name <span style="color: var(--danger);">*</span></label>
+                    <input id="name" class="form-control" name="name" value="{{ role.display_name or (role.name | replace('_', ' ') | replace('-', ' ') | title) }}" required>
+                    <small class="form-text">A unique name for this role</small>
                 </div>
-                <small class="form-text">Select the permissions this role should have</small>
-            </div>
 
-            <div class="form-actions">
-                <a href="/roles" class="btn btn-secondary">
-                    <i class="fas fa-times"></i>
-                    <span>Cancel</span>
-                </a>
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i>
-                    <span>Update Role</span>
-                </button>
+                <div class="form-group mt-3">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea id="description" class="form-control" name="description" rows="3">{{ role.description or '' }}</textarea>
+                    <small class="form-text">Optional description of what this role is for</small>
+                </div>
             </div>
-        </form>
-    </div>
+        </section>
+
+        <section class="rle-panel">
+            <header class="rle-panel-header"><i class="fas fa-key"></i><span>Permissions</span></header>
+            <div class="rle-panel-body">
+                <div class="form-group">
+                    <div class="permissions-grid">
+                        {% for permission in permissions %}
+                        <div class="permission-item">
+                            <label class="permission-checkbox">
+                                <input type="checkbox" name="permission_ids" value="{{ permission.id }}"
+                                       {% if permission.id in current_perm_ids %}checked{% endif %}>
+                                <span class="checkmark"></span>
+                                <div class="permission-details">
+                                    <strong>{{ permission.name | replace('_', ' ') | replace('-', ' ') | title }}</strong>
+                                    {% if permission.description %}
+                                    <br><small>{{ permission.description }}</small>
+                                    {% endif %}
+                                </div>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <small class="form-text">Select the permissions this role should have</small>
+                </div>
+            </div>
+            <footer class="rle-panel-footer">
+                <a href="/roles" class="btn btn-secondary"><i class="fas fa-times"></i><span>Cancel</span></a>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i><span>Update Role</span></button>
+            </footer>
+        </section>
+    </form>
 </div>
 {% endblock %}
 
-{% block extra_css %}{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="/static/role-edit.css">{% endblock %}

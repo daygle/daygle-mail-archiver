@@ -4,27 +4,28 @@
 
 {% block content %}
 {% set level_icons = {'error': 'fa-circle-exclamation', 'warning': 'fa-triangle-exclamation', 'info': 'fa-circle-info', 'success': 'fa-circle-check', 'debug': 'fa-bug'} %}
+{% set level_labels = {'error': 'Error', 'warning': 'Warning', 'info': 'Info', 'success': 'Success', 'debug': 'Debug'} %}
 {% set base_url = "/logs?level=" ~ (current_level|urlencode) ~ "&search=" ~ (current_search|urlencode) ~ "&source=" ~ (current_source|urlencode) ~ "&date_from=" ~ (current_date_from|urlencode) ~ "&date_to=" ~ (current_date_to|urlencode) %}
 
 <div class="log-page">
     <section class="log-hero" aria-labelledby="log-heading">
         <div class="log-hero-copy">
-            <div class="log-eyebrow"><i class="fas fa-list"></i> Operations</div>
-            <h2 id="log-heading">System logs</h2>
-            <p>Track fetch activity, worker health and system events. Filter by source, level or date range to find what you need.</p>
+            <div class="log-eyebrow"><i class="fas fa-list"></i> {{ gettext('Operations') }}</div>
+            <h2 id="log-heading">{{ gettext('System logs') }}</h2>
+            <p>{{ gettext('Track fetch activity, worker health and system events. Filter by source, level or date range to find what you need.') }}</p>
         </div>
-        <a href="/logs" class="btn btn-primary log-create-button"><i class="fas fa-rotate"></i><span>Refresh</span></a>
+        <a href="/logs" class="btn btn-primary log-create-button"><i class="fas fa-rotate"></i><span>{{ gettext('Refresh') }}</span></a>
     </section>
-    <section class="log-stats" aria-label="Log summary">
-        <div class="log-stat-card"><div class="log-stat-icon log-stat-icon-blue"><i class="fas fa-file-lines"></i></div><div><span class="log-stat-label">Total entries</span><strong>{{ stats.total }}</strong></div></div>
-        <div class="log-stat-card"><div class="log-stat-icon log-stat-icon-red"><i class="fas fa-circle-exclamation"></i></div><div><span class="log-stat-label">Errors</span><strong>{{ stats.error }}</strong></div></div>
-        <div class="log-stat-card"><div class="log-stat-icon log-stat-icon-orange"><i class="fas fa-triangle-exclamation"></i></div><div><span class="log-stat-label">Warnings</span><strong>{{ stats.warning }}</strong></div></div>
-        <div class="log-stat-card"><div class="log-stat-icon log-stat-icon-green"><i class="fas fa-circle-check"></i></div><div><span class="log-stat-label">Success</span><strong>{{ stats.success }}</strong></div></div>
+    <section class="log-stats" aria-label="{{ gettext('Log summary') }}">
+        <div class="log-stat-card"><div class="log-stat-icon log-stat-icon-blue"><i class="fas fa-file-lines"></i></div><div><span class="log-stat-label">{{ gettext('Total entries') }}</span><strong>{{ stats.total }}</strong></div></div>
+        <div class="log-stat-card"><div class="log-stat-icon log-stat-icon-red"><i class="fas fa-circle-exclamation"></i></div><div><span class="log-stat-label">{{ gettext('Errors') }}</span><strong>{{ stats.error }}</strong></div></div>
+        <div class="log-stat-card"><div class="log-stat-icon log-stat-icon-orange"><i class="fas fa-triangle-exclamation"></i></div><div><span class="log-stat-label">{{ gettext('Warnings') }}</span><strong>{{ stats.warning }}</strong></div></div>
+        <div class="log-stat-card"><div class="log-stat-icon log-stat-icon-green"><i class="fas fa-circle-check"></i></div><div><span class="log-stat-label">{{ gettext('Success') }}</span><strong>{{ stats.success }}</strong></div></div>
     </section>
-    <section class="log-toolbar" aria-label="Log filters">
-        <div class="log-toolbar-title"><div class="card-title"><i class="fas fa-file-lines"></i><span>System logs</span></div><span class="log-result-count" id="logResultCount">{{ total_logs }} {{ 'entry' if total_logs == 1 else 'entries' }}</span></div>
+    <section class="log-toolbar" aria-label="{{ gettext('Log filters') }}">
+        <div class="log-toolbar-title"><div class="card-title"><i class="fas fa-file-lines"></i><span>{{ gettext('System logs') }}</span></div><span class="log-result-count" id="logResultCount">{{ total_logs }} {{ gettext('entry') if total_logs == 1 else gettext('entries') }}</span></div>
         <div class="log-toolbar-actions">
-            <label class="log-search" for="logSearch"><i class="fas fa-search" aria-hidden="true"></i><input id="logSearch" type="search" placeholder="Search this page" autocomplete="off"></label>
+            <label class="log-search" for="logSearch"><i class="fas fa-search" aria-hidden="true"></i><input id="logSearch" type="search" placeholder="{{ gettext('Search this page') }}" autocomplete="off"></label>
             <button type="button" class="btn btn-secondary btn-sm" id="logFilterToggle" onclick="toggleFilters()">
                 <i class="fas fa-sliders"></i>
                 <span class="hide-mobile">Filters</span>
@@ -36,7 +37,7 @@
             <div class="grid grid-cols-4 gap-3">
                 <div>
                     <label class="form-label">Search</label>
-                    <input type="text" id="search" name="search" class="form-control" placeholder="Search message or source..." value="{{ current_search }}">
+                    <input type="text" id="search" name="search" class="form-control" placeholder="{{ gettext('Search message or source...') }}" value="{{ current_search }}">
                 </div>
                 <div>
                     <label class="form-label">Source</label>
@@ -48,14 +49,14 @@
                     </select>
                 </div>
                 <div>
-                    <label class="form-label">Level</label>
+                    <label class="form-label">{{ gettext('Level') }}</label>
                     <select id="level" name="level" class="form-select">
-                        <option value="all" {% if current_level == 'all' %}selected{% endif %}>All Levels</option>
-                        <option value="debug" {% if current_level == 'debug' %}selected{% endif %}>Debug Only</option>
-                        <option value="error" {% if current_level == 'error' %}selected{% endif %}>Error Only</option>
-                        <option value="warning" {% if current_level == 'warning' %}selected{% endif %}>Warning Only</option>
-                        <option value="info" {% if current_level == 'info' %}selected{% endif %}>Info Only</option>
-                        <option value="success" {% if current_level == 'success' %}selected{% endif %}>Success Only</option>
+                        <option value="all" {% if current_level == 'all' %}selected{% endif %}>{{ gettext('All Levels') }}</option>
+                        <option value="debug" {% if current_level == 'debug' %}selected{% endif %}>{{ gettext('Debug Only') }}</option>
+                        <option value="error" {% if current_level == 'error' %}selected{% endif %}>{{ gettext('Error Only') }}</option>
+                        <option value="warning" {% if current_level == 'warning' %}selected{% endif %}>{{ gettext('Warning Only') }}</option>
+                        <option value="info" {% if current_level == 'info' %}selected{% endif %}>{{ gettext('Info Only') }}</option>
+                        <option value="success" {% if current_level == 'success' %}selected{% endif %}>{{ gettext('Success Only') }}</option>
                     </select>
                 </div>
                 <div>
@@ -75,43 +76,59 @@
             <div class="grid grid-cols-2 gap-3 mt-3">
                 <div>
                     <label class="form-label">Date From</label>
-                    <input type="date" id="date_from" name="date_from" class="form-control" placeholder="Date From" value="{{ current_date_from }}">
+                    <input type="date" id="date_from" name="date_from" class="form-control" placeholder="{{ gettext('Date From') }}" value="{{ current_date_from }}">
                 </div>
                 <div>
                     <label class="form-label">Date To</label>
-                    <input type="date" id="date_to" name="date_to" class="form-control" placeholder="Date To" value="{{ current_date_to }}">
+                    <input type="date" id="date_to" name="date_to" class="form-control" placeholder="{{ gettext('Date To') }}" value="{{ current_date_to }}">
                 </div>
             </div>
         </form>
     </section>
 
     {% if logs %}
-    <div class="log-grid" id="logGrid">
-        {% for e in logs %}
-        <article class="log-card" data-log-search="{{ e.message }} {{ e.source or '' }} {{ e.level }}">
-            <div class="log-card-top">
-                <div class="log-avatar log-avatar-{{ e.level }}"><i class="fas {{ level_icons.get(e.level, 'fa-circle-info') }}" aria-hidden="true"></i></div>
-                <div class="log-card-main">
-                    <h3 class="log-message" title="{{ e.message }}">{{ e.message }}</h3>
-                    <div class="log-source" title="{{ e.source or '' }}"><i class="fas fa-cube"></i> {{ e.source_label or 'N/A' }}</div>
-                </div>
-                <div class="log-card-badges">
-                    <span class="log-badge log-badge-{{ e.level }}">{{ e.level }}</span>
-                </div>
-            </div>
-            <div class="log-card-meta">
-                <span><i class="fas fa-clock"></i> {{ e.timestamp | format_user_datetime(request.session.user_id) }}</span>
-                {% if e.source %}<span><i class="fas fa-cube"></i> {{ e.source }}</span>{% endif %}
-            </div>
-            {% if e.details %}
-            <details class="log-details">
-                <summary>Show details</summary>
-                <pre>{{ e.details }}</pre>
-            </details>
-            {% endif %}
-        </article>
-        {% endfor %}
-    </div>
+    <section class="log-table-card" aria-label="{{ gettext('Log entries') }}">
+        <div class="table-responsive">
+            <table class="table log-table" id="logTable">
+                <thead>
+                    <tr>
+                        <th scope="col">{{ gettext('Level') }}</th>
+                        <th scope="col">Timestamp</th>
+                        <th scope="col" class="hide-mobile">Source</th>
+                        <th scope="col">Message</th>
+                        <th scope="col" class="log-details-col"><span class="visually-hidden">Details</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for e in logs %}
+                    <tr class="log-row" data-log-search="{{ e.message }} {{ e.source or '' }} {{ e.level }}">
+                        <td class="log-level-cell"><span class="log-badge log-badge-{{ e.level }}"><i class="fas {{ level_icons.get(e.level, 'fa-circle-info') }}" aria-hidden="true"></i> {{ gettext(level_labels.get(e.level, e.level)) }}</span></td>
+                        <td class="log-time-cell" title="{{ e.timestamp_formatted or '' }}"><i class="fas fa-clock" aria-hidden="true"></i> {{ e.timestamp_formatted or '-' }}</td>
+                        <td class="hide-mobile log-source-cell" title="{{ e.source or '' }}"><i class="fas fa-cube" aria-hidden="true"></i> {{ e.source_label or 'N/A' }}</td>
+                        <td class="log-message-cell"><span class="log-message" title="{{ e.message }}">{{ e.message }}</span></td>
+                        <td class="log-details-cell">
+                            {% if e.details %}
+                            <button type="button" class="log-details-toggle" aria-expanded="false" aria-controls="log-details-{{ e.id }}" data-target="log-details-{{ e.id }}" title="{{ gettext('Show details') }}"><i class="fas fa-chevron-down" aria-hidden="true"></i></button>
+                            {% else %}
+                            <span class="log-no-details">&mdash;</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% if e.details %}
+                    <tr class="log-detail-row" id="log-details-{{ e.id }}" hidden>
+                        <td colspan="5">
+                            <div class="log-details-body">
+                                <span class="log-details-label"><i class="fas fa-align-left" aria-hidden="true"></i> Details</span>
+                                <pre>{{ e.details }}</pre>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
     <div class="log-filter-empty" id="logFilterEmpty" hidden><i class="fas fa-search"></i><h3>No matching entries</h3><p>Try a different search term or clear the filters.</p></div>
     {% else %}
     <div class="log-empty-state"><div class="log-empty-icon"><i class="fas fa-file-lines"></i></div><h3>No log entries found</h3><p>{% if has_active_filters %}Nothing matches your current filters. Try widening the search or date range.{% else %}The system has not written any log entries yet.{% endif %}</p></div>
@@ -121,7 +138,7 @@
     <div class="log-pagination">
         <div class="pagination-bar">
             {% if page > 1 %}
-            <a href="{{ base_url }}&page={{ page - 1 }}" class="page-link" title="Previous">
+            <a href="{{ base_url }}&page={{ page - 1 }}" class="page-link" title="{{ gettext('Previous') }}">
                 <i class="fas fa-chevron-left"></i>
             </a>
             {% else %}
@@ -151,7 +168,7 @@
             {% endif %}
 
             {% if page < total_pages %}
-            <a href="{{ base_url }}&page={{ page + 1 }}" class="page-link" title="Next">
+            <a href="{{ base_url }}&page={{ page + 1 }}" class="page-link" title="{{ gettext('Next') }}">
                 <i class="fas fa-chevron-right"></i>
             </a>
             {% else %}
@@ -165,7 +182,7 @@
                 <input type="hidden" name="date_from" value="{{ current_date_from }}">
                 <input type="hidden" name="date_to" value="{{ current_date_to }}">
                 <span>Go to</span>
-                <input type="number" name="page" min="1" max="{{ total_pages }}" value="{{ page }}" aria-label="Jump to page">
+                <input type="number" name="page" min="1" max="{{ total_pages }}" value="{{ page }}" aria-label="{{ gettext('Jump to page') }}">
                 <button type="submit" class="btn btn-secondary btn-sm">Go</button>
             </form>
         </div>
@@ -185,25 +202,48 @@
 {% block extra_js %}<script>
 (function () {
     const logSearch = document.getElementById('logSearch');
-    const logCards = Array.from(document.querySelectorAll('.log-card'));
+    const logRows = Array.from(document.querySelectorAll('.log-row'));
     const filterEmpty = document.getElementById('logFilterEmpty');
     const resultCount = document.getElementById('logResultCount');
     const filterCard = document.getElementById('filterCard');
     const filterToggle = document.getElementById('logFilterToggle');
 
+    function hideDetailRow(row) {
+        const target = row.querySelector('.log-details-toggle');
+        if (!target) return;
+        const detailRow = document.getElementById(target.dataset.target);
+        if (detailRow) detailRow.hidden = true;
+        target.setAttribute('aria-expanded', 'false');
+    }
+
     function filterLogs() {
         const term = (logSearch?.value || '').trim().toLowerCase();
         let visible = 0;
-        logCards.forEach(card => {
-            const shown = !term || (card.dataset.logSearch || '').toLowerCase().includes(term);
-            card.hidden = !shown;
-            if (shown) visible++;
+        logRows.forEach(row => {
+            const shown = !term || (row.dataset.logSearch || '').toLowerCase().includes(term);
+            row.hidden = !shown;
+            if (shown) visible++; else hideDetailRow(row);
         });
         if (filterEmpty) filterEmpty.hidden = visible !== 0;
         if (resultCount) resultCount.textContent = visible + ' ' + (visible === 1 ? 'entry' : 'entries');
     }
 
     logSearch?.addEventListener('input', filterLogs);
+
+    // Expand/collapse a log entry's detail row.
+    document.querySelectorAll('.log-details-toggle').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const detailRow = document.getElementById(btn.dataset.target);
+            const open = btn.getAttribute('aria-expanded') === 'true';
+            if (open) {
+                btn.setAttribute('aria-expanded', 'false');
+                if (detailRow) detailRow.hidden = true;
+            } else {
+                btn.setAttribute('aria-expanded', 'true');
+                if (detailRow) detailRow.hidden = false;
+            }
+        });
+    });
 
     window.toggleFilters = function () {
         if (!filterCard || !filterToggle) return;
@@ -222,7 +262,7 @@
 </script>
 
 <!-- Scroll to top button -->
-<button id="scroll-to-top-btn" class="scroll-to-top" aria-label="Scroll to top" title="Back to top">
+<button id="scroll-to-top-btn" class="scroll-to-top" aria-label="{{ gettext('Scroll to top') }}" title="{{ gettext('Back to top') }}">
     <i class="fas fa-arrow-up"></i>
 </button>
 

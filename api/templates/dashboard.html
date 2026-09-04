@@ -9,24 +9,33 @@
 {% endblock %}
 
 {% block content %}
+<!-- Hero -->
+<section class="dsh-hero" aria-labelledby="dsh-heading">
+    <div class="dsh-hero-copy">
+        <div class="dsh-eyebrow"><i class="fas fa-th-large"></i> Overview</div>
+        <h2 id="dsh-heading">Dashboard</h2>
+        <p>At-a-glance status for the archive - fetch health, storage, virus scanning, and recent activity. Widgets can be added or rearranged from the toolbar.</p>
+    </div>
+</section>
+
 <!-- Customisation Toolbar -->
 <div class="dashboard-toolbar">
     <div class="toolbar-left">
     </div>
     <div class="toolbar-right">
-        <button id="btn-customize" class="btn btn-secondary" title="Customise Dashboard">
+        <button id="btn-customize" class="btn btn-secondary" title="{{ gettext('Customise Dashboard') }}">
             <i class="fas fa-cog"></i>
         </button>
-        <button id="btn-add-widget" class="btn btn-info show-on-edit" title="Add Widget" onclick="DashboardManager.showWidgetSelector()">
+        <button id="btn-add-widget" class="btn btn-info show-on-edit" title="{{ gettext('Add Widget') }}" onclick="DashboardManager.showWidgetSelector()">
             <i class="fas fa-plus"></i>
         </button>
-        <button id="btn-save-layout" class="btn btn-primary show-on-edit" title="Save Layout">
+        <button id="btn-save-layout" class="btn btn-primary show-on-edit" title="{{ gettext('Save Layout') }}">
             <i class="fas fa-save"></i>
         </button>
-        <button id="btn-reset-layout" class="btn btn-warning show-on-edit" title="Reset Layout">
+        <button id="btn-reset-layout" class="btn btn-warning show-on-edit" title="{{ gettext('Reset Layout') }}">
             <i class="fas fa-undo"></i>
         </button>
-        <button id="btn-cancel" class="btn btn-secondary show-on-edit" title="Cancel">
+        <button id="btn-cancel" class="btn btn-secondary show-on-edit" title="{{ gettext('Cancel') }}">
             <i class="fas fa-times"></i>
         </button>
     </div>
@@ -65,7 +74,7 @@
     <!-- Total Emails Widget -->
     <div id="template-total-emails" class="grid-stack-item-content widget-card">
         <div class="widget-actions">
-            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
+            <button class="widget-action-btn danger" data-action="remove" title="{{ gettext('Remove widget') }}">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -86,7 +95,7 @@
     <!-- Emails Today Widget -->
     <div id="template-emails-today" class="grid-stack-item-content widget-card">
         <div class="widget-actions">
-            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
+            <button class="widget-action-btn danger" data-action="remove" title="{{ gettext('Remove widget') }}">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -107,7 +116,7 @@
     <!-- Database Size Widget -->
     <div id="template-database-size" class="grid-stack-item-content widget-card">
         <div class="widget-actions">
-            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
+            <button class="widget-action-btn danger" data-action="remove" title="{{ gettext('Remove widget') }}">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -128,7 +137,7 @@
     <!-- Active Accounts Widget -->
     <div id="template-active-accounts" class="grid-stack-item-content widget-card">
         <div class="widget-actions">
-            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
+            <button class="widget-action-btn danger" data-action="remove" title="{{ gettext('Remove widget') }}">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -149,7 +158,7 @@
     <!-- Workers Online Widget -->
     <div id="template-workers-online" class="grid-stack-item-content widget-card">
         <div class="widget-actions">
-            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
+            <button class="widget-action-btn danger" data-action="remove" title="{{ gettext('Remove widget') }}">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -170,7 +179,7 @@
     <!-- Emails Last 7 Days Widget -->
     <div id="template-emails-last-7d" class="grid-stack-item-content widget-card">
         <div class="widget-actions">
-            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
+            <button class="widget-action-btn danger" data-action="remove" title="{{ gettext('Remove widget') }}">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -191,7 +200,7 @@
     <!-- Emails Last 30 Days Widget -->
     <div id="template-emails-last-30d" class="grid-stack-item-content widget-card">
         <div class="widget-actions">
-            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
+            <button class="widget-action-btn danger" data-action="remove" title="{{ gettext('Remove widget') }}">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -212,7 +221,7 @@
     <!-- Storage Used Widget -->
     <div id="template-storage-used" class="grid-stack-item-content widget-card">
         <div class="widget-actions">
-            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
+            <button class="widget-action-btn danger" data-action="remove" title="{{ gettext('Remove widget') }}">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -233,7 +242,7 @@
     <!-- ClamAV Clean Widget -->
     <div id="template-clamav-clean" class="grid-stack-item-content widget-card">
         <div class="widget-actions">
-            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
+            <button class="widget-action-btn danger" data-action="remove" title="{{ gettext('Remove widget') }}">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -254,7 +263,7 @@
     <!-- ClamAV Quarantined Widget -->
     <div id="template-clamav-quarantined" class="grid-stack-item-content widget-card">
         <div class="widget-actions">
-            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
+            <button class="widget-action-btn danger" data-action="remove" title="{{ gettext('Remove widget') }}">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -275,7 +284,7 @@
     <!-- ClamAV Rejected Widget -->
     <div id="template-clamav-rejected" class="grid-stack-item-content widget-card">
         <div class="widget-actions">
-            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
+            <button class="widget-action-btn danger" data-action="remove" title="{{ gettext('Remove widget') }}">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -296,7 +305,7 @@
     <!-- System Uptime Widget -->
     <div id="template-system-uptime" class="grid-stack-item-content widget-card">
         <div class="widget-actions">
-            <button class="widget-action-btn danger" data-action="remove" title="Remove widget">
+            <button class="widget-action-btn danger" data-action="remove" title="{{ gettext('Remove widget') }}">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -331,6 +340,24 @@ const DashboardManager = {
         // No chart widgets currently implemented
     },
     currentSettingsWidget: null,
+
+    // Per-widget icon + tile colour for the stat display, and which widgets
+    // get a mini sparkline under the value.
+    widgetMeta: {
+        'total-emails': { icon: 'fas fa-envelope', color: 'blue' },
+        'emails-today': { icon: 'fas fa-calendar-day', color: 'green' },
+        'database-size': { icon: 'fas fa-database', color: 'purple' },
+        'active-accounts': { icon: 'fas fa-server', color: 'cyan' },
+        'workers-online': { icon: 'fas fa-heartbeat', color: 'orange' },
+        'emails-last-7d': { icon: 'fas fa-calendar-week', color: 'blue' },
+        'emails-last-30d': { icon: 'fas fa-calendar-alt', color: 'purple' },
+        'storage-used': { icon: 'fas fa-hdd', color: 'orange' },
+        'clamav-clean': { icon: 'fas fa-shield-alt', color: 'green' },
+        'clamav-quarantined': { icon: 'fas fa-exclamation-triangle', color: 'red' },
+        'clamav-rejected': { icon: 'fas fa-ban', color: 'red' },
+        'system-uptime': { icon: 'fas fa-clock', color: 'cyan' }
+    },
+    sparklineWidgets: ['emails-last-7d', 'emails-last-30d'],
 
     // API connectivity helpers
     async sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); },
@@ -409,6 +436,23 @@ const DashboardManager = {
             return 'N/A';
         }
         return value.toLocaleString();
+    },
+
+    // Draw a tiny inline-SVG sparkline (oldest to newest) into the widget's
+    // sparkline canvas. Pure SVG - no chart library required.
+    renderSparkline(id, series) {
+        const svg = document.getElementById(`spark-${id}`);
+        if (!svg || !Array.isArray(series) || series.length < 2) return;
+        const w = 100, h = 28, pad = 2;
+        const max = Math.max.apply(null, series.concat(1));
+        const step = (w - pad * 2) / (series.length - 1);
+        const pts = series.map((v, i) => [
+            (pad + i * step).toFixed(1),
+            (h - pad - (v / max) * (h - pad * 2)).toFixed(1)
+        ]);
+        svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+        svg.innerHTML = '<polyline points="' + pts.map(p => p.join(',')).join(' ') + '" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+            '<circle cx="' + pts[pts.length - 1][0] + '" cy="' + pts[pts.length - 1][1] + '" r="2.5" fill="currentColor"/>';
     },
 
     // Scale widgets for the current display columns. If the grid is using fewer columns
@@ -618,6 +662,29 @@ const DashboardManager = {
         const content = template.cloneNode(true);
         content.id = `widget-${config.id}`;
         content.style.display = 'block';
+
+        // Decorate the stat body with a coloured icon tile and, for trend
+        // widgets, an empty sparkline canvas that the loaders fill in.
+        const statBody = content.querySelector('.stat-display');
+        const meta = this.widgetMeta[config.id];
+        if (statBody && meta) {
+            const tile = document.createElement('div');
+            tile.className = `dsh-stat-icon dsh-stat-icon-${meta.color}`;
+            tile.innerHTML = `<i class="${meta.icon}" aria-hidden="true"></i>`;
+            const textWrap = document.createElement('div');
+            textWrap.className = 'dsh-stat-text';
+            while (statBody.firstChild) textWrap.appendChild(statBody.firstChild);
+            statBody.appendChild(tile);
+            statBody.appendChild(textWrap);
+        }
+        if (this.sparklineWidgets.includes(config.id)) {
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('class', 'dsh-sparkline');
+            svg.setAttribute('id', `spark-${config.id}`);
+            svg.setAttribute('aria-hidden', 'true');
+            const bodyEl = content.querySelector('.widget-body');
+            if (bodyEl) bodyEl.appendChild(svg);
+        }
 
         // Debug: log what we're adding
         try {
@@ -991,8 +1058,24 @@ const DashboardManager = {
     },
 
     loadWidgetData(widgetId) {
-        // No chart widgets currently implemented
-        return;
+        // Dispatch to the per-widget loader so a widget added from the
+        // selector populates immediately instead of staying at "-".
+        const loaders = {
+            'total-emails': 'loadTotalEmails',
+            'emails-today': 'loadEmailsToday',
+            'database-size': 'loadDatabaseSize',
+            'active-accounts': 'loadActiveAccounts',
+            'workers-online': 'loadWorkersOnline',
+            'emails-last-7d': 'loadEmailsLast7d',
+            'emails-last-30d': 'loadEmailsLast30d',
+            'storage-used': 'loadStorageUsed',
+            'clamav-clean': 'loadClamAVClean',
+            'clamav-quarantined': 'loadClamAVQuarantined',
+            'clamav-rejected': 'loadClamAVRejected',
+            'system-uptime': 'loadSystemUptime'
+        };
+        const fn = loaders[widgetId];
+        if (fn && typeof this[fn] === 'function') this[fn]();
     },
 
     async loadOverview() {
@@ -1080,6 +1163,7 @@ const DashboardManager = {
             const data = await this.fetchWithRetry('/api/dashboard/emails-last-7d');
             const el = document.getElementById('stat-emails-last-7d');
             if (el) el.textContent = this.formatNumber(data.count);
+            this.renderSparkline('emails-last-7d', data.series);
         } catch (error) {
             console.error('Error loading emails last 7d:', error);
         }
@@ -1090,6 +1174,7 @@ const DashboardManager = {
             const data = await this.fetchWithRetry('/api/dashboard/emails-last-30d');
             const el = document.getElementById('stat-emails-last-30d');
             if (el) el.textContent = this.formatNumber(data.count);
+            this.renderSparkline('emails-last-30d', data.series);
         } catch (error) {
             console.error('Error loading emails last 30d:', error);
         }

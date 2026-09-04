@@ -1,0 +1,10 @@
+/* Profile & settings pages (mirrors roles.css tokens) */
+.prf-page, .chp-page, .ust-page, .gls-page, .spw-page { display: flex; flex-direction: column; gap: 20px; }
+.prf-hero, .chp-hero, .ust-hero, .gls-hero, .spw-hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding: 28px 32px; border: 1px solid var(--border-color); border-radius: var(--radius-xl); background: linear-gradient(135deg, var(--bg-primary), var(--accent-light)); box-shadow: var(--shadow-sm); }
+.prf-hero-copy, .chp-hero-copy, .ust-hero-copy, .gls-hero-copy, .spw-hero-copy { max-width: 720px; }
+.prf-eyebrow, .chp-eyebrow, .ust-eyebrow, .gls-eyebrow, .spw-eyebrow { color: var(--accent-primary); font-size: .75rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 8px; }
+.prf-eyebrow i, .chp-eyebrow i, .ust-eyebrow i, .gls-eyebrow i, .spw-eyebrow i { margin-right: 6px; }
+.prf-hero h2, .chp-hero h2, .ust-hero h2, .gls-hero h2, .spw-hero h2 { margin: 0 0 6px; color: var(--text-primary); font-size: clamp(1.6rem, 3vw, 2.15rem); letter-spacing: -.03em; }
+.prf-hero p, .chp-hero p, .ust-hero p, .gls-hero p, .spw-hero p { margin: 0; color: var(--text-secondary); max-width: 650px; }
+@media (max-width: 800px) { .prf-hero, .chp-hero, .ust-hero, .gls-hero, .spw-hero { align-items: stretch; flex-direction: column; } }
+@media (max-width: 500px) { .prf-hero, .chp-hero, .ust-hero, .gls-hero, .spw-hero { padding: 22px 20px; } }

@@ -37,17 +37,17 @@
         <a href="/emails/import-export" class="btn btn-primary eml-create-button"><i class="fas fa-exchange-alt"></i><span>Import / Export</span></a>
         {% endif %}
     </section>
-    <section class="eml-stats" aria-label="Archive summary">
+    <section class="eml-stats" aria-label="{{ gettext('Archive summary') }}">
         <div class="eml-stat-card"><div class="eml-stat-icon eml-stat-icon-blue"><i class="fas fa-envelope-open-text"></i></div><div><span class="eml-stat-label">Total archived</span><strong>{{ stats.total_emails }}</strong></div></div>
         <div class="eml-stat-card"><div class="eml-stat-icon eml-stat-icon-red"><i class="fas fa-exclamation-triangle"></i></div><div><span class="eml-stat-label">Virus detected</span><strong>{{ stats.infected_emails }}</strong></div></div>
         <div class="eml-stat-card"><div class="eml-stat-icon eml-stat-icon-orange"><i class="fas fa-microscope"></i></div><div><span class="eml-stat-label">Unscanned</span><strong>{{ stats.unscanned_emails }}</strong></div></div>
         <div class="eml-stat-card"><div class="eml-stat-icon eml-stat-icon-purple"><i class="fas fa-shield-virus"></i></div><div><span class="eml-stat-label">Quarantined</span><strong>{{ stats.quarantined_emails }}</strong></div></div>
     </section>
-    <section class="eml-toolbar" aria-label="Email filters">
+    <section class="eml-toolbar" aria-label="{{ gettext('Email filters') }}">
         <div class="eml-toolbar-title"><div class="card-title"><i class="fas fa-layer-group"></i><span>All emails</span></div><span class="eml-result-count" id="emlResultCount">{{ total }} email{% if total != 1 %}s{% endif %}</span></div>
         <div class="eml-toolbar-actions">
-            <label class="eml-search" for="emlSearch"><i class="fas fa-search" aria-hidden="true"></i><input id="emlSearch" type="search" placeholder="Search this page" autocomplete="off"></label>
-            <label class="eml-sort" for="emlSort"><i class="fas fa-sort" aria-hidden="true"></i><select id="emlSort" aria-label="Sort emails">
+            <label class="eml-search" for="emlSearch"><i class="fas fa-search" aria-hidden="true"></i><input id="emlSearch" type="search" placeholder="{{ gettext('Search this page') }}" autocomplete="off"></label>
+            <label class="eml-sort" for="emlSort"><i class="fas fa-sort" aria-hidden="true"></i><select id="emlSort" aria-label="{{ gettext('Sort emails') }}">
                 <option value="date|desc" {% if sort_by == 'date' and sort_order == 'desc' %}selected{% endif %}>Newest first</option>
                 <option value="date|asc" {% if sort_by == 'date' and sort_order == 'asc' %}selected{% endif %}>Oldest first</option>
                 <option value="sender|asc" {% if sort_by == 'sender' and sort_order == 'asc' %}selected{% endif %}>From A-Z</option>
@@ -59,15 +59,25 @@
                 <i class="fas fa-sliders"></i>
                 <span class="hide-mobile">Filters</span>
             </button>
+            <div class="dropdown">
+                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="{{ gettext('Choose which columns to display') }}">
+                    <i class="fas fa-table-columns"></i><span class="hide-mobile">Columns</span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end eml-column-menu">
+                    <h6 class="dropdown-header">Visible columns</h6>
+                    <label class="dropdown-item"><input type="checkbox" class="form-check-input me-2 eml-col-toggle" data-col="to" {% if 'to' not in hidden_cols %}checked{% endif %}> To</label>
+                    <label class="dropdown-item"><input type="checkbox" class="form-check-input me-2 eml-col-toggle" data-col="folder" {% if 'folder' not in hidden_cols %}checked{% endif %}> Folder</label>
+                </div>
+            </div>
         </div>
     </section>
     {% if show_bulk %}
-    <section class="eml-bulk-bar" aria-label="Bulk actions">
+    <section class="eml-bulk-bar" aria-label="{{ gettext('Bulk actions') }}">
         <label class="eml-select-all"><input type="checkbox" id="select-all" class="form-check-input"><span>Select all</span></label>
         <span class="eml-selected-count" id="emlSelectedCount">0 selected</span>
         <div class="eml-bulk-actions">
             {% if 'scan_emails' in perms %}
-            <button type="button" class="btn btn-info btn-sm" id="scan-selected-btn" disabled onclick="submitManualScan()" title="Run ClamAV scan; infected results are flagged for review">
+            <button type="button" class="btn btn-info btn-sm" id="scan-selected-btn" disabled onclick="submitManualScan()" title="{{ gettext('Run ClamAV scan; infected results are flagged for review') }}">
                 <i class="fas fa-microscope"></i><span>Scan Selected</span>
             </button>
             {% endif %}
@@ -89,20 +99,20 @@
             <div class="grid grid-cols-4 gap-3">
                 <div>
                     <label class="form-label">Account</label>
-                    <input type="text" name="account" value="{{ account }}" placeholder="Account" class="form-control">
-                    <input type="text" name="folder" value="{{ folder }}" placeholder="Folder" class="form-control">
+                    <input type="text" name="account" value="{{ account }}" placeholder="{{ gettext('Account') }}" class="form-control">
+                    <input type="text" name="folder" value="{{ folder }}" placeholder="{{ gettext('Folder') }}" class="form-control">
                 </div>
                 <div>
                     <label class="form-label">From</label>
-                    <input type="text" name="sender" value="{{ sender }}" placeholder="Sender address" class="form-control">
+                    <input type="text" name="sender" value="{{ sender }}" placeholder="{{ gettext('Sender address') }}" class="form-control">
                 </div>
                 <div>
                     <label class="form-label">To</label>
-                    <input type="text" name="recipient" value="{{ recipient }}" placeholder="Recipient address" class="form-control">
+                    <input type="text" name="recipient" value="{{ recipient }}" placeholder="{{ gettext('Recipient address') }}" class="form-control">
                 </div>
                 <div>
                     <label class="form-label">Subject</label>
-                    <input type="text" name="subject" value="{{ subject }}" placeholder="Subject" class="form-control">
+                    <input type="text" name="subject" value="{{ subject }}" placeholder="{{ gettext('Subject') }}" class="form-control">
                 </div>
                 <div>
                     <label class="form-label">Date From</label>
@@ -114,7 +124,7 @@
                 </div>
                 <div>
                     <label class="form-label">Keyword Search</label>
-                    <input type="text" name="q" value="{{ q }}" placeholder="Search subject, sender, recipients" class="form-control">
+                    <input type="text" name="q" value="{{ q }}" placeholder="{{ gettext('Search subject, sender, recipients') }}" class="form-control">
                 </div>
                 {% if filter %}<input type="hidden" name="filter" value="{{ filter }}">{% endif %}
             </div>
@@ -133,61 +143,71 @@
 
     {% if emails %}
     <form method="post" action="/emails/delete" id="emails-bulk-form">
-    <div class="eml-grid" id="emlGrid">
-        {% for email in emails %}
-        {% set recipients_str = email.recipients | extract_emails %}
-        <article class="eml-card" data-eml-search="{{ email.subject or '' }} {{ email.sender or '' }} {{ email.recipients or '' }} {{ email.source }} {{ email.folder }}">
-            <div class="eml-card-top">
-                {% if show_bulk %}
-                <input type="checkbox" name="ids" value="{{ email.id }}" class="form-check-input email-checkbox" aria-label="Select email {{ email.id }}">
-                {% endif %}
-                <div class="eml-avatar {% if email.virus_detected %}eml-avatar-danger{% endif %}"><i class="fas fa-envelope" aria-hidden="true"></i></div>
-                <div class="eml-card-main">
-                    <h3 class="eml-subject" title="{{ email.subject or '(no subject)' }}"><a href="/emails/{{ email.id }}">{{ email.subject or '(no subject)' }}</a></h3>
-                    <div class="eml-sender" title="{{ email.sender }}">{{ email.sender | extract_emails or 'Unknown sender' }}</div>
-                </div>
-                <div class="eml-card-badges">
-                    {% if email.integrity == 'ok' %}
-                    <span class="eml-badge eml-badge-valid" title="{{ email.integrity_reason or 'Valid' }}">Valid</span>
-                    {% elif email.integrity == 'modified' %}
-                    <span class="eml-badge eml-badge-invalid" title="{{ email.integrity_reason or 'Modified' }}">Invalid</span>
-                    {% elif email.integrity == 'no_signature' %}
-                    <span class="eml-badge eml-badge-neutral" title="{{ email.integrity_reason or 'No Signature' }}">No Sig</span>
-                    {% else %}
-                    <span class="eml-badge eml-badge-neutral" title="{{ email.integrity_reason or 'Unknown' }}">Unknown</span>
-                    {% endif %}
-                    {% if email.virus_detected %}
-                    <span class="eml-badge eml-badge-danger" title="ClamAV detected: {{ email.virus_name }}">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <span>Virus detected</span>
-                    </span>
-                    {% elif email.virus_scanned %}
-                    <span class="eml-badge eml-badge-valid" title="ClamAV scan completed: no virus detected">
-                        <i class="fas fa-check"></i>
-                        <span>Scanned - clean</span>
-                    </span>
-                    {% else %}
-                    <span class="eml-badge eml-badge-neutral" title="ClamAV scan not completed or scanning is disabled">
-                        <i class="fas fa-minus"></i>
-                        <span>Not scanned</span>
-                    </span>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="eml-card-meta">
-                <span title="{{ recipients_str }}"><i class="fas fa-user"></i> To: {{ recipients_str or 'N/A' }}</span>
-                <span><i class="fas fa-server"></i> {{ email.source }}</span>
-                <span><i class="fas fa-folder"></i> {{ email.folder }}</span>
-                <span><i class="fas fa-clock"></i> {{ email.date_formatted or email.date }}</span>
-            </div>
-            <div class="eml-card-footer">
-                <a href="/emails/{{ email.id }}" class="btn btn-secondary btn-sm"><i class="fas fa-eye"></i><span>View</span></a>
-                {% if email.virus_scanned and email.scan_timestamp_formatted %}
-                <span class="eml-muted">Scanned {{ email.scan_timestamp_formatted }}</span>
-                {% endif %}
-            </div>
-        </article>
-        {% endfor %}
+    <div class="eml-table-card" aria-label="{{ gettext('Archived emails') }}">
+        <div class="table-responsive">
+            <table class="table eml-table">
+                <thead>
+                    <tr>
+                        {% if show_bulk %}<th scope="col" class="eml-check-col"><span class="visually-hidden">Select</span></th>{% endif %}
+                        <th scope="col">Subject</th>
+                        <th scope="col">From</th>
+                        <th scope="col" class="hide-mobile eml-col-to" {% if 'to' in hidden_cols %}hidden{% endif %}>To</th>
+                        <th scope="col" class="hide-mobile">Account</th>
+                        <th scope="col" class="hide-mobile eml-col-folder" {% if 'folder' in hidden_cols %}hidden{% endif %}>Folder</th>
+                        <th scope="col">Date</th>
+                        <th scope="col">Integrity</th>
+                        <th scope="col">Scan</th>
+                        <th scope="col" class="eml-view-col"><span class="visually-hidden">View</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for email in emails %}
+                    {% set recipients_str = email.recipients | extract_emails %}
+                    <tr class="eml-row" data-eml-search="{{ email.subject or '' }} {{ email.sender or '' }} {{ email.recipients or '' }} {{ email.source }} {{ email.folder }}">
+                        {% if show_bulk %}
+                        <td class="eml-check-cell"><input type="checkbox" name="ids" value="{{ email.id }}" class="form-check-input email-checkbox" aria-label="Select email {{ email.id }}"></td>
+                        {% endif %}
+                        <td class="eml-subject-cell"><a href="/emails/{{ email.id }}" title="{{ email.subject or '(no subject)' }}">{{ email.subject or '(no subject)' }}</a></td>
+                        <td class="eml-from-cell" title="{{ email.sender }}">{{ email.sender | extract_emails or 'Unknown sender' }}</td>
+                        <td class="hide-mobile eml-to-cell eml-col-to" {% if 'to' in hidden_cols %}hidden{% endif %} title="{{ recipients_str }}">{{ recipients_str or 'N/A' }}</td>
+                        <td class="hide-mobile eml-source-cell" title="{{ email.source }}"><i class="fas fa-server" aria-hidden="true"></i> {{ email.source }}</td>
+                        <td class="hide-mobile eml-folder-cell eml-col-folder" {% if 'folder' in hidden_cols %}hidden{% endif %} title="{{ email.folder }}"><i class="fas fa-folder" aria-hidden="true"></i> {{ email.folder }}</td>
+                        <td class="eml-date-cell" title="{{ email.date_formatted or email.date }}"><i class="fas fa-clock" aria-hidden="true"></i> {{ email.date_formatted or email.date }}</td>
+                        <td class="eml-badge-cell">
+                            {% if email.integrity == 'ok' %}
+                            <span class="eml-badge eml-badge-valid" title="{{ email.integrity_reason or 'Valid' }}">Valid</span>
+                            {% elif email.integrity == 'modified' %}
+                            <span class="eml-badge eml-badge-invalid" title="{{ email.integrity_reason or 'Modified' }}">Invalid</span>
+                            {% elif email.integrity == 'no_signature' %}
+                            <span class="eml-badge eml-badge-neutral" title="{{ email.integrity_reason or 'No Signature' }}">No Sig</span>
+                            {% else %}
+                            <span class="eml-badge eml-badge-neutral" title="{{ email.integrity_reason or 'Unknown' }}">Unknown</span>
+                            {% endif %}
+                        </td>
+                        <td class="eml-badge-cell">
+                            {% if email.virus_detected %}
+                            <span class="eml-badge eml-badge-danger" title="ClamAV detected: {{ email.virus_name }}">
+                                <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+                                <span>Virus detected</span>
+                            </span>
+                            {% elif email.virus_scanned %}
+                            <span class="eml-badge eml-badge-valid" title="ClamAV scan completed{% if email.scan_timestamp_formatted %} {{ email.scan_timestamp_formatted }}{% endif %}: no virus detected">
+                                <i class="fas fa-check" aria-hidden="true"></i>
+                                <span>Scanned - clean</span>
+                            </span>
+                            {% else %}
+                            <span class="eml-badge eml-badge-neutral" title="{{ gettext('ClamAV scan not completed or scanning is disabled') }}">
+                                <i class="fas fa-minus" aria-hidden="true"></i>
+                                <span>Not scanned</span>
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="eml-view-cell"><a href="/emails/{{ email.id }}" class="eml-view-link" title="{{ gettext('View email') }}"><i class="fas fa-eye" aria-hidden="true"></i><span class="visually-hidden">View</span></a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
     </form>
     <div class="eml-filter-empty" id="emlFilterEmpty" hidden><i class="fas fa-search"></i><h3>No matching emails</h3><p>Try a different search term or clear the filters.</p></div>
@@ -201,7 +221,7 @@
 
         <div class="pagination-bar">
             {% if page > 1 %}
-            <a href="{{ base_url }}&page={{ page - 1 }}" class="page-link" title="Previous">
+            <a href="{{ base_url }}&page={{ page - 1 }}" class="page-link" title="{{ gettext('Previous') }}">
                 <i class="fas fa-chevron-left"></i>
             </a>
             {% else %}
@@ -231,7 +251,7 @@
             {% endif %}
 
             {% if page < total_pages %}
-            <a href="{{ base_url }}&page={{ page + 1 }}" class="page-link" title="Next">
+            <a href="{{ base_url }}&page={{ page + 1 }}" class="page-link" title="{{ gettext('Next') }}">
                 <i class="fas fa-chevron-right"></i>
             </a>
             {% else %}
@@ -252,7 +272,7 @@
                 {% if sort_by %}<input type="hidden" name="sort_by" value="{{ sort_by }}">{% endif %}
                 {% if sort_order %}<input type="hidden" name="sort_order" value="{{ sort_order }}">{% endif %}
                 <span>Go to</span>
-                <input type="number" name="page" min="1" max="{{ total_pages }}" value="{{ page }}" aria-label="Jump to page">
+                <input type="number" name="page" min="1" max="{{ total_pages }}" value="{{ page }}" aria-label="{{ gettext('Jump to page') }}">
                 <button type="submit" class="btn btn-secondary btn-sm">Go</button>
             </form>
         </div>
@@ -266,10 +286,10 @@
     <div class="eml-tip"><i class="fas fa-circle-info"></i><span><strong>Tip:</strong> The search box filters the current page. Use <strong>Filters</strong> to search the whole archive by account, folder, sender, recipient, subject or date range.</span></div>
 </div>
 
-<div class="modal fade" id="quarantineModal" tabindex="-1" aria-labelledby="quarantineModalLabel" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h2 class="modal-title" id="quarantineModalLabel"><i class="fas fa-shield-virus text-warning"></i> Confirm quarantine</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body"><p>You are about to quarantine <strong id="quarantine-count">0</strong> email<span id="quarantine-plural">s</span>.</p><div class="alert alert-warning"><i class="fas fa-info-circle"></i><span>This will move the selected emails to quarantine for review. They will no longer appear in the main archive.</span></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-warning" onclick="hideQuarantineConfirmation(); document.getElementById('quarantine-form').submit();"><i class="fas fa-shield-virus"></i> Quarantine Selected Emails</button></div></div></div></div>
+<div class="modal fade" id="quarantineModal" tabindex="-1" aria-labelledby="quarantineModalLabel" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h2 class="modal-title" id="quarantineModalLabel"><i class="fas fa-shield-virus text-warning"></i> Confirm quarantine</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ gettext('Close') }}"></button></div><div class="modal-body"><p>You are about to quarantine <strong id="quarantine-count">0</strong> email<span id="quarantine-plural">s</span>.</p><div class="alert alert-warning"><i class="fas fa-info-circle"></i><span>This will move the selected emails to quarantine for review. They will no longer appear in the main archive.</span></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-warning" onclick="hideQuarantineConfirmation(); document.getElementById('quarantine-form').submit();"><i class="fas fa-shield-virus"></i> Quarantine Selected Emails</button></div></div></div></div>
 <form method="post" action="/emails/quarantine" id="quarantine-form" hidden></form>
 
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h2 class="modal-title" id="deleteModalLabel"><i class="fas fa-exclamation-triangle text-danger"></i> Confirm deletion</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body"><p>You are about to delete <strong id="delete-count">0</strong> email<span id="delete-plural">s</span>.</p><div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i><span>This cannot be undone. Choose how you want to delete them:</span></div><div class="eml-delete-options"><button type="button" class="btn btn-danger" onclick="performDelete('db')"><i class="fas fa-database"></i><span>Delete from Database Only</span></button><button type="button" class="btn btn-warning" onclick="performDelete('imap')"><i class="fas fa-server"></i><span>Delete from Database and Mail Server</span></button></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button></div></div></div></div>
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h2 class="modal-title" id="deleteModalLabel"><i class="fas fa-exclamation-triangle text-danger"></i> Confirm deletion</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ gettext('Close') }}"></button></div><div class="modal-body"><p>You are about to delete <strong id="delete-count">0</strong> email<span id="delete-plural">s</span>.</p><div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i><span>This cannot be undone. Choose how you want to delete them:</span></div><div class="eml-delete-options"><button type="button" class="btn btn-danger" onclick="performDelete('db')"><i class="fas fa-database"></i><span>Delete from Database Only</span></button><button type="button" class="btn btn-warning" onclick="performDelete('imap')"><i class="fas fa-server"></i><span>Delete from Database and Mail Server</span></button></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button></div></div></div></div>
 {% endblock %}
 
 {% block extra_css %}<link rel="stylesheet" href="/static/emails.css">{% endblock %}
@@ -286,7 +306,7 @@
     const selectedCount = document.getElementById('emlSelectedCount');
     const emlSearch = document.getElementById('emlSearch');
     const emlSort = document.getElementById('emlSort');
-    const emlCards = Array.from(document.querySelectorAll('.eml-card'));
+    const emlRows = Array.from(document.querySelectorAll('.eml-row'));
     const filterEmpty = document.getElementById('emlFilterEmpty');
     const resultCount = document.getElementById('emlResultCount');
     const filterCard = document.getElementById('filterCard');
@@ -317,9 +337,9 @@
     function filterEmails() {
         const term = (emlSearch?.value || '').trim().toLowerCase();
         let visible = 0;
-        emlCards.forEach(card => {
-            const shown = !term || (card.dataset.emlSearch || '').toLowerCase().includes(term);
-            card.hidden = !shown;
+        emlRows.forEach(row => {
+            const shown = !term || (row.dataset.emlSearch || '').toLowerCase().includes(term);
+            row.hidden = !shown;
             if (shown) visible++;
         });
         if (filterEmpty) filterEmpty.hidden = visible !== 0;
@@ -411,12 +431,45 @@
         bulkForm.submit();
     };
 
+    // --- Per-user column visibility (To / Folder) ---
+    const hideableCols = ['to', 'folder'];
+    let hiddenCols = [{% for c in hidden_cols %}'{{ c }}',{% endfor %}];
+    const colCells = {};
+    hideableCols.forEach(col => { colCells[col] = Array.from(document.querySelectorAll('.eml-col-' + col)); });
+
+    function applyColVisibility() {
+        hideableCols.forEach(col => {
+            const hidden = hiddenCols.includes(col);
+            colCells[col].forEach(el => { el.hidden = hidden; });
+        });
+    }
+
+    function persistColumns() {
+        fetch('/api/user/table-columns', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ page: 'emails', hidden: hiddenCols }),
+        }).catch(() => {});
+    }
+
+    document.querySelectorAll('.eml-col-toggle').forEach(cb => {
+        cb.addEventListener('change', () => {
+            const col = cb.dataset.col;
+            const idx = hiddenCols.indexOf(col);
+            if (cb.checked && idx !== -1) hiddenCols.splice(idx, 1);
+            if (!cb.checked && idx === -1) hiddenCols.push(col);
+            applyColVisibility();
+            persistColumns();
+        });
+    });
+
+    applyColVisibility();
     updateButtons();
     filterEmails();
 })();
 </script>
 <!-- Scroll to top button -->
-<button id="scroll-to-top-btn" class="scroll-to-top" aria-label="Scroll to top" title="Back to top">
+<button id="scroll-to-top-btn" class="scroll-to-top" aria-label="{{ gettext('Scroll to top') }}" title="{{ gettext('Back to top') }}">
     <i class="fas fa-arrow-up"></i>
 </button>
 <script>

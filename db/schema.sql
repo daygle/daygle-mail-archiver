@@ -415,6 +415,19 @@ CREATE TABLE IF NOT EXISTS user_widget_settings (
 CREATE INDEX IF NOT EXISTS user_widget_settings_user_idx ON user_widget_settings(user_id);
 
 -- ----------------------------
+-- user_table_prefs
+-- Per-user table column visibility (which columns are hidden on which page)
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS user_table_prefs (
+    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    hidden_columns JSONB NOT NULL DEFAULT '{}',
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Index for quick lookups by user
+CREATE INDEX IF NOT EXISTS user_table_prefs_user_idx ON user_table_prefs(user_id);
+
+-- ----------------------------
 -- alerts
 -- System alerts and notifications
 -- ----------------------------

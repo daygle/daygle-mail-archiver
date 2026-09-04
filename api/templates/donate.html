@@ -3,6 +3,15 @@
 {% block page_title %}Support This Project{% endblock %}
 
 {% block content %}
+<div class="doc-page">
+    <section class="doc-hero" aria-labelledby="doc-heading">
+        <div class="doc-hero-copy">
+            <div class="doc-eyebrow"><i class="fas fa-hand-holding-heart"></i> Community</div>
+            <h2 id="doc-heading">Support this project</h2>
+            <p>Daygle Mail Archiver is free and open source - your support helps keep development, hosting, and documentation sustainable.</p>
+        </div>
+    </section>
+
 <div class="help-docs-layout">
     <aside class="help-toc-card">
         <div class="card">
@@ -24,12 +33,6 @@
 
     <main class="help-content">
         <section class="card prose">
-            <div class="card-header">
-                <h2 class="card-title">
-                    <i class="fas fa-hand-holding-heart"></i>
-                    <span>Support Daygle Mail Archiver</span>
-                </h2>
-            </div>
             <div class="card-body help-body">
 
                 <section id="donate-paypal" class="help-section">
@@ -143,4 +146,7 @@
         });
     })();
 </script>
+</div>
 {% endblock %}
+
+{% block extra_css %}<link rel="stylesheet" href="/static/docs.css">{% endblock %}

@@ -3,6 +3,15 @@
 {% block page_title %}{{ gettext("My Profile") }}{% endblock %}
 
 {% block content %}
+<div class="prf-page">
+    <section class="prf-hero" aria-labelledby="prf-heading">
+        <div class="prf-hero-copy">
+            <div class="prf-eyebrow"><i class="fas fa-id-card"></i> {{ gettext("Account") }}</div>
+            <h2 id="prf-heading">{{ gettext("My Profile") }}</h2>
+            <p>{{ gettext("Manage your personal information, assigned roles, and recent login activity.") }}</p>
+        </div>
+    </section>
+
 <div class="grid grid-cols-1 gap-4 mb-4">
 
     <!-- Personal Information Card -->
@@ -122,4 +131,7 @@
     </div>
 
 </div>
+</div>
 {% endblock %}
+
+{% block extra_css %}<link rel="stylesheet" href="/static/settings.css">{% endblock %}

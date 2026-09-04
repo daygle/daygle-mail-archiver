@@ -6,8 +6,9 @@ from ..utils.db import query
 from ..utils.logger import log
 from ..utils.templates import templates
 from ..utils.alerts import create_alert, get_alerts, acknowledge_alert, acknowledge_all_alerts, get_unacknowledged_count
-from ..utils.timezone import convert_utc_to_user_timezone
+from ..utils.timezone import convert_utc_to_user_timezone, get_user_timezone
 from ..utils.permissions import PermissionChecker, require_permission, PERMISSIONS
+from ..utils.i18n import request_gettext
 from .reports import get_user_date_format
 
 router = APIRouter()
@@ -89,13 +90,16 @@ def alerts_page(
     # Get user's date/time format
     date_format = get_user_date_format(request)
 
-    # Convert alert timestamps to user timezone
+    # Convert alert timestamps to user timezone. The timezone is resolved once
+    # per request and threaded through, so a 50-alert page does not issue a
+    # timezone/settings lookup per row.
     user_id = request.session.get("user_id")
+    user_tz = get_user_timezone(user_id)
     for alert in alerts:
         if alert["created_at"]:
-            alert["created_at"] = convert_utc_to_user_timezone(alert["created_at"], user_id)
+            alert["created_at"] = convert_utc_to_user_timezone(alert["created_at"], user_id, tz=user_tz)
         if alert["acknowledged_at"]:
-            alert["acknowledged_at"] = convert_utc_to_user_timezone(alert["acknowledged_at"], user_id)
+            alert["acknowledged_at"] = convert_utc_to_user_timezone(alert["acknowledged_at"], user_id, tz=user_tz)
 
     return templates.TemplateResponse(
         "alerts.html",
@@ -124,9 +128,10 @@ def acknowledge_all_alerts_api(request: Request):
     if not checker.has_permission("manage_alerts"):
         return JSONResponse({"error": "Forbidden"}, status_code=403)
 
+    _ = request_gettext(request)
     user_id = request.session.get("user_id")
     if not user_id:
-        flash(request, "User not found", 'error')
+        flash(request, _("User not found"), 'error')
         return RedirectResponse("/alerts", status_code=303)
 
     try:
@@ -134,13 +139,13 @@ def acknowledge_all_alerts_api(request: Request):
         username = request.session.get("username", "unknown")
         log("info", "Alerts", f"User '{username}' acknowledged all {count} alert(s)", "")
         if count > 0:
-            flash(request, f"All {count} alert(s) acknowledged successfully!", 'success')
+            flash(request, _("All {0} alert(s) acknowledged successfully!").format(count), 'success')
         else:
-            flash(request, "No unacknowledged alerts to acknowledge", 'info')
+            flash(request, _("No unacknowledged alerts to acknowledge"), 'info')
         return RedirectResponse("/alerts", status_code=303)
     except Exception as e:
         log("error", "Alerts", f"Failed to acknowledge all alerts: {str(e)}", "")
-        flash(request, "Failed to acknowledge all alerts", 'error')
+        flash(request, _("Failed to acknowledge all alerts"), 'error')
         return RedirectResponse("/alerts", status_code=303)
 
 
@@ -155,9 +160,10 @@ def acknowledge_alert_api(request: Request, alert_id: int):
     if not checker.has_permission("manage_alerts"):
         return JSONResponse({"error": "Forbidden"}, status_code=403)
 
+    _ = request_gettext(request)
     user_id = request.session.get("user_id")
     if not user_id:
-        flash(request, "User not found", 'error')
+        flash(request, _("User not found"), 'error')
         return RedirectResponse("/alerts", status_code=303)
 
     try:
@@ -165,14 +171,14 @@ def acknowledge_alert_api(request: Request, alert_id: int):
         if success:
             username = request.session.get("username", "unknown")
             log("info", "Alerts", f"User '{username}' acknowledged alert ID {alert_id}", "")
-            flash(request, "Alert acknowledged successfully!", 'success')
+            flash(request, _("Alert acknowledged successfully!"), 'success')
             return RedirectResponse("/alerts", status_code=303)
         else:
-            flash(request, "Alert not found or already acknowledged", 'info')
+            flash(request, _("Alert not found or already acknowledged"), 'info')
             return RedirectResponse("/alerts", status_code=303)
     except Exception as e:
         log("error", "Alerts", f"Failed to acknowledge alert {alert_id}: {str(e)}", "")
-        flash(request, "Failed to acknowledge alert", 'error')
+        flash(request, _("Failed to acknowledge alert"), 'error')
         return RedirectResponse("/alerts", status_code=303)
 
 @router.get("/api/alerts/unacknowledged-count")
@@ -203,20 +209,21 @@ def create_alert_api(
     send_email: bool = Form(True)
 ):
     """Create a new alert (admin only)"""
+    _ = request_gettext(request)
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
     checker = PermissionChecker(request)
     if not checker.has_permission("manage_alerts"):
-        flash(request, "Access denied", 'error')
+        flash(request, _("Access denied"), 'error')
         return RedirectResponse("/alerts", status_code=303)
 
     if alert_type not in ['error', 'warning', 'info', 'success']:
-        flash(request, "Invalid alert type", 'error')
+        flash(request, _("Invalid alert type"), 'error')
         return RedirectResponse("/alerts", status_code=303)
 
     try:
-        alert_id = create_alert(
+        create_alert(
             alert_type,
             title,
             message,
@@ -225,9 +232,9 @@ def create_alert_api(
         )
         username = request.session.get("username", "unknown")
         log("info", "Alerts", f"Admin '{username}' created {alert_type} alert: {title}", "")
-        flash(request, "Test alert created successfully!", 'success')
+        flash(request, _("Test alert created successfully!"), 'success')
         return RedirectResponse("/alerts", status_code=303)
     except Exception as e:
         log("error", "Alerts", f"Failed to create alert: {str(e)}", "")
-        flash(request, "Failed to create test alert", 'error')
+        flash(request, _("Failed to create test alert"), 'error')
         return RedirectResponse("/alerts", status_code=303)

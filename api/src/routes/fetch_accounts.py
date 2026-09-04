@@ -1,6 +1,3 @@
-import traceback
-import sys
-
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import RedirectResponse
 from sqlalchemy import text
@@ -10,6 +7,8 @@ from ..utils.crypto import encrypt_password, decrypt_password
 from ..utils.logger import log
 from ..utils.templates import templates
 from ..utils.permissions import require_permission, PERMISSIONS
+from ..utils.i18n import request_gettext
+from ..utils.timezone import format_datetime, get_display_prefs
 from imaplib import IMAP4, IMAP4_SSL
 
 router = APIRouter()
@@ -78,11 +77,12 @@ def _test_oauth_connection(request: Request, account_id, account_type: str):
     Used by the new-account form test: a saved account is required before the
     OAuth flow can be exercised, so unsaved accounts get a helpful message.
     """
+    _ = request_gettext(request)
     if not account_id:
         flash(
             request,
-            f"Save the {account_type.upper()} account first, then use the OAuth Authorise "
-            f"button and test again.",
+            _("Save the {0} account first, then use the OAuth Authorise button and test again.")
+            .format(account_type.upper()),
             "error",
         )
         return RedirectResponse("/fetch-accounts", status_code=303)
@@ -97,13 +97,14 @@ def _test_oauth_connection(request: Request, account_id, account_type: str):
     ).mappings().first()
 
     if not acc:
-        flash(request, "Account not found", "error")
+        flash(request, _("Account not found"), "error")
         return RedirectResponse("/fetch-accounts", status_code=303)
 
     if not acc.get("oauth_client_id") or not acc.get("oauth_client_secret"):
         flash(
             request,
-            f"{account_type.upper()} OAuth Client ID and Secret must be configured for this account.",
+            _("{0} OAuth Client ID and Secret must be configured for this account.")
+            .format(account_type.upper()),
             "error",
         )
         return RedirectResponse("/fetch-accounts", status_code=303)
@@ -112,7 +113,7 @@ def _test_oauth_connection(request: Request, account_id, account_type: str):
         ok, msg = _probe_oauth_api(account_id, account_type)
         flash(request, msg, "success" if ok else "error")
     except Exception as e:
-        flash(request, f"✗ Connection failed: {str(e)}", "error")
+        flash(request, _("✗ Connection failed: {0}").format(str(e)), "error")
 
     return RedirectResponse("/fetch-accounts", status_code=303)
 
@@ -175,6 +176,20 @@ def list_accounts(request: Request, _=require_permission(PERMISSIONS["view_fetch
         }
         accounts.append(acc_dict)
 
+    # Resolve display preferences once and pre-format the worker-health
+    # timestamps. The template previously strftime'd the raw UTC values, which
+    # ignored the user's timezone entirely; it now renders these fields.
+    tz, date_format, time_format = get_display_prefs(user_id)
+    for acc in accounts:
+        acc["last_heartbeat_formatted"] = (
+            format_datetime(acc["last_heartbeat"], user_id, tz=tz, date_format=date_format, time_format=time_format)
+            if acc.get("last_heartbeat") else None
+        )
+        acc["last_success_formatted"] = (
+            format_datetime(acc["last_success"], user_id, tz=tz, date_format=date_format, time_format=time_format)
+            if acc.get("last_success") else None
+        )
+
     msg = request.session.pop("flash", None)
 
     from ..utils.config import get_config
@@ -223,11 +238,12 @@ def create_account(
     oauth_client_id: str = Form(""),
     oauth_client_secret: str = Form(""),
 ):
+    _ = request_gettext(request)
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
     if account_type not in VALID_ACCOUNT_TYPES:
-        flash(request, f"Invalid account type: {account_type}", "error")
+        flash(request, _("Invalid account type: {0}").format(account_type), "error")
         return RedirectResponse("/fetch-accounts", status_code=303)
 
     enc = encrypt_password(password) if password else None
@@ -267,15 +283,15 @@ def create_account(
         username_session = request.session.get("username", "unknown")
         log("info", "Fetch Accounts", f"User '{username_session}' created fetch account '{name}' (type: {account_type})", "")
 
-        flash(request, f"{account_type.upper()} account created successfully", "success")
+        flash(request, _("{0} account created successfully").format(account_type.upper()), "success")
         return RedirectResponse("/fetch-accounts", status_code=303)
     
     except Exception as e:
         # Handle duplicate name error
         if "duplicate key" in str(e) or "unique constraint" in str(e).lower():
-            flash(request, f"Account name '{name}' already exists. Please choose a different name.", "error")
+            flash(request, _("Account name '{0}' already exists. Please choose a different name.").format(name), "error")
         else:
-            flash(request, f"Failed to create account: {str(e)}", "error")
+            flash(request, _("Failed to create account: {0}").format(str(e)), "error")
 
         # Redirect to the list page; the flash message carries the error. The
         # previous re-render omitted the accounts context the template requires.
@@ -311,11 +327,12 @@ def update_account(
     oauth_client_id: str = Form(""),
     oauth_client_secret: str = Form(""),
 ):
+    _ = request_gettext(request)
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
     if account_type not in VALID_ACCOUNT_TYPES:
-        flash(request, f"Invalid account type: {account_type}", "error")
+        flash(request, _("Invalid account type: {0}").format(account_type), "error")
         return RedirectResponse("/fetch-accounts", status_code=303)
 
     if password.strip():
@@ -350,7 +367,7 @@ def update_account(
                 ((current.get('oauth_client_id') or '') == (oauth_client_id or ''))
             )
             if same and not password.strip() and not oauth_client_secret.strip():
-                flash(request, "No changes detected.", 'info')
+                flash(request, _("No changes detected."), 'info')
                 return RedirectResponse("/fetch-accounts", status_code=303)
         params = {
             "id": id,
@@ -415,15 +432,15 @@ def update_account(
         username_session = request.session.get("username", "unknown")
         log("info", "Fetch Accounts", f"User '{username_session}' updated fetch account '{name}' (ID: {id})", "")
 
-        flash(request, f"{account_type.upper()} account updated successfully", "success")
+        flash(request, _("{0} account updated successfully").format(account_type.upper()), "success")
         return RedirectResponse("/fetch-accounts", status_code=303)
     
     except Exception as e:
         # Handle duplicate name error
         if "duplicate key" in str(e) or "unique constraint" in str(e).lower():
-            flash(request, f"Account name '{name}' already exists. Please choose a different name.", "error")
+            flash(request, _("Account name '{0}' already exists. Please choose a different name.").format(name), "error")
         else:
-            flash(request, f"Failed to update account: {str(e)}", "error")
+            flash(request, _("Failed to update account: {0}").format(str(e)), "error")
         
         # Redirect back to edit form
         return RedirectResponse("/fetch-accounts", status_code=303)
@@ -431,6 +448,7 @@ def update_account(
 
 @router.post("/fetch-accounts/{id}/delete")
 def delete_account(request: Request, id: int, _=require_permission(PERMISSIONS["manage_fetch_accounts"]), mode: str = Form(...)):
+    _ = request_gettext(request)
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
@@ -440,7 +458,7 @@ def delete_account(request: Request, id: int, _=require_permission(PERMISSIONS["
     ).mappings().first()
 
     if not account:
-        flash(request, "Account not found", "error")
+        flash(request, _("Account not found"), "error")
         return RedirectResponse("/fetch-accounts", status_code=303)
 
     if mode == "retain":
@@ -448,7 +466,7 @@ def delete_account(request: Request, id: int, _=require_permission(PERMISSIONS["
         query("DELETE FROM fetch_accounts WHERE id = :id", {"id": id})
         username = request.session.get("username", "unknown")
         log("info", "Fetch Accounts", f"User '{username}' deleted fetch account '{account['name']}' (ID: {id}), emails retained", "")
-        flash(request, f"Fetch account '{account['name']}' deleted. Emails retained.", "success")
+        flash(request, _("Fetch account '{0}' deleted. Emails retained.").format(account['name']), "success")
         return RedirectResponse("/fetch-accounts", status_code=303)
 
     elif mode == "delete_messages":
@@ -464,10 +482,10 @@ def delete_account(request: Request, id: int, _=require_permission(PERMISSIONS["
         username = request.session.get("username", "unknown")
         log("warning", "Fetch Accounts", f"User '{username}' deleted fetch account '{account['name']}' (ID: {id}) and all related emails", "")
 
-        flash(request, f"Fetch account '{account['name']}' and all related emails deleted.", "success")
+        flash(request, _("Fetch account '{0}' and all related emails deleted.").format(account['name']), "success")
         return RedirectResponse("/fetch-accounts", status_code=303)
 
-    flash(request, "Invalid delete mode.", "error")
+    flash(request, _("Invalid delete mode."), "error")
     return RedirectResponse("/fetch-accounts", status_code=303)
 
 
@@ -478,6 +496,7 @@ def test_account_connection(
     _=require_permission(PERMISSIONS["manage_fetch_accounts"]),
 ):
     """Test connection for an existing fetch account"""
+    _ = request_gettext(request)
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
@@ -494,7 +513,7 @@ def test_account_connection(
     ).mappings().first()
 
     if not acc:
-        flash(request, "Account not found", "error")
+        flash(request, _("Account not found"), "error")
         return RedirectResponse("/fetch-accounts", status_code=303)
 
     account_type = acc["account_type"]
@@ -515,7 +534,7 @@ def test_account_connection(
                         conn.starttls()
                     conn.login(acc["username"], password)
                 
-                flash(request, f"IMAP connection successful to {acc['host']}", "success")
+                flash(request, _("IMAP connection successful to {0}").format(acc['host']), "success")
             finally:
                 if conn:
                     try:
@@ -528,7 +547,8 @@ def test_account_connection(
             if not acc["oauth_client_id"] or not acc["oauth_client_secret"]:
                 flash(
                     request,
-                    f"{account_type.upper()} OAuth Client ID and Secret must be configured for this account",
+                    _("{0} OAuth Client ID and Secret must be configured for this account")
+                    .format(account_type.upper()),
                     "error",
                 )
                 return RedirectResponse("/fetch-accounts", status_code=303)
@@ -536,10 +556,10 @@ def test_account_connection(
             ok, msg = _probe_oauth_api(id, account_type)
             flash(request, msg, "success" if ok else "error")
         else:
-            flash(request, f"✗ Unknown account type: {account_type}", "error")
+            flash(request, _("✗ Unknown account type: {0}").format(account_type), "error")
             
     except Exception as e:
-        flash(request, f"✗ Connection failed: {str(e)}", "error")
+        flash(request, _("✗ Connection failed: {0}").format(str(e)), "error")
 
     return RedirectResponse("/fetch-accounts", status_code=303)
 
@@ -565,8 +585,9 @@ def test_connection(
     # ---------------------------------------------------------
     # Load and decrypt stored password if none was provided
     # ---------------------------------------------------------
+    _ = request_gettext(request)
     if account_type not in VALID_ACCOUNT_TYPES:
-        flash(request, f"Invalid account type: {account_type}", "error")
+        flash(request, _("Invalid account type: {0}").format(account_type), "error")
         return RedirectResponse("/fetch-accounts", status_code=303)
 
     if account_type != "imap":
@@ -628,7 +649,7 @@ def test_connection(
                         try:
                             try_plain(username, username, password)
                         except Exception:
-                            raise RuntimeError("SASL PLAIN authentication failed for all variants")
+                            raise RuntimeError("SASL PLAIN authentication failed for all variants") from None
 
                 else:
                     raise RuntimeError("Server does not advertise AUTH=LOGIN or AUTH=PLAIN after STARTTLS")
@@ -636,12 +657,11 @@ def test_connection(
             else:
                 conn.login(username, password)
 
-        flash(request, "Connection successful", "success")
+        flash(request, _("Connection successful"), "success")
 
     except Exception as e:
-        print("=== IMAP TEST ERROR ===", file=sys.stderr)
-        traceback.print_exc()
-        flash(request, f"Connection failed: {str(e)}", "error")
+        log("error", "FetchAccounts", f"IMAP test connection failed: {str(e)}")
+        flash(request, _("Connection failed: {0}").format(str(e)), "error")
     finally:
         if conn:
             try:

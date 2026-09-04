@@ -1,17 +1,29 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from collections import defaultdict
-from typing import List, Dict, Any
 from datetime import datetime, timedelta, date
 from email.utils import getaddresses
 
 from ..utils.db import query
 from ..utils.logger import log
 from ..utils.templates import templates
-from ..utils.timezone import convert_utc_to_user_timezone, get_user_timezone
+from ..utils.timezone import convert_utc_to_user_timezone, get_user_timezone, get_display_prefs
 from ..utils.permissions import PermissionChecker, require_permission, PERMISSIONS
 
 router = APIRouter()
+
+
+def _local_bucket_expr(column: str, unit: str) -> str:
+    """SQL that buckets a naive-UTC timestamp column into user-local periods.
+
+    Stored timestamps are naive UTC wall-clock values, so the column is first
+    marked as UTC and then expressed in the user's timezone (a ``:tz`` bind
+    parameter) before truncation. Bucket labels must come straight from this
+    value - converting the naive boundary as if it were UTC shifts the label
+    by a day for users whose offset crosses midnight.
+    """
+    return f"date_trunc('{unit}', ({column} AT TIME ZONE 'UTC') AT TIME ZONE :tz)"
+
 
 def require_login(request: Request):
     return "user_id" in request.session
@@ -19,41 +31,10 @@ def require_login(request: Request):
 def get_user_date_format(request: Request, date_only: bool = False) -> str:
     """Get the user's preferred date format, falling back to global setting.
 
-    Runs at most two queries (global settings, then the user's overrides)
-    instead of four, because every report endpoint calls this once or twice.
+    Delegates to the shared display-prefs resolution (get_display_prefs) so the
+    whole API resolves date/time formats and timezone through one code path.
     """
-    date_format = "%d/%m/%Y"
-    time_format = "%H:%M"
-
-    # Global date/time format in a single query
-    try:
-        rows = query(
-            "SELECT key, value FROM settings WHERE key IN ('date_format', 'time_format')"
-        ).mappings().all()
-        for row in rows:
-            if row["key"] == "date_format" and row["value"]:
-                date_format = row["value"]
-            elif row["key"] == "time_format" and row["value"]:
-                time_format = row["value"]
-    except Exception:
-        pass
-
-    # Override with user's date/time format if set (single query)
-    user_id = request.session.get("user_id")
-    if user_id:
-        try:
-            user = query(
-                "SELECT date_format, time_format FROM users WHERE id = :id",
-                {"id": int(user_id)},
-            ).mappings().first()
-            if user:
-                if user["date_format"]:
-                    date_format = user["date_format"]
-                if user["time_format"]:
-                    time_format = user["time_format"]
-        except Exception:
-            pass
-
+    _, date_format, time_format = get_display_prefs(request.session.get("user_id"))
     if date_only:
         return date_format
     return f"{date_format} {time_format}"
@@ -107,18 +88,24 @@ def email_volume_report(request: Request, start_date: str = None, end_date: str 
             except (ValueError, TypeError):
                 user_id = None
         date_format = get_user_date_format(request, date_only=True)
+        user_tz = get_user_timezone(user_id) or "UTC"
 
-        # Calculate period based on date range
+        # Calculate period based on date range. Buckets are computed in the
+        # user's timezone so each bar covers one local day/week/month, and the
+        # label is the bucket start itself (no boundary conversion).
         days_diff = (end_dt - start_dt).days
         if days_diff <= 7:
             period = "daily"
-            group_by = "DATE(created_at)"
+            unit = "day"
         elif days_diff <= 90:
             period = "weekly"
-            group_by = "DATE_TRUNC('week', created_at)"
+            unit = "week"
         else:
             period = "monthly"
-            group_by = "DATE_TRUNC('month', created_at)"
+            unit = "month"
+        group_by = _local_bucket_expr("created_at", unit)
+        if period == "daily":
+            group_by += "::date"
 
         # Build query with optional account filter
         query_str = f"""
@@ -130,7 +117,7 @@ def email_volume_report(request: Request, start_date: str = None, end_date: str 
             FROM emails
             WHERE created_at >= :start_date AND created_at <= :end_date
         """
-        params = {"start_date": start_dt, "end_date": end_dt}
+        params = {"start_date": start_dt, "end_date": end_dt, "tz": user_tz}
         if account:
             query_str += " AND source = :account"
             params["account"] = account
@@ -146,14 +133,13 @@ def email_volume_report(request: Request, start_date: str = None, end_date: str 
 
         for row in results:
             if row["period_start"]:
-                local_dt = convert_utc_to_user_timezone(row["period_start"], user_id)
                 if period == "daily":
-                    labels.append(local_dt.strftime(date_format))
+                    labels.append(row["period_start"].strftime(date_format))
                 elif period == "weekly":
-                    week_end = local_dt + timedelta(days=6)
-                    labels.append(f"{local_dt.strftime(date_format)} - {week_end.strftime(date_format)}")
+                    week_end = row["period_start"] + timedelta(days=6)
+                    labels.append(f"{row['period_start'].strftime(date_format)} - {week_end.strftime(date_format)}")
                 elif period == "monthly":
-                    labels.append(local_dt.strftime("%B %Y"))
+                    labels.append(row["period_start"].strftime("%B %Y"))
 
             email_counts.append(int(row["email_count"] or 0))
             virus_counts.append(int(row["virus_count"] or 0))
@@ -220,7 +206,11 @@ def account_activity_report(request: Request, start_date: str = None, end_date: 
             ORDER BY fa.name
         """).mappings().all()
 
+        date_time_format = get_user_date_format(request)
+        user_tz = get_user_timezone(user_id)
+
         accounts = []
+
         for row in results:
             try:
                 last_success = None
@@ -235,7 +225,7 @@ def account_activity_report(request: Request, start_date: str = None, end_date: 
                         # Already a datetime object
                         dt = value
 
-                    last_success = convert_utc_to_user_timezone(dt, user_id).strftime(get_user_date_format(request))
+                    last_success = convert_utc_to_user_timezone(dt, user_id, tz=user_tz).strftime(date_time_format)
 
                 # Safely convert minutes_since_heartbeat to float; NULL means the
                 # account has never heartbeated (do NOT report it as 0 = online).
@@ -278,16 +268,17 @@ def account_activity_report(request: Request, start_date: str = None, end_date: 
                 continue
 
         # Get sync trends over time
-        trend_results = query("""
+        trend_bucket = _local_bucket_expr("created_at", "day") + "::date"
+        trend_results = query(f"""
             SELECT
-                DATE(created_at) as sync_date,
+                {trend_bucket} as sync_date,
                 source,
                 COUNT(*) as email_count
             FROM emails
             WHERE created_at >= :start_date AND created_at <= :end_date
-            GROUP BY DATE(created_at), source
+            GROUP BY {trend_bucket}, source
             ORDER BY sync_date, source
-        """, {"start_date": start_dt, "end_date": end_dt}).mappings().all()
+        """, {"start_date": start_dt, "end_date": end_dt, "tz": user_tz}).mappings().all()
 
         # Organise trend data
         sources = set()
@@ -316,7 +307,8 @@ def account_activity_report(request: Request, start_date: str = None, end_date: 
                     sync_date = None
 
             if sync_date:
-                date_str = convert_utc_to_user_timezone(sync_date, user_id).strftime(date_format)
+                # sync_date is already a user-local bucket start; label it directly.
+                date_str = sync_date.strftime(date_format)
             else:
                 date_str = str(sync_val)
 
@@ -421,24 +413,25 @@ def system_health_report(request: Request, start_date: str = None, end_date: str
             except (ValueError, TypeError):
                 db_size_bytes = 0
 
-        # Error trends
-        error_results = query("""
+        # Error trends (daily buckets in the user's timezone)
+        user_tz = get_user_timezone(user_id) or "UTC"
+        error_bucket = _local_bucket_expr("timestamp", "day") + "::date"
+        error_results = query(f"""
             SELECT
-                DATE(timestamp) as error_date,
+                {error_bucket} as error_date,
                 COUNT(*) as error_count
             FROM logs
             WHERE level = 'error' AND timestamp >= :start_date AND timestamp <= :end_date
-            GROUP BY DATE(timestamp)
+            GROUP BY {error_bucket}
             ORDER BY error_date
-        """, {"start_date": start_dt, "end_date": end_dt}).mappings().all()
+        """, {"start_date": start_dt, "end_date": end_dt, "tz": user_tz}).mappings().all()
 
         error_labels = []
         error_counts = []
 
         for row in error_results:
             if row["error_date"]:
-                local_dt = convert_utc_to_user_timezone(row["error_date"], user_id)
-                error_labels.append(local_dt.strftime(date_format))
+                error_labels.append(row["error_date"].strftime(date_format))
             
             # Safely convert error_count
             try:
@@ -534,11 +527,10 @@ def av_stats_report(request: Request, start_date: str = None, end_date: str = No
             except (ValueError, TypeError):
                 user_id = None
         date_format = get_user_date_format(request, date_only=True)
+        user_tz = get_user_timezone(user_id) or "UTC"
 
-        # Calculate period based on date range for grouping (SQLite compatible)
-        days_diff = (end_dt - start_dt).days
-        # For now, use daily grouping to avoid SQLite date function issues
-        group_by = "DATE(created_at)"
+        # Daily buckets in the user's timezone; the label is the bucket start.
+        group_by = _local_bucket_expr("created_at", "day") + "::date"
 
         # Get AV statistics
         query_str = f"""
@@ -549,7 +541,7 @@ def av_stats_report(request: Request, start_date: str = None, end_date: str = No
             FROM emails
             WHERE created_at >= :start_date AND created_at <= :end_date
         """
-        params = {"start_date": start_dt, "end_date": end_dt}
+        params = {"start_date": start_dt, "end_date": end_dt, "tz": user_tz}
         if account:
             query_str += " AND source = :account"
             params["account"] = account
@@ -562,17 +554,18 @@ def av_stats_report(request: Request, start_date: str = None, end_date: str = No
         # log entries instead of hard-coding zero. The worker logs these with the
         # ACCOUNT NAME as the log source, so no source filter is applied; the
         # account filter below matches the account name when one is requested.
-        rejected_query = """
-            SELECT DATE(timestamp) as rejected_date, COUNT(*) as c
+        rejected_bucket = _local_bucket_expr("timestamp", "day") + "::date"
+        rejected_query = f"""
+            SELECT {rejected_bucket} as rejected_date, COUNT(*) as c
             FROM logs
             WHERE message LIKE '%rejected due to virus%'
               AND timestamp >= :start_date AND timestamp <= :end_date
         """
-        rejected_params = {"start_date": start_dt, "end_date": end_dt}
+        rejected_params = {"start_date": start_dt, "end_date": end_dt, "tz": user_tz}
         if account:
             rejected_query += " AND source = :account"
             rejected_params["account"] = account
-        rejected_query += " GROUP BY DATE(timestamp)"
+        rejected_query += f" GROUP BY {rejected_bucket}"
 
         rejected_rows = query(rejected_query, rejected_params).mappings().all()
         rejected_by_date = {}
@@ -604,23 +597,9 @@ def av_stats_report(request: Request, start_date: str = None, end_date: str = No
         for row in av_results:
             day_key = ""
             if row["period_start"]:
-                # Convert string date back to datetime for timezone conversion
+                # Bucket start is already user-local; label it directly.
                 day_key = str(row["period_start"])[:10]
-                try:
-                    period_dt = datetime.strptime(day_key, "%Y-%m-%d").date()
-                    # Handle timezone conversion for authenticated user
-                    if user_id:
-                        local_dt = convert_utc_to_user_timezone(period_dt, user_id)
-                    else:
-                        # Use default timezone for testing
-                        from ..utils.timezone import convert_utc_to_timezone
-                        local_dt = convert_utc_to_timezone(period_dt, "Australia/Melbourne")
-
-                    # Format the date according to user preferences
-                    labels.append(local_dt.strftime(date_format))
-                except (ValueError, TypeError):
-                    # Fallback to string representation if conversion fails
-                    labels.append(day_key)
+                labels.append(row["period_start"].strftime(date_format))
             clean_counts.append(int(row["clean_count"] or 0))
             quarantined_counts.append(int(row["quarantined_count"] or 0))
             rejected_counts.append(rejected_by_date.get(day_key, 0))
@@ -670,18 +649,22 @@ def storage_utilization_report(request: Request, start_date: str = None, end_dat
             except (ValueError, TypeError):
                 user_id = None
         date_format = get_user_date_format(request, date_only=True)
+        user_tz = get_user_timezone(user_id) or "UTC"
 
-        # Calculate period based on date range
+        # Buckets in the user's timezone; the label is the bucket start.
         days_diff = (end_dt - start_dt).days
         if days_diff <= 7:
             period = "daily"
-            group_by = "DATE(created_at)"
+            unit = "day"
         elif days_diff <= 90:
             period = "weekly"
-            group_by = "DATE_TRUNC('week', created_at)"
+            unit = "week"
         else:
             period = "monthly"
-            group_by = "DATE_TRUNC('month', created_at)"
+            unit = "month"
+        group_by = _local_bucket_expr("created_at", unit)
+        if period == "daily":
+            group_by += "::date"
 
         # Storage growth over time
         storage_query = f"""
@@ -693,7 +676,7 @@ def storage_utilization_report(request: Request, start_date: str = None, end_dat
             FROM emails
             WHERE created_at >= :start_date AND created_at <= :end_date
         """
-        params = {"start_date": start_dt, "end_date": end_dt}
+        params = {"start_date": start_dt, "end_date": end_dt, "tz": user_tz}
         if account:
             storage_query += " AND source = :account"
             params["account"] = account
@@ -708,14 +691,13 @@ def storage_utilization_report(request: Request, start_date: str = None, end_dat
 
         for row in storage_results:
             if row["period_start"]:
-                local_dt = convert_utc_to_user_timezone(row["period_start"], user_id)
                 if period == "daily":
-                    storage_labels.append(local_dt.strftime(date_format))
+                    storage_labels.append(row["period_start"].strftime(date_format))
                 elif period == "weekly":
-                    week_end = local_dt + timedelta(days=6)
-                    storage_labels.append(f"{local_dt.strftime(date_format)} - {week_end.strftime(date_format)}")
+                    week_end = row["period_start"] + timedelta(days=6)
+                    storage_labels.append(f"{row['period_start'].strftime(date_format)} - {week_end.strftime(date_format)}")
                 elif period == "monthly":
-                    storage_labels.append(local_dt.strftime("%B %Y"))
+                    storage_labels.append(row["period_start"].strftime("%B %Y"))
 
             total_bytes = int(row["total_size_bytes"] or 0)
             count = int(row["email_count"] or 0)
@@ -778,12 +760,15 @@ def storage_utilization_report(request: Request, start_date: str = None, end_dat
             addresses = [addr for _name, addr in parsed if addr]
             return ", ".join(addresses) if addresses else value
 
+        date_time_format = get_user_date_format(request)
+        user_tz = get_user_timezone(user_id)
+
         formatted_largest = []
         for email in largest_emails:
             size_mb = round(int(email["size_bytes"] or 0) / (1024 * 1024), 2)
             created_at = None
             if email["created_at"]:
-                created_at = convert_utc_to_user_timezone(email["created_at"], user_id).strftime(get_user_date_format(request))
+                created_at = convert_utc_to_user_timezone(email["created_at"], user_id, tz=user_tz).strftime(date_time_format)
 
             formatted_largest.append({
                 "id": email["id"],
@@ -842,20 +827,24 @@ def retention_policy_report(request: Request, start_date: str = None, end_date: 
             except (ValueError, TypeError):
                 user_id = None
         date_format = get_user_date_format(request, date_only=True)
+        user_tz = get_user_timezone(user_id) or "UTC"
 
-        # Deletion statistics (retention policy is global, not per-account)
-        deletion_query = """
+        # Deletion statistics (retention policy is global, not per-account).
+        # deletion_date is a stored date; bucket it in the user's timezone so
+        # labels stay aligned with the other daily charts.
+        deletion_bucket = _local_bucket_expr("deletion_date", "day") + "::date"
+        deletion_query = f"""
             SELECT
-                deletion_date,
+                {deletion_bucket} as deletion_date,
                 deletion_type,
                 SUM(count) as total_deleted,
                 SUM(CASE WHEN deleted_from_mail_server THEN count ELSE 0 END) as deleted_from_server
             FROM deletion_stats
             WHERE deletion_date >= :start_date AND deletion_date <= :end_date
         """
-        deletion_params = {"start_date": start_dt.date(), "end_date": end_dt.date()}
+        deletion_params = {"start_date": start_dt.date(), "end_date": end_dt.date(), "tz": user_tz}
         # Note: Account filtering removed since retention policy is global
-        deletion_query += " GROUP BY deletion_date, deletion_type ORDER BY deletion_date"
+        deletion_query += f" GROUP BY {deletion_bucket}, deletion_type ORDER BY deletion_date"
 
         deletion_results = query(deletion_query, deletion_params).mappings().all()
 
@@ -870,8 +859,7 @@ def retention_policy_report(request: Request, start_date: str = None, end_date: 
         for row in deletion_results:
             date_str = ""
             if row["deletion_date"]:
-                local_dt = convert_utc_to_user_timezone(row["deletion_date"], user_id)
-                date_str = local_dt.strftime(date_format)
+                date_str = row["deletion_date"].strftime(date_format)
 
             if date_str and date_str not in deletion_labels:
                 deletion_labels.append(date_str)
@@ -993,19 +981,21 @@ def system_performance_report(request: Request, start_date: str = None, end_date
                 user_id = None
         date_format = get_user_date_format(request, date_only=True)
 
-        # Worker performance metrics
-        worker_results = query("""
+        # Worker performance metrics (daily buckets in the user's timezone)
+        user_tz = get_user_timezone(user_id) or "UTC"
+        heartbeat_bucket = _local_bucket_expr("last_heartbeat", "day") + "::date"
+        worker_results = query(f"""
             SELECT
-                DATE(last_heartbeat) as heartbeat_date,
+                {heartbeat_bucket} as heartbeat_date,
                 COUNT(*) as total_workers,
                 COUNT(CASE WHEN last_heartbeat >= NOW() - INTERVAL '5 minutes' THEN 1 END) as active_workers,
                 AVG(EXTRACT(EPOCH FROM (NOW() - last_heartbeat)) / 60) as avg_minutes_since_heartbeat
             FROM fetch_accounts
             WHERE enabled = TRUE
             AND last_heartbeat >= :start_date AND last_heartbeat <= :end_date
-            GROUP BY DATE(last_heartbeat)
+            GROUP BY {heartbeat_bucket}
             ORDER BY heartbeat_date
-        """, {"start_date": start_dt, "end_date": end_dt}).mappings().all()
+        """, {"start_date": start_dt, "end_date": end_dt, "tz": user_tz}).mappings().all()
 
         worker_labels = []
         active_workers = []
@@ -1014,56 +1004,55 @@ def system_performance_report(request: Request, start_date: str = None, end_date
 
         for row in worker_results:
             if row["heartbeat_date"]:
-                local_dt = convert_utc_to_user_timezone(row["heartbeat_date"], user_id)
-                worker_labels.append(local_dt.strftime(date_format))
+                worker_labels.append(row["heartbeat_date"].strftime(date_format))
 
             active_workers.append(int(row["active_workers"] or 0))
             total_workers.append(int(row["total_workers"] or 0))
             avg_response_times.append(round(float(row["avg_minutes_since_heartbeat"] or 0), 2))
 
         # Processing performance (emails processed per hour)
-        processing_results = query("""
+        processing_bucket = _local_bucket_expr("created_at", "day") + "::date"
+        processing_results = query(f"""
             SELECT
-                DATE(created_at) as processing_date,
+                {processing_bucket} as processing_date,
                 COUNT(*) as emails_processed,
                 EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))) / 3600 as processing_hours
             FROM emails
             WHERE created_at >= :start_date AND created_at <= :end_date
-            GROUP BY DATE(created_at)
+            GROUP BY {processing_bucket}
             ORDER BY processing_date
-        """, {"start_date": start_dt, "end_date": end_dt}).mappings().all()
+        """, {"start_date": start_dt, "end_date": end_dt, "tz": user_tz}).mappings().all()
 
         processing_labels = []
         emails_per_hour = []
 
         for row in processing_results:
             if row["processing_date"]:
-                local_dt = convert_utc_to_user_timezone(row["processing_date"], user_id)
-                processing_labels.append(local_dt.strftime(date_format))
+                processing_labels.append(row["processing_date"].strftime(date_format))
 
             emails_count = int(row["emails_processed"] or 0)
             hours = float(row["processing_hours"] or 1)  # Avoid division by zero
             emails_per_hour.append(round(emails_count / max(hours, 0.01), 2))
 
-        # Error rates
-        error_results = query("""
+        # Error rates (daily buckets in the user's timezone)
+        error_bucket = _local_bucket_expr("timestamp", "day") + "::date"
+        error_results = query(f"""
             SELECT
-                DATE(timestamp) as error_date,
+                {error_bucket} as error_date,
                 COUNT(*) as total_errors
             FROM logs
             WHERE level = 'error'
             AND timestamp >= :start_date AND timestamp <= :end_date
-            GROUP BY DATE(timestamp)
+            GROUP BY {error_bucket}
             ORDER BY error_date
-        """, {"start_date": start_dt, "end_date": end_dt}).mappings().all()
+        """, {"start_date": start_dt, "end_date": end_dt, "tz": user_tz}).mappings().all()
 
         error_labels = []
         error_counts = []
 
         for row in error_results:
             if row["error_date"]:
-                local_dt = convert_utc_to_user_timezone(row["error_date"], user_id)
-                error_labels.append(local_dt.strftime(date_format))
+                error_labels.append(row["error_date"].strftime(date_format))
 
             error_counts.append(int(row["total_errors"] or 0))
 
@@ -1131,19 +1120,21 @@ def security_access_report(request: Request, start_date: str = None, end_date: s
         date_format = get_user_date_format(request, date_only=True)
         datetime_format = get_user_date_format(request)
 
-        # Authentication events
-        auth_results = query("""
+        # Authentication events (daily buckets in the user's timezone)
+        user_tz = get_user_timezone(user_id) or "UTC"
+        auth_bucket = _local_bucket_expr("timestamp", "day") + "::date"
+        auth_results = query(f"""
             SELECT
-                DATE(timestamp) as event_date,
+                {auth_bucket} as event_date,
                 COUNT(CASE WHEN message LIKE '%login successful%' THEN 1 END) as successful_logins,
                 COUNT(CASE WHEN message LIKE '%login failed%' THEN 1 END) as failed_logins,
                 COUNT(CASE WHEN message LIKE '%password changed%' THEN 1 END) as password_changes
             FROM logs
             WHERE source = 'Auth'
               AND timestamp >= :start_date AND timestamp <= :end_date
-            GROUP BY DATE(timestamp)
+            GROUP BY {auth_bucket}
             ORDER BY event_date
-        """, {"start_date": start_dt, "end_date": end_dt}).mappings().all()
+        """, {"start_date": start_dt, "end_date": end_dt, "tz": user_tz}).mappings().all()
 
         auth_labels = []
         successful_logins = []
@@ -1152,8 +1143,7 @@ def security_access_report(request: Request, start_date: str = None, end_date: s
 
         for row in auth_results:
             if row["event_date"]:
-                local_dt = convert_utc_to_user_timezone(row["event_date"], user_id)
-                auth_labels.append(local_dt.strftime(date_format))
+                auth_labels.append(row["event_date"].strftime(date_format))
 
             successful_logins.append(int(row["successful_logins"] or 0))
             failed_logins.append(int(row["failed_logins"] or 0))
@@ -1177,7 +1167,7 @@ def security_access_report(request: Request, start_date: str = None, end_date: s
         for event in recent_events:
             event_time = None
             if event["timestamp"]:
-                event_time = convert_utc_to_user_timezone(event["timestamp"], user_id).strftime(datetime_format)
+                event_time = convert_utc_to_user_timezone(event["timestamp"], user_id, tz=user_tz).strftime(datetime_format)
 
             formatted_events.append({
                 "timestamp": event_time,
@@ -1205,7 +1195,7 @@ def security_access_report(request: Request, start_date: str = None, end_date: s
         for user in user_activity:
             last_login = None
             if user["last_login"]:
-                last_login = convert_utc_to_user_timezone(user["last_login"], user_id).strftime(datetime_format)
+                last_login = convert_utc_to_user_timezone(user["last_login"], user_id, tz=user_tz).strftime(datetime_format)
 
             formatted_users.append({
                 "username": user["username"],

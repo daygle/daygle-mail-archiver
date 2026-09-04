@@ -1,14 +1,15 @@
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from typing import List
+from datetime import datetime, timezone, timedelta
 from pydantic import BaseModel
 from sqlalchemy import text
 
 from ..utils.db import query, engine, transaction
 from ..utils.logger import log
 from ..utils.templates import templates
-from ..utils.timezone import convert_utc_to_user_timezone, get_user_timezone
 from ..utils.permissions import PermissionChecker, require_permission, PERMISSIONS
+from ..utils.i18n import request_gettext
 
 router = APIRouter()
 
@@ -170,6 +171,7 @@ def get_dashboard_preferences(request: Request):
 @router.post("/api/dashboard/preferences")
 async def save_dashboard_preferences(request: Request, widgets: str = Form(...)):
     """Save user's dashboard widget preferences"""
+    _ = request_gettext(request)
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
@@ -210,12 +212,12 @@ async def save_dashboard_preferences(request: Request, widgets: str = Form(...))
 
         username = getattr(request, "session", {}).get("username", "unknown")
         log("info", "Dashboard", f"User '{username}' saved dashboard preferences", "")
-        flash(request, "Dashboard layout saved successfully!", 'success')
+        flash(request, _("Dashboard layout saved successfully!"), 'success')
         return RedirectResponse("/dashboard", status_code=303)
     except Exception as e:
         username = getattr(request, "session", {}).get("username", "unknown")
         log("error", "Dashboard", f"Failed to save dashboard preferences for user '{username}': {str(e)}", "")
-        flash(request, "Failed to save dashboard layout", 'error')
+        flash(request, _("Failed to save dashboard layout"), 'error')
         return RedirectResponse("/dashboard", status_code=303)
 
 
@@ -344,9 +346,28 @@ def clamav_stats(request: Request):
         return JSONResponse({"error": "Failed to load data"}, status_code=500)
 
 
+def _daily_email_series(days: int) -> list:
+    """Per-day email counts (oldest to newest) for the last `days` calendar
+    days, zero-filled so the sparkline always has one point per day."""
+    rows = query(
+        """
+        SELECT date_trunc('day', created_at)::date AS day, COUNT(*) AS c
+        FROM emails
+        WHERE created_at >= NOW() - make_interval(days => :days)
+        GROUP BY date_trunc('day', created_at)::date
+        ORDER BY day
+        """,
+        {"days": days},
+    ).mappings().all()
+
+    counts = {row["day"]: row["c"] for row in rows}
+    today = datetime.now(timezone.utc).date()
+    return [counts.get(today - timedelta(days=i), 0) for i in range(days - 1, -1, -1)]
+
+
 @router.get("/api/dashboard/emails-last-7d")
 def get_emails_last_7d(request: Request):
-    """Get count of emails from the last 7 days"""
+    """Get count of emails from the last 7 days plus the daily series"""
     if not require_login(request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
@@ -358,7 +379,7 @@ def get_emails_last_7d(request: Request):
         """).mappings().first()
 
         count = result["count"] if result else 0
-        return {"count": count}
+        return {"count": count, "series": _daily_email_series(7)}
     except Exception as e:
         username = getattr(request, "session", {}).get("username", "unknown")
         log("error", "Dashboard", f"Failed to fetch emails last 7d for user '{username}': {str(e)}", "")
@@ -367,7 +388,7 @@ def get_emails_last_7d(request: Request):
 
 @router.get("/api/dashboard/emails-last-30d")
 def get_emails_last_30d(request: Request):
-    """Get count of emails from the last 30 days"""
+    """Get count of emails from the last 30 days plus the daily series"""
     if not require_login(request):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
@@ -379,7 +400,7 @@ def get_emails_last_30d(request: Request):
         """).mappings().first()
 
         count = result["count"] if result else 0
-        return {"count": count}
+        return {"count": count, "series": _daily_email_series(30)}
     except Exception as e:
         username = getattr(request, "session", {}).get("username", "unknown")
         log("error", "Dashboard", f"Failed to fetch emails last 30d for user '{username}': {str(e)}", "")

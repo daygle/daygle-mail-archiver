@@ -1,0 +1,35 @@
+/* Email / Quarantine detail views (mirrors roles.css tokens) */
+.emv-page, .qnv-page { display: flex; flex-direction: column; gap: 20px; }
+.emv-hero, .qnv-hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding: 28px 32px; border: 1px solid var(--border-color); border-radius: var(--radius-xl); background: linear-gradient(135deg, var(--bg-primary), var(--accent-light)); box-shadow: var(--shadow-sm); }
+.emv-hero-copy, .qnv-hero-copy { max-width: 720px; min-width: 0; }
+.emv-eyebrow, .qnv-eyebrow { color: var(--accent-primary); font-size: .75rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 8px; }
+.emv-eyebrow i, .qnv-eyebrow i { margin-right: 6px; }
+.emv-hero h2, .qnv-hero h2 { margin: 0 0 6px; color: var(--text-primary); font-size: clamp(1.6rem, 3vw, 2.15rem); letter-spacing: -.03em; }
+.emv-subject, .qnv-subject { overflow: hidden; margin: 0; color: var(--text-primary); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.emv-subject i, .qnv-subject i { margin-right: 8px; color: var(--accent-primary); font-size: .8em; }
+.emv-hero-actions, .qnv-hero-actions { display: flex; flex: 0 0 auto; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+.emv-layout, .qnv-layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(280px, 1fr); gap: 20px; align-items: start; }
+.emv-panel, .qnv-panel { min-width: 0; border: 1px solid var(--border-color); border-radius: var(--radius-lg); background: var(--bg-primary); box-shadow: var(--shadow-sm); overflow: hidden; }
+.emv-panel-header, .qnv-panel-header { display: flex; align-items: center; gap: 10px; padding: 14px 20px; border-bottom: 1px solid var(--border-light); color: var(--text-primary); font-weight: 600; background: var(--bg-secondary); }
+.emv-panel-header i, .qnv-panel-header i { color: var(--accent-primary); }
+.qnv-panel-header i { color: #8b5cf6; }
+.emv-panel-body, .qnv-panel-body { padding: 20px; }
+.emv-body, .qnv-body { display: flex; min-height: 420px; padding: 0; }
+.emv-iframe, .qnv-iframe { width: 100%; min-height: 560px; border: 0; background: var(--bg-primary); }
+.emv-pre, .qnv-pre { margin: 0; padding: 20px; border-radius: var(--radius-md); color: var(--text-primary); background: var(--bg-secondary); font-size: .85rem; white-space: pre-wrap; word-wrap: break-word; }
+.emv-pre-raw, .qnv-pre-raw { max-height: 400px; overflow: auto; }
+.emv-empty-note, .qnv-empty-note { margin: 0; }
+.emv-section, .qnv-section { padding-bottom: 16px; margin-bottom: 16px; border-bottom: 1px solid var(--border-light); }
+.emv-section:last-child, .qnv-section:last-child { padding-bottom: 0; margin-bottom: 0; border-bottom: 0; }
+.emv-section-title, .qnv-section-title { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; color: var(--text-secondary); font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+.emv-section-title i, .qnv-section-title i { color: var(--accent-primary); }
+.qnv-section-title i { color: #8b5cf6; }
+.emv-attachment { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; margin-bottom: 8px; border: 1px solid var(--border-light); border-radius: var(--radius-md); background: var(--bg-secondary); }
+.emv-attachment:last-child { margin-bottom: 0; }
+.emv-attachment-main { display: flex; align-items: flex-start; gap: 10px; min-width: 0; }
+.emv-attachment-icon { margin-top: 3px; color: var(--text-tertiary); }
+.emv-attachment-meta { display: flex; flex-direction: column; min-width: 0; }
+.emv-attachment-meta > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.emv-delete-options, .qnv-delete-options { display: flex; flex-direction: column; gap: 10px; }
+@media (max-width: 900px) { .emv-hero, .qnv-hero { align-items: stretch; flex-direction: column; } .emv-hero-actions, .qnv-hero-actions { justify-content: flex-start; } .emv-layout, .qnv-layout { grid-template-columns: 1fr; } .emv-iframe, .qnv-iframe { min-height: 420px; } }
+@media (max-width: 500px) { .emv-hero, .qnv-hero { padding: 22px 20px; } .emv-hero-actions, .qnv-hero-actions { align-items: stretch; flex-direction: column; } .emv-hero-actions .btn, .qnv-hero-actions .btn { width: 100%; } }

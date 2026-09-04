@@ -5,6 +5,7 @@ from imaplib import IMAP4, IMAP4_SSL
 from typing import List
 from sqlalchemy import text
 from ..utils.templates import templates
+from ..utils.table_prefs import get_hidden_columns
 from ..utils.db import query, execute, transaction
 from ..utils.logger import log
 from ..utils.config import get_config
@@ -12,7 +13,13 @@ from ..utils.crypto import decrypt_password
 from cryptography.fernet import Fernet
 from ..utils.alerts import create_alert
 from ..utils.email_parser import compute_signature, decompress
-from ..utils.timezone import format_datetime, format_email_date, user_date_to_utc_range_start, user_date_to_utc_range_end
+from ..utils.timezone import (
+    format_datetime,
+    format_email_date,
+    get_display_prefs,
+    user_date_to_utc_range_start,
+    user_date_to_utc_range_end,
+)
 from ..utils.permissions import PermissionChecker, require_permission, PERMISSIONS
 from .emails import _quote_imap_folder
 
@@ -422,11 +429,15 @@ def list_quarantine(
 
     # Get user_id for timezone formatting
     user_id = request.session.get('user_id')
+    hidden_cols = get_hidden_columns(user_id, 'quarantine')
     if user_id is not None:
         try:
             user_id = int(user_id)
         except (ValueError, TypeError):
             user_id = None
+
+    # Resolve display preferences once so per-row formatting below is query-free.
+    _tz, _date_format, _time_format = get_display_prefs(user_id)
 
     # Pagination: determine page_size from user or global settings
     page_size = 50
@@ -623,12 +634,20 @@ def list_quarantine(
 
         # Format quarantined_at
         if ir["quarantined_at"] and hasattr(ir["quarantined_at"], 'strftime'):
-            ir["quarantined_at_formatted"] = format_datetime(ir["quarantined_at"], user_id)
+            ir["quarantined_at_formatted"] = format_datetime(
+                ir["quarantined_at"], user_id,
+                date_format=_date_format, time_format=_time_format, tz=_tz,
+            )
         else:
-            ir["quarantined_at_formatted"] = ir["quarantined_at"]
+            # Never hand the raw UTC value to the template; it renders only the
+            # formatted field (or an explicit 'N/A' fallback).
+            ir["quarantined_at_formatted"] = None
         
         # Format date field
-        ir["date_formatted"] = format_email_date(ir.get("date"), ir.get("quarantined_at"), user_id)
+        ir["date_formatted"] = format_email_date(
+            ir.get("date"), ir.get("quarantined_at"), user_id,
+            date_format=_date_format, time_format=_time_format, tz=_tz,
+        )
 
         processed.append(ir)
 
@@ -656,6 +675,7 @@ def list_quarantine(
             'sort_by': sort_by or '',
             'sort_order': sort_order or '',
             'stats': stats,
+            'hidden_cols': hidden_cols,
             'flash': msg
         }
     )
@@ -689,11 +709,19 @@ def view_quarantine(request: Request, qid: int):
     except Exception:
         user_id = None
 
+    # Resolve display preferences once so formatting below is query-free.
+    _tz, _date_format, _time_format = get_display_prefs(user_id)
+
     item = dict(item)
     if item["quarantined_at"] and hasattr(item["quarantined_at"], 'strftime'):
-        item["quarantined_at_formatted"] = format_datetime(item["quarantined_at"], user_id)
+        item["quarantined_at_formatted"] = format_datetime(
+            item["quarantined_at"], user_id,
+            date_format=_date_format, time_format=_time_format, tz=_tz,
+        )
     else:
-        item["quarantined_at_formatted"] = item["quarantined_at"]
+        # Never hand the raw UTC value to the template; it renders only the
+        # formatted field (or an explicit 'N/A' fallback).
+        item["quarantined_at_formatted"] = None
 
     # Process raw email for preview, headers, body, integrity
     raw = item.get('raw_email')

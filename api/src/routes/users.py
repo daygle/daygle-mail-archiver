@@ -8,8 +8,9 @@ from typing import List
 from ..utils.db import query, execute, transaction
 from ..utils.logger import log
 from ..utils.templates import templates
-from ..utils.timezone import format_datetime
+from ..utils.timezone import format_datetime, get_display_prefs
 from ..utils.permissions import require_permission, PERMISSIONS, check_privileged_role_assignment
+from ..utils.i18n import request_gettext
 
 router = APIRouter()
 
@@ -50,6 +51,24 @@ def list_users(
         ORDER BY u.id
     """, {"minutes": auto_logout_minutes}).mappings().all()
 
+    # Resolve display preferences once so the template never queries the DB
+    # per row, then pre-format the timestamps.
+    current_user_id = request.session.get("user_id")
+    tz, date_format, time_format = get_display_prefs(current_user_id)
+
+    display_users = []
+    for u in users:
+        row = dict(u)
+        row["created_at_formatted"] = (
+            format_datetime(u["created_at"], current_user_id, tz=tz, date_format=date_format, time_format=time_format)
+            if u["created_at"] else None
+        )
+        row["last_login_formatted"] = (
+            format_datetime(u["last_login"], current_user_id, tz=tz, date_format=date_format, time_format=time_format)
+            if u["last_login"] else None
+        )
+        display_users.append(row)
+
     roles = query("""
         SELECT id, name, display_name, description
         FROM roles
@@ -60,7 +79,7 @@ def list_users(
 
     return templates.TemplateResponse(
         "users.html",
-        {"request": request, "users": users, "roles": roles, "flash": msg},
+        {"request": request, "users": display_users, "roles": roles, "flash": msg},
     )
 
 
@@ -80,6 +99,7 @@ def create_user(
     email_notifications: bool = Form(True),
     enabled: bool = Form(True)
 ):
+    _ = request_gettext(request)
     admin_username = request.session.get("username", "unknown")
 
     # Normalize input
@@ -90,12 +110,12 @@ def create_user(
 
     # Username validation
     if len(username) < 3:
-        flash(request, "Username must be at least 3 characters long.", "error")
+        flash(request, _("Username must be at least 3 characters long."), "error")
         return RedirectResponse("/users", status_code=303)
 
     # Unique username
     if query("SELECT id FROM users WHERE username = :u", {"u": username}).first():
-        flash(request, f"Username '{username}' already exists.", "error")
+        flash(request, _("Username '{0}' already exists.").format(username), "error")
         return RedirectResponse("/users", status_code=303)
 
     # Password validation
@@ -105,24 +125,24 @@ def create_user(
         or not re.search(r"[A-Z]", password)
         or not re.search(r"[0-9]", password)
     ):
-        flash(request, "Password must include upper, lower, number and be 8+ chars.", "error")
+        flash(request, _("Password must include upper, lower, number and be 8+ chars."), "error")
         return RedirectResponse("/users", status_code=303)
 
     # Email validation
     if email and not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email):
-        flash(request, "Invalid email format.", "error")
+        flash(request, _("Invalid email format."), "error")
         return RedirectResponse("/users", status_code=303)
 
     # Must have at least one role
     if not role_ids:
-        flash(request, "At least one role must be assigned.", "error")
+        flash(request, _("At least one role must be assigned."), "error")
         return RedirectResponse("/users", status_code=303)
 
     # Normalize + dedupe role ids before touching the DB
     try:
         role_ids = sorted({int(r) for r in role_ids})
     except (TypeError, ValueError):
-        flash(request, "Invalid role selection.", "error")
+        flash(request, _("Invalid role selection."), "error")
         return RedirectResponse("/users", status_code=303)
 
     # A user manager cannot assign roles that carry privileged permissions they
@@ -168,11 +188,11 @@ def create_user(
                 """), {"user_id": user_id, "role_id": role_id, "assigned_by": assigned_by})
 
         log("info", "Users", f"Admin '{admin_username}' created user '{username}' with roles {role_ids}")
-        flash(request, f"User '{username}' created successfully", "success")
+        flash(request, _("User '{0}' created successfully").format(username), "success")
 
     except Exception as e:
         log("error", "Users", f"Failed to create user '{username}': {str(e)}")
-        flash(request, "User creation failed. Please try again.", "error")
+        flash(request, _("User creation failed. Please try again."), "error")
 
     return RedirectResponse("/users", status_code=303)
 
@@ -200,8 +220,10 @@ def get_user(
         if not user:
             return JSONResponse({"error": "User not found"}, status_code=404)
 
-        # Current user's ID for timezone conversion
+        # Current user's ID for timezone conversion; resolve display prefs once
+        # so the three format calls below don't each hit the database.
         current_user_id = int(request.session.get("user_id"))
+        tz, date_format, time_format = get_display_prefs(current_user_id)
 
         # Get assigned role IDs
         role_rows = query("""
@@ -229,12 +251,12 @@ def get_user(
             "role_ids": role_ids,
             "email_notifications": user["email_notifications"],
             "enabled": user["enabled"],
-            "last_login": format_datetime(user["last_login"], current_user_id)
+            "last_login": format_datetime(user["last_login"], current_user_id, tz=tz, date_format=date_format, time_format=time_format)
                 if user["last_login"] else None,
             "last_login_ip": user["last_login_ip"] or None,
-            "created_at": format_datetime(user["created_at"], current_user_id)
+            "created_at": format_datetime(user["created_at"], current_user_id, tz=tz, date_format=date_format, time_format=time_format)
                 if user["created_at"] else None,
-            "last_seen": format_datetime(user["last_seen"], current_user_id)
+            "last_seen": format_datetime(user["last_seen"], current_user_id, tz=tz, date_format=date_format, time_format=time_format)
                 if user["last_seen"] else None,
             "online_status": online_status
         }
@@ -262,6 +284,7 @@ def update_user(
     enabled: bool = Form(False),
     password: str = Form("")
 ):
+    _ = request_gettext(request)
     admin_username = request.session.get("username", "unknown")
     current_user_id = int(request.session.get("user_id"))
 
@@ -273,7 +296,7 @@ def update_user(
 
     # Validate username
     if len(username) < 3:
-        flash(request, "Username must be at least 3 characters long.", "error")
+        flash(request, _("Username must be at least 3 characters long."), "error")
         return RedirectResponse("/users", status_code=303)
 
     # Unique username check
@@ -283,24 +306,24 @@ def update_user(
     """, {"u": username, "id": user_id}).mappings().first()
 
     if existing:
-        flash(request, f"Username '{username}' already exists.", "error")
+        flash(request, _("Username '{0}' already exists.").format(username), "error")
         return RedirectResponse("/users", status_code=303)
 
     # Email validation
     if email and not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email):
-        flash(request, "Invalid email format.", "error")
+        flash(request, _("Invalid email format."), "error")
         return RedirectResponse("/users", status_code=303)
 
     # Must have at least one role
     if not role_ids:
-        flash(request, "At least one role must be assigned.", "error")
+        flash(request, _("At least one role must be assigned."), "error")
         return RedirectResponse("/users", status_code=303)
 
     # Normalize + dedupe role ids before touching the DB
     try:
         new_role_ids = sorted({int(r) for r in role_ids})
     except (TypeError, ValueError):
-        flash(request, "Invalid role selection.", "error")
+        flash(request, _("Invalid role selection."), "error")
         return RedirectResponse("/users", status_code=303)
 
     try:
@@ -318,7 +341,7 @@ def update_user(
 
         current_role_ids = {int(r["role_id"]) for r in current_role_rows}
 
-        # Prevent self‑lockout: user cannot remove their own admin-level access
+        # Prevent self-lockout: user cannot remove their own admin-level access
         if user_id == current_user_id:
             # Check if the new role set still includes a role with manage_users permission
             admin_roles = query("""
@@ -331,7 +354,7 @@ def update_user(
             admin_role_ids = {int(r["role_id"]) for r in admin_roles}
 
             if not (set(new_role_ids) & admin_role_ids):
-                flash(request, "You cannot remove your own administrative access.", "error")
+                flash(request, _("You cannot remove your own administrative access."), "error")
                 return RedirectResponse("/users", status_code=303)
 
         # Detect no-op
@@ -346,7 +369,7 @@ def update_user(
             and bool(current["enabled"]) == (True if user_id == current_user_id else bool(enabled))
             and current_role_ids == set(new_role_ids)
         ):
-            flash(request, "No changes detected.", "info")
+            flash(request, _("No changes detected."), "info")
             return RedirectResponse("/users", status_code=303)
 
         # Only guard the assignment when the role set actually changes, so a user
@@ -365,7 +388,7 @@ def update_user(
             or not re.search(r"[A-Z]", password)
             or not re.search(r"[0-9]", password)
         ):
-            flash(request, "Password must include upper, lower, number and be 8+ chars.", "error")
+            flash(request, _("Password must include upper, lower, number and be 8+ chars."), "error")
             return RedirectResponse("/users", status_code=303)
 
         assigned_by = request.session.get("user_id")
@@ -430,12 +453,12 @@ def update_user(
                     VALUES (:user_id, :role_id, :assigned_by)
                 """), {"user_id": user_id, "role_id": rid, "assigned_by": assigned_by})
 
-        flash(request, "User updated successfully.", "success")
+        flash(request, _("User updated successfully."), "success")
 
     except Exception as e:
         log("error", "Users",
             f"Failed to update user {user_id} by admin '{admin_username}': {str(e)}")
-        flash(request, "User update failed. Please try again.", "error")
+        flash(request, _("User update failed. Please try again."), "error")
 
     return RedirectResponse("/users", status_code=303)
 
@@ -449,11 +472,12 @@ def delete_user(
     user_id: int,
     _=require_permission(PERMISSIONS["manage_users"])
 ):
+    _ = request_gettext(request)
     current_user_id = int(request.session.get("user_id"))
     admin_username = request.session.get("username", "unknown")
 
     if user_id == current_user_id:
-        flash(request, "You cannot delete your own account.", "error")
+        flash(request, _("You cannot delete your own account."), "error")
         return RedirectResponse("/users", status_code=303)
 
     try:
@@ -468,12 +492,12 @@ def delete_user(
         log("info", "Users",
             f"Admin '{admin_username}' deleted user '{username}' (ID: {user_id})")
 
-        flash(request, "User deleted successfully.", "success")
+        flash(request, _("User deleted successfully."), "success")
 
     except Exception as e:
         log("error", "Users",
             f"Failed to delete user {user_id} by admin '{admin_username}': {str(e)}")
-        flash(request, "User deletion failed. Please try again.", "error")
+        flash(request, _("User deletion failed. Please try again."), "error")
 
     return RedirectResponse("/users", status_code=303)
 
@@ -487,11 +511,12 @@ def toggle_user_enabled(
     user_id: int,
     _=require_permission(PERMISSIONS["manage_users"])
 ):
+    _ = request_gettext(request)
     current_user_id = int(request.session.get("user_id"))
     admin_username = request.session.get("username", "unknown")
 
     if user_id == current_user_id:
-        flash(request, "You cannot disable your own account.", "error")
+        flash(request, _("You cannot disable your own account."), "error")
         return RedirectResponse("/users", status_code=303)
 
     try:
@@ -502,7 +527,7 @@ def toggle_user_enabled(
         """, {"id": user_id}).mappings().first()
 
         if not user:
-            flash(request, "User not found.", "error")
+            flash(request, _("User not found."), "error")
             return RedirectResponse("/users", status_code=303)
 
         execute("""
@@ -516,11 +541,11 @@ def toggle_user_enabled(
         log("info", "Users",
             f"Admin '{admin_username}' {new_status} user '{user['username']}' (ID: {user_id})")
 
-        flash(request, "User status updated successfully.", "success")
+        flash(request, _("User status updated successfully."), "success")
 
     except Exception as e:
         log("error", "Users",
             f"Failed to toggle user {user_id} by admin '{admin_username}': {str(e)}")
-        flash(request, "User status update failed. Please try again.", "error")
+        flash(request, _("User status update failed. Please try again."), "error")
 
     return RedirectResponse("/users", status_code=303)
