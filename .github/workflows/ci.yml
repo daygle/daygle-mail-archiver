@@ -37,6 +37,12 @@ jobs:
       - name: Verify vendored frontend assets
         run: pytest -q tests/test_vendor_assets.py
 
+      - name: Verify translation catalogs are in sync and complete
+        # Regenerates messages.pot from the current source and asserts it
+        # matches the committed catalog, then checks every language is 100%
+        # translated (no missing, empty, or fuzzy msgids).
+        run: pytest -q tests/test_i18n_catalog.py
+
       - name: Ruff (error-level checks only)
         # Restrict to checks that catch real defects (syntax errors, undefined
         # names, invalid comparisons) rather than style, so the gate is stable.

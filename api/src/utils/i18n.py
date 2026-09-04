@@ -1,7 +1,19 @@
-import os
 import logging
 from pathlib import Path
 from babel.support import Translations
+
+
+def request_gettext(request):
+    """Return a gettext function for the language in the request session.
+
+    Route code calls this once per request and uses the result (conventionally
+    named ``_``) to wrap user-visible strings such as flash messages, so babel
+    can extract them and the running locale can translate them.
+    """
+    lang = 'en'
+    if request is not None and "session" in getattr(request, "scope", {}):
+        lang = request.session.get('language', 'en')
+    return get_gettext(lang)
 
 
 def get_gettext(lang='en'):

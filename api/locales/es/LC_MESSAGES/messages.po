@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-02-01 02:45+0000\n"
+"POT-Creation-Date: 2026-09-04 10:15+1000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -12,11 +12,648 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.10.3\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: src/routes/alert_management.py:50
+msgid "Unable to load alert triggers. Please try again."
+msgstr "No se pudieron cargar los disparadores de alerta. Inténtelo de nuevo."
+
+#: src/routes/alert_management.py:77 src/routes/alert_management.py:120
+msgid "Alert trigger not found."
+msgstr "Disparador de alerta no encontrado."
+
+#: src/routes/alert_management.py:85 src/routes/alert_management.py:128
+msgid "Alert trigger no longer exists."
+msgstr "El disparador de alerta ya no existe."
+
+#: src/routes/alert_management.py:92
+#, python-brace-format
+msgid "Alert trigger '{0}' enabled successfully."
+msgstr "Disparador de alerta '{0}' activado correctamente."
+
+#: src/routes/alert_management.py:94
+#, python-brace-format
+msgid "Alert trigger '{0}' disabled successfully."
+msgstr "Disparador de alerta '{0}' desactivado correctamente."
+
+#: src/routes/alert_management.py:98
+msgid "Failed to update trigger status."
+msgstr "No se pudo actualizar el estado del disparador."
+
+#: src/routes/alert_management.py:110
+#, python-brace-format
+msgid "Invalid alert type: {0}"
+msgstr "Tipo de alerta no válido: {0}"
+
+#: src/routes/alert_management.py:134
+#, python-brace-format
+msgid "Alert trigger '{0}' severity updated to {1}."
+msgstr "Severidad del disparador de alerta '{0}' actualizada a {1}."
+
+#: src/routes/alert_management.py:138
+msgid "Failed to update trigger severity."
+msgstr "No se pudo actualizar la severidad del disparador."
+
+#: src/routes/alerts.py:134 src/routes/alerts.py:166
+msgid "User not found"
+msgstr "Usuario no encontrado"
+
+#: src/routes/alerts.py:142
+#, python-brace-format
+msgid "All {0} alert(s) acknowledged successfully!"
+msgstr "¡Las {0} alerta(s) se confirmaron correctamente!"
+
+#: src/routes/alerts.py:144
+msgid "No unacknowledged alerts to acknowledge"
+msgstr "No hay alertas sin confirmar que confirmar"
+
+#: src/routes/alerts.py:148
+msgid "Failed to acknowledge all alerts"
+msgstr "No se pudieron confirmar todas las alertas"
+
+#: src/routes/alerts.py:174
+msgid "Alert acknowledged successfully!"
+msgstr "¡Alerta confirmada correctamente!"
+
+#: src/routes/alerts.py:177
+msgid "Alert not found or already acknowledged"
+msgstr "Alerta no encontrada o ya confirmada"
+
+#: src/routes/alerts.py:181
+msgid "Failed to acknowledge alert"
+msgstr "No se pudo confirmar la alerta"
+
+#: src/routes/alerts.py:217
+msgid "Access denied"
+msgstr "Acceso denegado"
+
+#: src/routes/alerts.py:221
+msgid "Invalid alert type"
+msgstr "Tipo de alerta no válido"
+
+#: src/routes/alerts.py:234
+msgid "Test alert created successfully!"
+msgstr "¡Alerta de prueba creada correctamente!"
+
+#: src/routes/alerts.py:238
+msgid "Failed to create test alert"
+msgstr "No se pudo crear la alerta de prueba"
+
+#: src/routes/dashboard.py:215
+msgid "Dashboard layout saved successfully!"
+msgstr "¡Diseño del panel guardado correctamente!"
+
+#: src/routes/dashboard.py:220
+msgid "Failed to save dashboard layout"
+msgstr "No se pudo guardar el diseño del panel"
+
+#: src/routes/emails.py:276
+#, python-brace-format
+msgid "Imported {0} message(s)."
+msgstr "{0} mensaje(s) importados."
+
+#: src/routes/emails.py:278
+#, python-brace-format
+msgid "{0} message(s) blocked (virus detected)."
+msgstr "{0} mensaje(s) bloqueados (virus detectado)."
+
+#: src/routes/emails.py:282
+#, python-brace-format
+msgid "... and {0} more issue(s)"
+msgstr "... y {0} problema(s) más"
+
+#: src/routes/emails.py:283 src/routes/emails.py:1113
+#, python-brace-format
+msgid "Issues: {0}"
+msgstr "Problemas: {0}"
+
+#: src/routes/emails.py:285
+#, python-brace-format
+msgid "No messages were imported. {0}"
+msgstr "No se importó ningún mensaje. {0}"
+
+#: src/routes/emails.py:291
+msgid "No messages were imported."
+msgstr "No se importó ningún mensaje."
+
+#: src/routes/emails.py:1105
+#, python-brace-format
+msgid "Scanned {0} email(s)."
+msgstr "{0} correo(s) escaneados."
+
+#: src/routes/emails.py:1107
+#, python-brace-format
+msgid "{0} clean."
+msgstr "{0} limpios."
+
+#: src/routes/emails.py:1109
+#, python-brace-format
+msgid "{0} infected - review and quarantine as needed."
+msgstr "{0} infectados: revise y ponga en cuarentena según sea necesario."
+
+#: src/routes/emails.py:1111
+#, python-brace-format
+msgid "{0} skipped."
+msgstr "{0} omitidos."
+
+#: src/routes/emails.py:1152
+msgid "Email quarantined successfully."
+msgstr "Correo puesto en cuarentena correctamente."
+
+#: src/routes/emails.py:1154
+msgid "Email could not be quarantined (may already be quarantined)."
+msgstr ""
+"No se pudo poner el correo en cuarentena (puede que ya esté en "
+"cuarentena)."
+
+#: src/routes/emails.py:1185
+#, python-brace-format
+msgid "Deleted {0} email(s) from the database."
+msgstr "{0} correo(s) eliminados de la base de datos."
+
+#: src/routes/emails.py:1197
+#, python-brace-format
+msgid ""
+"Deleted {0} email(s) from the database. Mail server deletion had issues: "
+"{1}"
+msgstr ""
+"{0} correo(s) eliminados de la base de datos. La eliminación en el "
+"servidor de correo tuvo problemas: {1}"
+
+#: src/routes/emails.py:1205
+#, python-brace-format
+msgid "Deleted {0} email(s) from database and mail server."
+msgstr "{0} correo(s) eliminados de la base de datos y del servidor de correo."
+
+#: src/routes/emails.py:1212
+msgid "Invalid delete mode selected."
+msgstr "Modo de eliminación no válido seleccionado."
+
+#: src/routes/emails.py:1253
+#, python-brace-format
+msgid "Quarantined {0} email(s)."
+msgstr "{0} correo(s) puestos en cuarentena."
+
+#: src/routes/emails.py:1255
+msgid "No emails were quarantined."
+msgstr "No se puso ningún correo en cuarentena."
+
+#: src/routes/emails.py:1544
+msgid "No emails found to export."
+msgstr "No se encontraron correos para exportar."
+
+#: src/routes/fetch_accounts.py:83
+#, python-brace-format
+msgid ""
+"Save the {0} account first, then use the OAuth Authorise button and test "
+"again."
+msgstr ""
+"Guarde primero la cuenta {0}, luego use el botón Autorizar OAuth y pruebe"
+" de nuevo."
+
+#: src/routes/fetch_accounts.py:99 src/routes/fetch_accounts.py:446
+#: src/routes/fetch_accounts.py:501
+msgid "Account not found"
+msgstr "Cuenta no encontrada"
+
+#: src/routes/fetch_accounts.py:105
+#, python-brace-format
+msgid "{0} OAuth Client ID and Secret must be configured for this account."
+msgstr ""
+"El ID y el secreto de cliente OAuth {0} deben configurarse para esta "
+"cuenta."
+
+#: src/routes/fetch_accounts.py:115 src/routes/fetch_accounts.py:547
+#, python-brace-format
+msgid "✗ Connection failed: {0}"
+msgstr "✗ Conexión fallida: {0}"
+
+#: src/routes/fetch_accounts.py:231 src/routes/fetch_accounts.py:320
+#: src/routes/fetch_accounts.py:575
+#, python-brace-format
+msgid "Invalid account type: {0}"
+msgstr "Tipo de cuenta no válido: {0}"
+
+#: src/routes/fetch_accounts.py:271
+#, python-brace-format
+msgid "{0} account created successfully"
+msgstr "Cuenta {0} creada correctamente"
+
+#: src/routes/fetch_accounts.py:277 src/routes/fetch_accounts.py:426
+#, python-brace-format
+msgid "Account name '{0}' already exists. Please choose a different name."
+msgstr "El nombre de cuenta '{0}' ya existe. Elija un nombre diferente."
+
+#: src/routes/fetch_accounts.py:279
+#, python-brace-format
+msgid "Failed to create account: {0}"
+msgstr "No se pudo crear la cuenta: {0}"
+
+#: src/routes/fetch_accounts.py:355 src/routes/global_settings.py:254
+#: src/routes/profile.py:235 src/routes/profile.py:363 src/routes/roles.py:288
+#: src/routes/users.py:372
+msgid "No changes detected."
+msgstr "No se detectaron cambios."
+
+#: src/routes/fetch_accounts.py:420
+#, python-brace-format
+msgid "{0} account updated successfully"
+msgstr "Cuenta {0} actualizada correctamente"
+
+#: src/routes/fetch_accounts.py:428
+#, python-brace-format
+msgid "Failed to update account: {0}"
+msgstr "No se pudo actualizar la cuenta: {0}"
+
+#: src/routes/fetch_accounts.py:454
+#, python-brace-format
+msgid "Fetch account '{0}' deleted. Emails retained."
+msgstr "Cuenta '{0}' eliminada. Los correos se conservaron."
+
+#: src/routes/fetch_accounts.py:470
+#, python-brace-format
+msgid "Fetch account '{0}' and all related emails deleted."
+msgstr "Cuenta '{0}' y todos los correos asociados eliminados."
+
+#: src/routes/fetch_accounts.py:473
+msgid "Invalid delete mode."
+msgstr "Modo de eliminación no válido."
+
+#: src/routes/fetch_accounts.py:522
+#, python-brace-format
+msgid "IMAP connection successful to {0}"
+msgstr "Conexión IMAP exitosa con {0}"
+
+#: src/routes/fetch_accounts.py:535
+#, python-brace-format
+msgid "{0} OAuth Client ID and Secret must be configured for this account"
+msgstr ""
+"El ID y el secreto de cliente OAuth {0} deben configurarse para esta "
+"cuenta"
+
+#: src/routes/fetch_accounts.py:544
+#, python-brace-format
+msgid "✗ Unknown account type: {0}"
+msgstr "✗ Tipo de cuenta desconocido: {0}"
+
+#: src/routes/fetch_accounts.py:645
+msgid "Connection successful"
+msgstr "Conexión exitosa"
+
+#: src/routes/fetch_accounts.py:649
+#, python-brace-format
+msgid "Connection failed: {0}"
+msgstr "Conexión fallida: {0}"
+
+#: src/routes/global_settings.py:37 src/routes/profile.py:332
+msgid "Items per page must be between 10 and 500."
+msgstr "Los elementos por página deben estar entre 10 y 500."
+
+#: src/routes/global_settings.py:39
+msgid "Items per page must be a number between 10 and 500."
+msgstr "Los elementos por página deben ser un número entre 10 y 500."
+
+#: src/routes/global_settings.py:44
+msgid "Retention period must be at least 1."
+msgstr "El periodo de retención debe ser de al menos 1."
+
+#: src/routes/global_settings.py:46
+msgid "Retention period must be a number of at least 1."
+msgstr "El periodo de retención debe ser un número de al menos 1."
+
+#: src/routes/global_settings.py:49
+msgid "Invalid retention unit selected."
+msgstr "Unidad de retención no válida seleccionada."
+
+#: src/routes/global_settings.py:54
+msgid "Auto logout must be between 0 and 1440 minutes (0 disables it)."
+msgstr ""
+"El cierre de sesión automático debe estar entre 0 y 1440 minutos (0 lo "
+"desactiva)."
+
+#: src/routes/global_settings.py:56
+msgid "Auto logout must be a number of minutes."
+msgstr "El cierre de sesión automático debe ser un número de minutos."
+
+#: src/routes/global_settings.py:61
+msgid "ClamAV port must be between 1 and 65535."
+msgstr "El puerto de ClamAV debe estar entre 1 y 65535."
+
+#: src/routes/global_settings.py:63
+msgid "ClamAV port must be a number."
+msgstr "El puerto de ClamAV debe ser un número."
+
+#: src/routes/global_settings.py:68
+msgid "Max file size to scan must be at least 1024 bytes."
+msgstr "El tamaño máximo de archivo para escanear debe ser de al menos 1024 bytes."
+
+#: src/routes/global_settings.py:70
+msgid "Max file size to scan must be a number of bytes."
+msgstr "El tamaño máximo de archivo para escanear debe ser un número de bytes."
+
+#: src/routes/global_settings.py:75
+msgid "Quarantine retention must be at least 1 day."
+msgstr "La retención de cuarentena debe ser de al menos 1 día."
+
+#: src/routes/global_settings.py:77
+msgid "Quarantine retention must be a number of days."
+msgstr "La retención de cuarentena debe ser un número de días."
+
+#: src/routes/global_settings.py:80
+msgid "Invalid virus action selected."
+msgstr "Acción contra virus no válida seleccionada."
+
+#: src/routes/global_settings.py:85
+msgid "SMTP port must be between 1 and 65535."
+msgstr "El puerto SMTP debe estar entre 1 y 65535."
+
+#: src/routes/global_settings.py:87
+msgid "SMTP port must be a number."
+msgstr "El puerto SMTP debe ser un número."
+
+#: src/routes/global_settings.py:92
+msgid "ClamAV alert grace period must be between 0 and 86400 seconds."
+msgstr ""
+"El periodo de gracia de alertas de ClamAV debe estar entre 0 y 86400 "
+"segundos."
+
+#: src/routes/global_settings.py:94
+msgid "ClamAV alert grace period must be a number of seconds."
+msgstr "El periodo de gracia de alertas de ClamAV debe ser un número de segundos."
+
+#: src/routes/global_settings.py:98
+#, python-brace-format
+msgid "Unknown timezone: {0}"
+msgstr "Zona horaria desconocida: {0}"
+
+#: src/routes/global_settings.py:273
+msgid "Settings updated successfully."
+msgstr "Ajustes actualizados correctamente."
+
+#: src/routes/global_settings.py:278
+#, python-brace-format
+msgid "Failed to save settings: {0}"
+msgstr "No se pudieron guardar los ajustes: {0}"
+
+#: src/routes/global_settings.py:300
+msgid "Your account does not have an email address configured."
+msgstr "Su cuenta no tiene configurada una dirección de correo."
+
+#: src/routes/global_settings.py:306
+#, python-brace-format
+msgid "SMTP test successful: {0}"
+msgstr "Prueba SMTP exitosa: {0}"
+
+#: src/routes/global_settings.py:308 src/routes/global_settings.py:312
+#, python-brace-format
+msgid "SMTP test failed: {0}"
+msgstr "Prueba SMTP fallida: {0}"
+
+#: src/routes/profile.py:127 src/routes/users.py:530
+msgid "User not found."
+msgstr "Usuario no encontrado."
+
+#: src/routes/profile.py:134
+msgid "Current password is incorrect."
+msgstr "La contraseña actual es incorrecta."
+
+#: src/routes/profile.py:138
+msgid "An error occurred. Please try again."
+msgstr "Se produjo un error. Inténtelo de nuevo."
+
+#: src/routes/profile.py:143
+msgid "New passwords do not match."
+msgstr "Las nuevas contraseñas no coinciden."
+
+#: src/routes/profile.py:152 src/routes/users.py:128 src/routes/users.py:391
+msgid "Password must include upper, lower, number and be 8+ chars."
+msgstr ""
+"La contraseña debe incluir mayúsculas, minúsculas, un número y tener 8 o "
+"más caracteres."
+
+#: src/routes/profile.py:164
+msgid "Password changed successfully."
+msgstr "Contraseña cambiada correctamente."
+
+#: src/routes/profile.py:169
+msgid "Failed to update password. Please try again."
+msgstr "No se pudo actualizar la contraseña. Inténtelo de nuevo."
+
+#: src/routes/profile.py:215 src/routes/users.py:133 src/routes/users.py:314
+msgid "Invalid email format."
+msgstr "Formato de correo no válido."
+
+#: src/routes/profile.py:245
+msgid "Profile updated successfully."
+msgstr "Perfil actualizado correctamente."
+
+#: src/routes/profile.py:250
+msgid "Failed to update profile. Please try again."
+msgstr "No se pudo actualizar el perfil. Inténtelo de nuevo."
+
+#: src/routes/profile.py:394
+msgid "User settings updated successfully."
+msgstr "Ajustes de usuario actualizados correctamente."
+
+#: src/routes/profile.py:399
+msgid "Failed to update settings. Please try again."
+msgstr "No se pudieron actualizar los ajustes. Inténtelo de nuevo."
+
+#: src/routes/roles.py:100 src/routes/roles.py:250
+msgid "Role name must be at least 2 characters long."
+msgstr "El nombre del rol debe tener al menos 2 caracteres."
+
+#: src/routes/roles.py:108 src/routes/roles.py:260
+#, python-brace-format
+msgid "Role '{0}' already exists."
+msgstr "El rol '{0}' ya existe."
+
+#: src/routes/roles.py:115 src/routes/roles.py:278
+msgid "Invalid permission selection."
+msgstr "Selección de permisos no válida."
+
+#: src/routes/roles.py:148
+#, python-brace-format
+msgid "Role '{0}' created successfully."
+msgstr "Rol '{0}' creado correctamente."
+
+#: src/routes/roles.py:153
+msgid "Failed to create role."
+msgstr "No se pudo crear el rol."
+
+#: src/routes/roles.py:175 src/routes/roles.py:233 src/routes/roles.py:355
+msgid "Role not found."
+msgstr "Rol no encontrado."
+
+#: src/routes/roles.py:180
+msgid "System roles cannot be edited."
+msgstr "Los roles del sistema no se pueden editar."
+
+#: src/routes/roles.py:237
+msgid "System roles cannot be modified."
+msgstr "Los roles del sistema no se pueden modificar."
+
+#: src/routes/roles.py:324
+#, python-brace-format
+msgid "Role '{0}' updated successfully."
+msgstr "Rol '{0}' actualizado correctamente."
+
+#: src/routes/roles.py:330
+msgid "Failed to update role."
+msgstr "No se pudo actualizar el rol."
+
+#: src/routes/roles.py:359
+msgid "System roles cannot be deleted."
+msgstr "Los roles del sistema no se pueden eliminar."
+
+#: src/routes/roles.py:371
+msgid "Cannot delete a role that is assigned to users."
+msgstr "No se puede eliminar un rol asignado a usuarios."
+
+#: src/routes/roles.py:387
+#, python-brace-format
+msgid "Role '{0}' deleted successfully."
+msgstr "Rol '{0}' eliminado correctamente."
+
+#: src/routes/roles.py:393
+msgid "Failed to delete role."
+msgstr "No se pudo eliminar el rol."
+
+#: src/routes/users.py:113 src/routes/users.py:299
+msgid "Username must be at least 3 characters long."
+msgstr "El nombre de usuario debe tener al menos 3 caracteres."
+
+#: src/routes/users.py:118 src/routes/users.py:309
+#, python-brace-format
+msgid "Username '{0}' already exists."
+msgstr "El nombre de usuario '{0}' ya existe."
+
+#: src/routes/users.py:138 src/routes/users.py:319
+msgid "At least one role must be assigned."
+msgstr "Debe asignarse al menos un rol."
+
+#: src/routes/users.py:145 src/routes/users.py:326
+msgid "Invalid role selection."
+msgstr "Selección de rol no válida."
+
+#: src/routes/users.py:191
+#, python-brace-format
+msgid "User '{0}' created successfully"
+msgstr "Usuario '{0}' creado correctamente"
+
+#: src/routes/users.py:195
+msgid "User creation failed. Please try again."
+msgstr "No se pudo crear el usuario. Inténtelo de nuevo."
+
+#: src/routes/users.py:357
+msgid "You cannot remove your own administrative access."
+msgstr "No puede eliminar su propio acceso administrativo."
+
+#: src/routes/users.py:456
+msgid "User updated successfully."
+msgstr "Usuario actualizado correctamente."
+
+#: src/routes/users.py:461
+msgid "User update failed. Please try again."
+msgstr "No se pudo actualizar el usuario. Inténtelo de nuevo."
+
+#: src/routes/users.py:480
+msgid "You cannot delete your own account."
+msgstr "No puede eliminar su propia cuenta."
+
+#: src/routes/users.py:495
+msgid "User deleted successfully."
+msgstr "Usuario eliminado correctamente."
+
+#: src/routes/users.py:500
+msgid "User deletion failed. Please try again."
+msgstr "No se pudo eliminar el usuario. Inténtelo de nuevo."
+
+#: src/routes/users.py:519
+msgid "You cannot disable your own account."
+msgstr "No puede desactivar su propia cuenta."
+
+#: src/routes/users.py:544
+msgid "User status updated successfully."
+msgstr "Estado del usuario actualizado correctamente."
+
+#: src/routes/users.py:549
+msgid "User status update failed. Please try again."
+msgstr "No se pudo actualizar el estado del usuario. Inténtelo de nuevo."
+
+#: templates/alert-management.html:18
+msgid "Trigger summary"
+msgstr "Resumen de disparadores"
+
+#: templates/alert-management.html:23
+msgid "Trigger filters"
+msgstr "Filtros de disparadores"
+
+#: templates/alert-management.html:26 templates/alerts.html:40
+#: templates/emails.html:49 templates/logs.html:28 templates/quarantine.html:27
+msgid "Search this page"
+msgstr "Buscar en esta página"
+
+#: templates/alert-management.html:27
+msgid "Filter by status"
+msgstr "Filtrar por estado"
+
+#: templates/alert-management.html:36
+msgid "Alert triggers"
+msgstr "Disparadores de alerta"
+
+#: templates/alert-management.html:102
+msgid "How alerts work"
+msgstr "Cómo funcionan las alertas"
+
+#: templates/alerts.html:31
+msgid "Alert summary"
+msgstr "Resumen de alertas"
+
+#: templates/alerts.html:37
+msgid "Alert filters"
+msgstr "Filtros de alertas"
+
+#: templates/alerts.html:104
+msgid "Email sent"
+msgstr "Correo enviado"
+
+#: templates/alerts.html:139 templates/emails.html:224 templates/logs.html:141
+#: templates/quarantine.html:190
+msgid "Previous"
+msgstr "Anterior"
+
+#: templates/alerts.html:169 templates/emails.html:254 templates/logs.html:171
+#: templates/quarantine.html:220
+msgid "Next"
+msgstr "Siguiente"
+
+#: templates/alerts.html:180 templates/emails.html:275 templates/logs.html:185
+#: templates/quarantine.html:242
+msgid "Jump to page"
+msgstr "Ir a la página"
+
+#: templates/alerts.html:194 templates/email-view.html:195
+#: templates/emails.html:289 templates/emails.html:292
+#: templates/fetch-accounts.html:96 templates/fetch-accounts.html:128
+#: templates/quarantine-view.html:146 templates/quarantine.html:256
+#: templates/quarantine.html:258 templates/roles.html:43
+#: templates/roles.html:44 templates/users.html:77 templates/users.html:78
+msgid "Close"
+msgstr "Cerrar"
+
+#: templates/alerts.html:328 templates/emails.html:472 templates/logs.html:265
+#: templates/quarantine.html:455 templates/system-status.html:142
+msgid "Scroll to top"
+msgstr "Desplazarse arriba"
+
+#: templates/alerts.html:328 templates/emails.html:472 templates/logs.html:265
+#: templates/quarantine.html:455 templates/system-status.html:142
+msgid "Back to top"
+msgstr "Volver arriba"
 
 # Added from templates/base.html
-#: templates/base.html:4 templates/base.html:49 templates/base.html:50
-#: templates/base.html:170
+#: templates/base.html:4 templates/base.html:49 templates/base.html:170
 msgid "Daygle Mail Archiver"
 msgstr "Daygle Mail Archiver"
 
@@ -49,8 +686,8 @@ msgid "Quarantine"
 msgstr "Cuarentena"
 
 #: templates/base.html:104
-msgid "Transfer"
-msgstr "Transferir"
+msgid "Import/Export"
+msgstr "Importar/Exportar"
 
 #: templates/base.html:110
 msgid "System Management"
@@ -61,6 +698,7 @@ msgid "Alert Management"
 msgstr "Gestión de alertas"
 
 #: templates/base.html:120 templates/global-settings.html:3
+#: templates/global-settings.html:10
 msgid "Global Settings"
 msgstr "Ajustes globales"
 
@@ -100,12 +738,14 @@ msgstr "Perfil"
 msgid "User Settings"
 msgstr "Configuración de usuario"
 
-#: templates/base.html:200 templates/base.html:203 templates/login.html:22
+#: templates/base.html:200 templates/base.html:203
+#: templates/forgot-password.html:29 templates/login.html:22
+#: templates/setup.html:65
 msgid "Toggle Theme"
 msgstr "Cambiar tema"
 
 #: templates/base.html:208 templates/change-password.html:3
-#: templates/change-password.html:10 templates/change-password.html:30
+#: templates/change-password.html:10 templates/change-password.html:38
 msgid "Change Password"
 msgstr "Cambiar contraseña"
 
@@ -129,33 +769,206 @@ msgstr "Tema guardado localmente"
 msgid "Theme applied"
 msgstr "Tema aplicado"
 
-#: templates/change-password.html:16
+#: templates/change-password.html:9 templates/set-password.html:9
+msgid "Security"
+msgstr "Seguridad"
+
+#: templates/change-password.html:11
+msgid "Update the password you use to sign in to the archive."
+msgstr "Actualiza la contraseña que usas para iniciar sesión en el archivo."
+
+#: templates/change-password.html:18 templates/login.html:65
+#: templates/set-password.html:19 templates/setup.html:136
+msgid "Password"
+msgstr "Contraseña"
+
+#: templates/change-password.html:24
 msgid "Current Password"
 msgstr "Contraseña actual"
 
-#: templates/change-password.html:17
+#: templates/change-password.html:25
 msgid "Enter your current password"
 msgstr "Introduzca su contraseña actual"
 
-#: templates/change-password.html:20 templates/reset-password.html:39
+#: templates/change-password.html:28 templates/reset-password.html:39
 msgid "New Password"
 msgstr "Nueva contraseña"
 
-#: templates/change-password.html:21 templates/reset-password.html:40
+#: templates/change-password.html:29 templates/reset-password.html:40
+#: templates/set-password.html:28
 msgid "Enter your new password"
 msgstr "Introduce tu nueva contraseña"
 
-#: templates/change-password.html:24 templates/reset-password.html:47
+#: templates/change-password.html:32 templates/reset-password.html:47
 msgid "Confirm New Password"
 msgstr "Confirmar nueva contraseña"
 
-#: templates/change-password.html:25 templates/reset-password.html:48
+#: templates/change-password.html:33 templates/reset-password.html:48
 msgid "Confirm your new password"
 msgstr "Confirma tu nueva contraseña"
 
+#: templates/dashboard.html:26
+msgid "Customise Dashboard"
+msgstr "Personalizar panel"
+
+#: templates/dashboard.html:29
+msgid "Add Widget"
+msgstr "Añadir widget"
+
+#: templates/dashboard.html:32
+msgid "Save Layout"
+msgstr "Guardar diseño"
+
+#: templates/dashboard.html:35
+msgid "Reset Layout"
+msgstr "Restablecer diseño"
+
+#: templates/dashboard.html:38 templates/global-settings.html:328
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: templates/dashboard.html:77 templates/dashboard.html:98
+#: templates/dashboard.html:119 templates/dashboard.html:140
+#: templates/dashboard.html:161 templates/dashboard.html:182
+#: templates/dashboard.html:203 templates/dashboard.html:224
+#: templates/dashboard.html:245 templates/dashboard.html:266
+#: templates/dashboard.html:287 templates/dashboard.html:308
+msgid "Remove widget"
+msgstr "Quitar widget"
+
+#: templates/email-view.html:19
+msgid "Download this message as a .eml file"
+msgstr "Descargar este mensaje como archivo .eml"
+
+#: templates/email-view.html:24 templates/emails.html:80
+msgid "Run ClamAV scan; infected results are flagged for review"
+msgstr ""
+"Ejecutar escaneo de ClamAV; los resultados infectados se marcan para "
+"revisión"
+
+#: templates/email-view.html:42 templates/email-view.html:43
+#: templates/email-view.html:46 templates/quarantine-view.html:33
+#: templates/quarantine-view.html:34 templates/quarantine-view.html:37
+msgid "Email body"
+msgstr "Contenido del correo"
+
+#: templates/email-view.html:54
+msgid "Email details"
+msgstr "Detalles del correo"
+
+#: templates/email-view.html:126 templates/email-view.html:168
+#: templates/emails.html:199
+msgid "ClamAV scan not completed or scanning is disabled"
+msgstr "Escaneo de ClamAV no completado o escaneo desactivado"
+
+#: templates/email-view.html:132
+msgid "Download blocked: virus detected"
+msgstr "Descarga bloqueada: virus detectado"
+
+#: templates/email-view.html:134
+msgid "Download attachment"
+msgstr "Descargar adjunto"
+
+#: templates/email-view.html:181 templates/quarantine-view.html:132
+msgid "Raw preview"
+msgstr "Vista previa sin procesar"
+
+#: templates/emails.html:40
+msgid "Archive summary"
+msgstr "Resumen del archivo"
+
+#: templates/emails.html:46
+msgid "Email filters"
+msgstr "Filtros de correo"
+
+#: templates/emails.html:50
+msgid "Sort emails"
+msgstr "Ordenar correos"
+
+#: templates/emails.html:63 templates/quarantine.html:42
+msgid "Choose which columns to display"
+msgstr "Elija qué columnas mostrar"
+
+#: templates/emails.html:75 templates/quarantine.html:54
+msgid "Bulk actions"
+msgstr "Acciones masivas"
+
+#: templates/emails.html:102 templates/profile.html:9
+#: templates/quarantine.html:76
+msgid "Account"
+msgstr "Cuenta"
+
+#: templates/emails.html:103
+msgid "Folder"
+msgstr "Carpeta"
+
+#: templates/emails.html:107
+msgid "Sender address"
+msgstr "Dirección del remitente"
+
+#: templates/emails.html:111
+msgid "Recipient address"
+msgstr "Dirección del destinatario"
+
+#: templates/emails.html:115
+msgid "Subject"
+msgstr "Asunto"
+
+#: templates/emails.html:127 templates/quarantine.html:89
+msgid "Search subject, sender, recipients"
+msgstr "Buscar asunto, remitente, destinatarios"
+
+#: templates/emails.html:146
+msgid "Archived emails"
+msgstr "Correos archivados"
+
+#: templates/emails.html:205
+msgid "View email"
+msgstr "Ver correo"
+
+#: templates/fetch-accounts.html:18
+msgid "Fetch account summary"
+msgstr "Resumen de cuentas de obtención"
+
+#: templates/fetch-accounts.html:24
+msgid "Account filters"
+msgstr "Filtros de cuenta"
+
+#: templates/fetch-accounts.html:27
+msgid "Search name, host or user"
+msgstr "Buscar nombre, host o usuario"
+
+#: templates/fetch-accounts.html:32
+msgid "Fetch accounts"
+msgstr "Cuentas de obtención"
+
+#: templates/fetch-accounts.html:72
+msgid "Edit account"
+msgstr "Editar cuenta"
+
+#: templates/fetch-accounts.html:73
+msgid "Test connection"
+msgstr "Probar conexión"
+
+#: templates/fetch-accounts.html:87
+msgid "Account pages"
+msgstr "Páginas de cuentas"
+
+#: templates/fetch-accounts.html:106
+msgid "Enter password"
+msgstr "Introduzca la contraseña"
+
+#: templates/fetch-accounts.html:117
+msgid "Enter your OAuth Client ID"
+msgstr "Introduzca su ID de cliente OAuth"
+
+#: templates/fetch-accounts.html:118
+msgid "Enter your OAuth Client Secret"
+msgstr "Introduzca su secreto de cliente OAuth"
+
 #: templates/forgot-password.html:36 templates/login.html:27
 #: templates/reset-password.html:22 templates/setup.html:70
-#: templates/user-settings.html:96
+#: templates/user-settings.html:105
 msgid "Language"
 msgstr "Idioma"
 
@@ -220,264 +1033,277 @@ msgstr "Enviar enlace de restablecimiento"
 msgid "Back to Login"
 msgstr "Volver al inicio de sesión"
 
-#: templates/global-settings.html:15
+#: templates/global-settings.html:9
+msgid "Administration"
+msgstr "Administración"
+
+#: templates/global-settings.html:11
+msgid ""
+"System-wide defaults for display, retention, virus scanning, quarantine, "
+"and email alerts."
+msgstr ""
+"Valores predeterminados globales para visualización, retención, análisis "
+"de virus, cuarentena y alertas de correo."
+
+#: templates/global-settings.html:24
 msgid "General Settings"
 msgstr "Configuración general"
 
-#: templates/global-settings.html:20 templates/user-settings.html:19
+#: templates/global-settings.html:29 templates/user-settings.html:28
 msgid "Items Per Page"
 msgstr "Elementos por página"
 
-#: templates/global-settings.html:22 templates/user-settings.html:21
+#: templates/global-settings.html:31 templates/user-settings.html:30
 msgid "Number of emails to display per page in lists"
 msgstr "Número de correos electrónicos para mostrar por página en listas"
 
-#: templates/global-settings.html:26 templates/user-settings.html:25
+#: templates/global-settings.html:35 templates/user-settings.html:34
 msgid "Date Format"
 msgstr "Formato de fecha"
 
-#: templates/global-settings.html:28
+#: templates/global-settings.html:37
 msgid "15/01/2024"
 msgstr "15/01/2024"
 
-#: templates/global-settings.html:29
+#: templates/global-settings.html:38
 msgid "2024-01-15"
 msgstr "2024-01-15"
 
 # Machine-translated additions (prefill)
-#: templates/global-settings.html:30
+#: templates/global-settings.html:39
 msgid "01/15/2024"
 msgstr "01/15/2024"
 
-#: templates/global-settings.html:31
+#: templates/global-settings.html:40
 msgid "15 Jan 2024"
 msgstr "15 ene 2024"
 
-#: templates/global-settings.html:32
+#: templates/global-settings.html:41
 msgid "January 15, 2024"
 msgstr "15 de enero de 2024"
 
-#: templates/global-settings.html:34
+#: templates/global-settings.html:43
 msgid "Date display format throughout the application"
 msgstr "Formato de fecha mostrado en toda la aplicación"
 
-#: templates/global-settings.html:38
+#: templates/global-settings.html:47
 msgid "Time Format"
 msgstr "Formato de hora"
 
-#: templates/global-settings.html:40
+#: templates/global-settings.html:49
 msgid "14:30 (24-hour)"
 msgstr "14:30 (24 horas)"
 
-#: templates/global-settings.html:41
+#: templates/global-settings.html:50
 msgid "14:30:45 (24-hour with seconds)"
 msgstr "14:30:45 (24 horas con segundos)"
 
-#: templates/global-settings.html:42
+#: templates/global-settings.html:51
 msgid "02:30 PM (12-hour)"
 msgstr "02:30 p. m. (12 horas)"
 
-#: templates/global-settings.html:43
+#: templates/global-settings.html:52
 msgid "02:30:45 PM (12-hour with seconds)"
 msgstr "02:30:45 p. m. (12 horas con segundos)"
 
-#: templates/global-settings.html:45
+#: templates/global-settings.html:54
 msgid "Time display format throughout the application"
 msgstr "Formato de hora mostrado en toda la aplicación"
 
-#: templates/global-settings.html:49
+#: templates/global-settings.html:58
 msgid "Timezone"
 msgstr "Zona horaria"
 
-#: templates/global-settings.html:51
+#: templates/global-settings.html:60
 msgid "UTC"
 msgstr "UTC"
 
-#: templates/global-settings.html:52
+#: templates/global-settings.html:61
 msgid "Pacific/Honolulu (HST)"
 msgstr "Pacífico/Honolulú (HST)"
 
-#: templates/global-settings.html:53
+#: templates/global-settings.html:62
 msgid "America/Anchorage (AKST)"
 msgstr "América/Anchorage (AKST)"
 
-#: templates/global-settings.html:54
+#: templates/global-settings.html:63
 msgid "America/Los Angeles (PST)"
 msgstr "América/Los Ángeles (PST)"
 
-#: templates/global-settings.html:55
+#: templates/global-settings.html:64
 msgid "America/Vancouver (PST)"
 msgstr "América/Vancouver (PST)"
 
-#: templates/global-settings.html:56
+#: templates/global-settings.html:65
 msgid "America/Denver (MST)"
 msgstr "América/Denver (MST)"
 
-#: templates/global-settings.html:57
+#: templates/global-settings.html:66
 msgid "America/Chicago (CST)"
 msgstr "América/Chicago (CST)"
 
-#: templates/global-settings.html:58
+#: templates/global-settings.html:67
 msgid "America/Mexico City (CST)"
 msgstr "América/Ciudad de México (CST)"
 
-#: templates/global-settings.html:59
+#: templates/global-settings.html:68
 msgid "America/New York (EST)"
 msgstr "América/Nueva York (EST)"
 
-#: templates/global-settings.html:60
+#: templates/global-settings.html:69
 msgid "America/Toronto (EST)"
 msgstr "América/Toronto (EST)"
 
-#: templates/global-settings.html:61
+#: templates/global-settings.html:70
 msgid "America/Argentina (BRT)"
 msgstr "América/Argentina (BRT)"
 
-#: templates/global-settings.html:62
+#: templates/global-settings.html:71
 msgid "America/Sao Paulo (BRT)"
 msgstr "América/Sao Paulo (BRT)"
 
-#: templates/global-settings.html:63
+#: templates/global-settings.html:72
 msgid "Europe/London (GMT)"
 msgstr "Europa/Londres (GMT)"
 
-#: templates/global-settings.html:64
+#: templates/global-settings.html:73
 msgid "Europe/Dublin (GMT)"
 msgstr "Europa/Dublín (GMT)"
 
-#: templates/global-settings.html:65
+#: templates/global-settings.html:74
 msgid "Europe/Berlin (CET)"
 msgstr "Europa/Berlín (CET)"
 
-#: templates/global-settings.html:66
+#: templates/global-settings.html:75
 msgid "Europe/Paris (CET)"
 msgstr "Europa/París (CET)"
 
-#: templates/global-settings.html:67
+#: templates/global-settings.html:76
 msgid "Europe/Madrid (CET)"
 msgstr "Europa/Madrid (CET)"
 
-#: templates/global-settings.html:68
+#: templates/global-settings.html:77
 msgid "Europe/Rome (CET)"
 msgstr "Europa/Roma (CET)"
 
-#: templates/global-settings.html:69
+#: templates/global-settings.html:78
 msgid "Europe/Amsterdam (CET)"
 msgstr "Europa/Ámsterdam (CET)"
 
-#: templates/global-settings.html:70
+#: templates/global-settings.html:79
 msgid "Europe/Zurich (CET)"
 msgstr "Europa/Zúrich (CET)"
 
-#: templates/global-settings.html:71
+#: templates/global-settings.html:80
 msgid "Europe/Moscow (MSK)"
 msgstr "Europa/Moscú (MSK)"
 
-#: templates/global-settings.html:72
+#: templates/global-settings.html:81
 msgid "Africa/Cairo (EET)"
 msgstr "África/El Cairo (EET)"
 
-#: templates/global-settings.html:73
+#: templates/global-settings.html:82
 msgid "Africa/Johannesburg (SAST)"
 msgstr "África/Johannesburgo (SAST)"
 
-#: templates/global-settings.html:74
+#: templates/global-settings.html:83
 msgid "Asia/Dubai (GST)"
 msgstr "Asia/Dubái (GST)"
 
-#: templates/global-settings.html:75
+#: templates/global-settings.html:84
 msgid "Asia/Jerusalem (IST)"
 msgstr "Asia/Jerusalén (IST)"
 
-#: templates/global-settings.html:76
+#: templates/global-settings.html:85
 msgid "Asia/Kolkata (IST)"
 msgstr "Asia/Kolkata (IST)"
 
-#: templates/global-settings.html:77
+#: templates/global-settings.html:86
 msgid "Asia/Karachi (PKT)"
 msgstr "Asia/Karachi (PKT)"
 
-#: templates/global-settings.html:78
+#: templates/global-settings.html:87
 msgid "Asia/Bangkok (ICT)"
 msgstr "Asia/Bangkok (ICT)"
 
-#: templates/global-settings.html:79
+#: templates/global-settings.html:88
 msgid "Asia/Singapore (SGT)"
 msgstr "Asia/Singapur (SGT)"
 
-#: templates/global-settings.html:80
+#: templates/global-settings.html:89
 msgid "Asia/Hong Kong (HKT)"
 msgstr "Asia/Hong Kong (HKT)"
 
-#: templates/global-settings.html:81
+#: templates/global-settings.html:90
 msgid "Asia/Tokyo (JST)"
 msgstr "Asia/Tokio (JST)"
 
-#: templates/global-settings.html:82
+#: templates/global-settings.html:91
 msgid "Asia/Seoul (KST)"
 msgstr "Asia/Seúl (KST)"
 
-#: templates/global-settings.html:83
+#: templates/global-settings.html:92
 msgid "Australia/Perth (AWST)"
 msgstr "Australia/Perth (AWST)"
 
-#: templates/global-settings.html:84
+#: templates/global-settings.html:93
 msgid "Australia/Adelaide (ACST)"
 msgstr "Australia/Adelaide (ACST)"
 
-#: templates/global-settings.html:85
+#: templates/global-settings.html:94
 msgid "Australia/Brisbane (AEST)"
 msgstr "Australia/Brisbane (AEST)"
 
-#: templates/global-settings.html:86
+#: templates/global-settings.html:95
 msgid "Australia/Sydney (AEST)"
 msgstr "Australia/Sydney (AEST)"
 
-#: templates/global-settings.html:87
+#: templates/global-settings.html:96
 msgid "Australia/Melbourne (AEST)"
 msgstr "Australia/Melbourne (AEST)"
 
-#: templates/global-settings.html:88
+#: templates/global-settings.html:97
 msgid "Pacific/Auckland (NZST)"
 msgstr "Pacífico/Auckland (NZST)"
 
-#: templates/global-settings.html:89
+#: templates/global-settings.html:98
 msgid "Pacific/Guam (ChST)"
 msgstr "Pacífico/Guam (ChST)"
 
-#: templates/global-settings.html:91
+#: templates/global-settings.html:100
 msgid "Timezone for displaying dates and times throughout the application"
 msgstr "Zona horaria para mostrar fechas y horas en toda la aplicación"
 
-#: templates/global-settings.html:95
+#: templates/global-settings.html:104
 msgid "Default Theme"
 msgstr "Tema por defecto"
 
-#: templates/global-settings.html:97
+#: templates/global-settings.html:106
 msgid "System (use browser / user preference)"
 msgstr "Sistema (usar preferencia del navegador/usuario)"
 
-#: templates/global-settings.html:98
+#: templates/global-settings.html:107
 msgid "Light"
 msgstr "Claro"
 
-#: templates/global-settings.html:99
+#: templates/global-settings.html:108
 msgid "Dark"
 msgstr "Oscuro"
 
-#: templates/global-settings.html:101
+#: templates/global-settings.html:110
 msgid ""
 "Global default theme for users who have not set a personal preference "
 "(users' own preference overrides this)"
 msgstr ""
-"Tema predeterminado global para usuarios que no han establecido una preferencia personal "
-"(la preferencia del usuario anula esta configuración)"
+"Tema predeterminado global para usuarios que no han establecido una "
+"preferencia personal (la preferencia del usuario anula esta "
+"configuración)"
 
-#: templates/global-settings.html:105
+#: templates/global-settings.html:114
 msgid "Auto Logout (minutes)"
 msgstr "Cierre de sesión automático (minutos)"
 
-#: templates/global-settings.html:107
+#: templates/global-settings.html:116
 msgid ""
 "Automatically log out users after this many minutes of inactivity. Set to"
 " 0 to disable auto-logout."
@@ -485,23 +1311,23 @@ msgstr ""
 "Cerrar sesión automáticamente tras este número de minutos de inactividad."
 " Ponga 0 para desactivar."
 
-#: templates/global-settings.html:119
+#: templates/global-settings.html:128
 msgid "Email Retention Policy"
 msgstr "Política de retención de correos"
 
-#: templates/global-settings.html:126
+#: templates/global-settings.html:135
 msgid "Enable Automatic Email Purging"
 msgstr "Habilitar purga automática de correos"
 
-#: templates/global-settings.html:127
+#: templates/global-settings.html:136
 msgid "Automatically delete emails older than the retention period"
 msgstr "Eliminar automáticamente los correos anteriores al periodo de retención"
 
-#: templates/global-settings.html:134
+#: templates/global-settings.html:143
 msgid "Delete from Mail Server During Retention Cleanup"
 msgstr "Eliminar del servidor de correo durante la limpieza de retención"
 
-#: templates/global-settings.html:135
+#: templates/global-settings.html:144
 msgid ""
 "When enabled, retention cleanup will also attempt to delete emails from "
 "the original IMAP mail servers for both regular emails and quarantined "
@@ -511,115 +1337,128 @@ msgstr ""
 "eliminar correos de los servidores IMAP originales tanto para correos "
 "normales como en cuarentena"
 
-#: templates/global-settings.html:140
+#: templates/global-settings.html:149
 msgid "Retention Period"
 msgstr "Periodo de retención"
 
-#: templates/global-settings.html:147
+#: templates/global-settings.html:156
 msgid "Day(s)"
 msgstr "Día(s)"
 
-#: templates/global-settings.html:148
+#: templates/global-settings.html:157
 msgid "Month(s)"
 msgstr "Mes(es)"
 
-#: templates/global-settings.html:149
+#: templates/global-settings.html:158
 msgid "Year(s)"
 msgstr "Año(s)"
 
-#: templates/global-settings.html:153
+#: templates/global-settings.html:162
 msgid "Emails older than this period will be automatically deleted"
 msgstr "Los correos más antiguos que este periodo se eliminarán automáticamente"
 
-#: templates/global-settings.html:163
+#: templates/global-settings.html:172
 msgid "Virus Scanning (ClamAV)"
 msgstr "Escaneo de virus (ClamAV)"
 
-#: templates/global-settings.html:170
+#: templates/global-settings.html:179
 msgid "Enable Virus Scanning"
 msgstr "Habilitar escaneo de virus"
 
-#: templates/global-settings.html:171
+#: templates/global-settings.html:180
 msgid "Scan incoming emails for viruses using ClamAV"
 msgstr "Escanear correos entrantes en busca de virus con ClamAV"
 
-#: templates/global-settings.html:176
+#: templates/global-settings.html:185
 msgid "ClamAV Host"
 msgstr "Host de ClamAV"
 
-#: templates/global-settings.html:178
+#: templates/global-settings.html:187
 msgid "Hostname or IP address of the ClamAV daemon (default: clamav for Docker)"
 msgstr "Nombre de host o IP del demonio ClamAV (por defecto: clamav para Docker)"
 
-#: templates/global-settings.html:182
+#: templates/global-settings.html:191
 msgid "ClamAV Port"
 msgstr "Puerto de ClamAV"
 
-#: templates/global-settings.html:184
+#: templates/global-settings.html:193
 msgid "Port number for the ClamAV daemon (default: 3310)"
 msgstr "Número de puerto para el demonio ClamAV (por defecto: 3310)"
 
-#: templates/global-settings.html:188
+#: templates/global-settings.html:197
 msgid "Action When Virus Detected"
 msgstr "Acción cuando se detecta un virus"
 
-#: templates/global-settings.html:190
+#: templates/global-settings.html:199
 msgid "Quarantine (Store with virus flag)"
 msgstr "Cuarentena (almacenar con marca de virus)"
 
-#: templates/global-settings.html:191
+#: templates/global-settings.html:200
 msgid "Reject (Do not store infected emails)"
 msgstr "Rechazar (no almacenar correos infectados)"
 
-#: templates/global-settings.html:192
+#: templates/global-settings.html:201
 msgid "Log Only (Store all emails, log detections)"
 msgstr "Solo registro (almacenar todos los correos, registrar detecciones)"
 
-#: templates/global-settings.html:195
+#: templates/global-settings.html:204
 msgid "Quarantine:"
 msgstr "Cuarentena:"
 
-#: templates/global-settings.html:195
+#: templates/global-settings.html:204
 msgid "Emails with viruses are stored but marked as infected for review"
 msgstr ""
 "Los correos con virus se almacenan pero se marcan como infectados para "
 "revisión"
 
-#: templates/global-settings.html:196
+#: templates/global-settings.html:205
 msgid "Reject:"
 msgstr "Rechazar:"
 
-#: templates/global-settings.html:196
+#: templates/global-settings.html:205
 msgid "Emails with viruses are not stored in the database"
 msgstr "Los correos con virus no se almacenan en la base de datos"
 
-#: templates/global-settings.html:197
+#: templates/global-settings.html:206
 msgid "Log Only:"
 msgstr "Solo registro:"
 
-#: templates/global-settings.html:197
+#: templates/global-settings.html:206
 msgid "All emails are stored, virus detections are logged for monitoring"
 msgstr ""
 "Todos los correos se almacenan; las detecciones de virus se registran "
 "para supervisión"
 
-#: templates/global-settings.html:202
+#: templates/global-settings.html:211
 msgid "Max File Size to Scan (bytes)"
 msgstr "Tamaño máximo de archivo para escanear (bytes)"
 
-#: templates/global-settings.html:204
+#: templates/global-settings.html:213
 msgid "Files larger than this size will not be scanned by ClamAV"
 msgstr "Los archivos más grandes que este tamaño no serán escaneados por ClamAV"
 
-#: templates/global-settings.html:214
+#: templates/global-settings.html:217
+msgid "Outage Alert Grace Period (seconds)"
+msgstr "Período de gracia para alertas de interrupción (segundos)"
+
+#: templates/global-settings.html:219
+msgid ""
+"How long a ClamAV outage must persist before an alert is raised. "
+"Suppresses brief blips during signature-database reloads."
+msgstr ""
+"Cuánto tiempo debe persistir una interrupción de ClamAV antes de generar "
+"una alerta. Suprime breves interrupciones durante las recargas de la base"
+" de firmas."
+
+#: templates/global-settings.html:229
 msgid "Quarantine Settings"
 msgstr "Configuración de cuarentena"
 
-#: templates/global-settings.html:221
+#: templates/global-settings.html:236
 msgid "Store quarantined emails in database"
 msgstr "Almacenar correos en cuarentena en la base de datos"
 
-#: templates/global-settings.html:222
+#: templates/global-settings.html:237
 msgid ""
 "When enabled, infected message payloads are moved to the "
 "quarantined_emails table (recommended for auditability)"
@@ -627,21 +1466,21 @@ msgstr ""
 "Cuando está habilitado, las cargas infectadas se mueven a la tabla "
 "quarantined_emails (recomendado para auditoría)"
 
-#: templates/global-settings.html:227
+#: templates/global-settings.html:242
 msgid "Quarantine Retention (days)"
 msgstr "Retención de cuarentena (días)"
 
-#: templates/global-settings.html:229
+#: templates/global-settings.html:244
 msgid "Number of days to retain quarantined messages before automatic purge"
 msgstr ""
 "Número de días para retener mensajes en cuarentena antes de la purga "
 "automática"
 
-#: templates/global-settings.html:235
+#: templates/global-settings.html:250
 msgid "Encrypt quarantined data at rest"
 msgstr "Encriptar datos en cuarentena en reposo"
 
-#: templates/global-settings.html:236
+#: templates/global-settings.html:251
 msgid ""
 "Requires CLAMAV_QUARANTINE_KEY to be configured in the environment or "
 "config file (see README)"
@@ -649,89 +1488,93 @@ msgstr ""
 "Requiere que CLAMAV_QUARANTINE_KEY esté configurado en el entorno o "
 "archivo de configuración (ver README)"
 
-#: templates/global-settings.html:248
+#: templates/global-settings.html:263
 msgid "SMTP Email Configuration"
 msgstr "Configuración SMTP"
 
-#: templates/global-settings.html:257
+#: templates/global-settings.html:272
 msgid "Enable Email Alerts"
 msgstr "Habilitar alertas por correo"
 
-#: templates/global-settings.html:258
+#: templates/global-settings.html:273
 msgid "Send email notifications for system alerts and important events"
 msgstr ""
 "Enviar notificaciones por correo para alertas del sistema y eventos "
 "importantes"
 
-#: templates/global-settings.html:263
+#: templates/global-settings.html:278
 msgid "SMTP Host"
 msgstr "Host SMTP"
 
-#: templates/global-settings.html:265
+#: templates/global-settings.html:280
 msgid "SMTP server hostname or IP address"
 msgstr "Nombre de host o IP del servidor SMTP"
 
-#: templates/global-settings.html:269
+#: templates/global-settings.html:284
 msgid "SMTP Port"
 msgstr "Puerto SMTP"
 
-#: templates/global-settings.html:271
+#: templates/global-settings.html:286
 msgid "SMTP server port (587 for TLS, 465 for SSL, 25 for plain)"
 msgstr "Puerto del servidor SMTP (587 para TLS, 465 para SSL, 25 para plain)"
 
-#: templates/global-settings.html:275
+#: templates/global-settings.html:290
 msgid "SMTP Username"
 msgstr "Usuario SMTP"
 
-#: templates/global-settings.html:277
+#: templates/global-settings.html:292
 msgid "Username for SMTP authentication (usually your email address)"
 msgstr "Usuario para autenticación SMTP (normalmente su dirección de correo)"
 
-#: templates/global-settings.html:281
+#: templates/global-settings.html:296
 msgid "SMTP Password"
 msgstr "Contraseña SMTP"
 
-#: templates/global-settings.html:283
+#: templates/global-settings.html:299
+msgid "A password is currently stored. Leave this field blank to keep it."
+msgstr ""
+"Actualmente hay una contraseña guardada. Deja este campo vacío para "
+"conservarla."
+
+#: templates/global-settings.html:301
 msgid "Password for SMTP authentication (use app passwords for Gmail)"
 msgstr ""
 "Contraseña para autenticación SMTP (use contraseñas de aplicación para "
 "Gmail)"
 
-#: templates/global-settings.html:289
-msgid "Use TLS Encryption"
-msgstr "Usar encriptación TLS"
+#: templates/global-settings.html:308
+msgid "Use STARTTLS"
+msgstr "Usar STARTTLS"
 
-#: templates/global-settings.html:290
-msgid "Use STARTTLS for secure connection (recommended for most servers)"
+#: templates/global-settings.html:309
+msgid ""
+"Use STARTTLS for secure connection (recommended, e.g. port 587). When "
+"disabled, implicit SSL is used (e.g. port 465)."
 msgstr ""
-"Usar STARTTLS para conexión segura (recomendado para la mayoría de "
-"servidores)"
+"Usa STARTTLS para una conexión segura (recomendado, p. ej., puerto 587). "
+"Cuando está desactivado, se usa SSL implícito (p. ej., puerto 465)."
 
-#: templates/global-settings.html:295
+#: templates/global-settings.html:314
 msgid "From Email Address"
 msgstr "Dirección de correo remitente"
 
-#: templates/global-settings.html:297
+#: templates/global-settings.html:316
 msgid "Email address to send alerts from"
 msgstr "Dirección de correo desde la que enviar alertas"
 
-#: templates/global-settings.html:301
+#: templates/global-settings.html:320
 msgid "From Name"
 msgstr "Nombre del remitente"
 
-#: templates/global-settings.html:303
+#: templates/global-settings.html:322
 msgid "Display name for alert emails"
 msgstr "Nombre para mostrar en correos de alerta"
 
-#: templates/global-settings.html:309
-msgid "Cancel"
-msgstr "Cancelar"
-
-#: templates/global-settings.html:313
+#: templates/global-settings.html:332
 msgid "Save Settings"
 msgstr "Guardar ajustes"
 
-#: templates/global-settings.html:326
+#: templates/global-settings.html:345
 msgid "Send Test Email"
 msgstr "Enviar correo de prueba"
 
@@ -747,10 +1590,6 @@ msgstr "Nombre de usuario"
 msgid "Enter your username"
 msgstr "Ingresa tu nombre de usuario"
 
-#: templates/login.html:65 templates/setup.html:136
-msgid "Password"
-msgstr "Contraseña"
-
 #: templates/login.html:66
 msgid "Enter your password"
 msgstr "Ingresa tu contraseña"
@@ -763,86 +1602,231 @@ msgstr "Iniciar sesión"
 msgid "Forgot Password?"
 msgstr "¿Olvidaste tu contraseña?"
 
+#: templates/logs.html:13
+msgid "Operations"
+msgstr "Operaciones"
+
+#: templates/logs.html:14 templates/logs.html:26
+msgid "System logs"
+msgstr "Registros del sistema"
+
+#: templates/logs.html:15
+msgid ""
+"Track fetch activity, worker health and system events. Filter by source, "
+"level or date range to find what you need."
+msgstr ""
+"Realice un seguimiento de la actividad de obtención, el estado del worker"
+" y los eventos del sistema. Filtre por fuente, nivel o rango de fechas "
+"para encontrar lo que necesita."
+
+#: templates/logs.html:17
+msgid "Refresh"
+msgstr "Actualizar"
+
+#: templates/logs.html:19
+msgid "Log summary"
+msgstr "Resumen del registro"
+
+#: templates/logs.html:20
+msgid "Total entries"
+msgstr "Entradas totales"
+
+#: templates/logs.html:21
+msgid "Errors"
+msgstr "Errores"
+
+#: templates/logs.html:22
+msgid "Warnings"
+msgstr "Advertencias"
+
+#: templates/logs.html:23
+msgid "Success"
+msgstr "Éxito"
+
+#: templates/logs.html:25
+msgid "Log filters"
+msgstr "Filtros del registro"
+
+#: templates/logs.html:26
+msgid "entry"
+msgstr "entrada"
+
+#: templates/logs.html:26
+msgid "entries"
+msgstr "entradas"
+
+#: templates/logs.html:40
+msgid "Search message or source..."
+msgstr "Buscar mensaje o fuente..."
+
+#: templates/logs.html:52 templates/logs.html:95
+msgid "Level"
+msgstr "Nivel"
+
+#: templates/logs.html:54
+msgid "All Levels"
+msgstr "Todos los niveles"
+
+#: templates/logs.html:55
+msgid "Debug Only"
+msgstr "Solo depuración"
+
+#: templates/logs.html:56
+msgid "Error Only"
+msgstr "Solo errores"
+
+#: templates/logs.html:57
+msgid "Warning Only"
+msgstr "Solo advertencias"
+
+#: templates/logs.html:58
+msgid "Info Only"
+msgstr "Solo información"
+
+#: templates/logs.html:59
+msgid "Success Only"
+msgstr "Solo éxitos"
+
+#: templates/logs.html:79
+msgid "Date From"
+msgstr "Fecha desde"
+
+#: templates/logs.html:83
+msgid "Date To"
+msgstr "Fecha hasta"
+
+#: templates/logs.html:90
+msgid "Log entries"
+msgstr "Entradas del registro"
+
+#: templates/logs.html:111
+msgid "Show details"
+msgstr "Mostrar detalles"
+
 # Added from templates/profile.html
-#: templates/profile.html:3
+#: templates/profile.html:3 templates/profile.html:10
 msgid "My Profile"
 msgstr "Mi perfil"
 
-#: templates/profile.html:13
+#: templates/profile.html:11
+msgid ""
+"Manage your personal information, assigned roles, and recent login "
+"activity."
+msgstr ""
+"Gestiona tu información personal, tus roles asignados y tu actividad de "
+"inicio de sesión reciente."
+
+#: templates/profile.html:22
 msgid "Personal Information"
 msgstr "Información personal"
 
-#: templates/profile.html:22 templates/setup.html:115
+#: templates/profile.html:31 templates/setup.html:115
 msgid "First Name"
 msgstr "Nombre"
 
-#: templates/profile.html:27
+#: templates/profile.html:36
 msgid "First name"
 msgstr "Nombre"
 
-#: templates/profile.html:31 templates/setup.html:122
+#: templates/profile.html:40 templates/setup.html:122
 msgid "Last Name"
 msgstr "Apellido"
 
-#: templates/profile.html:36
+#: templates/profile.html:45
 msgid "Last name"
 msgstr "Apellido"
 
-#: templates/profile.html:41
+#: templates/profile.html:50
 msgid "Email"
 msgstr "Correo electrónico"
 
-#: templates/profile.html:47
+#: templates/profile.html:56
 msgid "your.email@example.com"
 msgstr "tu.email@ejemplo.com"
 
-#: templates/profile.html:54
+#: templates/profile.html:63
 msgid "Username:"
 msgstr "Nombre de usuario:"
 
-#: templates/profile.html:57
+#: templates/profile.html:66
 msgid "Roles:"
 msgstr "Roles:"
 
-#: templates/profile.html:61
+#: templates/profile.html:70
 msgid "No roles assigned"
 msgstr "No hay roles asignados"
 
-#: templates/profile.html:66
+#: templates/profile.html:75
 msgid "Last Login:"
 msgstr "Último acceso:"
 
-#: templates/profile.html:70 templates/profile.html:88
+#: templates/profile.html:79 templates/profile.html:97
 msgid "Never"
 msgstr "Nunca"
 
-#: templates/profile.html:75
+#: templates/profile.html:84
 msgid "Last Login IP:"
 msgstr "IP del último acceso:"
 
-#: templates/profile.html:84
+#: templates/profile.html:93
 msgid "Last Seen:"
 msgstr "Última vez visto:"
 
-#: templates/profile.html:93
+#: templates/profile.html:102
 msgid "Online Status:"
 msgstr "Estado en línea:"
 
-#: templates/profile.html:95
+#: templates/profile.html:104
 msgid "Online"
 msgstr "En línea"
 
-#: templates/profile.html:97
+#: templates/profile.html:106
 msgid "Offline"
 msgstr "Desconectado"
 
-#: templates/profile.html:102
+#: templates/profile.html:111
 msgid "Account Created:"
 msgstr "Cuenta creada:"
 
-#: templates/profile.html:116
+#: templates/profile.html:125
 msgid "Update Information"
 msgstr "Actualizar información"
+
+#: templates/quarantine-view.html:47
+msgid "Quarantined email details"
+msgstr "Detalles del correo en cuarentena"
+
+#: templates/quarantine.html:19
+msgid "Quarantine summary"
+msgstr "Resumen de cuarentena"
+
+#: templates/quarantine.html:24
+msgid "Quarantine filters"
+msgstr "Filtros de cuarentena"
+
+#: templates/quarantine.html:28
+msgid "Sort messages"
+msgstr "Ordenar mensajes"
+
+#: templates/quarantine.html:77
+msgid "Virus name"
+msgstr "Nombre del virus"
+
+#: templates/quarantine.html:115
+msgid "Quarantined messages"
+msgstr "Mensajes en cuarentena"
+
+#: templates/quarantine.html:164
+msgid "View"
+msgstr "Ver"
+
+#: templates/quarantine.html:166
+msgid "Restore"
+msgstr "Restaurar"
+
+#: templates/quarantine.html:169
+msgid "Delete"
+msgstr "Eliminar"
 
 #: templates/reset-password.html:18 templates/reset-password.html:53
 msgid "Reset Password"
@@ -860,9 +1844,37 @@ msgstr ""
 "La contraseña debe tener al menos 8 caracteres y contener mayúsculas, "
 "minúsculas y caracteres numéricos."
 
+#: templates/roles.html:15
+msgid "Role management summary"
+msgstr "Resumen de gestión de roles"
+
+#: templates/roles.html:20
+msgid "Role filters"
+msgstr "Filtros de roles"
+
+#: templates/roles.html:22
+msgid "Search roles or permissions"
+msgstr "Buscar roles o permisos"
+
+#: templates/roles.html:43
+msgid "What is this role used for?"
+msgstr "¿Para qué se usa este rol?"
+
+#: templates/roles.html:43
+msgid "Find permission"
+msgstr "Buscar permiso"
+
 #: templates/set-password.html:10
 msgid "Set Your Password"
 msgstr "Establezca su contraseña"
+
+#: templates/set-password.html:11
+msgid "This is your first login - choose a password for your account."
+msgstr "Este es tu primer inicio de sesión: elige una contraseña para tu cuenta."
+
+#: templates/set-password.html:34
+msgid "Re-enter your password"
+msgstr "Vuelva a introducir su contraseña"
 
 #: templates/setup.html:4
 msgid "Initial Setup - Daygle Mail Archiver"
@@ -940,329 +1952,77 @@ msgstr "Confirme la contraseña"
 msgid "Create Administrator"
 msgstr "Crear administrador"
 
-#: templates/user-settings.html:12
+#: templates/system-status.html:27
+msgid "Account summary"
+msgstr "Resumen de cuentas"
+
+#: templates/system-status.html:34
+msgid "Service status"
+msgstr "Estado del servicio"
+
+#: templates/system-status.html:88
+msgid "Account status"
+msgstr "Estado de la cuenta"
+
+#: templates/user-settings.html:21
 msgid "Display & Formatting Settings"
 msgstr "Configuración de visualización y formato"
 
-#: templates/user-settings.html:16
+#: templates/user-settings.html:25
 msgid "Configure how content is displayed throughout the application"
 msgstr "Configura cómo se muestra el contenido en toda la aplicación"
 
-#: templates/user-settings.html:104
+#: templates/user-settings.html:113
 msgid "Interface language"
 msgstr "Idioma de la interfaz"
 
-#: templates/user-settings.html:154
+#: templates/user-settings.html:163
 msgid "Email Notifications"
 msgstr "Notificaciones por correo electrónico"
 
-#: templates/user-settings.html:156
+#: templates/user-settings.html:165
 msgid "Enabled"
 msgstr "Habilitado"
 
-#: templates/user-settings.html:157
+#: templates/user-settings.html:166
 msgid "Disabled"
 msgstr "Desactivado"
 
-#: templates/user-settings.html:159
+#: templates/user-settings.html:168
 msgid "Receive email alerts and notifications for system events"
 msgstr ""
 "Recibir alertas y notificaciones por correo electrónico para eventos del "
 "sistema"
 
-#~ msgid "Customise Dashboard"
-#~ msgstr "Personalizar panel"
-
-#~ msgid "Add Widget"
-#~ msgstr "Agregar widget"
-
-#~ msgid "Save Layout"
-#~ msgstr "Guardar diseño"
-
-#~ msgid "Reset Layout"
-#~ msgstr "Restablecer diseño"
-
-#~ msgid "API unreachable - retrying..."
-#~ msgstr "API inalcanzable - reintentando..."
-
-#~ msgid "Retry now"
-#~ msgstr "Reintentar ahora"
-
-#~ msgid "Add Widgets"
-#~ msgstr "Agregar widgets"
-
-#~ msgid "Select widgets to add to your dashboard:"
-#~ msgstr "Seleccione widgets para agregar a su panel:"
-
-#~ msgid "Remove widget"
-#~ msgstr "Eliminar widget"
-
-#~ msgid "Total Emails"
-#~ msgstr "Total de correos"
-
-#~ msgid "Total archived emails"
-#~ msgstr "Correos archivados totales"
-
-#~ msgid "Emails Today"
-#~ msgstr "Correos hoy"
-
-#~ msgid "Emails received today"
-#~ msgstr "Correos recibidos hoy"
-
-#~ msgid "Database Size"
-#~ msgstr "Tamaño de la base de datos"
-
-#~ msgid "Current database size"
-#~ msgstr "Tamaño actual de la base de datos"
-
-#~ msgid "Active Accounts"
-#~ msgstr "Cuentas activas"
-
-#~ msgid "Configured fetch accounts"
-#~ msgstr "Cuentas de extracción configuradas"
-
-#~ msgid "Workers Online"
-#~ msgstr "Trabajadores en línea"
-
-#~ msgid "Active worker processes"
-#~ msgstr "Procesos de trabajo activos"
-
-#~ msgid "Last 7 Days"
-#~ msgstr "Últimos 7 días"
-
-#~ msgid "Emails in past week"
-#~ msgstr "Correos en la última semana"
-
-#~ msgid "Last 30 Days"
-#~ msgstr "Últimos 30 días"
-
-#~ msgid "Emails in past month"
-#~ msgstr "Correos en el último mes"
-
-#~ msgid "Storage Used"
-#~ msgstr "Almacenamiento usado"
-
-#~ msgid "Total storage consumed"
-#~ msgstr "Almacenamiento total consumido"
-
-#~ msgid "Clean Emails"
-#~ msgstr "Correos limpios"
-
-#~ msgid "Virus-free emails"
-#~ msgstr "Correos libres de virus"
-
-#~ msgid "Quarantined"
-#~ msgstr "En cuarentena"
-
-#~ msgid "Emails with viruses"
-#~ msgstr "Correos con virus"
-
-#~ msgid "Rejected"
-#~ msgstr "Rechazados"
-
-#~ msgid "Emails blocked by antivirus"
-#~ msgstr "Correos bloqueados por antivirus"
-
-#~ msgid "System Uptime"
-#~ msgstr "Tiempo de actividad"
-
-#~ msgid "Time since last restart"
-#~ msgstr "Tiempo desde el último reinicio"
-
-#~ msgid "New Fetch Account"
-#~ msgstr ""
-
-#~ msgid "Account Name"
-#~ msgstr ""
-
-#~ msgid "A friendly name to identify this account"
-#~ msgstr ""
-
-#~ msgid "Account Type"
-#~ msgstr ""
-
-#~ msgid "IMAP"
-#~ msgstr ""
-
-#~ msgid "Gmail API"
-#~ msgstr ""
-
-#~ msgid "Office 365 API"
-#~ msgstr ""
-
-#~ msgid "Select the type of email service to fetch from"
-#~ msgstr ""
-
-#~ msgid "IMAP Configuration"
-#~ msgstr ""
-
-#~ msgid "Host"
-#~ msgstr ""
-
-#~ msgid "Port"
-#~ msgstr ""
-
-#~ msgid "Leave blank to keep the existing password"
-#~ msgstr ""
-
-#~ msgid "Fetch Settings"
-#~ msgstr ""
-
-#~ msgid "Recommended for secure connections (port 993)"
-#~ msgstr ""
-
-#~ msgid "How often to check for new emails (minimum 60 seconds)"
-#~ msgstr ""
-
-#~ msgid "Require STARTTLS"
-#~ msgstr ""
-
-#~ msgid "For plain connections that upgrade to TLS (port 143)"
-#~ msgstr ""
-
-#~ msgid "Delete Email After Processing"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Gmail: moves to Trash | Office "
-#~ "365: moves to Deleted Items | "
-#~ "IMAP: marks as deleted (recoverable)"
-#~ msgstr ""
-
-#~ msgid "Permanently Expunge Deleted (IMAP only)"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Warning: Permanently removes deleted emails"
-#~ " from server - cannot be recovered"
-#~ msgstr ""
-
-#~ msgid "OAuth Setup Required"
-#~ msgstr ""
-
-#~ msgid "To use Gmail or Office 365, you need to:"
-#~ msgstr ""
-
-#~ msgid "Create an OAuth app in Google/Microsoft developer console"
-#~ msgstr ""
-
-#~ msgid "Enter your Client ID and Client Secret below"
-#~ msgstr ""
-
-#~ msgid "Click \"Authorise\" to grant access"
-#~ msgstr ""
-
-#~ msgid "Create Account"
-#~ msgstr ""
-
-#~ msgid "OAuth Client ID"
-#~ msgstr ""
-
-#~ msgid "From your Google/Microsoft OAuth app"
-#~ msgstr ""
-
-#~ msgid "OAuth Client Secret"
-#~ msgstr ""
-
-#~ msgid "Keep this secret secure"
-#~ msgstr ""
-
-#~ msgid "Add Fetch Account"
-#~ msgstr ""
-
-#~ msgid "Name"
-#~ msgstr ""
-
-#~ msgid "Type"
-#~ msgstr ""
-
-#~ msgid "Host/Service"
-#~ msgstr ""
-
-#~ msgid "User"
-#~ msgstr ""
-
-#~ msgid "Poll Interval"
-#~ msgstr ""
-
-#~ msgid "Last Success"
-#~ msgstr ""
-
-#~ msgid "Actions"
-#~ msgstr ""
-
-#~ msgid "Gmail"
-#~ msgstr ""
-
-#~ msgid "O365"
-#~ msgstr ""
-
-#~ msgid "SSL Enabled"
-#~ msgstr ""
-
-#~ msgid "Edit"
-#~ msgstr ""
-
-#~ msgid "Test Connection"
-#~ msgstr ""
-
-#~ msgid "Delete"
-#~ msgstr ""
-
-#~ msgid "No fetch accounts configured."
-#~ msgstr ""
-
-#~ msgid "Previous"
-#~ msgstr ""
-
-#~ msgid "Next"
-#~ msgstr ""
-
-#~ msgid "Delete Fetch Account"
-#~ msgstr ""
-
-#~ msgid "Warning:"
-#~ msgstr ""
-
-#~ msgid "You are about to delete the fetch account:"
-#~ msgstr ""
-
-#~ msgid "Loading email count..."
-#~ msgstr ""
-
-#~ msgid "What would you like to do?"
-#~ msgstr ""
-
-#~ msgid "Delete Account Only (retain emails)"
-#~ msgstr ""
-
-#~ msgid "Delete Account + All Emails"
-#~ msgstr ""
-
-#~ msgid "Edit Fetch Account"
-#~ msgstr ""
-
-#~ msgid "Update Account"
-#~ msgstr ""
-
-#~ msgid "This account has"
-#~ msgstr ""
-
-#~ msgid "associated with it."
-#~ msgstr ""
-
-#~ msgid "email"
-#~ msgstr ""
-
-#~ msgid "emails"
-#~ msgstr ""
-
-#~ msgid "Delete Account Only (retain"
-#~ msgstr ""
-
-#~ msgid "Delete Account + All"
-#~ msgstr ""
-
-#~ msgid "aygle Mail Archiver"
-#~ msgstr "aygle Mail Archiver"
+#: templates/users.html:17
+msgid "User management summary"
+msgstr "Resumen de gestión de usuarios"
+
+#: templates/users.html:22
+msgid "User filters"
+msgstr "Filtros de usuarios"
+
+#: templates/users.html:24
+msgid "Search name, email or role"
+msgstr "Buscar nombre, correo o rol"
+
+#: templates/users.html:27
+msgid "User accounts"
+msgstr "Cuentas de usuario"
+
+#: templates/users.html:60
+msgid "Edit user"
+msgstr "Editar usuario"
+
+#: templates/users.html:61
+msgid "You cannot disable your own account"
+msgstr "No puede desactivar su propia cuenta"
+
+#: templates/users.html:62
+msgid "You cannot delete your own account"
+msgstr "No puede eliminar su propia cuenta"
+
+#: templates/users.html:77
+msgid "Find role"
+msgstr "Buscar rol"
 

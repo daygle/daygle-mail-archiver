@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-02-01 02:45+0000\n"
+"POT-Creation-Date: 2026-09-04 10:15+1000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh\n"
@@ -12,10 +12,631 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.10.3\n"
+"Generated-By: Babel 2.18.0\n"
 
-#: templates/base.html:4 templates/base.html:49 templates/base.html:50
-#: templates/base.html:170
+#: src/routes/alert_management.py:50
+msgid "Unable to load alert triggers. Please try again."
+msgstr "无法加载警报触发器。请重试。"
+
+#: src/routes/alert_management.py:77 src/routes/alert_management.py:120
+msgid "Alert trigger not found."
+msgstr "未找到警报触发器。"
+
+#: src/routes/alert_management.py:85 src/routes/alert_management.py:128
+msgid "Alert trigger no longer exists."
+msgstr "警报触发器不再存在。"
+
+#: src/routes/alert_management.py:92
+#, python-brace-format
+msgid "Alert trigger '{0}' enabled successfully."
+msgstr "警报触发器 '{0}' 已成功启用。"
+
+#: src/routes/alert_management.py:94
+#, python-brace-format
+msgid "Alert trigger '{0}' disabled successfully."
+msgstr "警报触发器 '{0}' 已成功停用。"
+
+#: src/routes/alert_management.py:98
+msgid "Failed to update trigger status."
+msgstr "更新触发器状态失败。"
+
+#: src/routes/alert_management.py:110
+#, python-brace-format
+msgid "Invalid alert type: {0}"
+msgstr "无效的警报类型：{0}"
+
+#: src/routes/alert_management.py:134
+#, python-brace-format
+msgid "Alert trigger '{0}' severity updated to {1}."
+msgstr "警报触发器 '{0}' 的严重级别已更新为 {1}。"
+
+#: src/routes/alert_management.py:138
+msgid "Failed to update trigger severity."
+msgstr "更新触发器严重级别失败。"
+
+#: src/routes/alerts.py:134 src/routes/alerts.py:166
+msgid "User not found"
+msgstr "未找到用户"
+
+#: src/routes/alerts.py:142
+#, python-brace-format
+msgid "All {0} alert(s) acknowledged successfully!"
+msgstr "所有 {0} 条警报已成功确认！"
+
+#: src/routes/alerts.py:144
+msgid "No unacknowledged alerts to acknowledge"
+msgstr "没有待确认的未确认警报"
+
+#: src/routes/alerts.py:148
+msgid "Failed to acknowledge all alerts"
+msgstr "确认所有警报失败"
+
+#: src/routes/alerts.py:174
+msgid "Alert acknowledged successfully!"
+msgstr "警报确认成功！"
+
+#: src/routes/alerts.py:177
+msgid "Alert not found or already acknowledged"
+msgstr "未找到警报或已确认"
+
+#: src/routes/alerts.py:181
+msgid "Failed to acknowledge alert"
+msgstr "确认警报失败"
+
+#: src/routes/alerts.py:217
+msgid "Access denied"
+msgstr "拒绝访问"
+
+#: src/routes/alerts.py:221
+msgid "Invalid alert type"
+msgstr "无效的警报类型"
+
+#: src/routes/alerts.py:234
+msgid "Test alert created successfully!"
+msgstr "测试警报创建成功！"
+
+#: src/routes/alerts.py:238
+msgid "Failed to create test alert"
+msgstr "创建测试警报失败"
+
+#: src/routes/dashboard.py:215
+msgid "Dashboard layout saved successfully!"
+msgstr "仪表板布局保存成功！"
+
+#: src/routes/dashboard.py:220
+msgid "Failed to save dashboard layout"
+msgstr "保存仪表板布局失败"
+
+#: src/routes/emails.py:276
+#, python-brace-format
+msgid "Imported {0} message(s)."
+msgstr "已导入 {0} 条消息。"
+
+#: src/routes/emails.py:278
+#, python-brace-format
+msgid "{0} message(s) blocked (virus detected)."
+msgstr "已阻止 {0} 条消息（检测到病毒）。"
+
+#: src/routes/emails.py:282
+#, python-brace-format
+msgid "... and {0} more issue(s)"
+msgstr "...以及另外 {0} 个问题"
+
+#: src/routes/emails.py:283 src/routes/emails.py:1113
+#, python-brace-format
+msgid "Issues: {0}"
+msgstr "问题：{0}"
+
+#: src/routes/emails.py:285
+#, python-brace-format
+msgid "No messages were imported. {0}"
+msgstr "未导入任何消息。{0}"
+
+#: src/routes/emails.py:291
+msgid "No messages were imported."
+msgstr "未导入任何消息。"
+
+#: src/routes/emails.py:1105
+#, python-brace-format
+msgid "Scanned {0} email(s)."
+msgstr "已扫描 {0} 封邮件。"
+
+#: src/routes/emails.py:1107
+#, python-brace-format
+msgid "{0} clean."
+msgstr "{0} 封正常。"
+
+#: src/routes/emails.py:1109
+#, python-brace-format
+msgid "{0} infected - review and quarantine as needed."
+msgstr "{0} 封受感染 - 请审查并根据需要隔离。"
+
+#: src/routes/emails.py:1111
+#, python-brace-format
+msgid "{0} skipped."
+msgstr "已跳过 {0} 条。"
+
+#: src/routes/emails.py:1152
+msgid "Email quarantined successfully."
+msgstr "邮件已成功隔离。"
+
+#: src/routes/emails.py:1154
+msgid "Email could not be quarantined (may already be quarantined)."
+msgstr "无法隔离该邮件（可能已处于隔离状态）。"
+
+#: src/routes/emails.py:1185
+#, python-brace-format
+msgid "Deleted {0} email(s) from the database."
+msgstr "已从数据库删除 {0} 封邮件。"
+
+#: src/routes/emails.py:1197
+#, python-brace-format
+msgid ""
+"Deleted {0} email(s) from the database. Mail server deletion had issues: "
+"{1}"
+msgstr "已从数据库删除 {0} 封邮件。邮件服务器删除时出现问题：{1}"
+
+#: src/routes/emails.py:1205
+#, python-brace-format
+msgid "Deleted {0} email(s) from database and mail server."
+msgstr "已从数据库和邮件服务器删除 {0} 封邮件。"
+
+#: src/routes/emails.py:1212
+msgid "Invalid delete mode selected."
+msgstr "所选删除模式无效。"
+
+#: src/routes/emails.py:1253
+#, python-brace-format
+msgid "Quarantined {0} email(s)."
+msgstr "已隔离 {0} 封邮件。"
+
+#: src/routes/emails.py:1255
+msgid "No emails were quarantined."
+msgstr "没有邮件被隔离。"
+
+#: src/routes/emails.py:1544
+msgid "No emails found to export."
+msgstr "未找到要导出的邮件。"
+
+#: src/routes/fetch_accounts.py:83
+#, python-brace-format
+msgid ""
+"Save the {0} account first, then use the OAuth Authorise button and test "
+"again."
+msgstr "请先保存 {0} 账户，然后使用“OAuth 授权”按钮并重新测试。"
+
+#: src/routes/fetch_accounts.py:99 src/routes/fetch_accounts.py:446
+#: src/routes/fetch_accounts.py:501
+msgid "Account not found"
+msgstr "未找到账户"
+
+#: src/routes/fetch_accounts.py:105
+#, python-brace-format
+msgid "{0} OAuth Client ID and Secret must be configured for this account."
+msgstr "必须为此账户配置 {0} OAuth 客户端 ID 和密钥。"
+
+#: src/routes/fetch_accounts.py:115 src/routes/fetch_accounts.py:547
+#, python-brace-format
+msgid "✗ Connection failed: {0}"
+msgstr "✗ 连接失败：{0}"
+
+#: src/routes/fetch_accounts.py:231 src/routes/fetch_accounts.py:320
+#: src/routes/fetch_accounts.py:575
+#, python-brace-format
+msgid "Invalid account type: {0}"
+msgstr "无效的账户类型：{0}"
+
+#: src/routes/fetch_accounts.py:271
+#, python-brace-format
+msgid "{0} account created successfully"
+msgstr "{0} 账户创建成功"
+
+#: src/routes/fetch_accounts.py:277 src/routes/fetch_accounts.py:426
+#, python-brace-format
+msgid "Account name '{0}' already exists. Please choose a different name."
+msgstr "账户名称 '{0}' 已存在。请选择其他名称。"
+
+#: src/routes/fetch_accounts.py:279
+#, python-brace-format
+msgid "Failed to create account: {0}"
+msgstr "创建账户失败：{0}"
+
+#: src/routes/fetch_accounts.py:355 src/routes/global_settings.py:254
+#: src/routes/profile.py:235 src/routes/profile.py:363 src/routes/roles.py:288
+#: src/routes/users.py:372
+msgid "No changes detected."
+msgstr "未检测到更改。"
+
+#: src/routes/fetch_accounts.py:420
+#, python-brace-format
+msgid "{0} account updated successfully"
+msgstr "{0} 账户更新成功"
+
+#: src/routes/fetch_accounts.py:428
+#, python-brace-format
+msgid "Failed to update account: {0}"
+msgstr "更新账户失败：{0}"
+
+#: src/routes/fetch_accounts.py:454
+#, python-brace-format
+msgid "Fetch account '{0}' deleted. Emails retained."
+msgstr "已删除账户 '{0}'。邮件已保留。"
+
+#: src/routes/fetch_accounts.py:470
+#, python-brace-format
+msgid "Fetch account '{0}' and all related emails deleted."
+msgstr "已删除账户 '{0}' 及其所有相关邮件。"
+
+#: src/routes/fetch_accounts.py:473
+msgid "Invalid delete mode."
+msgstr "删除模式无效。"
+
+#: src/routes/fetch_accounts.py:522
+#, python-brace-format
+msgid "IMAP connection successful to {0}"
+msgstr "与 {0} 的 IMAP 连接成功"
+
+#: src/routes/fetch_accounts.py:535
+#, python-brace-format
+msgid "{0} OAuth Client ID and Secret must be configured for this account"
+msgstr "必须为此账户配置 {0} OAuth 客户端 ID 和密钥"
+
+#: src/routes/fetch_accounts.py:544
+#, python-brace-format
+msgid "✗ Unknown account type: {0}"
+msgstr "✗ 未知的账户类型：{0}"
+
+#: src/routes/fetch_accounts.py:645
+msgid "Connection successful"
+msgstr "连接成功"
+
+#: src/routes/fetch_accounts.py:649
+#, python-brace-format
+msgid "Connection failed: {0}"
+msgstr "连接失败：{0}"
+
+#: src/routes/global_settings.py:37 src/routes/profile.py:332
+msgid "Items per page must be between 10 and 500."
+msgstr "每页条数必须在 10 到 500 之间。"
+
+#: src/routes/global_settings.py:39
+msgid "Items per page must be a number between 10 and 500."
+msgstr "每页条数必须是 10 到 500 之间的数字。"
+
+#: src/routes/global_settings.py:44
+msgid "Retention period must be at least 1."
+msgstr "保留期必须至少为 1。"
+
+#: src/routes/global_settings.py:46
+msgid "Retention period must be a number of at least 1."
+msgstr "保留期必须是至少为 1 的数字。"
+
+#: src/routes/global_settings.py:49
+msgid "Invalid retention unit selected."
+msgstr "所选保留单位无效。"
+
+#: src/routes/global_settings.py:54
+msgid "Auto logout must be between 0 and 1440 minutes (0 disables it)."
+msgstr "自动注销时间必须在 0 到 1440 分钟之间（0 表示禁用）。"
+
+#: src/routes/global_settings.py:56
+msgid "Auto logout must be a number of minutes."
+msgstr "自动注销时间必须是分钟数。"
+
+#: src/routes/global_settings.py:61
+msgid "ClamAV port must be between 1 and 65535."
+msgstr "ClamAV 端口必须在 1 到 65535 之间。"
+
+#: src/routes/global_settings.py:63
+msgid "ClamAV port must be a number."
+msgstr "ClamAV 端口必须是数字。"
+
+#: src/routes/global_settings.py:68
+msgid "Max file size to scan must be at least 1024 bytes."
+msgstr "最大扫描文件大小必须至少为 1024 字节。"
+
+#: src/routes/global_settings.py:70
+msgid "Max file size to scan must be a number of bytes."
+msgstr "最大扫描文件大小必须是字节数。"
+
+#: src/routes/global_settings.py:75
+msgid "Quarantine retention must be at least 1 day."
+msgstr "隔离保留期必须至少为 1 天。"
+
+#: src/routes/global_settings.py:77
+msgid "Quarantine retention must be a number of days."
+msgstr "隔离保留期必须是天数。"
+
+#: src/routes/global_settings.py:80
+msgid "Invalid virus action selected."
+msgstr "所选病毒处理操作无效。"
+
+#: src/routes/global_settings.py:85
+msgid "SMTP port must be between 1 and 65535."
+msgstr "SMTP 端口必须在 1 到 65535 之间。"
+
+#: src/routes/global_settings.py:87
+msgid "SMTP port must be a number."
+msgstr "SMTP 端口必须是数字。"
+
+#: src/routes/global_settings.py:92
+msgid "ClamAV alert grace period must be between 0 and 86400 seconds."
+msgstr "ClamAV 警报宽限期必须在 0 到 86400 秒之间。"
+
+#: src/routes/global_settings.py:94
+msgid "ClamAV alert grace period must be a number of seconds."
+msgstr "ClamAV 警报宽限期必须是秒数。"
+
+#: src/routes/global_settings.py:98
+#, python-brace-format
+msgid "Unknown timezone: {0}"
+msgstr "未知时区：{0}"
+
+#: src/routes/global_settings.py:273
+msgid "Settings updated successfully."
+msgstr "设置更新成功。"
+
+#: src/routes/global_settings.py:278
+#, python-brace-format
+msgid "Failed to save settings: {0}"
+msgstr "保存设置失败：{0}"
+
+#: src/routes/global_settings.py:300
+msgid "Your account does not have an email address configured."
+msgstr "您的账户未配置电子邮件地址。"
+
+#: src/routes/global_settings.py:306
+#, python-brace-format
+msgid "SMTP test successful: {0}"
+msgstr "SMTP 测试成功：{0}"
+
+#: src/routes/global_settings.py:308 src/routes/global_settings.py:312
+#, python-brace-format
+msgid "SMTP test failed: {0}"
+msgstr "SMTP 测试失败：{0}"
+
+#: src/routes/profile.py:127 src/routes/users.py:530
+msgid "User not found."
+msgstr "未找到用户。"
+
+#: src/routes/profile.py:134
+msgid "Current password is incorrect."
+msgstr "当前密码不正确。"
+
+#: src/routes/profile.py:138
+msgid "An error occurred. Please try again."
+msgstr "发生错误。请重试。"
+
+#: src/routes/profile.py:143
+msgid "New passwords do not match."
+msgstr "新密码不匹配。"
+
+#: src/routes/profile.py:152 src/routes/users.py:128 src/routes/users.py:391
+msgid "Password must include upper, lower, number and be 8+ chars."
+msgstr "密码必须包含大写字母、小写字母、数字，并且长度至少为 8 个字符。"
+
+#: src/routes/profile.py:164
+msgid "Password changed successfully."
+msgstr "密码修改成功。"
+
+#: src/routes/profile.py:169
+msgid "Failed to update password. Please try again."
+msgstr "更新密码失败。请重试。"
+
+#: src/routes/profile.py:215 src/routes/users.py:133 src/routes/users.py:314
+msgid "Invalid email format."
+msgstr "邮件格式无效。"
+
+#: src/routes/profile.py:245
+msgid "Profile updated successfully."
+msgstr "个人资料更新成功。"
+
+#: src/routes/profile.py:250
+msgid "Failed to update profile. Please try again."
+msgstr "更新个人资料失败。请重试。"
+
+#: src/routes/profile.py:394
+msgid "User settings updated successfully."
+msgstr "用户设置更新成功。"
+
+#: src/routes/profile.py:399
+msgid "Failed to update settings. Please try again."
+msgstr "更新设置失败。请重试。"
+
+#: src/routes/roles.py:100 src/routes/roles.py:250
+msgid "Role name must be at least 2 characters long."
+msgstr "角色名称必须至少为 2 个字符。"
+
+#: src/routes/roles.py:108 src/routes/roles.py:260
+#, python-brace-format
+msgid "Role '{0}' already exists."
+msgstr "角色 '{0}' 已存在。"
+
+#: src/routes/roles.py:115 src/routes/roles.py:278
+msgid "Invalid permission selection."
+msgstr "权限选择无效。"
+
+#: src/routes/roles.py:148
+#, python-brace-format
+msgid "Role '{0}' created successfully."
+msgstr "角色 '{0}' 创建成功。"
+
+#: src/routes/roles.py:153
+msgid "Failed to create role."
+msgstr "创建角色失败。"
+
+#: src/routes/roles.py:175 src/routes/roles.py:233 src/routes/roles.py:355
+msgid "Role not found."
+msgstr "未找到角色。"
+
+#: src/routes/roles.py:180
+msgid "System roles cannot be edited."
+msgstr "系统角色无法编辑。"
+
+#: src/routes/roles.py:237
+msgid "System roles cannot be modified."
+msgstr "系统角色无法修改。"
+
+#: src/routes/roles.py:324
+#, python-brace-format
+msgid "Role '{0}' updated successfully."
+msgstr "角色 '{0}' 更新成功。"
+
+#: src/routes/roles.py:330
+msgid "Failed to update role."
+msgstr "更新角色失败。"
+
+#: src/routes/roles.py:359
+msgid "System roles cannot be deleted."
+msgstr "系统角色无法删除。"
+
+#: src/routes/roles.py:371
+msgid "Cannot delete a role that is assigned to users."
+msgstr "无法删除已分配给用户的角色。"
+
+#: src/routes/roles.py:387
+#, python-brace-format
+msgid "Role '{0}' deleted successfully."
+msgstr "角色 '{0}' 删除成功。"
+
+#: src/routes/roles.py:393
+msgid "Failed to delete role."
+msgstr "删除角色失败。"
+
+#: src/routes/users.py:113 src/routes/users.py:299
+msgid "Username must be at least 3 characters long."
+msgstr "用户名必须至少为 3 个字符。"
+
+#: src/routes/users.py:118 src/routes/users.py:309
+#, python-brace-format
+msgid "Username '{0}' already exists."
+msgstr "用户名 '{0}' 已存在。"
+
+#: src/routes/users.py:138 src/routes/users.py:319
+msgid "At least one role must be assigned."
+msgstr "必须至少分配一个角色。"
+
+#: src/routes/users.py:145 src/routes/users.py:326
+msgid "Invalid role selection."
+msgstr "角色选择无效。"
+
+#: src/routes/users.py:191
+#, python-brace-format
+msgid "User '{0}' created successfully"
+msgstr "用户 '{0}' 创建成功"
+
+#: src/routes/users.py:195
+msgid "User creation failed. Please try again."
+msgstr "创建用户失败。请重试。"
+
+#: src/routes/users.py:357
+msgid "You cannot remove your own administrative access."
+msgstr "您不能移除自己的管理访问权限。"
+
+#: src/routes/users.py:456
+msgid "User updated successfully."
+msgstr "用户更新成功。"
+
+#: src/routes/users.py:461
+msgid "User update failed. Please try again."
+msgstr "更新用户失败。请重试。"
+
+#: src/routes/users.py:480
+msgid "You cannot delete your own account."
+msgstr "您不能删除自己的账户。"
+
+#: src/routes/users.py:495
+msgid "User deleted successfully."
+msgstr "用户删除成功。"
+
+#: src/routes/users.py:500
+msgid "User deletion failed. Please try again."
+msgstr "删除用户失败。请重试。"
+
+#: src/routes/users.py:519
+msgid "You cannot disable your own account."
+msgstr "您不能停用自己的账户。"
+
+#: src/routes/users.py:544
+msgid "User status updated successfully."
+msgstr "用户状态更新成功。"
+
+#: src/routes/users.py:549
+msgid "User status update failed. Please try again."
+msgstr "更新用户状态失败。请重试。"
+
+#: templates/alert-management.html:18
+msgid "Trigger summary"
+msgstr "触发器摘要"
+
+#: templates/alert-management.html:23
+msgid "Trigger filters"
+msgstr "触发器筛选器"
+
+#: templates/alert-management.html:26 templates/alerts.html:40
+#: templates/emails.html:49 templates/logs.html:28 templates/quarantine.html:27
+msgid "Search this page"
+msgstr "搜索此页面"
+
+#: templates/alert-management.html:27
+msgid "Filter by status"
+msgstr "按状态筛选"
+
+#: templates/alert-management.html:36
+msgid "Alert triggers"
+msgstr "警报触发器"
+
+#: templates/alert-management.html:102
+msgid "How alerts work"
+msgstr "警报工作原理"
+
+#: templates/alerts.html:31
+msgid "Alert summary"
+msgstr "警报摘要"
+
+#: templates/alerts.html:37
+msgid "Alert filters"
+msgstr "警报筛选器"
+
+#: templates/alerts.html:104
+msgid "Email sent"
+msgstr "邮件已发送"
+
+#: templates/alerts.html:139 templates/emails.html:224 templates/logs.html:141
+#: templates/quarantine.html:190
+msgid "Previous"
+msgstr "上一页"
+
+#: templates/alerts.html:169 templates/emails.html:254 templates/logs.html:171
+#: templates/quarantine.html:220
+msgid "Next"
+msgstr "下一页"
+
+#: templates/alerts.html:180 templates/emails.html:275 templates/logs.html:185
+#: templates/quarantine.html:242
+msgid "Jump to page"
+msgstr "跳转到页面"
+
+#: templates/alerts.html:194 templates/email-view.html:195
+#: templates/emails.html:289 templates/emails.html:292
+#: templates/fetch-accounts.html:96 templates/fetch-accounts.html:128
+#: templates/quarantine-view.html:146 templates/quarantine.html:256
+#: templates/quarantine.html:258 templates/roles.html:43
+#: templates/roles.html:44 templates/users.html:77 templates/users.html:78
+msgid "Close"
+msgstr "关闭"
+
+#: templates/alerts.html:328 templates/emails.html:472 templates/logs.html:265
+#: templates/quarantine.html:455 templates/system-status.html:142
+msgid "Scroll to top"
+msgstr "滚动到顶部"
+
+#: templates/alerts.html:328 templates/emails.html:472 templates/logs.html:265
+#: templates/quarantine.html:455 templates/system-status.html:142
+msgid "Back to top"
+msgstr "返回顶部"
+
+#: templates/base.html:4 templates/base.html:49 templates/base.html:170
 msgid "Daygle Mail Archiver"
 msgstr "Daygle Mail Archiver"
 
@@ -48,8 +669,8 @@ msgid "Quarantine"
 msgstr "隔离"
 
 #: templates/base.html:104
-msgid "Transfer"
-msgstr "传输"
+msgid "Import/Export"
+msgstr "导入/导出"
 
 #: templates/base.html:110
 msgid "System Management"
@@ -60,6 +681,7 @@ msgid "Alert Management"
 msgstr "警报管理"
 
 #: templates/base.html:120 templates/global-settings.html:3
+#: templates/global-settings.html:10
 msgid "Global Settings"
 msgstr "全局设置"
 
@@ -99,12 +721,14 @@ msgstr "个人资料"
 msgid "User Settings"
 msgstr "用户设置"
 
-#: templates/base.html:200 templates/base.html:203 templates/login.html:22
+#: templates/base.html:200 templates/base.html:203
+#: templates/forgot-password.html:29 templates/login.html:22
+#: templates/setup.html:65
 msgid "Toggle Theme"
 msgstr "切换主题"
 
 #: templates/base.html:208 templates/change-password.html:3
-#: templates/change-password.html:10 templates/change-password.html:30
+#: templates/change-password.html:10 templates/change-password.html:38
 msgid "Change Password"
 msgstr "更改密码"
 
@@ -128,33 +752,204 @@ msgstr "主题已在本地保存"
 msgid "Theme applied"
 msgstr "主题已应用"
 
-#: templates/change-password.html:16
+#: templates/change-password.html:9 templates/set-password.html:9
+msgid "Security"
+msgstr "安全"
+
+#: templates/change-password.html:11
+msgid "Update the password you use to sign in to the archive."
+msgstr "更新您登录归档所使用的密码。"
+
+#: templates/change-password.html:18 templates/login.html:65
+#: templates/set-password.html:19 templates/setup.html:136
+msgid "Password"
+msgstr "密码"
+
+#: templates/change-password.html:24
 msgid "Current Password"
 msgstr "当前密码"
 
-#: templates/change-password.html:17
+#: templates/change-password.html:25
 msgid "Enter your current password"
 msgstr "输入您当前的密码"
 
-#: templates/change-password.html:20 templates/reset-password.html:39
+#: templates/change-password.html:28 templates/reset-password.html:39
 msgid "New Password"
 msgstr "新密码"
 
-#: templates/change-password.html:21 templates/reset-password.html:40
+#: templates/change-password.html:29 templates/reset-password.html:40
+#: templates/set-password.html:28
 msgid "Enter your new password"
 msgstr "请输入您的新密码"
 
-#: templates/change-password.html:24 templates/reset-password.html:47
+#: templates/change-password.html:32 templates/reset-password.html:47
 msgid "Confirm New Password"
 msgstr "确认新密码"
 
-#: templates/change-password.html:25 templates/reset-password.html:48
+#: templates/change-password.html:33 templates/reset-password.html:48
 msgid "Confirm your new password"
 msgstr "请确认您的新密码"
 
+#: templates/dashboard.html:26
+msgid "Customise Dashboard"
+msgstr "自定义仪表板"
+
+#: templates/dashboard.html:29
+msgid "Add Widget"
+msgstr "添加组件"
+
+#: templates/dashboard.html:32
+msgid "Save Layout"
+msgstr "保存布局"
+
+#: templates/dashboard.html:35
+msgid "Reset Layout"
+msgstr "重置布局"
+
+#: templates/dashboard.html:38 templates/global-settings.html:328
+msgid "Cancel"
+msgstr "取消"
+
+#: templates/dashboard.html:77 templates/dashboard.html:98
+#: templates/dashboard.html:119 templates/dashboard.html:140
+#: templates/dashboard.html:161 templates/dashboard.html:182
+#: templates/dashboard.html:203 templates/dashboard.html:224
+#: templates/dashboard.html:245 templates/dashboard.html:266
+#: templates/dashboard.html:287 templates/dashboard.html:308
+msgid "Remove widget"
+msgstr "移除组件"
+
+#: templates/email-view.html:19
+msgid "Download this message as a .eml file"
+msgstr "将此邮件下载为 .eml 文件"
+
+#: templates/email-view.html:24 templates/emails.html:80
+msgid "Run ClamAV scan; infected results are flagged for review"
+msgstr "运行 ClamAV 扫描；受感染的结果会被标记以供审查"
+
+#: templates/email-view.html:42 templates/email-view.html:43
+#: templates/email-view.html:46 templates/quarantine-view.html:33
+#: templates/quarantine-view.html:34 templates/quarantine-view.html:37
+msgid "Email body"
+msgstr "邮件正文"
+
+#: templates/email-view.html:54
+msgid "Email details"
+msgstr "邮件详情"
+
+#: templates/email-view.html:126 templates/email-view.html:168
+#: templates/emails.html:199
+msgid "ClamAV scan not completed or scanning is disabled"
+msgstr "ClamAV 扫描未完成或扫描已禁用"
+
+#: templates/email-view.html:132
+msgid "Download blocked: virus detected"
+msgstr "下载已阻止：检测到病毒"
+
+#: templates/email-view.html:134
+msgid "Download attachment"
+msgstr "下载附件"
+
+#: templates/email-view.html:181 templates/quarantine-view.html:132
+msgid "Raw preview"
+msgstr "原始预览"
+
+#: templates/emails.html:40
+msgid "Archive summary"
+msgstr "归档摘要"
+
+#: templates/emails.html:46
+msgid "Email filters"
+msgstr "邮件筛选器"
+
+#: templates/emails.html:50
+msgid "Sort emails"
+msgstr "排序邮件"
+
+#: templates/emails.html:63 templates/quarantine.html:42
+msgid "Choose which columns to display"
+msgstr "选择要显示的列"
+
+#: templates/emails.html:75 templates/quarantine.html:54
+msgid "Bulk actions"
+msgstr "批量操作"
+
+#: templates/emails.html:102 templates/profile.html:9
+#: templates/quarantine.html:76
+msgid "Account"
+msgstr "账户"
+
+#: templates/emails.html:103
+msgid "Folder"
+msgstr "文件夹"
+
+#: templates/emails.html:107
+msgid "Sender address"
+msgstr "发件人地址"
+
+#: templates/emails.html:111
+msgid "Recipient address"
+msgstr "收件人地址"
+
+#: templates/emails.html:115
+msgid "Subject"
+msgstr "主题"
+
+#: templates/emails.html:127 templates/quarantine.html:89
+msgid "Search subject, sender, recipients"
+msgstr "搜索主题、发件人、收件人"
+
+#: templates/emails.html:146
+msgid "Archived emails"
+msgstr "已归档邮件"
+
+#: templates/emails.html:205
+msgid "View email"
+msgstr "查看邮件"
+
+#: templates/fetch-accounts.html:18
+msgid "Fetch account summary"
+msgstr "获取账户摘要"
+
+#: templates/fetch-accounts.html:24
+msgid "Account filters"
+msgstr "账户筛选器"
+
+#: templates/fetch-accounts.html:27
+msgid "Search name, host or user"
+msgstr "搜索名称、主机或用户"
+
+#: templates/fetch-accounts.html:32
+msgid "Fetch accounts"
+msgstr "获取账户"
+
+#: templates/fetch-accounts.html:72
+msgid "Edit account"
+msgstr "编辑账户"
+
+#: templates/fetch-accounts.html:73
+msgid "Test connection"
+msgstr "测试连接"
+
+#: templates/fetch-accounts.html:87
+msgid "Account pages"
+msgstr "账户页面"
+
+#: templates/fetch-accounts.html:106
+msgid "Enter password"
+msgstr "输入密码"
+
+#: templates/fetch-accounts.html:117
+msgid "Enter your OAuth Client ID"
+msgstr "输入您的 OAuth 客户端 ID"
+
+#: templates/fetch-accounts.html:118
+msgid "Enter your OAuth Client Secret"
+msgstr "输入您的 OAuth 客户端密钥"
+
 #: templates/forgot-password.html:36 templates/login.html:27
 #: templates/reset-password.html:22 templates/setup.html:70
-#: templates/user-settings.html:96
+#: templates/user-settings.html:105
 msgid "Language"
 msgstr "语言"
 
@@ -217,497 +1012,517 @@ msgstr "发送重置链接"
 msgid "Back to Login"
 msgstr "返回登录"
 
-#: templates/global-settings.html:15
+#: templates/global-settings.html:9
+msgid "Administration"
+msgstr "管理"
+
+#: templates/global-settings.html:11
+msgid ""
+"System-wide defaults for display, retention, virus scanning, quarantine, "
+"and email alerts."
+msgstr "显示、保留、病毒扫描、隔离和电子邮件警报的系统范围默认设置。"
+
+#: templates/global-settings.html:24
 msgid "General Settings"
 msgstr "常规设置"
 
-#: templates/global-settings.html:20 templates/user-settings.html:19
+#: templates/global-settings.html:29 templates/user-settings.html:28
 msgid "Items Per Page"
 msgstr "每页项目数"
 
-#: templates/global-settings.html:22 templates/user-settings.html:21
+#: templates/global-settings.html:31 templates/user-settings.html:30
 msgid "Number of emails to display per page in lists"
 msgstr "列表中每页显示的电子邮件数量"
 
-#: templates/global-settings.html:26 templates/user-settings.html:25
+#: templates/global-settings.html:35 templates/user-settings.html:34
 msgid "Date Format"
 msgstr "日期格式"
 
-#: templates/global-settings.html:28
+#: templates/global-settings.html:37
 msgid "15/01/2024"
 msgstr "15/01/2024"
 
-#: templates/global-settings.html:29
+#: templates/global-settings.html:38
 msgid "2024-01-15"
 msgstr "2024-01-15"
 
 # Machine-translated additions (prefill)
-#: templates/global-settings.html:30
+#: templates/global-settings.html:39
 msgid "01/15/2024"
 msgstr "01/15/2024"
 
-#: templates/global-settings.html:31
+#: templates/global-settings.html:40
 msgid "15 Jan 2024"
 msgstr "2024年1月15日"
 
-#: templates/global-settings.html:32
+#: templates/global-settings.html:41
 msgid "January 15, 2024"
 msgstr "2024年1月15日"
 
-#: templates/global-settings.html:34
+#: templates/global-settings.html:43
 msgid "Date display format throughout the application"
 msgstr "应用中日期的显示格式"
 
-#: templates/global-settings.html:38
+#: templates/global-settings.html:47
 msgid "Time Format"
 msgstr "时间格式"
 
-#: templates/global-settings.html:40
+#: templates/global-settings.html:49
 msgid "14:30 (24-hour)"
 msgstr "14:30（24 小时制）"
 
-#: templates/global-settings.html:41
+#: templates/global-settings.html:50
 msgid "14:30:45 (24-hour with seconds)"
 msgstr "14:30:45（24 小时制，含秒）"
 
-#: templates/global-settings.html:42
+#: templates/global-settings.html:51
 msgid "02:30 PM (12-hour)"
 msgstr "02:30 PM（12 小时制）"
 
-#: templates/global-settings.html:43
+#: templates/global-settings.html:52
 msgid "02:30:45 PM (12-hour with seconds)"
 msgstr "02:30:45 PM（12 小时制，含秒）"
 
-#: templates/global-settings.html:45
+#: templates/global-settings.html:54
 msgid "Time display format throughout the application"
 msgstr "应用中时间显示格式"
 
-#: templates/global-settings.html:49
+#: templates/global-settings.html:58
 msgid "Timezone"
 msgstr "时区"
 
-#: templates/global-settings.html:51
+#: templates/global-settings.html:60
 msgid "UTC"
 msgstr "UTC"
 
-#: templates/global-settings.html:52
+#: templates/global-settings.html:61
 msgid "Pacific/Honolulu (HST)"
 msgstr "太平洋/檀香山 (HST)"
 
-#: templates/global-settings.html:53
+#: templates/global-settings.html:62
 msgid "America/Anchorage (AKST)"
 msgstr "美洲/安克雷奇 (AKST)"
 
-#: templates/global-settings.html:54
+#: templates/global-settings.html:63
 msgid "America/Los Angeles (PST)"
 msgstr "美洲/洛杉矶 (PST)"
 
-#: templates/global-settings.html:55
+#: templates/global-settings.html:64
 msgid "America/Vancouver (PST)"
 msgstr "美洲/温哥华 (PST)"
 
-#: templates/global-settings.html:56
+#: templates/global-settings.html:65
 msgid "America/Denver (MST)"
 msgstr "美洲/丹佛 (MST)"
 
-#: templates/global-settings.html:57
+#: templates/global-settings.html:66
 msgid "America/Chicago (CST)"
 msgstr "美洲/芝加哥 (CST)"
 
-#: templates/global-settings.html:58
+#: templates/global-settings.html:67
 msgid "America/Mexico City (CST)"
 msgstr "美洲/墨西哥城 (CST)"
 
-#: templates/global-settings.html:59
+#: templates/global-settings.html:68
 msgid "America/New York (EST)"
 msgstr "美洲/纽约 (EST)"
 
-#: templates/global-settings.html:60
+#: templates/global-settings.html:69
 msgid "America/Toronto (EST)"
 msgstr "美洲/多伦多 (EST)"
 
-#: templates/global-settings.html:61
+#: templates/global-settings.html:70
 msgid "America/Argentina (BRT)"
 msgstr "美洲/阿根廷 (BRT)"
 
-#: templates/global-settings.html:62
+#: templates/global-settings.html:71
 msgid "America/Sao Paulo (BRT)"
 msgstr "美洲/圣保罗 (BRT)"
 
-#: templates/global-settings.html:63
+#: templates/global-settings.html:72
 msgid "Europe/London (GMT)"
 msgstr "欧洲/伦敦 (GMT)"
 
-#: templates/global-settings.html:64
+#: templates/global-settings.html:73
 msgid "Europe/Dublin (GMT)"
 msgstr "欧洲/都柏林 (GMT)"
 
-#: templates/global-settings.html:65
+#: templates/global-settings.html:74
 msgid "Europe/Berlin (CET)"
 msgstr "欧洲/柏林 (CET)"
 
-#: templates/global-settings.html:66
+#: templates/global-settings.html:75
 msgid "Europe/Paris (CET)"
 msgstr "欧洲/巴黎 (CET)"
 
-#: templates/global-settings.html:67
+#: templates/global-settings.html:76
 msgid "Europe/Madrid (CET)"
 msgstr "欧洲/马德里 (CET)"
 
-#: templates/global-settings.html:68
+#: templates/global-settings.html:77
 msgid "Europe/Rome (CET)"
 msgstr "欧洲/罗马 (CET)"
 
-#: templates/global-settings.html:69
+#: templates/global-settings.html:78
 msgid "Europe/Amsterdam (CET)"
 msgstr "欧洲/阿姆斯特丹 (CET)"
 
-#: templates/global-settings.html:70
+#: templates/global-settings.html:79
 msgid "Europe/Zurich (CET)"
 msgstr "欧洲/苏黎世 (CET)"
 
-#: templates/global-settings.html:71
+#: templates/global-settings.html:80
 msgid "Europe/Moscow (MSK)"
 msgstr "欧洲/莫斯科 (MSK)"
 
-#: templates/global-settings.html:72
+#: templates/global-settings.html:81
 msgid "Africa/Cairo (EET)"
 msgstr "非洲/开罗 (EET)"
 
-#: templates/global-settings.html:73
+#: templates/global-settings.html:82
 msgid "Africa/Johannesburg (SAST)"
 msgstr "非洲/约翰内斯堡 (SAST)"
 
-#: templates/global-settings.html:74
+#: templates/global-settings.html:83
 msgid "Asia/Dubai (GST)"
 msgstr "亚洲/迪拜 (GST)"
 
-#: templates/global-settings.html:75
+#: templates/global-settings.html:84
 msgid "Asia/Jerusalem (IST)"
 msgstr "亚洲/耶路撒冷 (IST)"
 
-#: templates/global-settings.html:76
+#: templates/global-settings.html:85
 msgid "Asia/Kolkata (IST)"
 msgstr "亚洲/加尔各答 (IST)"
 
-#: templates/global-settings.html:77
+#: templates/global-settings.html:86
 msgid "Asia/Karachi (PKT)"
 msgstr "亚洲/卡拉奇 (PKT)"
 
-#: templates/global-settings.html:78
+#: templates/global-settings.html:87
 msgid "Asia/Bangkok (ICT)"
 msgstr "亚洲/曼谷 (ICT)"
 
-#: templates/global-settings.html:79
+#: templates/global-settings.html:88
 msgid "Asia/Singapore (SGT)"
 msgstr "亚洲/新加坡 (SGT)"
 
-#: templates/global-settings.html:80
+#: templates/global-settings.html:89
 msgid "Asia/Hong Kong (HKT)"
 msgstr "亚洲/香港 (HKT)"
 
-#: templates/global-settings.html:81
+#: templates/global-settings.html:90
 msgid "Asia/Tokyo (JST)"
 msgstr "亚洲/东京 (JST)"
 
-#: templates/global-settings.html:82
+#: templates/global-settings.html:91
 msgid "Asia/Seoul (KST)"
 msgstr "亚洲/首尔 (KST)"
 
-#: templates/global-settings.html:83
+#: templates/global-settings.html:92
 msgid "Australia/Perth (AWST)"
 msgstr "澳大利亚/珀斯 (AWST)"
 
-#: templates/global-settings.html:84
+#: templates/global-settings.html:93
 msgid "Australia/Adelaide (ACST)"
 msgstr "澳大利亚/阿德莱德 (ACST)"
 
-#: templates/global-settings.html:85
+#: templates/global-settings.html:94
 msgid "Australia/Brisbane (AEST)"
 msgstr "澳大利亚/布里斯班 (AEST)"
 
-#: templates/global-settings.html:86
+#: templates/global-settings.html:95
 msgid "Australia/Sydney (AEST)"
 msgstr "澳大利亚/悉尼 (AEST)"
 
-#: templates/global-settings.html:87
+#: templates/global-settings.html:96
 msgid "Australia/Melbourne (AEST)"
 msgstr "澳大利亚/墨尔本 (AEST)"
 
-#: templates/global-settings.html:88
+#: templates/global-settings.html:97
 msgid "Pacific/Auckland (NZST)"
 msgstr "太平洋/奥克兰 (NZST)"
 
-#: templates/global-settings.html:89
+#: templates/global-settings.html:98
 msgid "Pacific/Guam (ChST)"
 msgstr "太平洋/关岛 (ChST)"
 
-#: templates/global-settings.html:91
+#: templates/global-settings.html:100
 msgid "Timezone for displaying dates and times throughout the application"
 msgstr "在整个应用中显示日期和时间的时区"
 
-#: templates/global-settings.html:95
+#: templates/global-settings.html:104
 msgid "Default Theme"
 msgstr "默认主题"
 
-#: templates/global-settings.html:97
+#: templates/global-settings.html:106
 msgid "System (use browser / user preference)"
 msgstr "系统（使用浏览器/用户偏好）"
 
-#: templates/global-settings.html:98
+#: templates/global-settings.html:107
 msgid "Light"
 msgstr "浅色"
 
-#: templates/global-settings.html:99
+#: templates/global-settings.html:108
 msgid "Dark"
 msgstr "深色"
 
-#: templates/global-settings.html:101
+#: templates/global-settings.html:110
 msgid ""
 "Global default theme for users who have not set a personal preference "
 "(users' own preference overrides this)"
-msgstr ""
-"未设置个人偏好的用户的全局默认主题 "
-"（用户的个人偏好会覆盖此设置）"
+msgstr "未设置个人偏好的用户的全局默认主题 （用户的个人偏好会覆盖此设置）"
 
-#: templates/global-settings.html:105
+#: templates/global-settings.html:114
 msgid "Auto Logout (minutes)"
 msgstr "自动登出（分钟）"
 
-#: templates/global-settings.html:107
+#: templates/global-settings.html:116
 msgid ""
 "Automatically log out users after this many minutes of inactivity. Set to"
 " 0 to disable auto-logout."
 msgstr "在此分钟数无活动后自动注销用户。设置为 0 可禁用自动注销。"
 
-#: templates/global-settings.html:119
+#: templates/global-settings.html:128
 msgid "Email Retention Policy"
 msgstr "邮件保留策略"
 
-#: templates/global-settings.html:126
+#: templates/global-settings.html:135
 msgid "Enable Automatic Email Purging"
 msgstr "启用自动邮件清理"
 
-#: templates/global-settings.html:127
+#: templates/global-settings.html:136
 msgid "Automatically delete emails older than the retention period"
 msgstr "自动删除超过保留期的邮件"
 
-#: templates/global-settings.html:134
+#: templates/global-settings.html:143
 msgid "Delete from Mail Server During Retention Cleanup"
 msgstr "在保留清理期间从邮件服务器删除"
 
-#: templates/global-settings.html:135
+#: templates/global-settings.html:144
 msgid ""
 "When enabled, retention cleanup will also attempt to delete emails from "
 "the original IMAP mail servers for both regular emails and quarantined "
 "emails"
 msgstr "启用后，保留清理还将尝试从原始 IMAP 邮件服务器中删除常规邮件和隔离邮件"
 
-#: templates/global-settings.html:140
+#: templates/global-settings.html:149
 msgid "Retention Period"
 msgstr "保留期"
 
-#: templates/global-settings.html:147
+#: templates/global-settings.html:156
 msgid "Day(s)"
 msgstr "天"
 
-#: templates/global-settings.html:148
+#: templates/global-settings.html:157
 msgid "Month(s)"
 msgstr "月"
 
-#: templates/global-settings.html:149
+#: templates/global-settings.html:158
 msgid "Year(s)"
 msgstr "年"
 
-#: templates/global-settings.html:153
+#: templates/global-settings.html:162
 msgid "Emails older than this period will be automatically deleted"
 msgstr "超过此期限的邮件将被自动删除"
 
-#: templates/global-settings.html:163
+#: templates/global-settings.html:172
 msgid "Virus Scanning (ClamAV)"
 msgstr "病毒扫描（ClamAV）"
 
-#: templates/global-settings.html:170
+#: templates/global-settings.html:179
 msgid "Enable Virus Scanning"
 msgstr "启用病毒扫描"
 
-#: templates/global-settings.html:171
+#: templates/global-settings.html:180
 msgid "Scan incoming emails for viruses using ClamAV"
 msgstr "使用 ClamAV 扫描传入邮件中的病毒"
 
-#: templates/global-settings.html:176
+#: templates/global-settings.html:185
 msgid "ClamAV Host"
 msgstr "ClamAV 主机"
 
-#: templates/global-settings.html:178
+#: templates/global-settings.html:187
 msgid "Hostname or IP address of the ClamAV daemon (default: clamav for Docker)"
 msgstr "ClamAV 守护进程的主机名或 IP（默认：Docker 下为 clamav）"
 
-#: templates/global-settings.html:182
+#: templates/global-settings.html:191
 msgid "ClamAV Port"
 msgstr "ClamAV 端口"
 
-#: templates/global-settings.html:184
+#: templates/global-settings.html:193
 msgid "Port number for the ClamAV daemon (default: 3310)"
 msgstr "ClamAV 守护进程端口号（默认：3310）"
 
-#: templates/global-settings.html:188
+#: templates/global-settings.html:197
 msgid "Action When Virus Detected"
 msgstr "检测到病毒时的操作"
 
-#: templates/global-settings.html:190
+#: templates/global-settings.html:199
 msgid "Quarantine (Store with virus flag)"
 msgstr "隔离（带病毒标记存储）"
 
-#: templates/global-settings.html:191
+#: templates/global-settings.html:200
 msgid "Reject (Do not store infected emails)"
 msgstr "拒绝（不存储感染邮件）"
 
-#: templates/global-settings.html:192
+#: templates/global-settings.html:201
 msgid "Log Only (Store all emails, log detections)"
 msgstr "仅记录（存储所有邮件，记录检测）"
 
-#: templates/global-settings.html:195
+#: templates/global-settings.html:204
 msgid "Quarantine:"
 msgstr "隔离："
 
-#: templates/global-settings.html:195
+#: templates/global-settings.html:204
 msgid "Emails with viruses are stored but marked as infected for review"
 msgstr "带病毒的邮件会被存储但标记为感染以供审查"
 
-#: templates/global-settings.html:196
+#: templates/global-settings.html:205
 msgid "Reject:"
 msgstr "拒绝："
 
-#: templates/global-settings.html:196
+#: templates/global-settings.html:205
 msgid "Emails with viruses are not stored in the database"
 msgstr "带病毒的邮件不会存储在数据库中"
 
-#: templates/global-settings.html:197
+#: templates/global-settings.html:206
 msgid "Log Only:"
 msgstr "仅记录："
 
-#: templates/global-settings.html:197
+#: templates/global-settings.html:206
 msgid "All emails are stored, virus detections are logged for monitoring"
 msgstr "所有邮件均被存储，病毒检测结果会记录以便监控"
 
-#: templates/global-settings.html:202
+#: templates/global-settings.html:211
 msgid "Max File Size to Scan (bytes)"
 msgstr "扫描的最大文件大小（字节）"
 
-#: templates/global-settings.html:204
+#: templates/global-settings.html:213
 msgid "Files larger than this size will not be scanned by ClamAV"
 msgstr "大于此大小的文件不会被 ClamAV 扫描"
 
-#: templates/global-settings.html:214
+#: templates/global-settings.html:217
+msgid "Outage Alert Grace Period (seconds)"
+msgstr "中断警报宽限期（秒）"
+
+#: templates/global-settings.html:219
+msgid ""
+"How long a ClamAV outage must persist before an alert is raised. "
+"Suppresses brief blips during signature-database reloads."
+msgstr "ClamAV 中断必须持续多长时间才会发出警报。在签名数据库重新加载期间抑制短暂中断。"
+
+#: templates/global-settings.html:229
 msgid "Quarantine Settings"
 msgstr "隔离设置"
 
-#: templates/global-settings.html:221
+#: templates/global-settings.html:236
 msgid "Store quarantined emails in database"
 msgstr "在数据库中存储隔离的邮件"
 
-#: templates/global-settings.html:222
+#: templates/global-settings.html:237
 msgid ""
 "When enabled, infected message payloads are moved to the "
 "quarantined_emails table (recommended for auditability)"
 msgstr "启用后，感染的消息负载将移动到 quarantined_emails 表（建议用于审计）"
 
-#: templates/global-settings.html:227
+#: templates/global-settings.html:242
 msgid "Quarantine Retention (days)"
 msgstr "隔离保留（天）"
 
-#: templates/global-settings.html:229
+#: templates/global-settings.html:244
 msgid "Number of days to retain quarantined messages before automatic purge"
 msgstr "在自动清理之前保留隔离消息的天数"
 
-#: templates/global-settings.html:235
+#: templates/global-settings.html:250
 msgid "Encrypt quarantined data at rest"
 msgstr "对静态隔离数据加密"
 
-#: templates/global-settings.html:236
+#: templates/global-settings.html:251
 msgid ""
 "Requires CLAMAV_QUARANTINE_KEY to be configured in the environment or "
 "config file (see README)"
 msgstr "需要在环境或配置文件中配置 CLAMAV_QUARANTINE_KEY（见 README）"
 
-#: templates/global-settings.html:248
+#: templates/global-settings.html:263
 msgid "SMTP Email Configuration"
 msgstr "SMTP 邮件配置"
 
-#: templates/global-settings.html:257
+#: templates/global-settings.html:272
 msgid "Enable Email Alerts"
 msgstr "启用邮件警报"
 
-#: templates/global-settings.html:258
+#: templates/global-settings.html:273
 msgid "Send email notifications for system alerts and important events"
 msgstr "为系统警报和重要事件发送电子邮件通知"
 
-#: templates/global-settings.html:263
+#: templates/global-settings.html:278
 msgid "SMTP Host"
 msgstr "SMTP 主机"
 
-#: templates/global-settings.html:265
+#: templates/global-settings.html:280
 msgid "SMTP server hostname or IP address"
 msgstr "SMTP 服务器主机名或 IP 地址"
 
-#: templates/global-settings.html:269
+#: templates/global-settings.html:284
 msgid "SMTP Port"
 msgstr "SMTP 端口"
 
-#: templates/global-settings.html:271
+#: templates/global-settings.html:286
 msgid "SMTP server port (587 for TLS, 465 for SSL, 25 for plain)"
 msgstr "SMTP 服务器端口（587 用于 TLS，465 用于 SSL，25 用于明文）"
 
-#: templates/global-settings.html:275
+#: templates/global-settings.html:290
 msgid "SMTP Username"
 msgstr "SMTP 用户名"
 
-#: templates/global-settings.html:277
+#: templates/global-settings.html:292
 msgid "Username for SMTP authentication (usually your email address)"
 msgstr "SMTP 验证用户名（通常为您的电子邮件地址）"
 
-#: templates/global-settings.html:281
+#: templates/global-settings.html:296
 msgid "SMTP Password"
 msgstr "SMTP 密码"
 
-#: templates/global-settings.html:283
+#: templates/global-settings.html:299
+msgid "A password is currently stored. Leave this field blank to keep it."
+msgstr "当前已存储密码。将此字段留空以保留它。"
+
+#: templates/global-settings.html:301
 msgid "Password for SMTP authentication (use app passwords for Gmail)"
 msgstr "SMTP 身份验证密码（对 Gmail 使用应用专用密码）"
 
-#: templates/global-settings.html:289
-msgid "Use TLS Encryption"
-msgstr "使用 TLS 加密"
+#: templates/global-settings.html:308
+msgid "Use STARTTLS"
+msgstr "使用 STARTTLS"
 
-#: templates/global-settings.html:290
-msgid "Use STARTTLS for secure connection (recommended for most servers)"
-msgstr "使用 STARTTLS 进行安全连接（推荐大多数服务器）"
+#: templates/global-settings.html:309
+msgid ""
+"Use STARTTLS for secure connection (recommended, e.g. port 587). When "
+"disabled, implicit SSL is used (e.g. port 465)."
+msgstr "使用 STARTTLS 进行安全连接（推荐，例如端口 587）。禁用时使用隐式 SSL（例如端口 465）。"
 
-#: templates/global-settings.html:295
+#: templates/global-settings.html:314
 msgid "From Email Address"
 msgstr "发件邮箱地址"
 
-#: templates/global-settings.html:297
+#: templates/global-settings.html:316
 msgid "Email address to send alerts from"
 msgstr "用于发送警报的邮箱地址"
 
-#: templates/global-settings.html:301
+#: templates/global-settings.html:320
 msgid "From Name"
 msgstr "发件人名称"
 
-#: templates/global-settings.html:303
+#: templates/global-settings.html:322
 msgid "Display name for alert emails"
 msgstr "警报邮件显示名称"
 
-#: templates/global-settings.html:309
-msgid "Cancel"
-msgstr "取消"
-
-#: templates/global-settings.html:313
+#: templates/global-settings.html:332
 msgid "Save Settings"
 msgstr "保存设置"
 
-#: templates/global-settings.html:326
+#: templates/global-settings.html:345
 msgid "Send Test Email"
 msgstr "发送测试邮件"
 
@@ -723,10 +1538,6 @@ msgstr "用户名"
 msgid "Enter your username"
 msgstr "输入您的用户名"
 
-#: templates/login.html:65 templates/setup.html:136
-msgid "Password"
-msgstr "密码"
-
 #: templates/login.html:66
 msgid "Enter your password"
 msgstr "输入您的密码"
@@ -739,86 +1550,226 @@ msgstr "登录"
 msgid "Forgot Password?"
 msgstr "忘记密码？"
 
+#: templates/logs.html:13
+msgid "Operations"
+msgstr "运维"
+
+#: templates/logs.html:14 templates/logs.html:26
+msgid "System logs"
+msgstr "系统日志"
+
+#: templates/logs.html:15
+msgid ""
+"Track fetch activity, worker health and system events. Filter by source, "
+"level or date range to find what you need."
+msgstr "跟踪获取活动、工作进程状态和系统事件。按来源、级别或日期范围筛选以找到所需内容。"
+
+#: templates/logs.html:17
+msgid "Refresh"
+msgstr "刷新"
+
+#: templates/logs.html:19
+msgid "Log summary"
+msgstr "日志摘要"
+
+#: templates/logs.html:20
+msgid "Total entries"
+msgstr "总条目数"
+
+#: templates/logs.html:21
+msgid "Errors"
+msgstr "错误"
+
+#: templates/logs.html:22
+msgid "Warnings"
+msgstr "警告"
+
+#: templates/logs.html:23
+msgid "Success"
+msgstr "成功"
+
+#: templates/logs.html:25
+msgid "Log filters"
+msgstr "日志筛选器"
+
+#: templates/logs.html:26
+msgid "entry"
+msgstr "条"
+
+#: templates/logs.html:26
+msgid "entries"
+msgstr "条"
+
+#: templates/logs.html:40
+msgid "Search message or source..."
+msgstr "搜索消息或来源..."
+
+#: templates/logs.html:52 templates/logs.html:95
+msgid "Level"
+msgstr "级别"
+
+#: templates/logs.html:54
+msgid "All Levels"
+msgstr "所有级别"
+
+#: templates/logs.html:55
+msgid "Debug Only"
+msgstr "仅调试"
+
+#: templates/logs.html:56
+msgid "Error Only"
+msgstr "仅错误"
+
+#: templates/logs.html:57
+msgid "Warning Only"
+msgstr "仅警告"
+
+#: templates/logs.html:58
+msgid "Info Only"
+msgstr "仅信息"
+
+#: templates/logs.html:59
+msgid "Success Only"
+msgstr "仅成功"
+
+#: templates/logs.html:79
+msgid "Date From"
+msgstr "开始日期"
+
+#: templates/logs.html:83
+msgid "Date To"
+msgstr "结束日期"
+
+#: templates/logs.html:90
+msgid "Log entries"
+msgstr "日志条目"
+
+#: templates/logs.html:111
+msgid "Show details"
+msgstr "显示详情"
+
 # Added from templates/profile.html
-#: templates/profile.html:3
+#: templates/profile.html:3 templates/profile.html:10
 msgid "My Profile"
 msgstr "我的个人资料"
 
-#: templates/profile.html:13
+#: templates/profile.html:11
+msgid ""
+"Manage your personal information, assigned roles, and recent login "
+"activity."
+msgstr "管理您的个人信息、分配的角色和最近的登录活动。"
+
+#: templates/profile.html:22
 msgid "Personal Information"
 msgstr "个人信息"
 
-#: templates/profile.html:22 templates/setup.html:115
+#: templates/profile.html:31 templates/setup.html:115
 msgid "First Name"
 msgstr "名字"
 
-#: templates/profile.html:27
+#: templates/profile.html:36
 msgid "First name"
 msgstr "名"
 
-#: templates/profile.html:31 templates/setup.html:122
+#: templates/profile.html:40 templates/setup.html:122
 msgid "Last Name"
 msgstr "姓氏"
 
-#: templates/profile.html:36
+#: templates/profile.html:45
 msgid "Last name"
 msgstr "姓"
 
-#: templates/profile.html:41
+#: templates/profile.html:50
 msgid "Email"
 msgstr "电子邮件"
 
-#: templates/profile.html:47
+#: templates/profile.html:56
 msgid "your.email@example.com"
 msgstr "your.email@example.com"
 
-#: templates/profile.html:54
+#: templates/profile.html:63
 msgid "Username:"
 msgstr "用户名："
 
-#: templates/profile.html:57
+#: templates/profile.html:66
 msgid "Roles:"
 msgstr "角色："
 
-#: templates/profile.html:61
+#: templates/profile.html:70
 msgid "No roles assigned"
 msgstr "未分配角色"
 
-#: templates/profile.html:66
+#: templates/profile.html:75
 msgid "Last Login:"
 msgstr "最后登录："
 
-#: templates/profile.html:70 templates/profile.html:88
+#: templates/profile.html:79 templates/profile.html:97
 msgid "Never"
 msgstr "从不"
 
-#: templates/profile.html:75
+#: templates/profile.html:84
 msgid "Last Login IP:"
 msgstr "最后登录IP："
 
-#: templates/profile.html:84
+#: templates/profile.html:93
 msgid "Last Seen:"
 msgstr "最后活动："
 
-#: templates/profile.html:93
+#: templates/profile.html:102
 msgid "Online Status:"
 msgstr "在线状态："
 
-#: templates/profile.html:95
+#: templates/profile.html:104
 msgid "Online"
 msgstr "在线"
 
-#: templates/profile.html:97
+#: templates/profile.html:106
 msgid "Offline"
 msgstr "离线"
 
-#: templates/profile.html:102
+#: templates/profile.html:111
 msgid "Account Created:"
 msgstr "账户创建时间："
 
-#: templates/profile.html:116
+#: templates/profile.html:125
 msgid "Update Information"
 msgstr "更新信息"
+
+#: templates/quarantine-view.html:47
+msgid "Quarantined email details"
+msgstr "隔离邮件详情"
+
+#: templates/quarantine.html:19
+msgid "Quarantine summary"
+msgstr "隔离摘要"
+
+#: templates/quarantine.html:24
+msgid "Quarantine filters"
+msgstr "隔离筛选器"
+
+#: templates/quarantine.html:28
+msgid "Sort messages"
+msgstr "排序消息"
+
+#: templates/quarantine.html:77
+msgid "Virus name"
+msgstr "病毒名称"
+
+#: templates/quarantine.html:115
+msgid "Quarantined messages"
+msgstr "已隔离消息"
+
+#: templates/quarantine.html:164
+msgid "View"
+msgstr "查看"
+
+#: templates/quarantine.html:166
+msgid "Restore"
+msgstr "恢复"
+
+#: templates/quarantine.html:169
+msgid "Delete"
+msgstr "删除"
 
 #: templates/reset-password.html:18 templates/reset-password.html:53
 msgid "Reset Password"
@@ -834,9 +1785,37 @@ msgid ""
 "lowercase, and numeric characters."
 msgstr "密码必须至少 8 个字符长，且包含大写字母、小写字母和数字。"
 
+#: templates/roles.html:15
+msgid "Role management summary"
+msgstr "角色管理摘要"
+
+#: templates/roles.html:20
+msgid "Role filters"
+msgstr "角色筛选器"
+
+#: templates/roles.html:22
+msgid "Search roles or permissions"
+msgstr "搜索角色或权限"
+
+#: templates/roles.html:43
+msgid "What is this role used for?"
+msgstr "此角色用于什么？"
+
+#: templates/roles.html:43
+msgid "Find permission"
+msgstr "查找权限"
+
 #: templates/set-password.html:10
 msgid "Set Your Password"
 msgstr "设置您的密码"
+
+#: templates/set-password.html:11
+msgid "This is your first login - choose a password for your account."
+msgstr "这是您的首次登录 - 请为您的账户选择密码。"
+
+#: templates/set-password.html:34
+msgid "Re-enter your password"
+msgstr "再次输入您的密码"
 
 #: templates/setup.html:4
 msgid "Initial Setup - Daygle Mail Archiver"
@@ -912,327 +1891,75 @@ msgstr "确认密码"
 msgid "Create Administrator"
 msgstr "创建管理员"
 
-#: templates/user-settings.html:12
+#: templates/system-status.html:27
+msgid "Account summary"
+msgstr "账户摘要"
+
+#: templates/system-status.html:34
+msgid "Service status"
+msgstr "服务状态"
+
+#: templates/system-status.html:88
+msgid "Account status"
+msgstr "账户状态"
+
+#: templates/user-settings.html:21
 msgid "Display & Formatting Settings"
 msgstr "显示和格式设置"
 
-#: templates/user-settings.html:16
+#: templates/user-settings.html:25
 msgid "Configure how content is displayed throughout the application"
 msgstr "配置整个应用程序中内容的显示方式"
 
-#: templates/user-settings.html:104
+#: templates/user-settings.html:113
 msgid "Interface language"
 msgstr "界面语言"
 
-#: templates/user-settings.html:154
+#: templates/user-settings.html:163
 msgid "Email Notifications"
 msgstr "邮件通知"
 
-#: templates/user-settings.html:156
+#: templates/user-settings.html:165
 msgid "Enabled"
 msgstr "已启用"
 
-#: templates/user-settings.html:157
+#: templates/user-settings.html:166
 msgid "Disabled"
 msgstr "已禁用"
 
-#: templates/user-settings.html:159
+#: templates/user-settings.html:168
 msgid "Receive email alerts and notifications for system events"
 msgstr "接收系统事件的电子邮件警报和通知"
 
-#~ msgid "Customise Dashboard"
-#~ msgstr "自定义仪表板"
-
-#~ msgid "Add Widget"
-#~ msgstr "添加小部件"
-
-#~ msgid "Save Layout"
-#~ msgstr "保存布局"
-
-#~ msgid "Reset Layout"
-#~ msgstr "重置布局"
-
-#~ msgid "API unreachable - retrying..."
-#~ msgstr "无法访问API - 正在重试..."
-
-#~ msgid "Retry now"
-#~ msgstr "立即重试"
-
-#~ msgid "Add Widgets"
-#~ msgstr "添加小部件"
-
-#~ msgid "Select widgets to add to your dashboard:"
-#~ msgstr "选择要添加到仪表板的小部件："
-
-#~ msgid "Remove widget"
-#~ msgstr "移除小部件"
-
-#~ msgid "Total Emails"
-#~ msgstr "电子邮件总数"
-
-#~ msgid "Total archived emails"
-#~ msgstr "归档电子邮件总数"
-
-#~ msgid "Emails Today"
-#~ msgstr "今日邮件"
-
-#~ msgid "Emails received today"
-#~ msgstr "今日收到的邮件"
-
-#~ msgid "Database Size"
-#~ msgstr "数据库大小"
-
-#~ msgid "Current database size"
-#~ msgstr "当前数据库大小"
-
-#~ msgid "Active Accounts"
-#~ msgstr "活动账户"
-
-#~ msgid "Configured fetch accounts"
-#~ msgstr "已配置的抓取账户"
-
-#~ msgid "Workers Online"
-#~ msgstr "在线工作进程"
-
-#~ msgid "Active worker processes"
-#~ msgstr "活跃工作进程"
-
-#~ msgid "Last 7 Days"
-#~ msgstr "过去7天"
-
-#~ msgid "Emails in past week"
-#~ msgstr "过去一周的邮件"
-
-#~ msgid "Last 30 Days"
-#~ msgstr "过去30天"
-
-#~ msgid "Emails in past month"
-#~ msgstr "过去一个月的邮件"
-
-#~ msgid "Storage Used"
-#~ msgstr "已用存储"
-
-#~ msgid "Total storage consumed"
-#~ msgstr "总消耗存储"
-
-#~ msgid "Clean Emails"
-#~ msgstr "无病毒邮件"
-
-#~ msgid "Virus-free emails"
-#~ msgstr "无病毒的邮件"
-
-#~ msgid "Quarantined"
-#~ msgstr "已隔离"
-
-#~ msgid "Emails with viruses"
-#~ msgstr "含病毒的邮件"
-
-#~ msgid "Rejected"
-#~ msgstr "被拒绝的邮件"
-
-#~ msgid "Emails blocked by antivirus"
-#~ msgstr "被杀毒软件拦截的邮件"
-
-#~ msgid "System Uptime"
-#~ msgstr "系统运行时间"
-
-#~ msgid "Time since last restart"
-#~ msgstr "自上次重启以来的时间"
-
-#~ msgid "New Fetch Account"
-#~ msgstr ""
-
-#~ msgid "Account Name"
-#~ msgstr ""
-
-#~ msgid "A friendly name to identify this account"
-#~ msgstr ""
-
-#~ msgid "Account Type"
-#~ msgstr ""
-
-#~ msgid "IMAP"
-#~ msgstr ""
-
-#~ msgid "Gmail API"
-#~ msgstr ""
-
-#~ msgid "Office 365 API"
-#~ msgstr ""
-
-#~ msgid "Select the type of email service to fetch from"
-#~ msgstr ""
-
-#~ msgid "IMAP Configuration"
-#~ msgstr ""
-
-#~ msgid "Host"
-#~ msgstr ""
-
-#~ msgid "Port"
-#~ msgstr ""
-
-#~ msgid "Leave blank to keep the existing password"
-#~ msgstr ""
-
-#~ msgid "Fetch Settings"
-#~ msgstr ""
-
-#~ msgid "Recommended for secure connections (port 993)"
-#~ msgstr ""
-
-#~ msgid "How often to check for new emails (minimum 60 seconds)"
-#~ msgstr ""
-
-#~ msgid "Require STARTTLS"
-#~ msgstr ""
-
-#~ msgid "For plain connections that upgrade to TLS (port 143)"
-#~ msgstr ""
-
-#~ msgid "Delete Email After Processing"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Gmail: moves to Trash | Office "
-#~ "365: moves to Deleted Items | "
-#~ "IMAP: marks as deleted (recoverable)"
-#~ msgstr ""
-
-#~ msgid "Permanently Expunge Deleted (IMAP only)"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Warning: Permanently removes deleted emails"
-#~ " from server - cannot be recovered"
-#~ msgstr ""
-
-#~ msgid "OAuth Setup Required"
-#~ msgstr ""
-
-#~ msgid "To use Gmail or Office 365, you need to:"
-#~ msgstr ""
-
-#~ msgid "Create an OAuth app in Google/Microsoft developer console"
-#~ msgstr ""
-
-#~ msgid "Enter your Client ID and Client Secret below"
-#~ msgstr ""
-
-#~ msgid "Click \"Authorise\" to grant access"
-#~ msgstr ""
-
-#~ msgid "Create Account"
-#~ msgstr ""
-
-#~ msgid "OAuth Client ID"
-#~ msgstr ""
-
-#~ msgid "From your Google/Microsoft OAuth app"
-#~ msgstr ""
-
-#~ msgid "OAuth Client Secret"
-#~ msgstr ""
-
-#~ msgid "Keep this secret secure"
-#~ msgstr ""
-
-#~ msgid "Add Fetch Account"
-#~ msgstr ""
-
-#~ msgid "Name"
-#~ msgstr ""
-
-#~ msgid "Type"
-#~ msgstr ""
-
-#~ msgid "Host/Service"
-#~ msgstr ""
-
-#~ msgid "User"
-#~ msgstr ""
-
-#~ msgid "Poll Interval"
-#~ msgstr ""
-
-#~ msgid "Last Success"
-#~ msgstr ""
-
-#~ msgid "Actions"
-#~ msgstr ""
-
-#~ msgid "Gmail"
-#~ msgstr ""
-
-#~ msgid "O365"
-#~ msgstr ""
-
-#~ msgid "SSL Enabled"
-#~ msgstr ""
-
-#~ msgid "Edit"
-#~ msgstr ""
-
-#~ msgid "Test Connection"
-#~ msgstr ""
-
-#~ msgid "Delete"
-#~ msgstr ""
-
-#~ msgid "No fetch accounts configured."
-#~ msgstr ""
-
-#~ msgid "Previous"
-#~ msgstr ""
-
-#~ msgid "Next"
-#~ msgstr ""
-
-#~ msgid "Delete Fetch Account"
-#~ msgstr ""
-
-#~ msgid "Warning:"
-#~ msgstr ""
-
-#~ msgid "You are about to delete the fetch account:"
-#~ msgstr ""
-
-#~ msgid "Loading email count..."
-#~ msgstr ""
-
-#~ msgid "What would you like to do?"
-#~ msgstr ""
-
-#~ msgid "Delete Account Only (retain emails)"
-#~ msgstr ""
-
-#~ msgid "Delete Account + All Emails"
-#~ msgstr ""
-
-#~ msgid "Edit Fetch Account"
-#~ msgstr ""
-
-#~ msgid "Update Account"
-#~ msgstr ""
-
-#~ msgid "This account has"
-#~ msgstr ""
-
-#~ msgid "associated with it."
-#~ msgstr ""
-
-#~ msgid "email"
-#~ msgstr ""
-
-#~ msgid "emails"
-#~ msgstr ""
-
-#~ msgid "Delete Account Only (retain"
-#~ msgstr ""
-
-#~ msgid "Delete Account + All"
-#~ msgstr ""
-
-#~ msgid "aygle Mail Archiver"
-#~ msgstr "aygle Mail Archiver"
+#: templates/users.html:17
+msgid "User management summary"
+msgstr "用户管理摘要"
+
+#: templates/users.html:22
+msgid "User filters"
+msgstr "用户筛选器"
+
+#: templates/users.html:24
+msgid "Search name, email or role"
+msgstr "搜索名称、邮箱或角色"
+
+#: templates/users.html:27
+msgid "User accounts"
+msgstr "用户账户"
+
+#: templates/users.html:60
+msgid "Edit user"
+msgstr "编辑用户"
+
+#: templates/users.html:61
+msgid "You cannot disable your own account"
+msgstr "您不能停用自己的账户"
+
+#: templates/users.html:62
+msgid "You cannot delete your own account"
+msgstr "您不能删除自己的账户"
+
+#: templates/users.html:77
+msgid "Find role"
+msgstr "查找角色"
 
