@@ -1581,6 +1581,21 @@ textarea.form-control {
     justify-content: flex-end;
 }
 
+/* Modals whose body + footer live inside a <form> (the account/user/role
+   editors) need the form to join the modal's flex column. Without this the
+   form keeps its full content height, overflows the capped .modal-content
+   and gets clipped: the footer and the bottom of the form become
+   unreachable and the body never scrolls. Making the form a shrinking flex
+   column lets .modal-body (flex: 1 1 auto; overflow-y: auto) scroll
+   instead, keeping the header and footer pinned. */
+.modal-content > form {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+}
+
 /* Responsive */
 
 /* Tablet Styles (768px - 1024px) */
