@@ -1,0 +1,82 @@
+version: 2
+
+# Dependency update policy for this project.
+#
+# Pip: each service pins its own requirements file (api/, worker/). The dev
+# requirements at the repo root pull in api/requirements.txt via `-r`, so it is
+# deliberately not listed here to avoid duplicate PRs for the same packages.
+# Docker: base images in the service Dockerfiles plus the pinned tags in
+# docker-compose.yml (postgres, clamav).
+# GitHub Actions: keeps the action versions used in CI current.
+updates:
+  - package-ecosystem: pip
+    directory: /api
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 5
+    labels: [dependencies, python]
+    commit-message:
+      prefix: "pip(api)"
+
+  - package-ecosystem: pip
+    directory: /worker
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 5
+    labels: [dependencies, python]
+    commit-message:
+      prefix: "pip(worker)"
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 3
+    labels: [dependencies, docker]
+    commit-message:
+      prefix: "docker"
+
+  - package-ecosystem: docker
+    directory: /api
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 3
+    labels: [dependencies, docker]
+    commit-message:
+      prefix: "docker(api)"
+
+  - package-ecosystem: docker
+    directory: /worker
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 3
+    labels: [dependencies, docker]
+    commit-message:
+      prefix: "docker(worker)"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 3
+    labels: [dependencies, ci]
+    commit-message:
+      prefix: "ci"
