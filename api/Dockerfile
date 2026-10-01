@@ -1,4 +1,4 @@
-FROM python:3.12-slim-bookworm
+FROM python:3.14-slim-bookworm
 # To pin to an exact image digest replace the FROM line with a digest-pinned reference,
 # e.g. `FROM python:3.12-slim-bookworm@sha256:<digest>`.
 # Get the digest locally with: `docker pull python:3.12-slim-bookworm` then
