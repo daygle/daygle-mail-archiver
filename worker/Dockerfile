@@ -2,7 +2,7 @@
 # for example: `FROM python:3.12-slim-bookworm@sha256:<digest>`.
 # Locally you can fetch the digest with `docker pull python:3.12-slim-bookworm` then
 # `docker inspect --format='{{index .RepoDigests 0}}' python:3.12-slim-bookworm`.
-FROM python:3.12-slim-bookworm AS builder
+FROM python:3.14-slim-bookworm AS builder
 
 WORKDIR /app
 
@@ -21,7 +21,7 @@ RUN python -m pip install --upgrade pip setuptools wheel && \
 # -----------------------------
 # Final runtime image
 # -----------------------------
-FROM python:3.12-slim-bookworm
+FROM python:3.14-slim-bookworm
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
