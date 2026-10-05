@@ -3,6 +3,6 @@
 # Versions are kept in sync with api/requirements.txt for shared packages.
 sqlalchemy==2.1.2
 psycopg2==2.9.13
-cryptography==50.0.1
+cryptography==50.0.2
 requests==2.34.2
 pyclamd==0.4.0
