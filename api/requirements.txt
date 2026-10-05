@@ -1,7 +1,7 @@
 # API service dependencies.
 # Pinned to explicit versions for reproducible, auditable builds.
 # To upgrade: bump a version here, rebuild, and test before committing.
-fastapi==0.141.1
+fastapi==0.142.2
 uvicorn==0.54.0
 jinja2==3.1.6
 python-multipart==0.0.32
