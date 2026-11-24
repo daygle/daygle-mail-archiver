@@ -255,6 +255,30 @@ Important: the update script does NOT automatically create a full database backu
 
 See [Updating](https://github.com/daygle/daygle-mail-archiver/wiki/Updating) in the wiki for a recommended update workflow, rollback tips, and common troubleshooting steps.
 
+### Container base images (PostgreSQL and ClamAV)
+
+Dependabot cannot see the image tags in `docker-compose.yml`: its `docker` ecosystem only parses Dockerfiles and Kubernetes manifests. Those two images are tracked by a local check instead:
+
+```bash
+# Show each configured tag next to the newest Docker Hub release
+python3 check_base_images.py
+```
+
+The check exits non-zero when a tag can be bumped, and `.github/workflows/base-images.yml` runs it every Monday at 06:00 UTC, so a red **Base image updates** run is the reminder to bump. Fixing it is a tag change plus a pull:
+
+```yaml
+# docker-compose.yml
+image: postgres:17            # -> postgres:19
+image: clamav/clamav:latest   # -> clamav/clamav:1.5.5
+```
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+A new PostgreSQL **major** needs a dump/restore migration, not just a tag change. If a new major has been reviewed and you are deliberately staying on the current line, record it in `DEFERRED_MAJORS` at the top of `check_base_images.py` so the weekly run only goes red for something new. See [`docs/configuration.md`](docs/configuration.md#container-image-updates) for the full procedure.
+
 ---
 
 ## 🔑 OAuth2 Setup (Gmail & Office 365)

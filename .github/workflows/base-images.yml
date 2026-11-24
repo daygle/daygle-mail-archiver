@@ -1,0 +1,26 @@
+name: Base image updates
+
+# Dependabot's docker ecosystem only reads Dockerfiles and Kubernetes
+# manifests, so it cannot see the PostgreSQL and ClamAV tags pinned in
+# docker-compose.yml. This weekly job is the replacement reminder: a red run
+# means one of those tags can be bumped (see docs/configuration.md).
+on:
+  schedule:
+    # Mondays at 06:00 UTC, matching the cadence of the other dependency jobs.
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check Postgres/ClamAV tags
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Compare docker-compose image tags with Docker Hub
+        # Exits non-zero when a tag can be bumped, so the failing run itself is
+        # the notification. The table is also written to the job summary.
+        run: python3 check_base_images.py --verbose
