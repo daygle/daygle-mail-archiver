@@ -5,8 +5,10 @@ version: 2
 # Pip: each service pins its own requirements file (api/, worker/). The dev
 # requirements at the repo root pull in api/requirements.txt via `-r`, so it is
 # deliberately not listed here to avoid duplicate PRs for the same packages.
-# Docker: base images in the service Dockerfiles plus the pinned tags in
-# docker-compose.yml (postgres, clamav).
+# Docker: Dependabot's docker ecosystem only parses Dockerfiles and Kubernetes
+# manifests, so it is configured per service directory (api/, worker/). The
+# postgres and clamav image tags pinned in docker-compose.yml are not visible to
+# Dependabot and have to be bumped manually.
 # GitHub Actions: keeps the action versions used in CI current.
 updates:
   - package-ecosystem: pip
@@ -32,18 +34,6 @@ updates:
     labels: [dependencies, python]
     commit-message:
       prefix: "pip(worker)"
-
-  - package-ecosystem: docker
-    directory: /
-    schedule:
-      interval: weekly
-      day: monday
-      time: "06:00"
-      timezone: Etc/UTC
-    open-pull-requests-limit: 3
-    labels: [dependencies, docker]
-    commit-message:
-      prefix: "docker"
 
   - package-ecosystem: docker
     directory: /api
